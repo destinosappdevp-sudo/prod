@@ -1,7 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { AddToFavorite, RemoveFromFavorite } from "../action";
-import { useCountries } from "../lib/getCountries";
+import { useVenezuelaStates } from "../lib/venezuelaStates";
 import { AddToFavoriteButton, DeleteFromFavorite } from "./SubmitButtons";
 
 interface iAppProps {
@@ -29,8 +31,9 @@ function ListingCard({
   homeId,
   pathName,
 }: iAppProps) {
-  const { getCountryByValue } = useCountries();
-  const country = getCountryByValue(location);
+  const { getStateByValue } = useVenezuelaStates();
+  const state = getStateByValue(location);
+
   return (
     <div className="flex flex-col">
       <div className="relative h-72">
@@ -63,11 +66,11 @@ function ListingCard({
       </div>
       <Link href={`/home/${homeId}`} className="mt-2">
         <h3 className="font-medium text-base">
-          {country?.flag} {country?.label}, {country?.region}
+          {state?.label}
         </h3>
         <p className="text-muted-foreground text-sm line-clamp-1">{title}</p>
         <p className="pt-2 text-muted-foreground">
-          <span className="font-medium text-black">€ {price}</span> night
+          <span className="font-medium text-black">€ {price}</span> noche
         </p>
       </Link>
     </div>

@@ -13,8 +13,8 @@ function ShowCaseCategory({ categoryName }: { categoryName: string }) {
       />
 
       <div className="flex flex-col ml-4">
-        <h3 className="font-medium">{category?.title}</h3>
-        <p className="text-sm text-muted-foreground">{category?.description}</p>
+        <h3 className="font-medium">{category?.title.es}</h3>
+        <p className="text-sm text-muted-foreground">{category?.description.es}</p>
       </div>
     </div>
   );

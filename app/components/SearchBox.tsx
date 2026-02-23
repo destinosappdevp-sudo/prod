@@ -20,56 +20,74 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { useState } from "react";
-import { useCountries } from "../lib/getCountries";
+import { useState, useRef } from "react";
+import { useVenezuelaStates } from "../lib/venezuelaStates";
 import Counter from "./Counter";
 import HomeMap from "./HomeMap";
+import SelectCalendar from "./SelectCalendar";
 import { SubmitButtons } from "./SubmitButtons";
 
 function SearchBox() {
-  const { getAllCountries } = useCountries();
+  const { getAllStates } = useVenezuelaStates();
   const [locationValue, setLocationValue] = useState("");
-  //   const LazyMap = dynamic(() => import("@/app/components/Map"), {
-  //     ssr: false,
-  //     loading: () => <Skeleton className="h-[50vh] w-full" />,
-  //   });
   const [step, setStep] = useState(1);
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   function SubmitStep() {
     if (step === 1) {
       return (
         <Button onClick={() => setStep(step + 1)} type="button">
-          Next
+          Siguiente
         </Button>
       );
     } else if (step === 2) {
+      return (
+        <Button onClick={() => setStep(step + 1)} type="button">
+          Siguiente
+        </Button>
+      );
+    } else if (step === 3) {
       return <SubmitButtons />;
     }
   }
 
   return (
-    <Dialog>
-      <DialogTrigger>
-        <div className="rounded-full py-2 px-5 border flex items-center cursor-pointer">
-          <div className="flex h-full divide-x font-medium">
-            <p className="px-4 text-sm">Anywhere</p>
-            <p className="px-4 text-sm">Any Week</p>
-            <p className="px-4 text-sm">Add Guest</p>
-          </div>
-          <div className="bg-primary flex justify-center items-center rounded-full h-10 w-10">
-            <Search className="text-white" />
-          </div>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <div className="rounded-full py-2 px-5 border flex items-center cursor-pointer">
+        <div className="flex h-full divide-x font-medium" ref={triggerRef}>
+          <p 
+            className="px-4 text-sm hover:bg-gray-100 rounded transition" 
+            onClick={() => { setStep(1); setIsOpen(true); }}
+          >
+            Cualquier lugar
+          </p>
+          <p 
+            className="px-4 text-sm hover:bg-gray-100 rounded transition" 
+            onClick={() => { setStep(2); setIsOpen(true); }}
+          >
+            Cualquier semana
+          </p>
+          <p 
+            className="px-4 text-sm hover:bg-gray-100 rounded transition" 
+            onClick={() => { setStep(3); setIsOpen(true); }}
+          >
+            Agregar huéspedes
+          </p>
         </div>
-      </DialogTrigger>
+        <div className="bg-primary flex justify-center items-center rounded-full h-10 w-10">
+          <Search className="text-white" />
+        </div>
+      </div>
       <DialogContent className="sm:max-w-[425px]">
         <form className="gap-4 flex flex-col">
           <input type="hidden" name="country" value={locationValue} />
           {step === 1 ? (
             <>
               <DialogHeader>
-                <DialogTitle>Select a country</DialogTitle>
+                <DialogTitle>Selecciona un estado</DialogTitle>
                 <DialogDescription>
-                  Please select a country you would like to visit
+                  Por favor selecciona un estado de Venezuela que desees visitar
                 </DialogDescription>
               </DialogHeader>
 
@@ -78,14 +96,14 @@ function SearchBox() {
                 onValueChange={(value) => setLocationValue(value)}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a country"></SelectValue>
+                  <SelectValue placeholder="Selecciona un estado"></SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>Countries</SelectLabel>
-                    {getAllCountries().map((item) => (
+                    <SelectLabel>Estados de Venezuela</SelectLabel>
+                    {getAllStates().map((item) => (
                       <SelectItem key={item.value} value={item.value}>
-                        {item.flag} {item.label} / {item.region}
+                        {item.label}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -93,12 +111,23 @@ function SearchBox() {
               </Select>
               <HomeMap locationValue={locationValue} />
             </>
+          ) : step === 2 ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Selecciona las fechas</DialogTitle>
+                <DialogDescription>
+                  Por favor selecciona las fechas de tu estadía
+                </DialogDescription>
+              </DialogHeader>
+
+              <SelectCalendar reservation={undefined} />
+            </>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>Select all the info you need</DialogTitle>
+                <DialogTitle>Selecciona toda la información</DialogTitle>
                 <DialogDescription>
-                  Please select a country you would like to visit
+                  Por favor selecciona los detalles de tu búsqueda
                 </DialogDescription>
               </DialogHeader>
 
@@ -106,9 +135,9 @@ function SearchBox() {
                 <CardHeader className="flex flex-col gap-y-5">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <h3 className="underline font-medium">Guests</h3>
+                      <h3 className="underline font-medium">Huéspedes</h3>
                       <p className="text-muted-foreground text-sm">
-                        How many guests do you want?
+                        ¿Cuántos huéspedes deseas?
                       </p>
                     </div>
                     <Counter name="guests" />
@@ -116,9 +145,9 @@ function SearchBox() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <h3 className="underline font-medium">Rooms</h3>
+                      <h3 className="underline font-medium">Dormitorios</h3>
                       <p className="text-muted-foreground text-sm">
-                        How many rooms do you have?
+                        ¿Cuántos dormitorios tienes?
                       </p>
                     </div>
                     <Counter name="rooms" />
@@ -126,9 +155,9 @@ function SearchBox() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <h3 className="underline font-medium">Bathrooms</h3>
+                      <h3 className="underline font-medium">Baños</h3>
                       <p className="text-muted-foreground text-sm">
-                        How many bathrooms do you have?
+                        ¿Cuántos baños tienes?
                       </p>
                     </div>
                     <Counter name="bathrooms" />

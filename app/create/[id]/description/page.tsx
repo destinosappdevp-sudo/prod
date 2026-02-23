@@ -1,3 +1,5 @@
+"use client";
+
 import { createDescription } from "@/app/action";
 import Counter from "@/app/components/Counter";
 import CreateButtonBar from "@/app/components/CreateButtonBar";
@@ -11,44 +13,44 @@ function DescriptionPage({ params }: { params: { id: string } }) {
     <>
       <div className="w-3/5 mx-auto">
         <h2 className="text-3xl font-semibold tracking-tighter transition-colors">
-          Please description your home as good as you can.
+          Por favor describe tu hogar lo mejor que puedas.
         </h2>
       </div>
       <form action={createDescription}>
         <input type="hidden" name="homeId" value={params.id} />
         <div className="mx-auto w-3/5 mt-10 flex flex-col gap-y-5 mb-36">
           <div className="flex flex-col gap-y-2">
-            <Label>Title</Label>
+            <Label>Título</Label>
             <Input
               name="title"
               type="text"
               required
-              placeholder="Short and simple..."
+              placeholder="Nombre de tu propiedad..."
             />
           </div>
 
           <div className="flex flex-col gap-y-2">
-            <Label>Description</Label>
+            <Label>Descripción</Label>
             <Textarea
               name="description"
               required
-              placeholder="Please describe your home..."
+              placeholder="Por favor describe tu hogar..."
             />
           </div>
 
           <div className="flex flex-col gap-y-2">
-            <Label>Price</Label>
+            <Label>Precio</Label>
             <Input
               name="price"
               type="number"
               required
-              placeholder="Price per Night in EUR"
+              placeholder="Precio por noche en EUR"
               min={10}
             />
           </div>
 
           <div className="flex flex-col gap-y-2">
-            <Label>Image</Label>
+            <Label>Imagen</Label>
             <Input name="image" type="file" required />
           </div>
 
@@ -56,9 +58,9 @@ function DescriptionPage({ params }: { params: { id: string } }) {
             <CardHeader className="flex flex-col gap-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <h3 className="underline font-medium">Guests</h3>
+                  <h3 className="underline font-medium">Huéspedes</h3>
                   <p className="text-muted-foreground text-sm">
-                    How many guests do you want?
+                    ¿Cuántos huéspedes deseas?
                   </p>
                 </div>
                 <Counter name="guests" />
@@ -66,9 +68,9 @@ function DescriptionPage({ params }: { params: { id: string } }) {
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <h3 className="underline font-medium">Rooms</h3>
+                  <h3 className="underline font-medium">Dormitorios</h3>
                   <p className="text-muted-foreground text-sm">
-                    How many rooms do you have?
+                    ¿Cuántos dormitorios tienes?
                   </p>
                 </div>
                 <Counter name="rooms" />
@@ -76,9 +78,9 @@ function DescriptionPage({ params }: { params: { id: string } }) {
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <h3 className="underline font-medium">Bathrooms</h3>
+                  <h3 className="underline font-medium">Baños</h3>
                   <p className="text-muted-foreground text-sm">
-                    How many bathrooms do you have?
+                    ¿Cuántos baños tienes?
                   </p>
                 </div>
                 <Counter name="bathrooms" />

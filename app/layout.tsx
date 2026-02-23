@@ -20,7 +20,6 @@ export default function RootLayout({
       <link rel="icon" href="/mobile_logo.svg" sizes="any" />
       <body className={inter.className}>
         <Navbar />
-
         {children}
       </body>
     </html>

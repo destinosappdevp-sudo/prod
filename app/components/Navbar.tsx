@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import logo from "../../public/logo.svg";
+import logo from "../../public/screenshot/logodesktop.svg";
 import mobileLogo from "../../public/mobile_logo.svg";
 import SearchBox from "./SearchBox";
 import UserNav from "./UserNav";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 function Navbar() {
   return (
@@ -18,7 +19,10 @@ function Navbar() {
           />
         </Link>
         <SearchBox />
-        <UserNav />
+        <div className="flex items-center gap-x-4">
+          <LanguageSwitcher />
+          <UserNav />
+        </div>
       </div>
     </nav>
   );

@@ -36,13 +36,13 @@ function MapFilter() {
           <div className="relative w-6 h-6">
             <Image
               src={item.imageUrl}
-              alt={item.title}
+              alt={item.title.es}
               className="w-6 h-6"
               width={24}
               height={24}
             />
           </div>
-          <p className="text-xs font-medium">{item.title}</p>
+          <p className="text-xs font-medium">{item.title.es}</p>
         </Link>
       ))}
     </div>

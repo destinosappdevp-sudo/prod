@@ -3,7 +3,7 @@
 import { icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, TileLayer } from "react-leaflet";
-import { useCountries } from "../lib/getCountries";
+import { useVenezuelaStates } from "../lib/venezuelaStates";
 
 const ICON = icon({
   iconUrl:
@@ -12,23 +12,23 @@ const ICON = icon({
 });
 
 function Map({ locationValue }: { locationValue: string }) {
-  const { getCountryByValue } = useCountries();
-  const latLang = getCountryByValue(locationValue)?.latLang;
+  const { getStateByValue } = useVenezuelaStates();
+  const latLng = getStateByValue(locationValue)?.latLng;
 
   return (
     <>
       <MapContainer
         scrollWheelZoom={false}
         className="h-[50vh] rounded-lg relative z-0"
-        center={latLang ?? [40.5, -0.5]}
-        zoom={10}
+        center={latLng ?? [6.5, -66.6]}
+        zoom={7}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.github.com/shpetimaliu">ShpetimAliu</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <Marker position={latLang ?? [40.6, -0.5]} icon={ICON} />
+        <Marker position={latLng ?? [6.5, -66.6]} icon={ICON} />
       </MapContainer>
     </>
   );

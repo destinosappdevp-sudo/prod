@@ -10,11 +10,11 @@ export function SubmitButtons() {
       {pending ? (
         <Button disabled size="lg">
           <Loader2 className="mr-4 h-4 w-4 animate-spin" />
-          Please wait
+          Por favor espera
         </Button>
       ) : (
         <Button type="submit" size="lg">
-          Next
+          Siguiente
         </Button>
       )}
     </>
@@ -84,11 +84,11 @@ export function SubmitReservationButton() {
     <>
       {pending ? (
         <Button className="w-full" disabled>
-          <Loader2 className="w-4 h-4 animate-spin mr-2" /> Please wait...
+          <Loader2 className="w-4 h-4 animate-spin mr-2" /> Por favor espera...
         </Button>
       ) : (
         <Button className="w-full" type="submit">
-          Make a reservation
+          Hacer una reserva
         </Button>
       )}
     </>

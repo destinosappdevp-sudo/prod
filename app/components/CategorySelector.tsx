@@ -25,13 +25,13 @@ function CategorySelector() {
             <CardHeader>
               <Image
                 src={item.imageUrl}
-                alt={item.title}
+                alt={item.title.es}
                 height={32}
                 width={32}
                 className="w-8 h-8"
               />
 
-              <h3 className="font-medium">{item.title}</h3>
+              <h3 className="font-medium">{item.title.es}</h3>
             </CardHeader>
           </Card>
         </div>

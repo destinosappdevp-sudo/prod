@@ -1,16 +1,14 @@
 import { creteReservation } from "@/app/action";
 import HomeMap from "@/app/components/HomeMap";
+import { HomeHostInfo } from "@/app/components/HomeHostInfo";
+import { HomeReservationForm } from "@/app/components/HomeReservationForm";
 import SelectCalendar from "@/app/components/SelectCalendar";
 import ShowCaseCategory from "@/app/components/ShowCaseCategory";
-import { SubmitReservationButton } from "@/app/components/SubmitButtons";
 import prisma from "@/app/lib/db";
-import { useCountries } from "@/app/lib/getCountries";
-import { Button } from "@/components/ui/button";
+import { getStateByValue } from "@/app/lib/venezuelaStates";
 import { Separator } from "@/components/ui/separator";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { unstable_noStore as noStore } from "next/cache";
-import Image from "next/image";
-import Link from "next/link";
 
 async function getData(homeId: string) {
   noStore();
@@ -46,9 +44,8 @@ async function getData(homeId: string) {
 }
 
 async function SingleHomePage({ params }: { params: { id: string } }) {
-  const { getCountryByValue } = useCountries();
   const data = await getData(params.id);
-  const country = getCountryByValue(data?.country as string);
+  const state = getStateByValue(data?.country as string);
   const { getUser } = getKindeServerSession();
   const user = await getUser();
   return (
@@ -66,7 +63,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
       <div className="flex justify-between gap-x-24 mt-8">
         <div className="w-2/3">
           <h3 className="text-xl font-medium">
-            {country?.flag} {country?.label} / {country?.region}
+            {state?.label}
           </h3>
           <div className="flex gap-x-2 text-muted-foreground">
             <p>{data?.guests} Guests</p> · <p>{data?.bedrooms} Bedrooms</p>·{" "}
@@ -74,22 +71,11 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="flex items-center mt-6">
-            <Image
-              src={
-                data?.User?.profileImage ??
-                "https://static.vecteezy.com/system/resources/previews/009/292/244/large_2x/default-avatar-icon-of-social-media-user-vector.jpg"
-              }
-              alt={data?.User?.firstName as string}
-              width={11}
-              height={11}
-              className="w-11 h-11 rounded-full"
+            <HomeHostInfo
+              firstName={data?.User?.firstName}
+              userPicture={data?.User?.profileImage}
+              createdAt={data?.createdAt}
             />
-            <div className="flex flex-col ml-4">
-              <h3 className="font-medium">Hosted by {data?.User?.firstName}</h3>
-              <p className="text-sm text-muted-foreground">
-                Host since {data?.createdAt ? data.createdAt.getFullYear() : ""}
-              </p>
-            </div>
           </div>
 
           <Separator className="my-7" />
@@ -97,21 +83,14 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           <Separator className="my-7" />
           <p className="text-muted-foreground">{data?.description}</p>
           <Separator className="my-7" />
-          <HomeMap locationValue={country?.value as string} />
+          <HomeMap locationValue={state?.value as string} />
         </div>
-        <form action={creteReservation}>
-          <input type="hidden" name="homeId" value={params.id} />
-          <input type="hidden" name="userId" value={user?.id} />
-          <SelectCalendar reservation={data?.Reservation} />
-
-          {user?.id ? (
-            <SubmitReservationButton />
-          ) : (
-            <Button className="w-full" asChild>
-              <Link href={"/api/auth/login"}>Make a reservation</Link>
-            </Button>
-          )}
-        </form>
+        <HomeReservationForm
+          homeId={params.id}
+          userId={user?.id}
+          reservation={data?.Reservation}
+          creteReservation={creteReservation}
+        />
       </div>
     </div>
   );
