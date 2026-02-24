@@ -1,4 +1,4 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 import ListingCard from "../components/ListingCard";
@@ -34,8 +34,8 @@ async function getData(userId: string) {
 }
 
 async function ReservationPage() {
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id) return redirect("/");
   const data = await getData(user.id);
 

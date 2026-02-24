@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { AddToFavorite, RemoveFromFavorite } from "../action";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
 import { AddToFavoriteButton, DeleteFromFavorite } from "./SubmitButtons";
+import { SupabaseImage } from "./SupabaseImage";
 
 interface iAppProps {
   imagePath: string;
@@ -37,8 +37,8 @@ function ListingCard({
   return (
     <div className="flex flex-col">
       <div className="relative h-72">
-        <Image
-          src={`https://gnygijwemqkfceqfmmie.supabase.co/storage/v1/object/public/images/${imagePath}`}
+        <SupabaseImage
+          imagePath={imagePath}
           alt="Image of House"
           fill
           className="rounded-lg h-full object-cover"

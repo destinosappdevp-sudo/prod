@@ -1,7 +1,7 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
-import ListingCard from "../components/ListingCard";
+import HostListingCard from "../components/HostListingCard";
 import { Nothing } from "../components/Nothing";
 import prisma from "../lib/db";
 
@@ -35,8 +35,8 @@ async function getData(userId: string) {
 }
 
 async function page() {
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/");
@@ -45,29 +45,25 @@ async function page() {
   const data = await getData(user?.id);
   return (
     <section className="container mx-auto px-5 lg:px-10 mt-10">
-      <h2 className="text-3xl font-medium tracking-tight">My Listing</h2>
+      <h2 className="text-3xl font-medium tracking-tight">Mis Anuncios</h2>
 
       {data.length === 0 ? (
         <>
           <Nothing
-            title="There are no destinations listed by you"
-            description="Please list a property on airbnb so that you can see it right here 👀"
+            title="No tienes anuncios publicados"
+            description="Publica una propiedad en Zerkka para que aparezca aquí 👀"
           />
         </>
       ) : (
         <div className="grid lg:grid-cols-4 sm:grid-cols-2 md:grid-cols-3 grid-cols-1 gap-8 mt-8">
           {data.map((item) => (
-            <ListingCard
+            <HostListingCard
               key={item.id}
               imagePath={item.photo as string}
               homeId={item.id}
               price={item.price as number}
               description={item.description as string}
               location={item.country as string}
-              userId={user.id}
-              pathName="my-listing"
-              favoriteId={item.Favorite[0]?.id}
-              isInFavoriteList={item.Favorite.length > 0 ? true : false}
               title={item.title as string}
             />
           ))}

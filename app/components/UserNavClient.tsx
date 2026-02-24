@@ -8,12 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  LoginLink,
-  LogoutLink,
-  RegisterLink,
-} from "@kinde-oss/kinde-auth-nextjs/components";
 import Link from "next/link";
+import { signOut } from "../action";
 
 interface UserNavClientProps {
   user: any;
@@ -41,7 +37,7 @@ export function UserNavClient({
             <DropdownMenuItem>
               <form action={createHomeAction} className="w-full">
                 <button type="submit" className="w-full text-start">
-                  Tu hogar en Airbnb
+                  Publicar en Zerkka
                 </button>
               </form>
             </DropdownMenuItem>
@@ -62,16 +58,19 @@ export function UserNavClient({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogoutLink>Cerrar Sesión</LogoutLink>
+              <form action={signOut} className="w-full">
+                <button type="submit" className="w-full text-start">
+                  Cerrar Sesión
+                </button>
+              </form>
             </DropdownMenuItem>
           </>
         ) : (
           <>
             <DropdownMenuItem>
-              <RegisterLink className="w-full">Registrarse</RegisterLink>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <LoginLink className="w-full">Iniciar Sesión</LoginLink>
+              <Link href="/login" className="w-full">
+                Iniciar Sesión
+              </Link>
             </DropdownMenuItem>
           </>
         )}

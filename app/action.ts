@@ -3,6 +3,103 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "./lib/db";
 import { supabase } from "./lib/supabase";
+import { createClient } from "@/app/lib/supabase/server";
+import { headers } from "next/headers";
+
+export async function signIn() {
+  const supabase = createClient();
+  const origin = headers().get("origin");
+  
+  // Por ahora redirigir directo a Google OAuth
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    console.error("Error en login:", error);
+    // Si Google no está configurado, mostrar mensaje
+    return redirect("/?error=configure-google-oauth");
+  }
+
+  return redirect(data.url);
+}
+
+export async function signUp(email: string, password: string) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error("Error en registro:", error);
+    return { error: error.message };
+  }
+
+  // Crear usuario en la base de datos
+  if (data.user) {
+    try {
+      await prisma.user.create({
+        data: {
+          id: data.user.id,
+          email: data.user.email ?? email,
+          firstName: "Usuario",
+          lastName: "",
+          profileImage: `https://avatar.vercel.sh/${email}`,
+        },
+      });
+    } catch (e) {
+      console.log("Usuario ya existe en BD, continuando...");
+    }
+  }
+
+  return { success: true };
+}
+
+export async function signInWithEmail(email: string, password: string) {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error("Error en login:", error);
+    return { error: error.message };
+  }
+
+  // Asegurar que el usuario existe en la base de datos
+  if (data.user) {
+    const userExists = await prisma.user.findUnique({
+      where: { id: data.user.id },
+    });
+
+    if (!userExists) {
+      await prisma.user.create({
+        data: {
+          id: data.user.id,
+          email: data.user.email ?? email,
+          firstName: "Usuario",
+          lastName: "",
+          profileImage: `https://avatar.vercel.sh/${email}`,
+        },
+      });
+    }
+  }
+
+  return redirect("/");
+}
+
+export async function signOut() {
+  const supabase = createClient();
+  await supabase.auth.signOut();
+  return redirect("/");
+}
 
 export async function createAirbnbHome({ userId }: { userId: string }) {
   const data = await prisma.home.findFirst({
@@ -78,12 +175,21 @@ export async function createDescription(formData: FormData) {
   const roomsNumber = formData.get("rooms") as string;
   const bathroomsNumber = formData.get("bathrooms") as string;
 
-  const { data: imageData } = await supabase.storage
+  // Generar nombre de archivo único y válido
+  const fileExtension = imageFiles.name.split('.').pop();
+  const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+
+  const { data: imageData, error } = await supabase.storage
     .from("images")
-    .upload(`${imageFiles.name}-${new Date()}`, imageFiles, {
+    .upload(uniqueFileName, imageFiles, {
       cacheControl: "2592000",
-      contentType: "image/png",
+      contentType: imageFiles.type,
     });
+
+  if (error) {
+    console.error("Error uploading image to Supabase:", error);
+    throw new Error("Failed to upload image");
+  }
 
   const data = await prisma.home.update({
     where: { id: homeId },

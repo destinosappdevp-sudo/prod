@@ -4,10 +4,11 @@ import { HomeHostInfo } from "@/app/components/HomeHostInfo";
 import { HomeReservationForm } from "@/app/components/HomeReservationForm";
 import SelectCalendar from "@/app/components/SelectCalendar";
 import ShowCaseCategory from "@/app/components/ShowCaseCategory";
+import { SupabaseImage } from "@/app/components/SupabaseImage";
 import prisma from "@/app/lib/db";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
 import { Separator } from "@/components/ui/separator";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 
 async function getData(homeId: string) {
@@ -46,15 +47,15 @@ async function getData(homeId: string) {
 async function SingleHomePage({ params }: { params: { id: string } }) {
   const data = await getData(params.id);
   const state = getStateByValue(data?.country as string);
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   return (
     <div className="w-[75%] mx-auto mt-10 mb-12">
       <h1 className="font-medium text-2xl mb-5">{data?.title}</h1>
       <div className="relative h-[550px]">
-        <Image
+        <SupabaseImage
+          imagePath={data?.photo as string}
           alt={data?.title as string}
-          src={`https://gnygijwemqkfceqfmmie.supabase.co/storage/v1/object/public/images/${data?.photo}`}
           fill
           className="rounded-lg h-full object-cover w-full"
         />

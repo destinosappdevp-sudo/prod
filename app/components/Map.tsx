@@ -6,8 +6,7 @@ import { MapContainer, Marker, TileLayer } from "react-leaflet";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
 
 const ICON = icon({
-  iconUrl:
-    "https://static-00.iconduck.com/assets.00/airbnb-fill-logo-icon-1930x2048-wjsgmkiz.png",
+  iconUrl: "/z.webp",
   iconSize: [20, 20],
 });
 

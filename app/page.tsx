@@ -1,4 +1,4 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { Suspense } from "react";
 import ListingCard from "./components/ListingCard";
@@ -77,16 +77,16 @@ async function ShowPlace({
     bathrooms?: string;
   };
 }) {
-  const { getUser } = getKindeServerSession();
-  const user = await getUser();
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const data = await getData({ searchParams: searchParams, userId: user?.id });
 
   return (
     <>
       {data.length === 0 ? (
         <Nothing
-          title="This destination will soon have many listings 🤩"
-          description="Please check a other category or create your own listing!"
+          title="Este destino pronto tendrá muchos listados"
+          description="Verifica otra categoría o crea tu propio listado!"
         />
       ) : (
         <div className="grid lg:grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">

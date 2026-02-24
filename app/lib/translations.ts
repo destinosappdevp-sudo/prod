@@ -2,7 +2,7 @@ export const translations = {
   es: {
     // Navigation
     navbar: {
-      airbnbHome: "Tu hogar en Airbnb",
+      airbnbHome: "Publicar en Zerkka",
       myListing: "Mis Anuncios",
       myFavorites: "Mis Favoritos",
       myReservation: "Mis Reservas",
