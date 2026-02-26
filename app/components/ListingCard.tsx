@@ -70,7 +70,7 @@ function ListingCard({
         </h3>
         <p className="text-muted-foreground text-sm line-clamp-1">{title}</p>
         <p className="pt-2 text-muted-foreground">
-          <span className="font-medium text-black">€ {price}</span> noche
+          <span className="font-medium text-black">$ {price}</span> / noche
         </p>
       </Link>
     </div>

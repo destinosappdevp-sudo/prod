@@ -39,7 +39,7 @@ export const translations = {
       // Description page
       description: "Descripción",
       price: "Precio",
-      pricePerNight: "Precio por noche en EUR",
+      pricePerNight: "Precio por noche en USD",
       image: "Imagen",
       guests: "Huéspedes",
       howManyGuests: "¿Cuántos huéspedes deseas?",
@@ -142,7 +142,7 @@ export const translations = {
       // Description page
       description: "Description",
       price: "Price",
-      pricePerNight: "Price per Night in EUR",
+      pricePerNight: "Price per Night in USD",
       image: "Image",
       guests: "Guests",
       howManyGuests: "How many guests do you want?",
