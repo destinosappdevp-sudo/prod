@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 
 interface SupabaseImageProps {
-  imagePath: string;
+  imagePath?: string | null;
   alt: string;
   fill?: boolean;
   className?: string;
@@ -20,9 +20,11 @@ export function SupabaseImage({
   width,
   height,
 }: SupabaseImageProps) {
-  const [imgSrc, setImgSrc] = useState<string>(
-    `https://gnygijwemqkfceqfmmie.supabase.co/storage/v1/object/public/images/${imagePath}`
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const initialSrc = imagePath
+    ? `${supabaseUrl}/storage/v1/object/public/images/${imagePath}`
+    : "/placeholder.webp";
+  const [imgSrc, setImgSrc] = useState<string>(initialSrc);
 
   return (
     <Image

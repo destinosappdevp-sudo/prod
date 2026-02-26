@@ -59,6 +59,41 @@ export async function signUp(email: string, password: string) {
   return { success: true };
 }
 
+
+export async function signUpWithRole(email: string, password: string, role: 'GUEST' | 'HOST' | 'ADMIN' | 'SUPERADMIN' = 'GUEST') {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) {
+    console.error("Error en registro:", error);
+    return { error: error.message };
+  }
+
+  // Crear usuario en la base de datos con rol especificado
+  if (data.user) {
+    try {
+      await prisma.user.create({
+        data: {
+          id: data.user.id,
+          email: data.user.email ?? email,
+          firstName: "Usuario",
+          lastName: "",
+          profileImage: `https://avatar.vercel.sh/${email}`,
+          role: role,
+        },
+      });
+    } catch (e) {
+      console.log("Usuario ya existe en BD, continuando...");
+    }
+  }
+
+  return { success: true };
+}
+
 export async function signInWithEmail(email: string, password: string) {
   const supabase = createClient();
   

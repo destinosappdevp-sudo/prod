@@ -4,6 +4,7 @@ const nextConfig = {
     domains: [
       "a0.muscache.com",
       "gnygijwemqkfceqfmmie.supabase.co",
+      "hxdhkbiwhrroeffxyxfz.supabase.co",
       "avatar.vercel.sh",
     ],
   },
