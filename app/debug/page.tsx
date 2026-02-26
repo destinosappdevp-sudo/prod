@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function DebugPage() {
-  const [email, setEmail] = useState("admin@zerkka.com");
+  const [email, setEmail] = useState("colombeiaweb@gmail.com");
   const [password, setPassword] = useState("Admin123!@#");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
