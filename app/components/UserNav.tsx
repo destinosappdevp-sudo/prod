@@ -15,11 +15,16 @@ async function UserNav() {
     user?.user_metadata?.avatar_url ??
     "https://static.vecteezy.com/system/resources/previews/009/292/244/large_2x/default-avatar-icon-of-social-media-user-vector.jpg";
 
+  const userName = user?.user_metadata?.first_name ? 
+    `${user.user_metadata.first_name} ${user.user_metadata.last_name || ""}`.trim() :
+    user?.email?.split("@")[0];
+
   return (
     <UserNavClient
       user={user}
       createHomeAction={createHomeWithId}
       userPicture={userPicture}
+      userName={userName}
     />
   );
 }

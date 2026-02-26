@@ -15,12 +15,14 @@ interface UserNavClientProps {
   user: any;
   createHomeAction: (formData: FormData) => Promise<void>;
   userPicture: string;
+  userName?: string;
 }
 
 export function UserNavClient({
   user,
   createHomeAction,
   userPicture,
+  userName,
 }: UserNavClientProps) {
   return (
     <DropdownMenu>
@@ -34,6 +36,16 @@ export function UserNavClient({
       <DropdownMenuContent align="end" className="w-[240px]">
         {user ? (
           <>
+            <DropdownMenuItem disabled className="font-semibold text-sm">
+              {userName || "Mi Cuenta"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Link href="/profile" className="w-full">
+                Ver Perfil
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem>
               <form action={createHomeAction} className="w-full">
                 <button type="submit" className="w-full text-start">
@@ -58,11 +70,6 @@ export function UserNavClient({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <Link href="/profile" className="w-full">
-                Ver Perfil
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
               <form action={signOut} className="w-full">
                 <button type="submit" className="w-full text-start">
                   Cerrar Sesión
@@ -75,6 +82,11 @@ export function UserNavClient({
             <DropdownMenuItem>
               <Link href="/login" className="w-full">
                 Iniciar Sesión
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href="/login" className="w-full">
+                Registrarse
               </Link>
             </DropdownMenuItem>
           </>
