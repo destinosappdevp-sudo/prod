@@ -390,3 +390,247 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/profile");
   return { success: true, user: updatedUser };
 }
+
+// ========== AUDIT LOG ==========
+export async function logAuditAction(
+  userId: string,
+  action: string,
+  details?: Record<string, any>
+) {
+  try {
+    const headersList = headers();
+    const ip = headersList.get("x-forwarded-for") || "unknown";
+    const userAgent = headersList.get("user-agent") || "unknown";
+
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+        details: details || null,
+        ip,
+        userAgent,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error logging audit action:", error);
+    return { success: false, error: "Failed to log action" };
+  }
+}
+
+// ========== NOTIFICATION PREFERENCES ==========
+export async function updateNotificationPreferences(
+  userId: string,
+  preferences: {
+    emailOnReservation?: boolean;
+    emailOnReview?: boolean;
+    emailOnMessage?: boolean;
+    emailOnPayment?: boolean;
+    smsNotifications?: boolean;
+  }
+) {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const notifPrefs = await prisma.notificationPreferences.upsert({
+      where: { userId },
+      update: {
+        ...preferences,
+        updatedAt: new Date(),
+      },
+      create: {
+        userId,
+        emailOnReservation: preferences.emailOnReservation ?? true,
+        emailOnReview: preferences.emailOnReview ?? true,
+        emailOnMessage: preferences.emailOnMessage ?? true,
+        emailOnPayment: preferences.emailOnPayment ?? true,
+        smsNotifications: preferences.smsNotifications ?? false,
+      },
+    });
+
+    // Log the change
+    await logAuditAction(userId, "NOTIFICATION_PREFERENCES_UPDATED", preferences);
+
+    revalidatePath("/my-dashboard?tab=profile");
+    return { success: true, preferences: notifPrefs };
+  } catch (error) {
+    console.error("Error updating notification preferences:", error);
+    return { success: false, error: "Failed to update preferences" };
+  }
+}
+
+export async function getNotificationPreferences(userId: string) {
+  try {
+    const prefs = await prisma.notificationPreferences.findUnique({
+      where: { userId },
+    });
+
+    if (!prefs) {
+      // Create default preferences if not exists
+      return await prisma.notificationPreferences.create({
+        data: {
+          userId,
+          emailOnReservation: true,
+          emailOnReview: true,
+          emailOnMessage: true,
+          emailOnPayment: true,
+          smsNotifications: false,
+        },
+      });
+    }
+
+    return prefs;
+  } catch (error) {
+    console.error("Error fetching notification preferences:", error);
+    return null;
+  }
+}
+
+// ========== MESSAGES ==========
+export async function sendMessage(
+  senderId: string,
+  recipientId: string,
+  content: string
+) {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== senderId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    if (!content.trim()) {
+      return { success: false, error: "Message content cannot be empty" };
+    }
+
+    const message = await prisma.message.create({
+      data: {
+        senderId,
+        recipientId,
+        content: content.trim(),
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
+      },
+    });
+
+    // Log the action
+    await logAuditAction(senderId, "MESSAGE_SENT", { recipientId });
+
+    // Check recipient's notification preferences
+    const recipientPrefs = await getNotificationPreferences(recipientId);
+    if (recipientPrefs?.emailOnMessage) {
+      // TODO: Send email notification to recipient
+    }
+
+    return { success: true, message };
+  } catch (error) {
+    console.error("Error sending message:", error);
+    return { success: false, error: "Failed to send message" };
+  }
+}
+
+export async function getMessages(userId: string, otherUserId?: string) {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== userId) {
+      return { success: false, error: "Unauthorized", messages: [] };
+    }
+
+    const whereClause = otherUserId
+      ? {
+          OR: [
+            { senderId: userId, recipientId: otherUserId },
+            { senderId: otherUserId, recipientId: userId },
+          ],
+        }
+      : {
+          OR: [{ senderId: userId }, { recipientId: userId }],
+        };
+
+    const messages = await prisma.message.findMany({
+      where: whereClause,
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
+        recipient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+
+    return { success: true, messages };
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    return { success: false, error: "Failed to fetch messages", messages: [] };
+  }
+}
+
+export async function markMessageAsRead(messageId: string, userId: string) {
+  try {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+    });
+
+    if (!message || message.recipientId !== userId) {
+      return { success: false, error: "Message not found or not authorized" };
+    }
+
+    const updated = await prisma.message.update({
+      where: { id: messageId },
+      data: {
+        isRead: true,
+        readAt: new Date(),
+      },
+    });
+
+    return { success: true, message: updated };
+  } catch (error) {
+    console.error("Error marking message as read:", error);
+    return { success: false, error: "Failed to update message" };
+  }
+}

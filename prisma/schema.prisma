@@ -27,6 +27,10 @@ model User {
   Favorite      Favorite[]
   Reservation     Reservation[]
   Review         Review[]
+  AuditLog      AuditLog[]
+  NotificationPreferences NotificationPreferences?
+  MessagesSent  Message[] @relation("SentMessages")
+  MessagesReceived Message[] @relation("ReceivedMessages")
 }
 
 enum UserRole {
@@ -169,6 +173,46 @@ model Review {
   userId         String?
   Reservation    Reservation? @relation(fields: [reservationId], references: [id])
   reservationId  String?   @unique
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // "PROFILE_UPDATE", "EMAIL_SENT", "RESERVATION_CREATED", "PAYMENT_CONFIRMED"
+  userId    String
+  details   Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationPreferences {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  emailOnReservation Boolean @default(true)
+  emailOnReview      Boolean @default(true)
+  emailOnMessage     Boolean @default(true)
+  emailOnPayment     Boolean @default(true)
+  smsNotifications   Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  content     String
+  createdAt   DateTime @default(now())
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  
+  senderId    String
+  recipientId String
+  
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
 }
 
 enum AmenityStatus {
