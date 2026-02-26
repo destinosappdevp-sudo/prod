@@ -58,6 +58,11 @@ export function UserNavClient({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
+              <Link href="/profile" className="w-full">
+                Ver Perfil
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
               <form action={signOut} className="w-full">
                 <button type="submit" className="w-full text-start">
                   Cerrar Sesión
