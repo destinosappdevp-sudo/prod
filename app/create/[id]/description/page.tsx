@@ -44,7 +44,7 @@ function DescriptionPage({ params }: { params: { id: string } }) {
               name="price"
               type="number"
               required
-              placeholder="Precio por noche en EUR"
+              placeholder="Precio por noche en USD"
               min={10}
             />
           </div>
