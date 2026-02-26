@@ -2,7 +2,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "./lib/db";
-import { supabase } from "./lib/supabase";
 import { createClient } from "@/app/lib/supabase/server";
 import { headers } from "next/headers";
 
@@ -165,6 +164,15 @@ export async function createCategoryPage(formData: FormData) {
 }
 
 export async function createDescription(formData: FormData) {
+  const supabaseServer = createClient();
+  
+  // Verificar que el usuario esté autenticado
+  const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
+  
+  if (userError || !user) {
+    throw new Error("Debes iniciar sesión antes de subir imágenes");
+  }
+
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const price = formData.get("price");
@@ -178,10 +186,10 @@ export async function createDescription(formData: FormData) {
   // Generar nombre de archivo único y válido
   const fileExtension = imageFiles.name.split('.').pop();
   const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
-  const filePath = `user-uploads/${uniqueFileName}`;
+  const filePath = `user-${user.id}/${uniqueFileName}`;
 
-  // Subir imagen a Supabase
-  const { data: imageData, error } = await supabase.storage
+  // Subir imagen a Supabase usando cliente de servidor
+  const { data: imageData, error } = await supabaseServer.storage
     .from("images")
     .upload(filePath, imageFiles, {
       cacheControl: "3600",
@@ -195,7 +203,7 @@ export async function createDescription(formData: FormData) {
   }
 
   // Obtener URL pública
-  const { data: publicUrlData } = supabase.storage
+  const { data: publicUrlData } = supabaseServer.storage
     .from("images")
     .getPublicUrl(filePath);
 
