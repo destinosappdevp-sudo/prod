@@ -9,13 +9,15 @@ async function UserNav() {
   const { data: { user } } = await supabase.auth.getUser();
   
   let userRole: string | null = null;
+  let userProfileImage: string | null = null;
   
   if (user?.id) {
     const userRecord = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { role: true },
+      select: { role: true, profileImage: true },
     });
     userRole = userRecord?.role || null;
+    userProfileImage = userRecord?.profileImage || null;
   }
   
   const createHomeWithId = createAirbnbHome.bind(null, {
@@ -23,6 +25,7 @@ async function UserNav() {
   });
 
   const userPicture =
+    userProfileImage ??
     user?.user_metadata?.avatar_url ??
     "https://static.vecteezy.com/system/resources/previews/009/292/244/large_2x/default-avatar-icon-of-social-media-user-vector.jpg";
 

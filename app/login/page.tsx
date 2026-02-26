@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { signUp, signInWithEmail } from "@/app/action";
+import { signUpWithRole, signInWithEmail } from "@/app/action";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +20,7 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [role, setRole] = useState<"GUEST" | "HOST">("GUEST");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +33,7 @@ export default function LoginPage() {
         setError(result.error);
       }
     } else {
-      const result = await signUp(email, password);
+      const result = await signUpWithRole(email, password, role);
       if (result?.error) {
         setError(result.error);
       } else {
@@ -69,6 +77,24 @@ export default function LoginPage() {
                 minLength={6}
               />
             </div>
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="role">Tipo de cuenta</Label>
+                <Select
+                  value={role}
+                  onValueChange={(value) => setRole(value as "GUEST" | "HOST")}
+                >
+                  <SelectTrigger id="role">
+                    <SelectValue placeholder="Selecciona un tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GUEST">Huesped</SelectItem>
+                    <SelectItem value="HOST">Anfitrion</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {error && (
               <div className="text-sm text-red-600 bg-red-50 p-3 rounded">

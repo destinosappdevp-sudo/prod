@@ -21,6 +21,7 @@ model User {
   firstName     String
   lastName      String
   profileImage  String?
+  phoneNumber   String?
   role          UserRole @default(GUEST)
   Home          Home[]
   Favorite      Favorite[]
@@ -43,6 +44,10 @@ model Home {
   bedrooms        String?   
   bathrooms       String?  
   country         String?
+  municipality    String?
+  exactAddress    String?
+  checkInTime     String?
+  contactNumber   String?
   photo           String?
   price           Int?
   categoryName    String?

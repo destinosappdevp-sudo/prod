@@ -7,6 +7,7 @@ import ShowCaseCategory from "@/app/components/ShowCaseCategory";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
 import prisma from "@/app/lib/db";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
+import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
@@ -27,6 +28,7 @@ async function getData(homeId: string) {
       categoryName: true,
       price: true,
       country: true,
+      municipality: true,
       createdAt: true,
       Reservation: {
         where: {
@@ -47,6 +49,10 @@ async function getData(homeId: string) {
 async function SingleHomePage({ params }: { params: { id: string } }) {
   const data = await getData(params.id);
   const state = getStateByValue(data?.country as string);
+  const municipality =
+    data?.country && data?.municipality
+      ? getMunicipalityByValue(data.country, data.municipality)
+      : null;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return (
@@ -64,7 +70,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
       <div className="flex justify-between gap-x-24 mt-8">
         <div className="w-2/3">
           <h3 className="text-xl font-medium">
-            {state?.label}
+            {municipality ? municipality.label : state?.label}
           </h3>
           <div className="flex gap-x-2 text-muted-foreground">
             <p>{data?.guests} Guests</p> · <p>{data?.bedrooms} Bedrooms</p>·{" "}
@@ -84,7 +90,10 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           <Separator className="my-7" />
           <p className="text-muted-foreground">{data?.description}</p>
           <Separator className="my-7" />
-          <HomeMap locationValue={state?.value as string} />
+          <HomeMap
+            stateValue={state?.value as string}
+            municipalityValue={data?.municipality as string}
+          />
         </div>
         <HomeReservationForm
           homeId={params.id}

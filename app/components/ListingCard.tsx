@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { AddToFavorite, RemoveFromFavorite } from "../action";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
+import { useVenezuelaMunicipalities } from "../lib/venezuelaMunicipalities";
 import { AddToFavoriteButton, DeleteFromFavorite } from "./SubmitButtons";
 import { SupabaseImage } from "./SupabaseImage";
 
 interface iAppProps {
   imagePath: string;
   description: string;
-  location: string;
+  stateValue: string;
+  municipalityValue?: string | null;
   price: number;
   title: string;
   userId: string | undefined;
@@ -22,7 +24,8 @@ interface iAppProps {
 function ListingCard({
   imagePath,
   description,
-  location,
+  stateValue,
+  municipalityValue,
   price,
   title,
   userId,
@@ -32,7 +35,11 @@ function ListingCard({
   pathName,
 }: iAppProps) {
   const { getStateByValue } = useVenezuelaStates();
-  const state = getStateByValue(location);
+  const { getMunicipalityByValue } = useVenezuelaMunicipalities();
+  const state = getStateByValue(stateValue);
+  const municipality = municipalityValue
+    ? getMunicipalityByValue(stateValue, municipalityValue)
+    : null;
 
   return (
     <div className="flex flex-col">
@@ -66,7 +73,7 @@ function ListingCard({
       </div>
       <Link href={`/home/${homeId}`} className="mt-2">
         <h3 className="font-medium text-base">
-          {state?.label}
+          {municipality ? municipality.label : state?.label}
         </h3>
         <p className="text-muted-foreground text-sm line-clamp-1">{title}</p>
         <p className="pt-2 text-muted-foreground">

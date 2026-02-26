@@ -6,8 +6,11 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Airbnb - Clone with Supabase, Kinde, Prisma and Tailwind ",
-  description: "Airbnb cloned by Shpetim Aliu",
+  title: "Reservas en Venezuela",
+  description: "Zerkka",
+  icons: {
+    icon: "/z.webp",
+  },
 };
 
 export default function RootLayout({
@@ -17,7 +20,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <link rel="icon" href="/z.webp" sizes="any" />
       <body className={inter.className}>
         <Navbar />
         {children}

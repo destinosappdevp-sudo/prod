@@ -1,6 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { redirect } from "next/navigation";
 import prisma from "@/app/lib/db";
+import { AdminSidebar } from "./components/AdminSidebar";
 
 export default async function AdminLayout({
   children,
@@ -23,5 +24,16 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  return <>{children}</>;
+  const userName = user.user_metadata?.first_name
+    ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ""}`.trim()
+    : user.email?.split("@")[0];
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <AdminSidebar userName={userName} />
+      <main className="flex-1 ml-64">
+        <div className="p-8">{children}</div>
+      </main>
+    </div>
+  );
 }

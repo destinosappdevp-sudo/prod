@@ -4,15 +4,27 @@ import { icon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, TileLayer } from "react-leaflet";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
+import { useVenezuelaMunicipalities } from "../lib/venezuelaMunicipalities";
 
 const ICON = icon({
   iconUrl: "/z.webp",
   iconSize: [20, 20],
 });
 
-function Map({ locationValue }: { locationValue: string }) {
+function Map({
+  stateValue,
+  municipalityValue,
+}: {
+  stateValue: string;
+  municipalityValue?: string;
+}) {
   const { getStateByValue } = useVenezuelaStates();
-  const latLng = getStateByValue(locationValue)?.latLng;
+  const { getMunicipalityByValue } = useVenezuelaMunicipalities();
+  const municipality = municipalityValue
+    ? getMunicipalityByValue(stateValue, municipalityValue)
+    : null;
+  const stateLatLng = getStateByValue(stateValue)?.latLng;
+  const latLng = municipality?.latLng ?? stateLatLng;
 
   return (
     <>

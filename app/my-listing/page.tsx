@@ -17,6 +17,7 @@ async function getData(userId: string) {
     select: {
       id: true,
       country: true,
+      municipality: true,
       photo: true,
       title: true,
       description: true,
@@ -63,7 +64,8 @@ async function page() {
               homeId={item.id}
               price={item.price as number}
               description={item.description as string}
-              location={item.country as string}
+              stateValue={item.country as string}
+              municipalityValue={item.municipality}
               title={item.title as string}
             />
           ))}

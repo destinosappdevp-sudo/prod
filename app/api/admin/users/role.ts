@@ -14,6 +14,7 @@ export async function POST(request: Request) {
     // Verificar que sea ADMIN o SUPERADMIN
     const userRecord = await prisma.user.findUnique({
       where: { id: user.id },
+      select: { role: true },
     });
 
     if (!userRecord || (userRecord.role !== "ADMIN" && userRecord.role !== "SUPERADMIN")) {
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
       const { userId } = await request.json();
       const targetUser = await prisma.user.findUnique({
         where: { id: userId },
+        select: { role: true },
       });
 
       if (targetUser?.role === "SUPERADMIN") {

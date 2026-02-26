@@ -109,7 +109,7 @@ function SearchBox() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <HomeMap locationValue={locationValue} />
+              <HomeMap stateValue={locationValue} />
             </>
           ) : step === 2 ? (
             <>

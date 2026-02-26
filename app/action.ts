@@ -268,14 +268,22 @@ export async function createDescription(formData: FormData) {
 
 export async function createLocation(formData: FormData) {
   const homeId = formData.get("homeId") as string;
-  const countryValue = formData.get("countryValue") as string;
+  const stateValue = formData.get("stateValue") as string;
+  const municipalityValue = formData.get("municipalityValue") as string;
+  const exactAddress = formData.get("exactAddress") as string;
+  const checkInTime = formData.get("checkInTime") as string;
+  const contactNumber = formData.get("contactNumber") as string;
   const data = await prisma.home.update({
     where: {
       id: homeId,
     },
     data: {
-      addedLocation: true,
-      country: countryValue,
+      addedLocation: !!(stateValue && municipalityValue),
+      country: stateValue,
+      municipality: municipalityValue,
+      exactAddress: exactAddress || null,
+      checkInTime: checkInTime || null,
+      contactNumber: contactNumber || null,
     },
   });
   return redirect(`/`);
@@ -327,4 +335,50 @@ export async function creteReservation(formDate: FormData) {
   });
 
   return redirect(`/`);
+}
+export async function updateProfile(formData: FormData) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Usuario no autenticado" };
+  }
+
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+  const phoneNumber = formData.get("phoneNumber") as string;
+  const profileImageFile = formData.get("profileImage") as File | null;
+
+  let profileImageUrl = formData.get("currentProfileImage") as string;
+
+  // Si hay una nueva foto, subirla a Supabase Storage
+  if (profileImageFile && profileImageFile.size > 0) {
+    const fileName = `${user.id}-${Date.now()}`;
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from("images")
+      .upload(`profiles/${fileName}`, profileImageFile, {
+        upsert: true,
+      });
+
+    if (storageError) {
+      console.error("Error subiendo imagen:", storageError);
+      return { error: "Error al subir la imagen" };
+    }
+
+    profileImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+  }
+
+  // Actualizar usuario en la base de datos
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      firstName: firstName || "Usuario",
+      lastName: lastName || "",
+      phoneNumber: phoneNumber || null,
+      profileImage: profileImageUrl,
+    },
+  });
+
+  revalidatePath("/profile");
+  return { success: true, user: updatedUser };
 }

@@ -38,6 +38,7 @@ async function getData({
       price: true,
       description: true,
       country: true,
+      municipality: true,
       Favorite: { where: { userId: userId ?? undefined } },
     },
   });
@@ -97,7 +98,8 @@ async function ShowPlace({
               description={item.description as string}
               imagePath={item.photo as string}
               price={item.price as number}
-              location={item.country as string}
+              stateValue={item.country as string}
+              municipalityValue={item.municipality}
               userId={user?.id}
               favoriteId={item.Favorite[0]?.id}
               isInFavoriteList={item.Favorite.length > 0 ? true : false}
