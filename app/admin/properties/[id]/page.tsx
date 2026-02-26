@@ -10,8 +10,10 @@ import { ArrowLeft, Calendar, Heart, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+const prismaAny = prisma as any;
+
 async function getProperty(id: string) {
-  const property = await prisma.home.findUnique({
+  const property = await (prisma as any).home.findUnique({
     where: { id },
     include: {
       User: {
@@ -41,6 +43,7 @@ async function getProperty(id: string) {
               email: true,
             },
           },
+          Payment: true,
         },
       },
     },
@@ -59,6 +62,32 @@ export default async function PropertyDetailPage({
   params: { id: string };
 }) {
   const property = await getProperty(params.id);
+  const amenityCategories = await prismaAny.amenityCategory.findMany({
+    where: { isActive: true },
+    orderBy: [{ order: "asc" }, { name: "asc" }],
+    include: {
+      Amenity: {
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        include: {
+          HomeAmenity: {
+            where: { homeId: property.id },
+          },
+        },
+      },
+    },
+  });
+  const amenityCategoriesForForm = amenityCategories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    amenities: category.Amenity.map((amenity) => ({
+      id: amenity.id,
+      name: amenity.name,
+      iconKey: amenity.iconKey,
+      iconUrl: amenity.iconUrl,
+      status: amenity.HomeAmenity[0]?.status || "UNSPECIFIED",
+    })),
+  }));
   const states = getAllStates();
   const state = property.country ? getStateByValue(property.country) : null;
   const municipality =
@@ -67,7 +96,10 @@ export default async function PropertyDetailPage({
       : null;
 
   const isComplete =
-    property.addedCategory && property.addedDescription && property.addedLocation;
+    property.addedCategory &&
+    property.addedDescription &&
+    property.addedAmenities &&
+    property.addedLocation;
 
   // Preparar categorías para el formulario
   const categoriesForForm = categoryItems.map((cat) => ({
@@ -204,30 +236,90 @@ export default async function PropertyDetailPage({
           <h3 className="text-lg font-semibold mb-4">Reservas Recientes</h3>
           {property.Reservation.length > 0 ? (
             <div className="space-y-3">
-              {property.Reservation.map((reservation) => (
-                <div
-                  key={reservation.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {reservation.User?.firstName} {reservation.User?.lastName}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {reservation.User?.email}
-                    </p>
+              {property.Reservation.map((reservation) => {
+                const payment = reservation.Payment;
+                const paymentMethodLabels: Record<string, string> = {
+                  PAGO_MOVIL: "Pago Móvil",
+                  ZELLE: "Zelle",
+                  ZILLI: "Zilli",
+                  INTERNATIONAL_CARD: "Tarjeta Internacional",
+                  BANK_TRANSFER: "Transferencia Bancaria",
+                };
+                
+                const reservationStatusColors: Record<string, string> = {
+                  PENDING: "bg-yellow-100 text-yellow-800",
+                  CONFIRMED: "bg-green-100 text-green-800",
+                  CANCELLED: "bg-red-100 text-red-800",
+                  COMPLETED: "bg-blue-100 text-blue-800",
+                };
+                
+                const paymentStatusColors: Record<string, string> = {
+                  PENDING: "bg-yellow-100 text-yellow-800",
+                  CONFIRMED: "bg-green-100 text-green-800",
+                  REJECTED: "bg-red-100 text-red-800",
+                  CANCELLED: "bg-gray-100 text-gray-800",
+                };
+
+                return (
+                  <div
+                    key={reservation.id}
+                    className="p-4 bg-gray-50 rounded-lg space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium">
+                          {reservation.User?.firstName} {reservation.User?.lastName}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {reservation.User?.email}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          {new Date(reservation.startDate).toLocaleDateString("es-ES")} -{" "}
+                          {new Date(reservation.endDate).toLocaleDateString("es-ES")}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {reservation.nights} {reservation.nights === 1 ? "noche" : "noches"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {payment && (
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">
+                            Método: <span className="font-medium text-gray-900">{paymentMethodLabels[payment.paymentMethod] || payment.paymentMethod}</span>
+                          </p>
+                          {payment.referenceNumber && (
+                            <p className="text-xs text-gray-500">
+                              Ref: {payment.referenceNumber}
+                            </p>
+                          )}
+                          <p className="text-sm font-semibold text-gray-900">
+                            ${payment.amount.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${paymentStatusColors[payment.status] || "bg-gray-100 text-gray-800"}`}>
+                            {payment.status === "PENDING" ? "Pago Pendiente" :
+                             payment.status === "CONFIRMED" ? "Pago Confirmado" :
+                             payment.status === "REJECTED" ? "Pago Rechazado" :
+                             payment.status}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${reservationStatusColors[reservation.status] || "bg-gray-100 text-gray-800"}`}>
+                            {reservation.status === "PENDING" ? "Pendiente" :
+                             reservation.status === "CONFIRMED" ? "Confirmada" :
+                             reservation.status === "CANCELLED" ? "Cancelada" :
+                             reservation.status === "COMPLETED" ? "Completada" :
+                             reservation.status}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">
-                      {new Date(reservation.startDate).toLocaleDateString("es-ES")} -{" "}
-                      {new Date(reservation.endDate).toLocaleDateString("es-ES")}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Creada: {new Date(reservation.createdAt).toLocaleDateString("es-ES")}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-500 text-center py-8">
@@ -244,6 +336,7 @@ export default async function PropertyDetailPage({
           property={property}
           categories={categoriesForForm}
           states={statesForForm}
+          amenityCategories={amenityCategoriesForForm}
         />
       </div>
     </div>

@@ -1,12 +1,13 @@
 "use client";
 import { eachDayOfInterval } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
 function SelectCalendar({
   reservation,
+  onDatesChange,
 }: {
   reservation:
     | {
@@ -14,6 +15,7 @@ function SelectCalendar({
         endDate: Date;
       }[]
     | undefined;
+  onDatesChange?: (dates: { startDate: Date; endDate: Date }) => void;
 }) {
   const [dates, setDates] = useState([
     {
@@ -22,6 +24,15 @@ function SelectCalendar({
       key: "selection",
     },
   ]);
+
+  useEffect(() => {
+    if (onDatesChange) {
+      onDatesChange({
+        startDate: dates[0].startDate,
+        endDate: dates[0].endDate,
+      });
+    }
+  }, [dates, onDatesChange]);
 
   let disabledDate: Date[] = [];
   reservation?.forEach((element) => {

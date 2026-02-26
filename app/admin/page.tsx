@@ -7,30 +7,41 @@ import {
   TrendingUp,
   Calendar,
   Star,
-  BarChart3
+  BarChart3,
+  AlertCircle
 } from "lucide-react";
+import Link from "next/link";
 
 async function getAdminStats() {
+  const prismaAny = prisma as any;
   const [
     totalUsers,
     totalProperties,
     totalReservations,
     totalFavorites,
     activeHosts,
-    pendingReservations
+    pendingReservations,
+    pendingPayments,
+    confirmedRevenue
   ] = await Promise.all([
     prisma.user.count(),
     prisma.home.count(),
-    prisma.reservation.count(),
+    prismaAny.reservation.count(),
     prisma.favorite.count(),
-    prisma.user.count({ where: { role: "HOST" } }),
-    prisma.reservation.count({
+    prismaAny.user.count({ where: { role: "HOST" } }),
+    prismaAny.reservation.count({
       where: {
         startDate: {
           gte: new Date()
-        }
+        },
+        status: "CONFIRMED"
       }
-    })
+    }),
+    prismaAny.payment.count({ where: { status: "PENDING" } }),
+    prismaAny.payment.aggregate({
+      where: { status: "CONFIRMED" },
+      _sum: { amount: true },
+    }),
   ]);
 
   return {
@@ -39,7 +50,9 @@ async function getAdminStats() {
     totalReservations,
     totalFavorites,
     activeHosts,
-    pendingReservations
+    pendingReservations,
+    pendingPayments,
+    confirmedRevenue: confirmedRevenue._sum.amount || 0,
   };
 }
 
@@ -72,10 +85,10 @@ export default async function AdminDashboard() {
       color: "purple"
     },
     {
-      title: "Ingresos Totales",
-      value: "$0",
+      title: "Ingresos Confirmados",
+      value: `$${stats.confirmedRevenue.toFixed(2)}`,
       icon: DollarSign,
-      change: "Próximamente",
+      change: stats.confirmedRevenue > 0 ? "Confirmado" : "Sin ingresos",
       changeType: "neutral" as const,
       color: "yellow"
     },
@@ -104,6 +117,30 @@ export default async function AdminDashboard() {
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600 mt-1">Bienvenido al panel de administración de Zerkka</p>
       </div>
+
+      {/* Alert for pending payments */}
+      {stats.pendingPayments > 0 && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Tienes <span className="font-bold">{stats.pendingPayments}</span> pago(s) pendiente(s) de confirmación.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/admin/payments"
+              className="text-sm font-medium text-yellow-700 hover:text-yellow-800 underline"
+            >
+              Ver pagos →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

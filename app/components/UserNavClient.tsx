@@ -42,32 +42,18 @@ export function UserNavClient({
               {userName || "Mi Cuenta"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            {userRole === "HOST" && (
+              <DropdownMenuItem>
+                <form action={createHomeAction} className="w-full">
+                  <button type="submit" className="w-full text-start">
+                    Publicar en Zerkka
+                  </button>
+                </form>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem>
-              <Link href="/profile" className="w-full">
-                Ver Perfil
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <form action={createHomeAction} className="w-full">
-                <button type="submit" className="w-full text-start">
-                  Publicar en Zerkka
-                </button>
-              </form>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/my-listing" className="w-full">
-                Mis Anuncios
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/favorites" className="w-full">
-                Mis Favoritos
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/reservation" className="w-full">
-                Mis Reservas
+              <Link href="/my-dashboard" className="w-full">
+                Escritorio
               </Link>
             </DropdownMenuItem>
             {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (

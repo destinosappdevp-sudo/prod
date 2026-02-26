@@ -12,12 +12,12 @@ export async function GET() {
     }
 
     // Verificar que sea ADMIN o SUPERADMIN
-    const userRecord = await prisma.user.findUnique({
+    const userRecord = await (prisma as any).user.findUnique({
       where: { id: user.id },
       select: { role: true },
     });
 
-    if (!userRecord || (userRecord.role !== "ADMIN" && userRecord.role !== "SUPERADMIN")) {
+    if (!userRecord || ((userRecord as any).role !== "ADMIN" && (userRecord as any).role !== "SUPERADMIN")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

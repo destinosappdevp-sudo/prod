@@ -106,7 +106,7 @@ export const translations = {
     // Navigation
     navbar: {
       airbnbHome: "Airbnb your home",
-      myListing: "My Listings",
+      myListing: "Mis Anuncios",
       myFavorites: "My Favorites",
       myReservation: "My Reservations",
       logout: "Log out",
@@ -167,7 +167,7 @@ export const translations = {
     // Listings
     listing: {
       night: "night",
-      myListings: "My Listings",
+      myListings: "Mis Anuncios",
       noListings: "You have no listings",
       noListingsDescription: "Create a new listing to get started",
     },

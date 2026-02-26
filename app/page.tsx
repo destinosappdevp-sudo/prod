@@ -39,6 +39,19 @@ async function getData({
       description: true,
       country: true,
       municipality: true,
+      categoryName: true,
+      guests: true,
+      bedrooms: true,
+      Review: {
+        select: {
+          rating: true,
+        },
+      },
+      _count: {
+        select: {
+          Review: true,
+        },
+      },
       Favorite: { where: { userId: userId ?? undefined } },
     },
   });
@@ -105,6 +118,11 @@ async function ShowPlace({
               isInFavoriteList={item.Favorite.length > 0 ? true : false}
               homeId={item.id}
               pathName="/"
+              categoryName={item.categoryName}
+              guests={item.guests}
+              bedrooms={item.bedrooms}
+              reviews={item.Review}
+              reviewCount={item._count?.Review}
             />
           ))}
         </div>

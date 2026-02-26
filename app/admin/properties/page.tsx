@@ -32,11 +32,22 @@ async function getProperties() {
 
 export default async function PropertiesPage() {
   const properties = await getProperties();
+  const propertiesWithAmenities = properties as Array<
+    typeof properties[number] & { addedAmenities?: boolean; municipality?: string | null }
+  >;
 
   const stats = {
-    total: properties.length,
-    active: properties.filter(p => p.addedCategory && p.addedDescription && p.addedLocation).length,
-    pending: properties.filter(p => !p.addedCategory || !p.addedDescription || !p.addedLocation).length,
+    total: propertiesWithAmenities.length,
+    active: propertiesWithAmenities.filter(
+      (p) => p.addedCategory && p.addedDescription && p.addedAmenities && p.addedLocation
+    ).length,
+    pending: propertiesWithAmenities.filter(
+      (p) =>
+        !p.addedCategory ||
+        !p.addedDescription ||
+        !p.addedAmenities ||
+        !p.addedLocation
+    ).length,
   };
 
   return (
@@ -121,8 +132,12 @@ export default async function PropertiesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {properties.map((property) => {
-                const isComplete = property.addedCategory && property.addedDescription && property.addedLocation;
+              {propertiesWithAmenities.map((property) => {
+                const isComplete =
+                  property.addedCategory &&
+                  property.addedDescription &&
+                  property.addedAmenities &&
+                  property.addedLocation;
                 
                 return (
                   <tr key={property.id} className="hover:bg-gray-50">

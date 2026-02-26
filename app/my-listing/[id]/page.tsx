@@ -11,6 +11,8 @@ import { ArrowLeft, Calendar, Heart, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+const prismaAny = prisma as any;
+
 async function getPropertyForHost(id: string, userId: string) {
   const property = await prisma.home.findFirst({
     where: { id, userId },
@@ -67,11 +69,38 @@ export default async function HostPropertyDetailPage({
   }
 
   const property = await getPropertyForHost(params.id, user.id);
+  const amenityCategories = await prismaAny.amenityCategory.findMany({
+    where: { isActive: true },
+    orderBy: [{ order: "asc" }, { name: "asc" }],
+    include: {
+      Amenity: {
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        include: {
+          HomeAmenity: {
+            where: { homeId: property.id },
+          },
+        },
+      },
+    },
+  });
+  const amenityCategoriesForForm = (amenityCategories as Array<any>).map((category) => ({
+    id: category.id,
+    name: category.name,
+    amenities: category.Amenity.map((amenity: any) => ({
+      id: amenity.id,
+      name: amenity.name,
+      iconKey: amenity.iconKey,
+      iconUrl: amenity.iconUrl,
+      status: amenity.HomeAmenity[0]?.status || "UNSPECIFIED",
+    })),
+  }));
   const propertyDetails = property as typeof property & {
     municipality: string | null;
     exactAddress: string | null;
     checkInTime: string | null;
     contactNumber: string | null;
+    addedAmenities: boolean;
   };
   const propertyForForm = {
     ...propertyDetails,
@@ -95,6 +124,7 @@ export default async function HostPropertyDetailPage({
   const isComplete =
     propertyDetails.addedCategory &&
     propertyDetails.addedDescription &&
+    propertyDetails.addedAmenities &&
     propertyDetails.addedLocation;
 
   const categoriesForForm = categoryItems.map((cat) => ({
@@ -111,7 +141,7 @@ export default async function HostPropertyDetailPage({
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
-          href="/my-listing"
+          href="/my-dashboard"
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft size={24} />
@@ -271,6 +301,7 @@ export default async function HostPropertyDetailPage({
           categories={categoriesForForm}
           states={statesForForm}
           updateEndpoint={`/api/host/properties/${propertyDetails.id}`}
+          amenityCategories={amenityCategoriesForForm}
         />
       </div>
     </div>

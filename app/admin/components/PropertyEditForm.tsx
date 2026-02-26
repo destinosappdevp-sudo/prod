@@ -16,6 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useVenezuelaMunicipalities } from "@/app/lib/venezuelaMunicipalities";
+import AmenitySelector, {
+  AmenityCategoryOption,
+  AmenityStatus,
+} from "@/app/components/AmenitySelector";
 
 interface PropertyEditFormProps {
   property: {
@@ -39,6 +43,7 @@ interface PropertyEditFormProps {
   };
   categories: Array<{ name: string; title: string }>;
   states: Array<{ value: string; label: string }>;
+  amenityCategories: AmenityCategoryOption[];
   updateEndpoint?: string;
 }
 
@@ -46,6 +51,7 @@ export default function PropertyEditForm({
   property,
   categories,
   states,
+  amenityCategories,
   updateEndpoint,
 }: PropertyEditFormProps) {
   const router = useRouter();
@@ -67,6 +73,16 @@ export default function PropertyEditForm({
     price: property.price?.toString() || "",
     categoryName: property.categoryName || "",
   });
+  const initialAmenityMap = useMemo(() => {
+    const map: Record<string, AmenityStatus> = {};
+    amenityCategories.forEach((category) => {
+      category.amenities.forEach((amenity) => {
+        map[amenity.id] = amenity.status || "UNSPECIFIED";
+      });
+    });
+    return map;
+  }, [amenityCategories]);
+  const [amenityMap, setAmenityMap] = useState(initialAmenityMap);
 
   const municipalities = useMemo(() => {
     return getMunicipalitiesByState(formData.country);
@@ -90,6 +106,15 @@ export default function PropertyEditForm({
       payload.append("contactNumber", formData.contactNumber);
       payload.append("price", formData.price);
       payload.append("categoryName", formData.categoryName);
+      payload.append(
+        "amenities",
+        JSON.stringify(
+          Object.entries(amenityMap).map(([amenityId, status]) => ({
+            amenityId,
+            status,
+          }))
+        )
+      );
       if (imageFile) {
         payload.append("image", imageFile);
       }
@@ -117,6 +142,9 @@ export default function PropertyEditForm({
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+  const handleAmenityChange = (amenityId: string, status: AmenityStatus) => {
+    setAmenityMap((prev) => ({ ...prev, [amenityId]: status }));
   };
 
   return (
@@ -299,6 +327,18 @@ export default function PropertyEditForm({
                 className="text-sm"
               />
             </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Servicios</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Marca con un check si lo tienes, con una X si no, o déjalo en blanco.
+            </p>
+            <AmenitySelector
+              categories={amenityCategories}
+              valueMap={amenityMap}
+              onChange={handleAmenityChange}
+            />
           </div>
 
           <div>

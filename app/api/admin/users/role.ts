@@ -5,6 +5,7 @@ import prisma from "@/app/lib/db";
 export async function POST(request: Request) {
   try {
     const supabase = createClient();
+    const prismaAny = prisma as any;
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
@@ -12,25 +13,25 @@ export async function POST(request: Request) {
     }
 
     // Verificar que sea ADMIN o SUPERADMIN
-    const userRecord = await prisma.user.findUnique({
+    const userRecord = await prismaAny.user.findUnique({
       where: { id: user.id },
       select: { role: true },
     });
 
-    if (!userRecord || (userRecord.role !== "ADMIN" && userRecord.role !== "SUPERADMIN")) {
+    if (!userRecord || ((userRecord as any).role !== "ADMIN" && (userRecord as any).role !== "SUPERADMIN")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // No permitir cambiar el rol del SUPERADMIN
-    if (userRecord.role === "ADMIN") {
+    if ((userRecord as any).role === "ADMIN") {
       // Los ADMIN no pueden cambiar roles de SUPERADMIN
       const { userId } = await request.json();
-      const targetUser = await prisma.user.findUnique({
+      const targetUser = await prismaAny.user.findUnique({
         where: { id: userId },
         select: { role: true },
       });
 
-      if (targetUser?.role === "SUPERADMIN") {
+      if ((targetUser as any)?.role === "SUPERADMIN") {
         return NextResponse.json(
           { error: "No puedes cambiar el rol del SUPERADMIN" },
           { status: 403 }
@@ -47,9 +48,9 @@ export async function POST(request: Request) {
     }
 
     // Actualizar el rol
-    const updated = await prisma.user.update({
+    const updated = await prismaAny.user.update({
       where: { id: userId },
-      data: { role: newRole },
+      data: { role: newRole } as any,
     });
 
     return NextResponse.json(updated);

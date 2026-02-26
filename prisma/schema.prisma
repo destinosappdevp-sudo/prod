@@ -26,6 +26,7 @@ model User {
   Home          Home[]
   Favorite      Favorite[]
   Reservation     Reservation[]
+  Review         Review[]
 }
 
 enum UserRole {
@@ -53,14 +54,50 @@ model Home {
   categoryName    String?
   Favorite        Favorite[]
   Reservation     Reservation[]
+  HomeAmenity     HomeAmenity[]
+  Review          Review[]
 
   addedCategory       Boolean @default(false)
   addedDescription    Boolean @default(false)
+  addedAmenities      Boolean @default(false)
   addedLocation       Boolean @default(false)
 
   createdAt         DateTime @default(now())  
   User              User? @relation(fields: [userId], references: [id])  
   userId            String? 
+}
+
+model AmenityCategory {
+  id        String    @id @default(uuid())
+  name      String
+  order     Int?
+  isActive  Boolean   @default(true)
+  Amenity   Amenity[]
+  createdAt DateTime  @default(now())
+}
+
+model Amenity {
+  id         String    @id @default(uuid())
+  name       String
+  iconKey    String
+  iconUrl    String?
+  isActive   Boolean   @default(true)
+  category   AmenityCategory? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  HomeAmenity HomeAmenity[]
+  createdAt  DateTime  @default(now())
+}
+
+model HomeAmenity {
+  id        String        @id @default(uuid())
+  status    AmenityStatus @default(UNSPECIFIED)
+  Home      Home?         @relation(fields: [homeId], references: [id])
+  homeId    String?
+  Amenity   Amenity?      @relation(fields: [amenityId], references: [id])
+  amenityId String?
+  createdAt DateTime      @default(now())
+
+  @@unique([homeId, amenityId])
 }
 
 model Favorite {
@@ -78,10 +115,86 @@ model Reservation {
 
   startDate     DateTime
   endDate       DateTime
+  nights        Int
+  totalAmount   Float
+  status        ReservationStatus @default(PENDING)
   createdAt     DateTime @default(now())
 
   User            User?             @relation(fields: [userId], references: [id])
   userId          String?
   Home            Home?             @relation(fields: [homeId], references: [id])
   homeId          String?
+  Review          Review?
+  Payment         Payment?
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  amount        Float
+  serviceFee    Float
+  subtotal      Float
+  paymentMethod PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  
+  // Campos para Pago Móvil y Transferencia
+  bankName      String?
+  phoneNumber   String?
+  cedula        String?
+  referenceNumber String?
+  emisorBank    String?
+  
+  // Metadata adicional
+  paymentDetails Json?
+  
+  createdAt     DateTime @default(now())
+  confirmedAt   DateTime?
+  
+  Reservation   Reservation? @relation(fields: [reservationId], references: [id])
+  reservationId String?      @unique
+}
+
+model Review {
+  id             String   @id @default(uuid())
+  rating         Int
+  comment        String
+  stayStartDate  DateTime?
+  stayEndDate    DateTime?
+  hostReply      String?
+  hostReplyAt    DateTime?
+  createdAt      DateTime @default(now())
+
+  Home           Home?     @relation(fields: [homeId], references: [id])
+  homeId         String?
+  User           User?     @relation(fields: [userId], references: [id])
+  userId         String?
+  Reservation    Reservation? @relation(fields: [reservationId], references: [id])
+  reservationId  String?   @unique
+}
+
+enum AmenityStatus {
+  YES
+  NO
+  UNSPECIFIED
+}
+
+enum PaymentMethod {
+  PAGO_MOVIL
+  ZELLE
+  ZILLI
+  TARJETA_INTERNACIONAL
+  TRANSFERENCIA_BANCARIA
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }

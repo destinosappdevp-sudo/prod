@@ -2,6 +2,74 @@ import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 
+const prismaAny = prisma as any;
+
+async function applyAmenityUpdates(homeId: string, payload?: string | null) {
+  if (!payload) return;
+
+  let amenities: { amenityId: string; status: "YES" | "NO" | "UNSPECIFIED" }[] = [];
+
+  try {
+    amenities = JSON.parse(payload);
+  } catch {
+    return;
+  }
+
+  if (!Array.isArray(amenities)) return;
+
+  const deleteIds = amenities
+    .filter((item) => item.status === "UNSPECIFIED")
+    .map((item) => item.amenityId);
+
+  const upserts = amenities.filter((item) => item.status !== "UNSPECIFIED");
+
+  const operations = [];
+
+  if (deleteIds.length > 0) {
+    operations.push(
+      prismaAny.homeAmenity.deleteMany({
+        where: {
+          homeId,
+          amenityId: { in: deleteIds },
+        },
+      })
+    );
+  }
+
+  upserts.forEach((item) => {
+    operations.push(
+      prismaAny.homeAmenity.upsert({
+        where: {
+          homeId_amenityId: {
+            homeId,
+            amenityId: item.amenityId,
+          },
+        },
+        update: {
+          status: item.status,
+        },
+        create: {
+          homeId,
+          amenityId: item.amenityId,
+          status: item.status,
+        },
+      })
+    );
+  });
+
+  const hasSelected = upserts.length > 0;
+  operations.push(
+    prismaAny.home.update({
+      where: { id: homeId },
+      data: { addedAmenities: hasSelected },
+    })
+  );
+
+  if (operations.length > 0) {
+    await prismaAny.$transaction(operations);
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -37,6 +105,7 @@ export async function PATCH(
     const contactNumber = (formData.get("contactNumber") as string) || "";
     const price = (formData.get("price") as string) || "";
     const categoryName = (formData.get("categoryName") as string) || "";
+    const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
 
     let photoPath: string | undefined;
@@ -89,6 +158,8 @@ export async function PATCH(
         addedLocation: !!(country && municipality),
       },
     });
+
+    await applyAmenityUpdates(params.id, amenitiesPayload);
 
     return NextResponse.json(updated);
   } catch (error) {
