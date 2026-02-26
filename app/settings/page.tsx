@@ -1,16 +1,76 @@
+"use client";
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Bell } from "lucide-react";
+import { ArrowLeft, Bell, Lock } from "lucide-react";
+import { updateNotificationPreferences, getNotificationPreferences } from "@/app/action";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default async function SettingsPage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+type NotificationPreferencesType = {
+  emailOnReservation: boolean;
+  emailOnReview: boolean;
+  emailOnMessage: boolean;
+  emailOnPayment: boolean;
+  smsNotifications: boolean;
+};
 
-  if (!user) {
-    redirect("/login");
+export default function SettingsPage() {
+  const router = useRouter();
+  const [preferences, setPreferences] = useState<NotificationPreferencesType>({
+    emailOnReservation: true,
+    emailOnReview: true,
+    emailOnMessage: true,
+    emailOnPayment: true,
+    smsNotifications: false,
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        redirect("/login");
+      }
+
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleToggle = (key: keyof NotificationPreferencesType) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      await updateNotificationPreferences(user.id, preferences);
+    }
+
+    setSaving(false);
+    router.refresh();
+  };
+
+  if (loading) {
+    return <div>Cargando...</div>;
   }
 
   return (
@@ -27,29 +87,151 @@ export default async function SettingsPage() {
           <h1 className="text-3xl font-bold">Configuración</h1>
         </div>
 
-        {/* TODO: Agregar opciones de configuración */}
-        <div className="space-y-6">
+        <form onSubmit={handleSave} className="space-y-6">
           {/* Notification Preferences */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <Bell size={24} />
               Preferencias de Notificaciones
             </h2>
-            <p className="text-slate-500">En desarrollo</p>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email en reservaciones</p>
+                  <p className="text-sm text-slate-600">
+                    Recibe notificaciones cuando alguien reserve o cancele
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.emailOnReservation}
+                  onChange={() => handleToggle("emailOnReservation")}
+                  className="w-5 h-5 cursor-pointer"
+                />
+              </div>
+
+              <hr className="my-4" />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email en reseñas</p>
+                  <p className="text-sm text-slate-600">
+                    Notificaciones sobre nuevas reseñas y calificaciones
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.emailOnReview}
+                  onChange={() => handleToggle("emailOnReview")}
+                  className="w-5 h-5 cursor-pointer"
+                />
+              </div>
+
+              <hr className="my-4" />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email en mensajes</p>
+                  <p className="text-sm text-slate-600">
+                    Recibe notificaciones de nuevos mensajes
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.emailOnMessage}
+                  onChange={() => handleToggle("emailOnMessage")}
+                  className="w-5 h-5 cursor-pointer"
+                />
+              </div>
+
+              <hr className="my-4" />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email en pagos</p>
+                  <p className="text-sm text-slate-600">
+                    Confirma recepción de pagos y cambios de estado
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={preferences.emailOnPayment}
+                  onChange={() => handleToggle("emailOnPayment")}
+                  className="w-5 h-5 cursor-pointer"
+                />
+              </div>
+
+              <hr className="my-4" />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Notificaciones SMS</p>
+                  <p className="text-sm text-slate-600 text-yellow-600">
+                    Próximamente disponible
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  disabled
+                  checked={preferences.smsNotifications}
+                  className="w-5 h-5 cursor-not-allowed opacity-50"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Account Settings */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Cuenta</h2>
-            <p className="text-slate-500">En desarrollo</p>
+            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+              <Lock size={24} />
+              Cuenta y Seguridad
+            </h2>
+
+            <div className="space-y-4">
+              <Link
+                href="/my-dashboard?tab=profile"
+                className="block p-4 border border-slate-200 rounded-lg hover:border-orange-300 transition text-slate-700 hover:text-orange-600"
+              >
+                <p className="font-medium">Editar Perfil</p>
+                <p className="text-sm text-slate-600">
+                  Actualiza tu nombre, foto y información personal
+                </p>
+              </Link>
+
+              <Link
+                href="#"
+                className="block p-4 border border-slate-200 rounded-lg hover:border-orange-300 transition text-slate-700 hover:text-orange-600"
+              >
+                <p className="font-medium">Cambiar Contraseña</p>
+                <p className="text-sm text-slate-600">
+                  Actualiza tu contraseña de acceso
+                </p>
+              </Link>
+
+              <Link
+                href="#"
+                className="block p-4 border border-slate-200 rounded-lg hover:border-orange-300 transition text-slate-700 hover:text-orange-600"
+              >
+                <p className="font-medium">Privacidad</p>
+                <p className="text-sm text-slate-600">
+                  Controla quién puede ver tu perfil y datos
+                </p>
+              </Link>
+            </div>
           </div>
 
-          {/* Privacy Settings */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Privacidad</h2>
-            <p className="text-slate-500">En desarrollo</p>
+          {/* Save Button */}
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-400 text-white font-semibold py-3 rounded-lg transition"
+            >
+              {saving ? "Guardando..." : "Guardar Cambios"}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
