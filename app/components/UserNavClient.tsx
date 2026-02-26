@@ -16,6 +16,7 @@ interface UserNavClientProps {
   createHomeAction: (formData: FormData) => Promise<void>;
   userPicture: string;
   userName?: string;
+  userRole?: string | null;
 }
 
 export function UserNavClient({
@@ -23,6 +24,7 @@ export function UserNavClient({
   createHomeAction,
   userPicture,
   userName,
+  userRole,
 }: UserNavClientProps) {
   return (
     <DropdownMenu>
@@ -68,6 +70,16 @@ export function UserNavClient({
                 Mis Reservas
               </Link>
             </DropdownMenuItem>
+            {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link href="/admin" className="w-full font-semibold text-blue-600">
+                    🔐 Panel de Admin
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <form action={signOut} className="w-full">

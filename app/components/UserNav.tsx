@@ -2,10 +2,21 @@
 import { createAirbnbHome } from "../action";
 import { UserNavClient } from "./UserNavClient";
 import { createClient } from "@/app/lib/supabase/server";
+import prisma from "@/app/lib/db";
 
 async function UserNav() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  
+  let userRole: string | null = null;
+  
+  if (user?.id) {
+    const userRecord = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true },
+    });
+    userRole = userRecord?.role || null;
+  }
   
   const createHomeWithId = createAirbnbHome.bind(null, {
     userId: user?.id as string,
@@ -25,6 +36,7 @@ async function UserNav() {
       createHomeAction={createHomeWithId}
       userPicture={userPicture}
       userName={userName}
+      userRole={userRole}
     />
   );
 }
