@@ -178,19 +178,34 @@ export async function createDescription(formData: FormData) {
   // Generar nombre de archivo único y válido
   const fileExtension = imageFiles.name.split('.').pop();
   const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+  const filePath = `user-uploads/${uniqueFileName}`;
 
+  // Subir imagen a Supabase
   const { data: imageData, error } = await supabase.storage
     .from("images")
-    .upload(uniqueFileName, imageFiles, {
-      cacheControl: "2592000",
+    .upload(filePath, imageFiles, {
+      cacheControl: "3600",
       contentType: imageFiles.type,
+      upsert: false,
     });
 
   if (error) {
-    console.error("Error uploading image to Supabase:", error);
-    throw new Error("Failed to upload image");
+    console.error("Error subiendo imagen:", error.message);
+    throw new Error("Failed to upload image: " + error.message);
   }
 
+  // Obtener URL pública
+  const { data: publicUrlData } = supabase.storage
+    .from("images")
+    .getPublicUrl(filePath);
+
+  const imagePublicUrl = publicUrlData?.publicUrl;
+
+  if (!imagePublicUrl) {
+    throw new Error("Failed to get public URL for image");
+  }
+
+  // Guardar en la base de datos con la URL pública completa
   const data = await prisma.home.update({
     where: { id: homeId },
     data: {
@@ -200,7 +215,7 @@ export async function createDescription(formData: FormData) {
       bedrooms: roomsNumber,
       bathrooms: bathroomsNumber,
       guests: guestsNumber,
-      photo: imageData?.path,
+      photo: filePath, // Guardar la ruta relativa para compatibilidad
       addedDescription: true,
     },
   });
