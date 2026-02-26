@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function DebugPage() {
-  const [email, setEmail] = useState("colombeiaweb@gmail.com");
-  const [password, setPassword] = useState("colombeiaweb@gmail.com");
+  const [email, setEmail] = useState("admin@zerkka.com");
+  const [password, setPassword] = useState("Admin123!@#");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -54,8 +54,7 @@ export default function DebugPage() {
       <div className="p-4 bg-yellow-50 border-2 border-yellow-300 rounded">
         <h2 className="text-lg font-semibold mb-3">⚡ Crear SUPERADMIN</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Registra el usuario SUPERADMIN con los datos por defecto. Una vez
-          completado, puedes eliminar esta página y el botón.
+          Registra el usuario SUPERADMIN. Una vez completado, elimina esta página.
         </p>
 
         <div className="space-y-3">
