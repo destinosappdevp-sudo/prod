@@ -40,7 +40,7 @@ function Map({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <Marker position={latLng ?? [6.5, -66.6]} icon={ICON} />
+        <Marker position={(latLng && latLng.length === 2 ? latLng : [6.5, -66.6]) as [number, number]} icon={ICON} />
       </MapContainer>
     </>
   );
