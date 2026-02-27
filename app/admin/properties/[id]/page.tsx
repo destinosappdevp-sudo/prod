@@ -1,12 +1,20 @@
 type Reservation = {
   id: string;
-  Payment?: any;
+  Payment?: {
+    paymentMethod?: string;
+    referenceNumber?: string;
+    amount: number;
+    status?: string;
+  };
   User?: {
     firstName?: string;
     lastName?: string;
     email?: string;
   };
-  // Agrega aquí otros campos si los usas
+  startDate: string;
+  endDate: string;
+  nights: number;
+  status?: string;
 };
 type AmenityCategory = {
   id: string;
