@@ -426,7 +426,7 @@ export async function logAuditAction(
       data: {
         userId,
         action,
-        details: details || null,
+        details: details || undefined,
         ip,
         userAgent,
       },
