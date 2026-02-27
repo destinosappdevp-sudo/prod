@@ -139,7 +139,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           <div>
             <h3 className="text-xl font-semibold mb-4">Lo que ofrece este lugar</h3>
             <div className="space-y-6">
-              {amenityCategories.map((category) => {
+              {amenityCategories.map((category: { id: string; name: string; amenities: { id: string; name: string; iconUrl?: string; status: string; }[] }) => {
                 const available = category.amenities.filter(
                   (amenity) => amenity.status === "YES"
                 );
