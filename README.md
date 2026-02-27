@@ -25,6 +25,25 @@ Su objetivo es simplificar la gestión de reservas y brindar una interfaz intuit
 
 ---
 
+## 📦 Esquema compartido (Supabase)
+
+Estas tablas son compartidas entre web y mobile:
+
+- User: usuarios y roles
+- Home: propiedades publicadas
+- Reservation: reservas de propiedades
+- Payment: pagos asociados a reservas
+- Review: reseñas y calificaciones
+- Favorite: propiedades favoritas
+- AmenityCategory: categorias de amenidades
+- Amenity: amenidades
+- HomeAmenity: relacion propiedad-amenidad
+- NotificationPreferences: preferencias de notificaciones
+- AuditLog: auditoria de acciones
+- Message: mensajes entre usuarios
+
+---
+
 ## 📦 Instalación y configuración
 
 1. Clona el repositorio:
