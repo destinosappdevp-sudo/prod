@@ -1,6 +1,11 @@
 type Reservation = {
   id: string;
   Payment?: any;
+  User?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
   // Agrega aquí otros campos si los usas
 };
 type AmenityCategory = {
