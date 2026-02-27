@@ -88,7 +88,6 @@ export default async function PropertyDetailPage({
       },
     },
   });
-  };
   const amenityCategoriesForForm = amenityCategories.map((category: AmenityCategory) => ({
     id: category.id,
     name: category.name,
