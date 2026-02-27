@@ -330,7 +330,7 @@ export default async function PropertyDetailPage({
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${paymentStatusColors[payment.status] || "bg-gray-100 text-gray-800"}`}>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${paymentStatusColors[payment.status as string] || "bg-gray-100 text-gray-800"}`}>
                             {payment.status === "PENDING" ? "Pago Pendiente" :
                              payment.status === "CONFIRMED" ? "Pago Confirmado" :
                              payment.status === "REJECTED" ? "Pago Rechazado" :
