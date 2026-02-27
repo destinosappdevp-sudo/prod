@@ -336,7 +336,7 @@ export default async function PropertyDetailPage({
                              payment.status === "REJECTED" ? "Pago Rechazado" :
                              payment.status}
                           </span>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${reservationStatusColors[reservation.status] || "bg-gray-100 text-gray-800"}`}>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${reservationStatusColors[reservation.status as string] || "bg-gray-100 text-gray-800"}`}>
                             {reservation.status === "PENDING" ? "Pendiente" :
                              reservation.status === "CONFIRMED" ? "Confirmada" :
                              reservation.status === "CANCELLED" ? "Cancelada" :
