@@ -1,3 +1,7 @@
+type Reservation = {
+  Payment?: any;
+  // Agrega aquí otros campos si los usas
+};
 type AmenityCategory = {
   id: string;
   name: string;
@@ -247,7 +251,7 @@ export default async function PropertyDetailPage({
           <h3 className="text-lg font-semibold mb-4">Reservas Recientes</h3>
           {property.Reservation.length > 0 ? (
             <div className="space-y-3">
-              {property.Reservation.map((reservation) => {
+              {property.Reservation.map((reservation: Reservation) => {
                 const payment = reservation.Payment;
                 const paymentMethodLabels: Record<string, string> = {
                   PAGO_MOVIL: "Pago Móvil",
