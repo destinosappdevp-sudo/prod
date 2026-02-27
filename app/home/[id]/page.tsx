@@ -174,7 +174,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
               })}
             </div>
 
-            {amenityCategories.some((category) =>
+            {amenityCategories.some((category: { amenities: { status: string }[] }) =>
               category.amenities.some((amenity) => amenity.status === "NO")
             ) && (
               <div className="mt-8">
