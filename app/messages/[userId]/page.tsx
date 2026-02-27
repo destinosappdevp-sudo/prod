@@ -86,7 +86,7 @@ export default async function ChatPage({
               <p className="text-slate-500">No hay mensajes aún. ¡Inicia la conversación!</p>
             </div>
           ) : (
-            messages.map((msg: { id: string; senderId: string }) => (
+            messages.map((msg: { id: string; senderId: string; content: string; createdAt: Date }) => (
               <div
                 key={msg.id}
                 className={`flex ${msg.senderId === user.id ? "justify-end" : "justify-start"}`}
