@@ -1,12 +1,11 @@
 "use client";
 
-import { redirect } from "next/navigation";
-import { createClient } from "@/app/lib/supabase/server";
-import Link from "next/link";
-import { ArrowLeft, Bell, Lock } from "lucide-react";
-import { updateNotificationPreferences, getNotificationPreferences } from "@/app/action";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Bell, Lock } from "lucide-react";
+import { updateNotificationPreferences, getNotificationPreferences, getUserAuth } from "@/app/action";
 
 type NotificationPreferencesType = {
   emailOnReservation: boolean;
@@ -18,6 +17,7 @@ type NotificationPreferencesType = {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<NotificationPreferencesType>({
     emailOnReservation: true,
     emailOnReview: true,
@@ -30,15 +30,13 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const user = await getUserAuth();
+      
       if (!user) {
         redirect("/login");
       }
-
+      
+      setUserId(user.id);
       setLoading(false);
     };
 
@@ -56,13 +54,8 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
 
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      await updateNotificationPreferences(user.id, preferences);
+    if (userId) {
+      await updateNotificationPreferences(userId, preferences);
     }
 
     setSaving(false);

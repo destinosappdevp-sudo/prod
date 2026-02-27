@@ -10,7 +10,7 @@ export default async function ChatPage({
 }: {
   params: { userId: string };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

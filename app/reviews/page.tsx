@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Star } from "lucide-react";
 
 export default async function ReviewsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

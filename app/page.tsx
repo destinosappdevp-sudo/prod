@@ -91,7 +91,7 @@ async function ShowPlace({
     bathrooms?: string;
   };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const data = await getData({ searchParams: searchParams, userId: user?.id });
 

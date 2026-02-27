@@ -40,7 +40,7 @@ export default async function CheckoutPage({
   params: { homeId: string };
   searchParams: { startDate?: string; endDate?: string; guests?: string };
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

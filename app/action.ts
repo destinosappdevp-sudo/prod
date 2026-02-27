@@ -5,8 +5,14 @@ import prisma from "./lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { headers } from "next/headers";
 
+export async function getUserAuth() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
 export async function signIn() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const origin = headers().get("origin");
   
   // Por ahora redirigir directo a Google OAuth
@@ -27,7 +33,7 @@ export async function signIn() {
 }
 
 export async function signUp(email: string, password: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -61,7 +67,7 @@ export async function signUp(email: string, password: string) {
 
 
 export async function signUpWithRole(email: string, password: string, role: 'GUEST' | 'HOST' | 'ADMIN' | 'SUPERADMIN' = 'GUEST') {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -95,7 +101,7 @@ export async function signUpWithRole(email: string, password: string, role: 'GUE
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -130,7 +136,7 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signOut() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   return redirect("/");
 }
@@ -207,7 +213,7 @@ export async function createCategoryPage(formData: FormData) {
 }
 
 export async function createDescription(formData: FormData) {
-  const supabaseServer = createClient();
+  const supabaseServer = await createClient();
   
   // Verificar que el usuario esté autenticado
   const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
@@ -345,7 +351,7 @@ export async function creteReservation(formDate: FormData) {
   return redirect(`/`);
 }
 export async function updateProfile(formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -431,7 +437,7 @@ export async function updateNotificationPreferences(
   }
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -501,7 +507,7 @@ export async function sendMessage(
   content: string
 ) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -550,7 +556,7 @@ export async function sendMessage(
 
 export async function getMessages(userId: string, otherUserId?: string) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -603,7 +609,7 @@ export async function getMessages(userId: string, otherUserId?: string) {
 
 export async function markMessageAsRead(messageId: string, userId: string) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

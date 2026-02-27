@@ -26,7 +26,7 @@ async function getUserData(userId: string) {
 }
 
 async function ProfilePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

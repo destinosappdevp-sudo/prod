@@ -5,7 +5,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 
 async function UserNav() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   let userRole: string | null = null;

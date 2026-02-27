@@ -88,7 +88,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
     data?.country && data?.municipality
       ? getMunicipalityByValue(data.country, data.municipality)
       : null;
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return (
     <div className="w-[75%] mx-auto mt-10 mb-12">

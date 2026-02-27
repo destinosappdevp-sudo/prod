@@ -4,7 +4,7 @@ import prisma from "@/app/lib/db";
 
 export async function POST(request: Request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const prismaAny = prisma as any;
     const { data: { user }, error } = await supabase.auth.getUser();
 
