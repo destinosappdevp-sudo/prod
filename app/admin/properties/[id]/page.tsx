@@ -77,7 +77,29 @@ export default async function PropertyDetailPage({
       },
     },
   });
-  const amenityCategoriesForForm = amenityCategories.map((category) => ({
+  type AmenityCategory = {
+    id: string;
+    name: string;
+    Amenity: {
+      id: string;
+      name: string;
+      iconKey?: string;
+      iconUrl?: string;
+      HomeAmenity: { status?: string }[];
+    }[];
+  };
+  type AmenityCategory = {
+    id: string;
+    name: string;
+    Amenity: {
+      id: string;
+      name: string;
+      iconKey?: string;
+      iconUrl?: string;
+      HomeAmenity: { status?: string }[];
+    }[];
+  };
+  const amenityCategoriesForForm = amenityCategories.map((category: AmenityCategory) => ({
     id: category.id,
     name: category.name,
     amenities: category.Amenity.map((amenity) => ({
