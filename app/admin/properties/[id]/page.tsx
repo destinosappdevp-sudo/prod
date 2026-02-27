@@ -1,3 +1,14 @@
+type AmenityCategory = {
+  id: string;
+  name: string;
+  Amenity: {
+    id: string;
+    name: string;
+    iconKey?: string;
+    iconUrl?: string;
+    HomeAmenity: { status?: string }[];
+  }[];
+};
 import { notFound } from "next/navigation";
 import prisma from "@/app/lib/db";
 import { Card } from "@/components/ui/card";
@@ -77,17 +88,6 @@ export default async function PropertyDetailPage({
       },
     },
   });
-  type AmenityCategory = {
-    id: string;
-    name: string;
-    Amenity: {
-      id: string;
-      name: string;
-      iconKey?: string;
-      iconUrl?: string;
-      HomeAmenity: { status?: string }[];
-    }[];
-  };
   };
   const amenityCategoriesForForm = amenityCategories.map((category: AmenityCategory) => ({
     id: category.id,
