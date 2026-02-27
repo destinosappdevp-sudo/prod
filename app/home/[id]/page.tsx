@@ -180,7 +180,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
               <div className="mt-8">
                 <h4 className="text-base font-semibold mb-3">No incluidos</h4>
                 <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                   {amenityCategories.flatMap((category: { amenities: { status: string }[] }) =>
+                   {amenityCategories.flatMap((category: { amenities: { id: string; name: string; status: string }[] }) =>
                     category.amenities
                       .filter((amenity) => amenity.status === "NO")
                       .map((amenity) => (
