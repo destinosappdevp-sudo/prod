@@ -31,7 +31,8 @@ function Map({
       <MapContainer
         scrollWheelZoom={false}
         className="h-[50vh] rounded-lg relative z-0"
-        center={latLng ?? [6.5, -66.6]}
+        // TODO: arreglar mapa aqui para usar dirección exacta
+        center={(latLng && latLng.length === 2 ? latLng : [6.5, -66.6]) as [number, number]}
         zoom={7}
       >
         <TileLayer
