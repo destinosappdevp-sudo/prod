@@ -1,4 +1,5 @@
 type Reservation = {
+  id: string;
   Payment?: any;
   // Agrega aquí otros campos si los usas
 };
