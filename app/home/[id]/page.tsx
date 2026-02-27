@@ -67,7 +67,18 @@ async function getAmenities(homeId: string) {
     },
   });
 
-  return categories.map((category) => ({
+  type AmenityCategory = {
+    id: string;
+    name: string;
+    Amenity: {
+      id: string;
+      name: string;
+      iconKey?: string;
+      iconUrl?: string;
+      HomeAmenity: { status?: string }[];
+    }[];
+  };
+  return categories.map((category: AmenityCategory) => ({
     id: category.id,
     name: category.name,
     amenities: category.Amenity.map((amenity) => ({
