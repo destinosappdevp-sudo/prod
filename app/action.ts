@@ -339,12 +339,26 @@ export async function creteReservation(formDate: FormData) {
   const startDate = formDate.get("startDate") as string;
   const endDate = formDate.get("endDate") as string;
 
+  // Calcular noches
+  const nights =
+    (new Date(endDate).getTime() - new Date(startDate).getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  // Obtener precio por noche
+  const home = await prisma.home.findUnique({ where: { id: homeId } });
+  const pricePerNight = home?.price ?? 0;
+
+  // Calcular total
+  const totalAmount = nights * pricePerNight;
+
   const data = await prisma.reservation.create({
     data: {
       userId: userId,
       homeId: homeId,
       startDate: startDate,
       endDate: endDate,
+      nights: nights,
+      totalAmount: totalAmount,
     },
   });
 
