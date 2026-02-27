@@ -5,7 +5,7 @@ import prisma from "@/app/lib/db";
 const prismaAny = prisma as any;
 
 async function requireAdmin() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
 
   if (error || !user) {
