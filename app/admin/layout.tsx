@@ -20,7 +20,7 @@ export default async function AdminLayout({
     where: { id: user.id },
   });
 
-  if (!userRecord || (userRecord.role !== "ADMIN" && userRecord.role !== "SUPERADMIN")) {
+  if (!userRecord || (userRecord.role !== "ADMIN" && userRecord.role !== "SUPERADMIN" && userRecord.role !== "BANNER")) {
     redirect("/");
   }
 
@@ -30,7 +30,7 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar userName={userName} />
+      <AdminSidebar userName={userName} role={userRecord.role} />
       <main className="flex-1 ml-64">
         <div className="p-8">{children}</div>
       </main>

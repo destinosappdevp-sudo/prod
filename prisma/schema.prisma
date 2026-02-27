@@ -38,6 +38,22 @@ enum UserRole {
   HOST
   ADMIN
   SUPERADMIN
+  BANNER
+}
+model Banner {
+  id           String   @id @default(uuid())
+  title        String
+  startDate    DateTime
+  endDate      DateTime
+  url          String
+  clientPhone  String
+  clientEmail  String
+  cost         Float
+  createdBy    User     @relation(fields: [createdById], references: [id])
+  createdById  String
+  createdAt    DateTime @default(now())
+  imageUrl     String
+  updatedAt    DateTime @updatedAt
 }
 
 model Home {

@@ -15,20 +15,34 @@ import { signOut } from "@/app/action";
 
 interface AdminSidebarProps {
   userName?: string;
+  role?: string;
 }
 
-const menuItems = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/admin/users", icon: Users, label: "Usuarios" },
-  { href: "/admin/properties", icon: Home, label: "Propiedades" },
-  { href: "/admin/amenities", icon: Home, label: "Servicios" },
-  { href: "/admin/payments", icon: CreditCard, label: "Pagos & Reservas" },
-  { href: "/admin/reports", icon: BarChart3, label: "Informes" },
-  { href: "/admin/settings", icon: Settings, label: "Configuración" },
-];
 
-export function AdminSidebar({ userName }: AdminSidebarProps) {
+const getMenuItems = (role?: string) => {
+  if (role === "BANNER") {
+    return [
+      { href: "/admin/banners", icon: BarChart3, label: "Banners" },
+    ];
+  }
+  const items = [
+    { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/admin/users", icon: Users, label: "Usuarios" },
+    { href: "/admin/properties", icon: Home, label: "Propiedades" },
+    { href: "/admin/amenities", icon: Home, label: "Servicios" },
+    { href: "/admin/payments", icon: CreditCard, label: "Pagos & Reservas" },
+    { href: "/admin/reports", icon: BarChart3, label: "Informes" },
+    { href: "/admin/settings", icon: Settings, label: "Configuración" },
+  ];
+  if (role === "SUPERADMIN") {
+    items.splice(1, 0, { href: "/admin/banners", icon: BarChart3, label: "Banners" });
+  }
+  return items;
+};
+
+export function AdminSidebar({ userName, role }: AdminSidebarProps) {
   const pathname = usePathname();
+  const menuItems = getMenuItems(role);
 
   return (
     <aside className="w-64 bg-gray-900 text-white min-h-screen fixed left-0 top-0 flex flex-col">
@@ -45,7 +59,6 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
-          
           return (
             <Link
               key={item.href}
