@@ -318,7 +318,7 @@ export default async function PropertyDetailPage({
                       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">
-                            Método: <span className="font-medium text-gray-900">{paymentMethodLabels[payment.paymentMethod] || payment.paymentMethod}</span>
+                            Método: <span className="font-medium text-gray-900">{paymentMethodLabels[payment.paymentMethod as string] || payment.paymentMethod}</span>
                           </p>
                           {payment.referenceNumber && (
                             <p className="text-xs text-gray-500">
