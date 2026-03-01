@@ -91,7 +91,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const formData = await request.formData();
+    const formData = (await request.formData()) as unknown as globalThis.FormData;
     const title = (formData.get("title") as string) || "";
     const description = (formData.get("description") as string) || "";
     const guests = (formData.get("guests") as string) || "";

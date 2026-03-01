@@ -31,6 +31,7 @@ model User {
   NotificationPreferences NotificationPreferences?
   MessagesSent  Message[] @relation("SentMessages")
   MessagesReceived Message[] @relation("ReceivedMessages")
+  banners       Banner[]
 }
 
 enum UserRole {

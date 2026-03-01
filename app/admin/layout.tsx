@@ -2,6 +2,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import { redirect } from "next/navigation";
 import prisma from "@/app/lib/db";
 import { AdminSidebar } from "./components/AdminSidebar";
+import { UserRole } from "../../ZerkkApp/types";
 
 export default async function AdminLayout({
   children,
@@ -20,7 +21,7 @@ export default async function AdminLayout({
     where: { id: user.id },
   });
 
-  if (!userRecord || (userRecord.role !== "ADMIN" && userRecord.role !== "SUPERADMIN" && userRecord.role !== "BANNER")) {
+  if (!userRecord || (userRecord.role !== UserRole.ADMIN && userRecord.role !== UserRole.SUPERADMIN)) {
     redirect("/");
   }
 

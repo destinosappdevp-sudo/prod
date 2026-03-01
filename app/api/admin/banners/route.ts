@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
-import { createClient } from "@/app/lib/supabase";
+import { createClient } from "@/app/lib/supabase/server";
 
 export async function GET() {
   const banners = await prisma.banner.findMany({
@@ -10,7 +10,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
+  const formData = (await req.formData()) as unknown as globalThis.FormData;
   const title = formData.get("title") as string;
   const startDate = formData.get("startDate") as string;
   const endDate = formData.get("endDate") as string;
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const createdById = formData.get("createdById") as string;
 
   // Subir imagen a Supabase Storage
-  const supabase = createClient();
+  const supabase = await createClient();
   const fileExt = image.name.split(".").pop();
   const fileName = `${Date.now()}.${fileExt}`;
   const { data, error } = await supabase.storage

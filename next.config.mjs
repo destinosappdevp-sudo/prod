@@ -1,11 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      "a0.muscache.com",
-      "gnygijwemqkfceqfmmie.supabase.co",
-      "hxdhkbiwhrroeffxyxfz.supabase.co",
-      "avatar.vercel.sh",
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'a0.muscache.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gnygijwemqkfceqfmmie.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'hxdhkbiwhrroeffxyxfz.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatar.vercel.sh',
+      },
     ],
   },
 };

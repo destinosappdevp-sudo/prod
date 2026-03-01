@@ -17,7 +17,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN";
+  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN" | "BANNER";
   _count?: {
     Home: number;
     Favorite: number;
