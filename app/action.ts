@@ -287,6 +287,28 @@ export async function createLocation(formData: FormData) {
   const exactAddress = formData.get("exactAddress") as string;
   const checkInTime = formData.get("checkInTime") as string;
   const contactNumber = formData.get("contactNumber") as string;
+
+  // Obtener el usuario autenticado
+  const supabaseServer = await createClient();
+  const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
+
+  if (userError || !user) {
+    throw new Error("Debes iniciar sesión para publicar un alojamiento");
+  }
+
+  // Obtener datos del usuario para verificar si está verificado
+  const userData = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { isVerified: true },
+  });
+
+  const isUserVerified = userData?.isVerified ?? false;
+
+  // Determinar el estado de publicación
+  const publishStatus = isUserVerified ? "APPROVED" : "PENDING_APPROVAL";
+  const approvedAt = isUserVerified ? new Date() : null;
+  const approvedById = isUserVerified ? user.id : null;
+
   const data = await prisma.home.update({
     where: {
       id: homeId,
@@ -298,39 +320,96 @@ export async function createLocation(formData: FormData) {
       exactAddress: exactAddress || null,
       checkInTime: checkInTime || null,
       contactNumber: contactNumber || null,
+      publishStatus: publishStatus as any,
+      approvedAt,
+      approvedById,
     },
   });
+
+  // Log para auditoría
+  await logAuditAction(user.id, "HOME_PUBLISHED", {
+    homeId,
+    status: publishStatus,
+    isVerified: isUserVerified,
+  });
+
   return redirect(`/`);
 }
 
 export async function AddToFavorite(formData: FormData) {
-  const homeId = formData.get("homeId") as string;
-  const userId = formData.get("userId") as string;
-  const pathName = formData.get("pathName") as string;
+  try {
+    const homeId = formData.get("homeId") as string;
+    const userId = formData.get("userId") as string;
+    const pathName = formData.get("pathName") as string;
 
-  const data = await prisma.favorite.create({
-    data: {
-      homeId: homeId,
-      userId: userId,
-    },
-  });
+    // Validar datos requeridos
+    if (!homeId || !userId) {
+      throw new Error("Faltan datos requeridos para guardar el favorito");
+    }
 
-  revalidatePath(pathName);
+    // Verificar que la propiedad existe
+    const homeExists = await prisma.home.findUnique({
+      where: { id: homeId },
+      select: { id: true },
+    });
+
+    if (!homeExists) {
+      throw new Error("La propiedad no existe");
+    }
+
+    // Verificar que no exista ya en favoritos
+    const existingFavorite = await prisma.favorite.findFirst({
+      where: {
+        homeId: homeId,
+        userId: userId,
+      },
+    });
+
+    if (existingFavorite) {
+      console.log("Este favorito ya existe");
+      revalidatePath(pathName);
+      return;
+    }
+
+    const data = await prisma.favorite.create({
+      data: {
+        homeId: homeId,
+        userId: userId,
+      },
+    });
+
+    revalidatePath(pathName);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido al guardar favorito";
+    console.error("Error en AddToFavorite:", errorMessage);
+    throw error;
+  }
 }
 
 export async function RemoveFromFavorite(formData: FormData) {
-  const favoriteId = formData.get("favoriteId") as string;
-  const pathName = formData.get("pathName") as string;
-  const userId = formData.get("userId") as string;
+  try {
+    const favoriteId = formData.get("favoriteId") as string;
+    const pathName = formData.get("pathName") as string;
+    const userId = formData.get("userId") as string;
 
-  const data = await prisma.favorite.delete({
-    where: {
-      id: favoriteId,
-      userId: userId,
-    },
-  });
+    // Validar datos requeridos
+    if (!favoriteId || !userId) {
+      throw new Error("Faltan datos requeridos para eliminar el favorito");
+    }
 
-  revalidatePath(pathName);
+    const data = await prisma.favorite.delete({
+      where: {
+        id: favoriteId,
+        userId: userId,
+      },
+    });
+
+    revalidatePath(pathName);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido al eliminar favorito";
+    console.error("Error en RemoveFromFavorite:", errorMessage);
+    throw error;
+  }
 }
 
 export async function creteReservation(formDate: FormData) {
@@ -376,8 +455,12 @@ export async function updateProfile(formData: FormData) {
   const lastName = formData.get("lastName") as string;
   const phoneNumber = formData.get("phoneNumber") as string;
   const profileImageFile = formData.get("profileImage") as File | null;
+  const document1File = formData.get("document1Image") as File | null;
+  const document2File = formData.get("document2Image") as File | null;
 
   let profileImageUrl = formData.get("currentProfileImage") as string;
+  let document1ImageUrl = (formData.get("currentDocument1Image") as string) || null;
+  let document2ImageUrl = (formData.get("currentDocument2Image") as string) || null;
 
   // Si hay una nueva foto, subirla a Supabase Storage
   if (profileImageFile && profileImageFile.size > 0) {
@@ -396,6 +479,44 @@ export async function updateProfile(formData: FormData) {
     profileImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
   }
 
+  if (document1File && document1File.size > 0) {
+    const fileName = `${user.id}-doc1-${Date.now()}`;
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from("images")
+      .upload(`verification-docs/${fileName}`, document1File, {
+        upsert: true,
+      });
+
+    if (storageError) {
+      console.error("Error subiendo documento 1:", storageError);
+      return { error: "Error al subir el documento 1" };
+    }
+
+    document1ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+  }
+
+  if (document2File && document2File.size > 0) {
+    const fileName = `${user.id}-doc2-${Date.now()}`;
+    const { data: storageData, error: storageError } = await supabase.storage
+      .from("images")
+      .upload(`verification-docs/${fileName}`, document2File, {
+        upsert: true,
+      });
+
+    if (storageError) {
+      console.error("Error subiendo documento 2:", storageError);
+      return { error: "Error al subir el documento 2" };
+    }
+
+    document2ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+  }
+
+  const hasVerificationDocs = !!document1ImageUrl || !!document2ImageUrl;
+  const currentUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { role: true, isVerified: true },
+  });
+
   // Actualizar usuario en la base de datos
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
@@ -404,6 +525,16 @@ export async function updateProfile(formData: FormData) {
       lastName: lastName || "",
       phoneNumber: phoneNumber || null,
       profileImage: profileImageUrl,
+      document1Image: document1ImageUrl,
+      document2Image: document2ImageUrl,
+      verificationStatus:
+        currentUser?.role === "HOST"
+          ? hasVerificationDocs
+            ? "PENDING"
+            : currentUser?.isVerified
+              ? "APPROVED"
+              : "NOT_SUBMITTED"
+          : undefined,
     },
   });
 
@@ -652,5 +783,146 @@ export async function markMessageAsRead(messageId: string, userId: string) {
   } catch (error) {
     console.error("Error marking message as read:", error);
     return { success: false, error: "Failed to update message" };
+  }
+}
+
+// ========== PUBLISH HOME / ALOJAMIENTOS ==========
+export async function publishHome(homeId: string, userId: string) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== userId) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    // Obtener el usuario para verificar su estado
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, isVerified: true },
+    });
+
+    if (!userRecord || userRecord.role !== "HOST") {
+      return { success: false, error: "Solo los hosts pueden publicar alojamientos" };
+    }
+
+    // Si el host está verificado, publicar directamente
+    // Si no, enviar a aprobación
+    const publishStatus = userRecord.isVerified ? "APPROVED" : "PENDING_APPROVAL";
+
+    const home = await prisma.home.update({
+      where: { id: homeId },
+      data: {
+        publishStatus: publishStatus as any,
+      },
+    });
+
+    // Log the action
+    await logAuditAction(userId, "HOME_PUBLISHED", {
+      homeId,
+      publishStatus,
+      requiresApproval: !userRecord.isVerified,
+    });
+
+    return {
+      success: true,
+      message: userRecord.isVerified
+        ? "Alojamiento publicado exitosamente"
+        : "Alojamiento enviado a revisión. Un superadmin lo aprobará pronto.",
+      publishStatus,
+    };
+  } catch (error) {
+    console.error("Error publishing home:", error);
+    return { success: false, error: "Error al publicar el alojamiento" };
+  }
+}
+
+// ========== APPROVE / REJECT HOME ==========
+export async function approveHome(homeId: string, superAdminId: string) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== superAdminId) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    // Verificar que sea SUPERADMIN
+    const superAdmin = await prisma.user.findUnique({
+      where: { id: superAdminId },
+      select: { role: true },
+    });
+
+    if (!superAdmin || superAdmin.role !== "SUPERADMIN") {
+      return { success: false, error: "Solo superadmins pueden aprobar alojamientos" };
+    }
+
+    const home = await prisma.home.update({
+      where: { id: homeId },
+      data: {
+        publishStatus: "APPROVED",
+        approvedById: superAdminId,
+        approvedAt: new Date(),
+        approvalRejectionReason: null,
+      },
+    });
+
+    // Log the action
+    await logAuditAction(superAdminId, "HOME_APPROVED", { homeId });
+
+    return { success: true, message: "Alojamiento aprobado" };
+  } catch (error) {
+    console.error("Error approving home:", error);
+    return { success: false, error: "Error al aprobar el alojamiento" };
+  }
+}
+
+export async function rejectHome(
+  homeId: string,
+  superAdminId: string,
+  reason: string
+) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== superAdminId) {
+      return { success: false, error: "No autorizado" };
+    }
+
+    // Verificar que sea SUPERADMIN
+    const superAdmin = await prisma.user.findUnique({
+      where: { id: superAdminId },
+      select: { role: true },
+    });
+
+    if (!superAdmin || superAdmin.role !== "SUPERADMIN") {
+      return { success: false, error: "Solo superadmins pueden rechazar alojamientos" };
+    }
+
+    const home = await prisma.home.update({
+      where: { id: homeId },
+      data: {
+        publishStatus: "REJECTED",
+        approvalRejectionReason: reason,
+      },
+    });
+
+    // Log the action
+    await logAuditAction(superAdminId, "HOME_REJECTED", {
+      homeId,
+      reason,
+    });
+
+    return { success: true, message: "Alojamiento rechazado" };
+  } catch (error) {
+    console.error("Error rejecting home:", error);
+    return { success: false, error: "Error al rechazar el alojamiento" };
   }
 }

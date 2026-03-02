@@ -10,14 +10,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Search, MoreVertical, UserCheck, UserX, Shield } from "lucide-react";
+import { Search, Edit } from "lucide-react";
+import Link from "next/link";
 
 interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN" | "BANNER";
+  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN" | "BANER";
+  isVerified?: boolean;
+  verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
+  verificationReason?: string | null;
+  document1Image?: string | null;
+  document2Image?: string | null;
   _count?: {
     Home: number;
     Favorite: number;
@@ -84,6 +90,19 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
         return "bg-blue-100 text-blue-700";
       default:
         return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const getVerificationLabel = (status?: string) => {
+    switch (status) {
+      case "PENDING":
+        return "Pendiente";
+      case "APPROVED":
+        return "Aprobado";
+      case "REJECTED":
+        return "Rechazado";
+      default:
+        return "No enviado";
     }
   };
 
@@ -164,7 +183,10 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                   Reservas
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
+                  Verificación
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Editar
                 </th>
               </tr>
             </thead>
@@ -217,9 +239,44 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                     <span className="text-sm font-semibold">{user._count?.Reservation || 0}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <MoreVertical size={20} />
-                    </button>
+                    {user.role === "HOST" ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          user.verificationStatus === "APPROVED"
+                            ? "bg-green-100 text-green-700"
+                            : user.verificationStatus === "PENDING"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : user.verificationStatus === "REJECTED"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {getVerificationLabel(user.verificationStatus)}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {user.document1Image && (
+                            <a href={user.document1Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">
+                              Documento 1
+                            </a>
+                          )}
+                          {user.document2Image && (
+                            <a href={user.document2Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">
+                              Documento 2
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">N/A</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <Link 
+                      href={`/admin/users/${user.id}`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                    >
+                      <Edit size={16} />
+                      Editar
+                    </Link>
                   </td>
                 </tr>
               ))}

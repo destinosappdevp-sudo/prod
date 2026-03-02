@@ -8,6 +8,7 @@ import {
   Home, 
   CreditCard, 
   BarChart3,
+  CheckCircle,
   Settings,
   LogOut
 } from "lucide-react";
@@ -28,6 +29,7 @@ const getMenuItems = (role?: string) => {
   const items = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/users", icon: Users, label: "Usuarios" },
+    { href: "/admin/approvals", icon: CheckCircle, label: "Aprobaciones" },
     { href: "/admin/properties", icon: Home, label: "Propiedades" },
     { href: "/admin/amenities", icon: Home, label: "Servicios" },
     { href: "/admin/payments", icon: CreditCard, label: "Pagos & Reservas" },

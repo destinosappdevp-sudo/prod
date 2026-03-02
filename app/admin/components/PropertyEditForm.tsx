@@ -45,6 +45,8 @@ interface PropertyEditFormProps {
   states: Array<{ value: string; label: string }>;
   amenityCategories: AmenityCategoryOption[];
   updateEndpoint?: string;
+  allowDelete?: boolean;
+  deleteEndpoint?: string;
 }
 
 export default function PropertyEditForm({
@@ -53,6 +55,8 @@ export default function PropertyEditForm({
   states,
   amenityCategories,
   updateEndpoint,
+  allowDelete = false,
+  deleteEndpoint,
 }: PropertyEditFormProps) {
   const router = useRouter();
   const { getMunicipalitiesByState, getDefaultMunicipalityByState } =
@@ -127,14 +131,25 @@ export default function PropertyEditForm({
       });
 
       if (!response.ok) {
-        throw new Error("Error al actualizar la propiedad");
+        let errorMessage = "Error al actualizar la propiedad";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData?.error || errorMessage;
+        } catch {
+          // ignore json parse error
+        }
+        throw new Error(errorMessage);
       }
 
       alert("Propiedad actualizada exitosamente");
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("Error al actualizar la propiedad");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error al actualizar la propiedad"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -145,6 +160,47 @@ export default function PropertyEditForm({
   };
   const handleAmenityChange = (amenityId: string, status: AmenityStatus) => {
     setAmenityMap((prev) => ({ ...prev, [amenityId]: status }));
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "¿Seguro que deseas eliminar esta propiedad? Esta acción no se puede deshacer."
+    );
+
+    if (!confirmed) return;
+
+    setIsLoading(true);
+
+    try {
+      const endpoint = deleteEndpoint ?? `/api/admin/properties/${property.id}`;
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        let errorMessage = "Error al eliminar la propiedad";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData?.error || errorMessage;
+        } catch {
+          // ignore json parse error
+        }
+        throw new Error(errorMessage);
+      }
+
+      alert("Propiedad eliminada exitosamente");
+      router.push("/admin/properties");
+      router.refresh();
+    } catch (error) {
+      console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Error al eliminar la propiedad"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -352,6 +408,16 @@ export default function PropertyEditForm({
           </div>
 
           <div className="flex justify-end gap-4 pt-4">
+            {allowDelete && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isLoading}
+              >
+                Eliminar Propiedad
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"

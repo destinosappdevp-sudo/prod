@@ -16,6 +16,9 @@ async function getHostDashboardData(userId: string) {
     title: string | null;
     description: string | null;
     price: number | null;
+    publishStatus?: string;
+    approvalRejectionReason?: string;
+    createdAt?: Date;
   };
 
   const [
@@ -44,6 +47,9 @@ async function getHostDashboardData(userId: string) {
         title: true,
         description: true,
         price: true,
+        publishStatus: true,
+        approvalRejectionReason: true,
+        createdAt: true,
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -143,6 +149,9 @@ async function getHostDashboardData(userId: string) {
       municipalityValue: item.municipality,
       price: item.price || 0,
       title: item.title || "Sin titulo",
+      publishStatus: item.publishStatus || "DRAFT",
+      approvalRejectionReason: item.approvalRejectionReason,
+      createdAt: item.createdAt,
     })),
     reservations: recentReservations,
     stats: {

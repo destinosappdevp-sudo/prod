@@ -170,7 +170,7 @@ function ListingCard({
           )}
           <div className="mt-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              <span className="text-lg font-bold text-orange-600">$ {price}</span> / noche
+              <span className="text-lg font-bold text-orange-600">$ {price}</span> / noche por persona
             </p>
             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
               Ver detalles

@@ -1,6 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import { createAdminClient } from "@/app/lib/supabase/admin";
 
 const prismaAny = prisma as any;
 
@@ -116,7 +117,9 @@ export async function PATCH(
         .substring(7)}.${fileExtension}`;
       const filePath = `user-${user.id}/${uniqueFileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      const storageClient = createAdminClient() ?? supabase;
+
+      const { error: uploadError } = await storageClient.storage
         .from("images")
         .upload(filePath, imageFile, {
           cacheControl: "3600",
@@ -193,10 +196,50 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Eliminar la propiedad
-    await prisma.home.delete({
+    const property = await prismaAny.home.findUnique({
       where: { id: params.id },
+      select: {
+        id: true,
+        photo: true,
+        _count: {
+          select: {
+            Reservation: true,
+          },
+        },
+      },
     });
+
+    if (!property) {
+      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+    }
+
+    if ((property._count?.Reservation || 0) > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Esta propiedad ha tenido reservas y no puede ser borrada",
+        },
+        { status: 409 }
+      );
+    }
+
+    await prismaAny.$transaction(async (tx: any) => {
+      await tx.favorite.deleteMany({ where: { homeId: params.id } });
+      await tx.homeAmenity.deleteMany({ where: { homeId: params.id } });
+      await tx.review.deleteMany({ where: { homeId: params.id } });
+      await tx.home.delete({ where: { id: params.id } });
+    });
+
+    if (property.photo) {
+      const storageClient = createAdminClient() ?? supabase;
+      const { error: removeError } = await storageClient.storage
+        .from("images")
+        .remove([property.photo]);
+
+      if (removeError) {
+        console.error("No se pudo eliminar imagen de storage:", removeError.message);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

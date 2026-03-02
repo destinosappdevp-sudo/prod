@@ -14,6 +14,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Smartphone, CreditCard, Building2, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { BANKS, getBankCode } from "@/app/lib/paymentBanks";
 
 type PaymentMethod =
   | "PAGO_MOVIL"
@@ -158,7 +159,10 @@ export default function CheckoutForm({
             <h3 className="font-semibold mb-2">Información de pago</h3>
             <div className="space-y-1 text-sm">
               <p>
-                <span className="font-medium">Banco:</span> Banesco (0134)
+                <span className="font-medium">Banco:</span>{" "}
+                {formData.emisorBank
+                  ? `${getBankCode(formData.emisorBank)} - ${BANKS.find((b) => b.value === formData.emisorBank)?.name}`
+                  : "Selecciona un banco"}
               </p>
               <p>
                 <span className="font-medium">Teléfono:</span> 0414-1234567
@@ -186,13 +190,11 @@ export default function CheckoutForm({
                     <SelectValue placeholder="Seleccionar..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="banesco">Banesco</SelectItem>
-                    <SelectItem value="venezuela">Banco de Venezuela</SelectItem>
-                    <SelectItem value="mercantil">Mercantil</SelectItem>
-                    <SelectItem value="provincial">Provincial</SelectItem>
-                    <SelectItem value="bod">BOD</SelectItem>
-                    <SelectItem value="bancaribe">Bancaribe</SelectItem>
-                    <SelectItem value="bicentenario">Bicentenario</SelectItem>
+                    {BANKS.map((bank) => (
+                      <SelectItem key={bank.value} value={bank.value}>
+                        {bank.code} - {bank.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

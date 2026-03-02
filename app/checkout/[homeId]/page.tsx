@@ -3,7 +3,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 import CheckoutForm from "@/app/components/CheckoutForm";
-import Image from "next/image";
+import { SupabaseImage } from "@/app/components/SupabaseImage";
 import Link from "next/link";
 
 async function getHomeData(homeId: string) {
@@ -70,8 +70,9 @@ export default async function CheckoutPage({
     return redirect(`/home/${params.homeId}`);
   }
 
-  // Calcular totales
-  const subtotal = home.price * nights;
+  // Calcular totales (tarifa por persona)
+  const guestsCount = guests ? parseInt(guests) : 1;
+  const subtotal = home.price * nights * guestsCount;
   const serviceFee = subtotal * 0.1; // 10% de tarifa de servicio
   const total = subtotal + serviceFee;
 
@@ -91,8 +92,8 @@ export default async function CheckoutPage({
           <div className="flex gap-4">
             {home.photo && (
               <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                <Image
-                  src={home.photo}
+                <SupabaseImage
+                  imagePath={home.photo}
                   alt={home.title || "Propiedad"}
                   fill
                   className="object-cover"
@@ -166,7 +167,7 @@ export default async function CheckoutPage({
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  ${home.price} × {nights} noche{nights > 1 ? "s" : ""}
+                  ${home.price} × {nights} noche{nights > 1 ? "s" : ""} × {guestsCount} huésped{guestsCount > 1 ? "es" : ""}
                 </span>
                 <span className="font-medium">${subtotal.toFixed(2)}</span>
               </div>

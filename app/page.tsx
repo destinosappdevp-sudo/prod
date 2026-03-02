@@ -23,6 +23,7 @@ async function getData({
   noStore();
   const data = await prisma.home.findMany({
     where: {
+      publishStatus: "APPROVED",
       addedCategory: true,
       addedLocation: true,
       addedDescription: true,

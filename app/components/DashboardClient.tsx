@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import HostListingCard from "@/app/components/HostListingCard";
+import HostListingsClient from "@/app/components/HostListingsClient";
 import ListingCard from "@/app/components/ListingCard";
 import { Button } from "@/components/ui/button";
 
@@ -56,6 +57,9 @@ interface HostListingItem {
   municipalityValue?: string | null;
   price: number;
   title: string;
+  publishStatus?: string;
+  approvalRejectionReason?: string;
+  createdAt?: Date;
 }
 
 interface FavoriteItem {
@@ -648,38 +652,26 @@ export default function DashboardClient({
           {activeTab === "listings" && role === "HOST" && (
             <div>
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h3 className="text-base md:text-lg font-semibold">Mis anuncios</h3>
+                <h3 className="text-base md:text-lg font-semibold">Mis alojamientos</h3>
                 <Link href="/create" className="text-xs md:text-sm text-orange-600 hover:underline">
                   Publicar nuevo
                 </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                {listings.map((item) => (
-                  <HostListingCard
-                    key={item.id}
-                    imagePath={item.imagePath}
-                    homeId={item.id}
-                    price={item.price}
-                    title={item.title}
-                    stateValue={item.stateValue}
-                    municipalityValue={item.municipalityValue}
-                    description={item.description}
-                  />
-                ))}
-              </div>
-              {listings.length === 0 && (
-                <div className="p-8 md:p-12 text-center border border-dashed border-slate-300 rounded-2xl">
-                  <List className="mx-auto text-slate-300 mb-4" size={40} />
-                  <p className="text-slate-900 font-semibold mb-2 text-sm md:text-base">No tienes anuncios publicados</p>
-                  <p className="text-slate-500 text-xs md:text-sm mb-4">Empieza a publicar tus propiedades</p>
-                  <Link
-                    href="/create"
-                    className="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-full text-xs md:text-sm font-medium hover:bg-orange-700 transition"
-                  >
-                    Publicar primera propiedad
-                  </Link>
-                </div>
-              )}
+              <HostListingsClient
+                listings={listings.map((item) => ({
+                  id: item.id,
+                  title: item.title,
+                  photo: item.imagePath,
+                  price: item.price,
+                  country: item.stateValue,
+                  municipality: item.municipalityValue ?? null,
+                  publishStatus: item.publishStatus || "DRAFT",
+                  approvalRejectionReason: item.approvalRejectionReason,
+                  createdAt: item.createdAt
+                    ? new Date(item.createdAt).toISOString()
+                    : new Date().toISOString(),
+                }))}
+              />
             </div>
           )}
 

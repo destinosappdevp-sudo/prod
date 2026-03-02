@@ -30,12 +30,12 @@ type AmenityCategory = {
 import { notFound } from "next/navigation";
 import prisma from "@/app/lib/db";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import PropertyEditForm from "@/app/admin/components/PropertyEditForm";
+import PropertyStatusControl from "@/app/admin/components/PropertyStatusControl";
 import { categoryItems } from "@/app/lib/categoryItems";
 import { getAllStates, getStateByValue } from "@/app/lib/venezuelaStates";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
-import { ArrowLeft, Calendar, Heart, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -124,12 +124,6 @@ export default async function PropertyDetailPage({
       ? getMunicipalityByValue(property.country, property.municipality)
       : null;
 
-  const isComplete =
-    property.addedCategory &&
-    property.addedDescription &&
-    property.addedAmenities &&
-    property.addedLocation;
-
   // Preparar categorías para el formulario
   const categoriesForForm = categoryItems.map((cat) => ({
     name: cat.name,
@@ -160,17 +154,10 @@ export default async function PropertyDetailPage({
             Detalles y edición de la propiedad
           </p>
         </div>
-        {isComplete ? (
-          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-            <CheckCircle size={16} className="mr-1" />
-            Activa
-          </Badge>
-        ) : (
-          <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">
-            <XCircle size={16} className="mr-1" />
-            Incompleta
-          </Badge>
-        )}
+        <PropertyStatusControl
+          propertyId={property.id}
+          initialStatus={property.publishStatus}
+        />
       </div>
 
       {/* Stats Cards */}
@@ -366,6 +353,8 @@ export default async function PropertyDetailPage({
           categories={categoriesForForm}
           states={statesForForm}
           amenityCategories={amenityCategoriesForForm}
+          allowDelete
+          deleteEndpoint={`/api/admin/properties/${property.id}`}
         />
       </div>
     </div>

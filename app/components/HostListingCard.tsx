@@ -49,7 +49,7 @@ function HostListingCard({
         </h3>
         <p className="text-muted-foreground text-sm line-clamp-1">{title}</p>
         <p className="pt-2 text-muted-foreground">
-          <span className="font-medium text-black">$ {price}</span> / noche
+          <span className="font-medium text-black">$ {price}</span> / noche por persona
         </p>
       </Link>
       <Link href={`/my-listing/${homeId}`} className="mt-3">
