@@ -50,3 +50,8 @@ Estas tablas son compartidas entre web y mobile:
    ```bash
    git clone https://github.com/fokusde/zerkka.git
    cd zerkka
+   ```
+
+---
+
+*Última actualización: 2 de marzo 2026*
