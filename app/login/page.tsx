@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { signUpWithRole, signInWithEmail } from "@/app/action";
+import { createClient } from "@/app/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,12 +17,111 @@ import {
 } from "@/components/ui/select";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [role, setRole] = useState<"GUEST" | "HOST">("GUEST");
+
+  const getOrCreateDeviceId = () => {
+    const existingDeviceId = localStorage.getItem("xerkka_device_id");
+    if (existingDeviceId) {
+      return existingDeviceId;
+    }
+
+    const newDeviceId = `device-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    localStorage.setItem("xerkka_device_id", newDeviceId);
+    return newDeviceId;
+  };
+
+  const detectBrowser = (userAgent: string) => {
+    if (userAgent.includes("Edg")) return "Edge";
+    if (userAgent.includes("Firefox")) return "Firefox";
+    if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) return "Safari";
+    if (userAgent.includes("Chrome")) return "Chrome";
+    return "Unknown";
+  };
+
+  const detectOS = (userAgent: string) => {
+    if (userAgent.includes("Windows NT 10.0")) return "Windows 10/11";
+    if (userAgent.includes("Mac OS X")) return "macOS";
+    if (userAgent.includes("Linux")) return "Linux";
+    return "Unknown";
+  };
+
+  const getIpAndLocation = async () => {
+    let ipAddress: string | null = null;
+    let location: string | null = null;
+
+    try {
+      const ipResponse = await fetch("https://api.ipify.org?format=json");
+      if (ipResponse.ok) {
+        const ipData = await ipResponse.json();
+        ipAddress = ipData?.ip ?? null;
+      }
+    } catch {
+      ipAddress = null;
+    }
+
+    if (ipAddress) {
+      try {
+        const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+        if (locationResponse.ok) {
+          const locationData = await locationResponse.json();
+          if (locationData?.city && locationData?.country_name) {
+            location = `${locationData.city}, ${locationData.country_name}`;
+          }
+        }
+      } catch {
+        location = null;
+      }
+    }
+
+    return { ipAddress, location };
+  };
+
+  const trackActiveSession = async (fallbackUserId?: string) => {
+    try {
+      const supabase = createClient();
+      const deviceId = getOrCreateDeviceId();
+      const userAgent = navigator.userAgent;
+      const browser = detectBrowser(userAgent);
+      const os = detectOS(userAgent);
+      const { ipAddress, location } = await getIpAndLocation();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const userId = user?.id ?? fallbackUserId;
+
+      if (!userId) {
+        return;
+      }
+
+      await supabase.from("usersessions").upsert(
+        {
+          user_id: userId,
+          device_id: deviceId,
+          device_name: `${browser} en ${os}`,
+          os,
+          browser,
+          ip_address: ipAddress,
+          location,
+          last_active: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          is_active: true,
+        },
+        {
+          onConflict: "user_id,device_id",
+        }
+      );
+    } catch (sessionError) {
+      console.error("No se pudo registrar la sesión activa:", sessionError);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +132,10 @@ export default function LoginPage() {
       const result = await signInWithEmail(email, password);
       if (result?.error) {
         setError(result.error);
+      } else if (result?.success) {
+        await trackActiveSession(result.userId);
+        router.push("/");
+        router.refresh();
       }
     } else {
       const result = await signUpWithRole(email, password, role);

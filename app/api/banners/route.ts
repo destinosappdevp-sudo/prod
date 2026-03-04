@@ -1,5 +1,6 @@
   import prisma from "@/app/lib/db";
 import { NextResponse } from "next/server";
+  import { normalizeExternalUrl } from "@/lib/utils";
 
 export async function GET() {
   try {
@@ -26,7 +27,12 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(banners);
+    const normalizedBanners = banners.map((banner) => ({
+      ...banner,
+      url: normalizeExternalUrl(banner.url),
+    }));
+
+    return NextResponse.json(normalizedBanners);
   } catch (error) {
     console.error("Error fetching banners:", error);
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import { normalizeExternalUrl } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
     const image = formData.get("image") as File;
     const existingImageUrl = formData.get("existingImageUrl") as string;
     const createdById = formData.get("createdById") as string;
+    const normalizedUrl = normalizeExternalUrl(url);
 
     // Validaciones básicas
     if (!title || !startDate || !endDate || !createdById) {
@@ -107,7 +109,7 @@ export async function POST(req: NextRequest) {
         title,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
-        url: url || "",
+        url: normalizedUrl,
         clientPhone: clientPhone || "",
         clientEmail: clientEmail || "",
         cost: cost ? parseFloat(cost) : 0,

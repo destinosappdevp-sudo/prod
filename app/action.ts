@@ -132,7 +132,7 @@ export async function signInWithEmail(email: string, password: string) {
     }
   }
 
-  return redirect("/");
+  return { success: true, userId: data.user?.id };
 }
 
 export async function signOut() {

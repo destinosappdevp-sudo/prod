@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { normalizeExternalUrl } from "@/lib/utils";
 
 interface Banner {
   id: string;
@@ -82,23 +83,40 @@ export default function BannerCarousel() {
     <div className="relative w-full mb-8">
       {/* Grid responsive de banners */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {visibleBanners.map((banner) => (
-          <a
-            key={banner.id}
-            href={banner.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative block aspect-[2/1] rounded-lg overflow-hidden shadow-lg group"
-          >
-            <Image
-              src={banner.imageUrl}
-              alt={banner.title}
-              fill
-              className="object-cover group-hover:opacity-90 transition-opacity duration-300"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-          </a>
-        ))}
+        {visibleBanners.map((banner) => {
+          const bannerUrl = normalizeExternalUrl(banner.url);
+
+          const bannerContent = (
+            <>
+              <Image
+                src={banner.imageUrl}
+                alt={banner.title}
+                fill
+                className="object-cover group-hover:opacity-90 transition-opacity duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            </>
+          );
+
+          return bannerUrl ? (
+            <a
+              key={banner.id}
+              href={bannerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative block aspect-[2/1] rounded-lg overflow-hidden shadow-lg group"
+            >
+              {bannerContent}
+            </a>
+          ) : (
+            <div
+              key={banner.id}
+              className="relative block aspect-[2/1] rounded-lg overflow-hidden shadow-lg group"
+            >
+              {bannerContent}
+            </div>
+          );
+        })}
       </div>
 
       {/* Botones de navegación - solo si hay más banners */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import { normalizeExternalUrl } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,7 @@ export async function PATCH(
     const cost = formData.get("cost") as string;
     const image = formData.get("image") as File | null;
     const existingImageUrl = formData.get("existingImageUrl") as string;
+    const normalizedUrl = normalizeExternalUrl(url);
 
     // Validar que el banner existe
     const existingBanner = await prisma.banner.findUnique({
@@ -102,7 +104,7 @@ export async function PATCH(
         title: title || existingBanner.title,
         startDate: startDate ? new Date(startDate) : existingBanner.startDate,
         endDate: endDate ? new Date(endDate) : existingBanner.endDate,
-        url: url || "",
+        url: normalizedUrl,
         clientPhone: clientPhone || "",
         clientEmail: clientEmail || "",
         cost: cost ? parseFloat(cost) : existingBanner.cost,
