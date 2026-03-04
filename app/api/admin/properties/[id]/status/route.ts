@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 type AllowedStatus = "APPROVED" | "PENDING_APPROVAL" | "DRAFT";
 
 export async function PATCH(

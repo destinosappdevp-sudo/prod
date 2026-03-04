@@ -1,18 +1,36 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function Counter({ name }: { name: string }) {
-  const [amount, setAmount] = useState(0);
+function Counter({ 
+  name, 
+  value, 
+  onChange 
+}: { 
+  name: string;
+  value?: number;
+  onChange?: (value: number) => void;
+}) {
+  const [amount, setAmount] = useState(value ?? 0);
+
+  useEffect(() => {
+    if (value !== undefined) {
+      setAmount(value);
+    }
+  }, [value]);
 
   function incrase() {
-    setAmount(amount + 1);
+    const newValue = amount + 1;
+    setAmount(newValue);
+    onChange?.(newValue);
   }
 
   function deincrase() {
     if (amount > 0) {
-      setAmount(amount - 1);
+      const newValue = amount - 1;
+      setAmount(newValue);
+      onChange?.(newValue);
     }
   }
 

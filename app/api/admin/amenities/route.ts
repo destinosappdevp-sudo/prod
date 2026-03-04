@@ -2,6 +2,8 @@ import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 
+export const dynamic = "force-dynamic";
+
 const prismaAny = prisma as any;
 
 async function requireAdmin() {

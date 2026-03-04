@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createAdminClient } from "@/app/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+
 const prismaAny = prisma as any;
 
 async function applyAmenityUpdates(homeId: string, payload?: string | null) {

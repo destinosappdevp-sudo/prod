@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -577,9 +578,11 @@ export default function HostDashboardClient({
                 <div className="flex items-center gap-6">
                   <div className="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 border-4 border-slate-100">
                     {profileImage ? (
-                      <img 
-                        src={profileImage} 
-                        alt="Profile" 
+                      <Image
+                        src={profileImage}
+                        alt="Profile"
+                        width={96}
+                        height={96}
                         className="h-full w-full rounded-full object-cover"
                       />
                     ) : (

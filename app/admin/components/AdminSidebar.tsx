@@ -21,7 +21,7 @@ interface AdminSidebarProps {
 
 
 const getMenuItems = (role?: string) => {
-  if (role === "BANNER") {
+  if (role === "BANER") {
     return [
       { href: "/admin/banners", icon: BarChart3, label: "Banners" },
     ];

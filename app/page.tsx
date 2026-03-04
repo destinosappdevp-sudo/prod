@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { Suspense } from "react";
 import ListingCard from "./components/ListingCard";
 import MapFilter from "./components/MapFilter";
+import BannerCarousel from "./components/BannerCarousel";
 import { Nothing } from "./components/Nothing";
 import SkeletonCard from "./components/SkeletonCard";
 import prisma from "./lib/db";
@@ -72,6 +73,7 @@ export default function Home({
 }) {
   return (
     <div className="container mx-auto px-5 lg:px-10">
+      <BannerCarousel />
       <MapFilter />
 
       <Suspense key={searchParams?.filter} fallback={<SkeletonLoader />}>

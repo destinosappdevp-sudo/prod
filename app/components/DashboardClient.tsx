@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -731,9 +732,11 @@ export default function DashboardClient({
                   <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8">
                     <div className="relative">
                       {profileImage ? (
-                        <img
+                        <Image
                           src={profileImage}
                           alt="Profile"
+                          width={96}
+                          height={96}
                           className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-slate-100"
                         />
                       ) : (

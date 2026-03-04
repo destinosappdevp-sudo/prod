@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Send } from "lucide-react";
 import { sendMessage } from "@/app/action";
 
@@ -66,9 +67,11 @@ export default async function ChatPage({
             </Link>
             <div className="flex items-center gap-3">
               {partner.profileImage && (
-                <img
+                <Image
                   src={partner.profileImage}
                   alt={partner.firstName}
+                  width={40}
+                  height={40}
                   className="w-10 h-10 rounded-full object-cover"
                 />
               )}

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
 export default async function ReservationDetailPage({
@@ -146,9 +147,11 @@ export default async function ReservationDetailPage({
                 <h2 className="text-xl font-semibold mb-4">Propiedad</h2>
                 <div className="flex gap-6">
                   {reservation.Home.photo && (
-                    <img
+                    <Image
                       src={reservation.Home.photo}
                       alt={reservation.Home.title}
+                      width={128}
+                      height={128}
                       className="w-32 h-32 rounded-lg object-cover"
                     />
                   )}
@@ -237,9 +240,11 @@ export default async function ReservationDetailPage({
                 </h2>
                 <div className="flex items-center gap-4">
                   {reservation.User.profileImage && (
-                    <img
+                    <Image
                       src={reservation.User.profileImage}
                       alt={reservation.User.firstName}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   )}

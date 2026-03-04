@@ -10,6 +10,7 @@ import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
+import Image from "next/image";
 
 const prismaAny = prisma as any;
 
@@ -153,9 +154,11 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
                       {available.map((amenity) => (
                         <div key={amenity.id} className="flex items-center gap-3">
                           {amenity.iconUrl ? (
-                            <img
+                            <Image
                               src={amenity.iconUrl}
                               alt={amenity.name}
+                              width={20}
+                              height={20}
                               className="h-5 w-5"
                             />
                           ) : (

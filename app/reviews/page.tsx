@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Star } from "lucide-react";
 
 export default async function ReviewsPage() {
@@ -145,9 +146,11 @@ export default async function ReviewsPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-4">
                       {review.User?.profileImage && (
-                        <img
+                        <Image
                           src={review.User.profileImage}
                           alt={review.User.firstName}
+                          width={48}
+                          height={48}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       )}

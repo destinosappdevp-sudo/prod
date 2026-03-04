@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 
 export default async function MessagesPage() {
@@ -116,9 +117,11 @@ export default async function MessagesPage() {
                 >
                   <div className="flex items-center gap-4">
                     {conv.profileImage && (
-                      <img
+                      <Image
                         src={conv.profileImage}
                         alt={conv.firstName}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     )}
