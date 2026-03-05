@@ -2,6 +2,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import { redirect } from "next/navigation";
 import prisma from "@/app/lib/db";
 import { AdminSidebar } from "./components/AdminSidebar";
+import UserNav from "@/app/components/UserNav";
 
 export default async function AdminLayout({
   children,
@@ -29,9 +30,12 @@ export default async function AdminLayout({
     : user.email?.split("@")[0];
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="fixed inset-0 flex bg-gray-50 z-50">
       <AdminSidebar userName={userName} role={userRecord.role} />
-      <main className="flex-1 ml-64">
+      <main className="flex-1 ml-64 overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-white border-b px-8 py-4 flex justify-end">
+          <UserNav />
+        </div>
         <div className="p-8">{children}</div>
       </main>
     </div>

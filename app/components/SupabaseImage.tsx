@@ -10,6 +10,7 @@ interface SupabaseImageProps {
   className?: string;
   width?: number;
   height?: number;
+  sizes?: string;
 }
 
 export function SupabaseImage({
@@ -19,6 +20,7 @@ export function SupabaseImage({
   className = "",
   width,
   height,
+  sizes,
 }: SupabaseImageProps) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const initialSrc = imagePath
@@ -34,6 +36,7 @@ export function SupabaseImage({
       className={className}
       width={!fill ? width : undefined}
       height={!fill ? height : undefined}
+      sizes={fill ? (sizes || "100vw") : undefined}
       onError={() => setImgSrc('/placeholder.webp')}
     />
   );

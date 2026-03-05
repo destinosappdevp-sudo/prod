@@ -92,6 +92,7 @@ export default function BannerCarousel() {
                 src={banner.imageUrl}
                 alt={banner.title}
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                 className="object-cover group-hover:opacity-90 transition-opacity duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />

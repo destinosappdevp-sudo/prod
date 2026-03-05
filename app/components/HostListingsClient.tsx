@@ -56,7 +56,7 @@ export default function HostListingsClient({
     }
   };
 
-  if (listings.length === 0) {
+  if (!listings || listings.length === 0) {
     return (
       <div className="p-8 md:p-12 text-center border border-dashed border-slate-300 rounded-2xl">
         <Eye className="mx-auto text-slate-300 mb-4" size={48} />
@@ -76,11 +76,11 @@ export default function HostListingsClient({
         <Card key={home.id} className="overflow-hidden hover:shadow-lg transition">
           <div className="flex flex-col md:flex-row gap-4 p-4">
             {/* Imagen */}
-            <div className="w-full md:w-40 h-40 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+            <div className="relative w-full md:w-40 h-40 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
               {home.photo ? (
                 <SupabaseImage
                   imagePath={home.photo}
-                  alt={home.title}
+                  alt={home.title || "Propiedad"}
                   fill
                   className="object-cover"
                 />

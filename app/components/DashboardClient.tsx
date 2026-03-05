@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -24,6 +23,7 @@ import { signOut } from "@/app/action";
 import HostListingCard from "@/app/components/HostListingCard";
 import HostListingsClient from "@/app/components/HostListingsClient";
 import ListingCard from "@/app/components/ListingCard";
+import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { Button } from "@/components/ui/button";
 
 interface HostStats {
@@ -93,6 +93,7 @@ interface DashboardClientProps {
   userId: string;
   firstName?: string | null;
   lastName?: string | null;
+  phoneNumber?: string | null;
   country?: string | null;
   city?: string | null;
   profileImage?: string | null;
@@ -159,6 +160,7 @@ export default function DashboardClient({
   userId,
   firstName,
   lastName,
+  phoneNumber,
   country,
   city,
   profileImage,
@@ -728,148 +730,17 @@ export default function DashboardClient({
               </div>
 
               <div className="p-4 md:p-6">
-                <div className="max-w-2xl">
-                  <div className="flex items-center gap-4 md:gap-6 mb-6 md:mb-8">
-                    <div className="relative">
-                      {profileImage ? (
-                        <Image
-                          src={profileImage}
-                          alt="Profile"
-                          width={96}
-                          height={96}
-                          className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-slate-100"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xl md:text-2xl font-bold border-4 border-slate-100">
-                          {firstName?.[0]?.toUpperCase() || userName?.[0]?.toUpperCase() || "U"}
-                        </div>
-                      )}
-                      <button
-                        type="button"
-                        className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md border border-slate-200 hover:bg-slate-50"
-                      >
-                        <svg
-                          className="w-4 h-4 text-slate-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                          />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div>
-                      <input
-                        type="file"
-                        id="profilePicture"
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="profilePicture"
-                        className="inline-block px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium cursor-pointer transition"
-                      >
-                        Cambiar foto
-                      </label>
-                      <p className="text-xs text-slate-500 mt-2">JPG, PNG o GIF. Max 5MB</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 md:space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
-                          Nombre
-                        </label>
-                        <input
-                          type="text"
-                          id="firstName"
-                          defaultValue={firstName || ""}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
-                          Apellido
-                        </label>
-                        <input
-                          type="text"
-                          id="lastName"
-                          defaultValue={lastName || ""}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                        Correo Electrónico
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        defaultValue={userEmail || ""}
-                        disabled
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">El email no se puede cambiar</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="country" className="block text-sm font-medium text-slate-700 mb-2">
-                          Estado / Región
-                        </label>
-                        <input
-                          type="text"
-                          id="country"
-                          defaultValue={country || ""}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="city" className="block text-sm font-medium text-slate-700 mb-2">
-                          Ciudad
-                        </label>
-                        <input
-                          type="text"
-                          id="city"
-                          defaultValue={city || ""}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-2">
-                        Acerca de ti
-                      </label>
-                      <textarea
-                        id="bio"
-                        rows={4}
-                        maxLength={500}
-                        placeholder="Cuéntanos sobre ti..."
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none resize-none"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Máximo 500 caracteres</p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4">
-                      <p className="text-xs text-slate-500">
-                        Los cambios se guardarán automáticamente
-                      </p>
-                      <Button className="bg-orange-600 hover:bg-orange-700 text-white">
-                        Guardar Cambios
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <ProfileEditClient
+                  userId={userId}
+                  userData={{
+                    firstName: firstName || "",
+                    lastName: lastName || "",
+                    email: userEmail || "",
+                    phoneNumber: phoneNumber || "",
+                    profileImage: profileImage || "",
+                    role,
+                  }}
+                />
               </div>
             </div>
           )}

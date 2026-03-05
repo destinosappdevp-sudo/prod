@@ -444,102 +444,124 @@ export async function creteReservation(formDate: FormData) {
   return redirect(`/`);
 }
 export async function updateProfile(formData: FormData) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "Usuario no autenticado" };
-  }
-
-  const firstName = formData.get("firstName") as string;
-  const lastName = formData.get("lastName") as string;
-  const phoneNumber = formData.get("phoneNumber") as string;
-  const profileImageFile = formData.get("profileImage") as File | null;
-  const document1File = formData.get("document1Image") as File | null;
-  const document2File = formData.get("document2Image") as File | null;
-
-  let profileImageUrl = formData.get("currentProfileImage") as string;
-  let document1ImageUrl = (formData.get("currentDocument1Image") as string) || null;
-  let document2ImageUrl = (formData.get("currentDocument2Image") as string) || null;
-
-  // Si hay una nueva foto, subirla a Supabase Storage
-  if (profileImageFile && profileImageFile.size > 0) {
-    const fileName = `${user.id}-${Date.now()}`;
-    const { data: storageData, error: storageError } = await supabase.storage
-      .from("images")
-      .upload(`profiles/${fileName}`, profileImageFile, {
-        upsert: true,
-      });
-
-    if (storageError) {
-      console.error("Error subiendo imagen:", storageError);
-      return { error: "Error al subir la imagen" };
+    if (!user) {
+      return { success: false, error: "Usuario no autenticado" };
     }
 
-    profileImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
-  }
+    const firstName = (formData.get("firstName") as string)?.trim();
+    const lastName = (formData.get("lastName") as string)?.trim();
+    const phoneNumber = (formData.get("phoneNumber") as string)?.trim();
+    const profileImageFile = formData.get("profileImage") as File | null;
+    const document1File = formData.get("document1Image") as File | null;
+    const document2File = formData.get("document2Image") as File | null;
 
-  if (document1File && document1File.size > 0) {
-    const fileName = `${user.id}-doc1-${Date.now()}`;
-    const { data: storageData, error: storageError } = await supabase.storage
-      .from("images")
-      .upload(`verification-docs/${fileName}`, document1File, {
-        upsert: true,
-      });
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        role: true,
+        isVerified: true,
+        profileImage: true,
+        document1Image: true,
+        document2Image: true,
+      },
+    });
 
-    if (storageError) {
-      console.error("Error subiendo documento 1:", storageError);
-      return { error: "Error al subir el documento 1" };
+    let profileImageUrl =
+      (formData.get("currentProfileImage") as string) || currentUser?.profileImage || "";
+    let document1ImageUrl =
+      (formData.get("currentDocument1Image") as string) || currentUser?.document1Image || null;
+    let document2ImageUrl =
+      (formData.get("currentDocument2Image") as string) || currentUser?.document2Image || null;
+
+    // Si hay una nueva foto, subirla a Supabase Storage
+    if (profileImageFile && profileImageFile.size > 0) {
+      const fileName = `${user.id}-${Date.now()}`;
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from("images")
+        .upload(`profiles/${fileName}`, profileImageFile, {
+          upsert: true,
+        });
+
+      if (storageError) {
+        console.error("Error subiendo imagen:", storageError);
+        return { success: false, error: "Error al subir la imagen de perfil" };
+      }
+
+      profileImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
     }
 
-    document1ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
-  }
+    if (document1File && document1File.size > 0) {
+      const fileName = `${user.id}-doc1-${Date.now()}`;
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from("images")
+        .upload(`verification-docs/${fileName}`, document1File, {
+          upsert: true,
+        });
 
-  if (document2File && document2File.size > 0) {
-    const fileName = `${user.id}-doc2-${Date.now()}`;
-    const { data: storageData, error: storageError } = await supabase.storage
-      .from("images")
-      .upload(`verification-docs/${fileName}`, document2File, {
-        upsert: true,
-      });
+      if (storageError) {
+        console.error("Error subiendo documento 1:", storageError);
+        return { success: false, error: "Error al subir el documento 1" };
+      }
 
-    if (storageError) {
-      console.error("Error subiendo documento 2:", storageError);
-      return { error: "Error al subir el documento 2" };
+      document1ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
     }
 
-    document2ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
-  }
+    if (document2File && document2File.size > 0) {
+      const fileName = `${user.id}-doc2-${Date.now()}`;
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from("images")
+        .upload(`verification-docs/${fileName}`, document2File, {
+          upsert: true,
+        });
 
-  const hasVerificationDocs = !!document1ImageUrl || !!document2ImageUrl;
-  const currentUser = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: { role: true, isVerified: true },
-  });
+      if (storageError) {
+        console.error("Error subiendo documento 2:", storageError);
+        return { success: false, error: "Error al subir el documento 2" };
+      }
 
-  // Actualizar usuario en la base de datos
-  const updatedUser = await prisma.user.update({
-    where: { id: user.id },
-    data: {
+      document2ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+    }
+
+    const hasVerificationDocs = !!document1ImageUrl || !!document2ImageUrl;
+
+    const updateData: any = {
       firstName: firstName || "Usuario",
       lastName: lastName || "",
       phoneNumber: phoneNumber || null,
-      profileImage: profileImageUrl,
+      profileImage: profileImageUrl || null,
       document1Image: document1ImageUrl,
       document2Image: document2ImageUrl,
-      verificationStatus:
-        currentUser?.role === "HOST"
-          ? hasVerificationDocs
-            ? "PENDING"
-            : currentUser?.isVerified
-              ? "APPROVED"
-              : "NOT_SUBMITTED"
-          : undefined,
-    },
-  });
+    };
 
-  revalidatePath("/profile");
-  return { success: true, user: updatedUser };
+    if (currentUser?.role === "HOST") {
+      updateData.verificationStatus = hasVerificationDocs
+        ? "PENDING"
+        : currentUser?.isVerified
+          ? "APPROVED"
+          : "NOT_SUBMITTED";
+    }
+
+    // Actualizar usuario en la base de datos
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: updateData,
+    });
+
+    console.log("Usuario actualizado:", updatedUser);
+    revalidatePath("/profile");
+    revalidatePath("/my-dashboard");
+    return { success: true, user: updatedUser };
+  } catch (error) {
+    console.error("Error en updateProfile:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Error al actualizar el perfil",
+    };
+  }
 }
 
 // ========== AUDIT LOG ==========

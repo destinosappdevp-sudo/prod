@@ -255,6 +255,7 @@ export default async function DashboardPage({
       role: true,
       firstName: true,
       lastName: true,
+      phoneNumber: true,
       profileImage: true,
     },
   });
@@ -280,6 +281,7 @@ export default async function DashboardPage({
         userId={user.id}
         firstName={userRecord?.firstName}
         lastName={userRecord?.lastName}
+        phoneNumber={userRecord?.phoneNumber}
         profileImage={userRecord?.profileImage}
         country="Venezuela"
         city="Caracas"
@@ -299,6 +301,7 @@ export default async function DashboardPage({
         userId={user.id}
         firstName={userRecord?.firstName}
         lastName={userRecord?.lastName}
+        phoneNumber={userRecord?.phoneNumber}
         profileImage={userRecord?.profileImage}
         country="Venezuela"
         city="Caracas"

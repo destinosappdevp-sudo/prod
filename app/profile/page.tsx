@@ -6,6 +6,8 @@ import prisma from "../lib/db";
 import { User, Mail, Calendar, Home, Heart, BookmarkCheck } from "lucide-react";
 import ProfileEditClient from "../components/ProfileEditClient";
 
+export const dynamic = "force-dynamic";
+
 async function getUserData(userId: string) {
   const userData = await prisma.user.findUnique({
     where: { id: userId },

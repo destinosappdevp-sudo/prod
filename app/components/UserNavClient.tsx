@@ -61,7 +61,7 @@ export function UserNavClient({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Link href="/admin" className="w-full font-semibold text-blue-600">
-                    🔐 Panel de Admin
+                    🏠 Panel de Admin
                   </Link>
                 </DropdownMenuItem>
               </>

@@ -1,264 +1,243 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id String @id @unique
-
-  email         String
-  firstName     String
-  lastName      String
-  profileImage  String?
-  phoneNumber   String?
-  role          UserRole @default(GUEST)
-  isVerified    Boolean @default(false)
-  verificationStatus VerificationStatus @default(NOT_SUBMITTED)
-  verifiedAt    DateTime?
-  verificationReason String?
-  document1Image String?
-  document2Image String?
-  Home          Home[]
-  Favorite      Favorite[]
-  Reservation     Reservation[]
-  Review         Review[]
-  AuditLog      AuditLog[]
-  NotificationPreferences NotificationPreferences?
-  MessagesSent  Message[] @relation("SentMessages")
-  MessagesReceived Message[] @relation("ReceivedMessages")
-  banners       Banner[]
-  ApprovalsGiven Home[] @relation("ApprovedBy")
-}
-
-enum UserRole {
-  GUEST
-  HOST
-  ADMIN
-  SUPERADMIN
-  BANER
-}
-
-enum VerificationStatus {
-  NOT_SUBMITTED
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum PublishStatus {
-  DRAFT
-  PENDING_APPROVAL
-  APPROVED
-  REJECTED
-}
-model Banner {
-  id           String   @id @default(uuid())
-  title        String
-  startDate    DateTime
-  endDate      DateTime
-  url          String
-  clientPhone  String
-  clientEmail  String
-  cost         Float
-  createdBy    User     @relation(fields: [createdById], references: [id])
-  createdById  String
-  createdAt    DateTime @default(now())
-  imageUrl     String
-  updatedAt    DateTime @updatedAt
-}
-
-model Home {
-  id String @id @default(uuid())
-
-  title           String?
-  description     String?
-  guests          String?
-  bedrooms        String?   
-  bathrooms       String?  
-  country         String?
-  municipality    String?
-  exactAddress    String?
-  checkInTime     String?
-  contactNumber   String?
-  photo           String?
-  price           Int?
-  categoryName    String?
-  Favorite        Favorite[]
-  Reservation     Reservation[]
+model Amenity {
+  id              String           @id
+  name            String
+  iconKey         String
+  iconUrl         String?
+  isActive        Boolean          @default(true)
+  categoryId      String?
+  createdAt       DateTime         @default(now())
+  AmenityCategory AmenityCategory? @relation(fields: [categoryId], references: [id])
   HomeAmenity     HomeAmenity[]
-  Review          Review[]
-
-  addedCategory       Boolean @default(false)
-  addedDescription    Boolean @default(false)
-  addedAmenities      Boolean @default(false)
-  addedLocation       Boolean @default(false)
-
-  publishStatus   PublishStatus @default(DRAFT)
-  approvalRejectionReason String?
-  approvedBy      User? @relation("ApprovedBy", fields: [approvedById], references: [id])
-  approvedById    String?
-  approvedAt      DateTime?
-
-  createdAt         DateTime @default(now())  
-  User              User? @relation(fields: [userId], references: [id])  
-  userId            String? 
 }
 
 model AmenityCategory {
-  id        String    @id @default(uuid())
+  id        String    @id
   name      String
   order     Int?
   isActive  Boolean   @default(true)
-  Amenity   Amenity[]
   createdAt DateTime  @default(now())
-}
-
-model Amenity {
-  id         String    @id @default(uuid())
-  name       String
-  iconKey    String
-  iconUrl    String?
-  isActive   Boolean   @default(true)
-  category   AmenityCategory? @relation(fields: [categoryId], references: [id])
-  categoryId String?
-  HomeAmenity HomeAmenity[]
-  createdAt  DateTime  @default(now())
-}
-
-model HomeAmenity {
-  id        String        @id @default(uuid())
-  status    AmenityStatus @default(UNSPECIFIED)
-  Home      Home?         @relation(fields: [homeId], references: [id])
-  homeId    String?
-  Amenity   Amenity?      @relation(fields: [amenityId], references: [id])
-  amenityId String?
-  createdAt DateTime      @default(now())
-
-  @@unique([homeId, amenityId])
-}
-
-model Favorite {
-  id              String            @id @default(uuid())
-  User            User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String
-  Home            Home?             @relation(fields: [homeId], references: [id], onDelete: Cascade)
-  homeId          String
-
-  createAt DateTime @default(now())
-
-  @@unique([userId, homeId])
-}
-
-model Reservation {
-  id String @id @default(uuid())
-
-  startDate     DateTime
-  endDate       DateTime
-  nights        Int
-  totalAmount   Float
-  status        ReservationStatus @default(PENDING)
-  createdAt     DateTime @default(now())
-
-  User            User?             @relation(fields: [userId], references: [id])
-  userId          String?
-  Home            Home?             @relation(fields: [homeId], references: [id])
-  homeId          String?
-  Review          Review?
-  Payment         Payment?
-}
-
-model Payment {
-  id            String        @id @default(uuid())
-  amount        Float
-  serviceFee    Float
-  subtotal      Float
-  paymentMethod PaymentMethod
-  status        PaymentStatus @default(PENDING)
-  
-  // Campos para Pago Móvil y Transferencia
-  bankName      String?
-  phoneNumber   String?
-  cedula        String?
-  referenceNumber String?
-  emisorBank    String?
-  
-  // Metadata adicional
-  paymentDetails Json?
-  
-  createdAt     DateTime @default(now())
-  confirmedAt   DateTime?
-  
-  Reservation   Reservation? @relation(fields: [reservationId], references: [id])
-  reservationId String?      @unique
-}
-
-model Review {
-  id             String   @id @default(uuid())
-  rating         Int
-  comment        String
-  stayStartDate  DateTime?
-  stayEndDate    DateTime?
-  hostReply      String?
-  hostReplyAt    DateTime?
-  createdAt      DateTime @default(now())
-
-  Home           Home?     @relation(fields: [homeId], references: [id])
-  homeId         String?
-  User           User?     @relation(fields: [userId], references: [id])
-  userId         String?
-  Reservation    Reservation? @relation(fields: [reservationId], references: [id])
-  reservationId  String?   @unique
+  Amenity   Amenity[]
 }
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  action    String   // "PROFILE_UPDATE", "EMAIL_SENT", "RESERVATION_CREATED", "PAYMENT_CONFIRMED"
+  id        String   @id
+  action    String
   userId    String
   details   Json?
   ip        String?
   userAgent String?
   createdAt DateTime @default(now())
-  
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model NotificationPreferences {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  emailOnReservation Boolean @default(true)
-  emailOnReview      Boolean @default(true)
-  emailOnMessage     Boolean @default(true)
-  emailOnPayment     Boolean @default(true)
-  smsNotifications   Boolean @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Banner {
+  id          String   @id
+  title       String
+  startDate   DateTime
+  endDate     DateTime
+  url         String
+  clientPhone String
+  clientEmail String
+  cost        Float
+  createdById String
+  createdAt   DateTime @default(now())
+  imageUrl    String
+  updatedAt   DateTime
+  User        User     @relation(fields: [createdById], references: [id])
+}
+
+model Favorite {
+  id       String   @id
+  userId   String
+  homeId   String
+  createAt DateTime @default(now())
+  Home     Home     @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  User     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, homeId])
+}
+
+model Home {
+  id                           String         @id
+  title                        String?
+  description                  String?
+  guests                       String?
+  bedrooms                     String?
+  bathrooms                    String?
+  country                      String?
+  photo                        String?
+  price                        Int?
+  categoryName                 String?
+  addedCategory                Boolean        @default(false)
+  addedDescription             Boolean        @default(false)
+  addedLocation                Boolean        @default(false)
+  createdAt                    DateTime       @default(now())
+  userId                       String?
+  municipality                 String?
+  checkInTime                  String?
+  contactNumber                String?
+  exactAddress                 String?
+  addedAmenities               Boolean        @default(false)
+  approvalRejectionReason      String?
+  approvedAt                   DateTime?
+  approvedById                 String?
+  publishStatus                PublishStatus  @default(DRAFT)
+  paymentAmount                Float?
+  paymentBank                  String?
+  paymentDate                  DateTime?
+  paymentMethod                PaymentMethod?
+  paymentReference             String?
+  Favorite                     Favorite[]
+  approvedBy                   User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  User                         User?          @relation(fields: [userId], references: [id])
+  HomeAmenity                  HomeAmenity[]
+  Reservation                  Reservation[]
+  Review                       Review[]
+}
+
+model HomeAmenity {
+  id        String        @id
+  status    AmenityStatus @default(UNSPECIFIED)
+  homeId    String?
+  amenityId String?
+  createdAt DateTime      @default(now())
+  Amenity   Amenity?      @relation(fields: [amenityId], references: [id])
+  Home      Home?         @relation(fields: [homeId], references: [id])
+
+  @@unique([homeId, amenityId])
 }
 
 model Message {
-  id          String   @id @default(uuid())
-  content     String
-  createdAt   DateTime @default(now())
-  isRead      Boolean  @default(false)
-  readAt      DateTime?
-  
-  senderId    String
-  recipientId String
-  
-  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  recipient   User     @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  id                             String    @id
+  content                        String
+  createdAt                      DateTime  @default(now())
+  isRead                         Boolean   @default(false)
+  readAt                         DateTime?
+  senderId                       String
+  recipientId                    String
+  User_Message_recipientIdToUser User      @relation("Message_recipientIdToUser", fields: [recipientId], references: [id], onDelete: Cascade)
+  User_Message_senderIdToUser    User      @relation("Message_senderIdToUser", fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model NotificationPreferences {
+  id                 String   @id
+  userId             String   @unique
+  emailOnReservation Boolean  @default(true)
+  emailOnReview      Boolean  @default(true)
+  emailOnMessage     Boolean  @default(true)
+  emailOnPayment     Boolean  @default(true)
+  smsNotifications   Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime
+  User               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  amount          Float
+  serviceFee      Float
+  subtotal        Float
+  paymentMethod   PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  bankName        String?
+  phoneNumber     String?
+  cedula          String?
+  referenceNumber String?
+  emisorBank      String?
+  paymentDetails  Json?
+  createdAt       DateTime      @default(now())
+  confirmedAt     DateTime?
+  reservationId   String?       @unique
+  Reservation     Reservation?  @relation(fields: [reservationId], references: [id])
+}
+
+model Reservation {
+  id          String            @id @default(uuid())
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime          @default(now())
+  userId      String?
+  homeId      String?
+  nights      Int
+  status      ReservationStatus @default(PENDING)
+  totalAmount Float
+  Payment     Payment?
+  Home        Home?             @relation(fields: [homeId], references: [id])
+  User        User?             @relation(fields: [userId], references: [id])
+  Review      Review?
+}
+
+model Review {
+  id            String       @id
+  rating        Int
+  comment       String
+  stayStartDate DateTime?
+  stayEndDate   DateTime?
+  hostReply     String?
+  hostReplyAt   DateTime?
+  createdAt     DateTime     @default(now())
+  homeId        String?
+  userId        String?
+  reservationId String?      @unique
+  Home          Home?        @relation(fields: [homeId], references: [id])
+  Reservation   Reservation? @relation(fields: [reservationId], references: [id])
+  User          User?        @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id                                String                   @id @unique
+  email                             String
+  firstName                         String
+  lastName                          String
+  profileImage                      String?
+  role                              UserRole                 @default(GUEST)
+  phoneNumber                       String?
+  isVerified                        Boolean                  @default(false)
+  verificationReason                String?
+  verifiedAt                        DateTime?
+  document1Image                    String?
+  document2Image                    String?
+  verificationStatus                VerificationStatus       @default(NOT_SUBMITTED)
+  AuditLog                          AuditLog[]
+  Banner                            Banner[]
+  Favorite                          Favorite[]
+  Home                              Home[]
+  ApprovalsGiven                    Home[]                   @relation("ApprovedBy")
+  Message_Message_recipientIdToUser Message[]                @relation("Message_recipientIdToUser")
+  Message_Message_senderIdToUser    Message[]                @relation("Message_senderIdToUser")
+  NotificationPreferences           NotificationPreferences?
+  Reservation                       Reservation[]
+  Review                            Review[]
+  usersessions                      usersessions[]
+}
+
+model usersessions {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String
+  device_id   String
+  device_name String?
+  os          String?
+  browser     String?
+  ip_address  String?
+  location    String?
+  last_active DateTime? @default(now()) @db.Timestamptz(6)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  is_active   Boolean?  @default(true)
+  User        User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, device_id])
+  @@index([is_active], map: "idx_user_sessions_is_active")
+  @@index([user_id], map: "idx_user_sessions_user_id")
 }
 
 enum AmenityStatus {
@@ -282,9 +261,31 @@ enum PaymentStatus {
   CANCELLED
 }
 
+enum PublishStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
 enum ReservationStatus {
   PENDING
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+enum UserRole {
+  GUEST
+  HOST
+  ADMIN
+  SUPERADMIN
+  BANER
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
 }

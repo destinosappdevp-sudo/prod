@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +15,12 @@ interface ProfileEditClientProps {
 }
 
 export default function ProfileEditClient({ userData, userId }: ProfileEditClientProps) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [currentUserData, setCurrentUserData] = useState(userData);
   const [formData, setFormData] = useState({
     firstName: userData?.firstName || "",
     lastName: userData?.lastName || "",
@@ -62,14 +67,16 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+    setSuccess(false);
 
     const form = new FormData();
     form.append("firstName", formData.firstName);
     form.append("lastName", formData.lastName);
     form.append("phoneNumber", formData.phoneNumber);
-    form.append("currentProfileImage", userData?.profileImage || "");
-    form.append("currentDocument1Image", userData?.document1Image || "");
-    form.append("currentDocument2Image", userData?.document2Image || "");
+    form.append("currentProfileImage", currentUserData?.profileImage || "");
+    form.append("currentDocument1Image", currentUserData?.document1Image || "");
+    form.append("currentDocument2Image", currentUserData?.document2Image || "");
     
     if (selectedFile) {
       form.append("profileImage", selectedFile);
@@ -83,37 +90,68 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
 
     try {
       const result = await updateProfile(form);
-      if (result.success) {
+
+      if (result.success && result.user) {
+        const updatedData = { ...currentUserData, ...result.user };
+        setCurrentUserData(updatedData);
+        setFormData({
+          firstName: updatedData?.firstName || "",
+          lastName: updatedData?.lastName || "",
+          phoneNumber: updatedData?.phoneNumber || "",
+        });
+        setSuccess(true);
         setIsEditing(false);
         setPreviewImage(null);
         setSelectedFile(null);
-        // Realizar un refresh para ver los cambios
-        window.location.reload();
+        setDocument1File(null);
+        setDocument2File(null);
+        router.refresh();
+      } else {
+        setError(result.error || "Error al actualizar el perfil");
       }
     } catch (error) {
       console.error("Error actualizando perfil:", error);
+      setError(error instanceof Error ? error.message : "Error desconocido al actualizar el perfil");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const displayImage = previewImage || userData?.profileImage || 
-    "https://static.vecteezy.com/system/resources/previews/009/292/244/large_2x/default-avatar-icon-of-social-media-user-vector.jpg";
+  const displayImage = previewImage || currentUserData?.profileImage || "/placeholder.webp";
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Mi Perfil</h1>
         {!isEditing && (
-          <Button onClick={() => setIsEditing(true)}>
+          <Button
+            onClick={() => {
+              setIsEditing(true);
+              setError(null);
+              setSuccess(false);
+            }}
+          >
             Editar Perfil
           </Button>
         )}
       </div>
 
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-6">
+          <p className="text-sm text-green-800">✓ Cambios guardados exitosamente</p>
+        </div>
+      )}
+
       {isEditing ? (
         <form onSubmit={handleSubmit} className="bg-white rounded-lg border p-6 mb-6">
           <div className="space-y-6">
+            {/* Mensaje de error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+            
             {/* Foto de perfil */}
             <div>
               <Label className="text-base font-semibold mb-4 block">Foto de Perfil</Label>
@@ -144,15 +182,15 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
               </div>
             </div>
 
-            {userData?.role === "HOST" && (
+            {currentUserData?.role === "HOST" && (
               <>
                 <div className="rounded-lg border p-4 bg-gray-50">
                   <p className="text-sm font-semibold">Estado de verificación</p>
                   <p className="text-sm text-gray-700 mt-1">
-                    {getVerificationLabel(userData?.verificationStatus)}
+                    {getVerificationLabel(currentUserData?.verificationStatus)}
                   </p>
-                  {userData?.verificationReason && (
-                    <p className="text-xs text-gray-500 mt-1">{userData.verificationReason}</p>
+                  {currentUserData?.verificationReason && (
+                    <p className="text-xs text-gray-500 mt-1">{currentUserData.verificationReason}</p>
                   )}
                 </div>
 
@@ -165,8 +203,8 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
                     onChange={(e) => setDocument1File(e.target.files?.[0] || null)}
                     className="mt-1"
                   />
-                  {userData?.document1Image && (
-                    <a href={userData.document1Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                  {currentUserData?.document1Image && (
+                    <a href={currentUserData.document1Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
                       Ver documento 1 actual
                     </a>
                   )}
@@ -181,8 +219,8 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
                     onChange={(e) => setDocument2File(e.target.files?.[0] || null)}
                     className="mt-1"
                   />
-                  {userData?.document2Image && (
-                    <a href={userData.document2Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                  {currentUserData?.document2Image && (
+                    <a href={currentUserData.document2Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
                       Ver documento 2 actual
                     </a>
                   )}
@@ -232,7 +270,7 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
             <div>
               <Label className="text-sm font-medium">Correo electrónico</Label>
               <Input
-                value={userData?.email}
+                value={currentUserData?.email}
                 disabled
                 className="mt-1 bg-gray-50"
               />
@@ -248,6 +286,7 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
                 variant="outline"
                 onClick={() => {
                   setIsEditing(false);
+                  setError(null);
                   setPreviewImage(null);
                   setSelectedFile(null);
                   setDocument1File(null);
@@ -264,8 +303,8 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
           <div className="flex items-start gap-6">
             <div className="relative">
               <Image
-                src={userData?.profileImage || "https://static.vecteezy.com/system/resources/previews/009/292/244/large_2x/default-avatar-icon-of-social-media-user-vector.jpg"}
-                alt={`${userData?.firstName} ${userData?.lastName}`}
+                src={currentUserData?.profileImage || "/placeholder.webp"}
+                alt={`${currentUserData?.firstName} ${currentUserData?.lastName}`}
                 width={120}
                 height={120}
                 className="rounded-full border-4 border-gray-200"
@@ -274,18 +313,18 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
 
             <div className="flex-1">
               <h2 className="text-2xl font-semibold mb-2">
-                {userData?.firstName} {userData?.lastName}
+                {currentUserData?.firstName} {currentUserData?.lastName}
               </h2>
 
               <div className="flex items-center gap-2 text-muted-foreground mb-4">
                 <Mail className="w-4 h-4" />
-                <span>{userData?.email}</span>
+                <span>{currentUserData?.email}</span>
               </div>
 
-              {userData?.phoneNumber && (
+              {currentUserData?.phoneNumber && (
                 <div className="flex items-center gap-2 text-muted-foreground mb-4">
                   <span>📞</span>
-                  <span>{userData?.phoneNumber}</span>
+                  <span>{currentUserData?.phoneNumber}</span>
                 </div>
               )}
 

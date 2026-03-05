@@ -267,6 +267,80 @@ export async function getPendingHomes(limit = 10, offset = 0) {
 }
 
 /**
+ * Obtiene los alojamientos aprobados
+ */
+export async function getApprovedHomes(limit = 10, offset = 0) {
+  try {
+    const supabaseServer = await createClient();
+    const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error("No autenticado");
+    }
+
+    // Verificar que sea SUPERADMIN
+    const adminUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true },
+    });
+
+    if (adminUser?.role !== "SUPERADMIN") {
+      throw new Error("No tienes permisos para ver alojamientos aprobados");
+    }
+
+    const [approvedHomes, total] = await Promise.all([
+      prisma.home.findMany({
+        where: { publishStatus: "APPROVED" },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          country: true,
+          municipality: true,
+          price: true,
+          categoryName: true,
+          createdAt: true,
+          approvedAt: true,
+          // Campos de pago
+          paymentReference: true,
+          paymentBank: true,
+          paymentMethod: true,
+          paymentAmount: true,
+          paymentDate: true,
+          User: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              isVerified: true,
+            },
+          },
+        },
+        orderBy: { approvedAt: "desc" },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.home.count({
+        where: { publishStatus: "APPROVED" },
+      }),
+    ]);
+
+    return {
+      success: true,
+      homes: approvedHomes,
+      total,
+      limit,
+      offset,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+    console.error("Error obteniendo alojamientos aprobados:", errorMessage);
+    throw error;
+  }
+}
+
+/**
  * Obtiene los hosts no verificados
  */
 export async function getUnverifiedHosts(limit = 10, offset = 0) {
