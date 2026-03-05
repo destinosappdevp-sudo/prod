@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { normalizeExternalUrl } from "@/lib/utils";
+import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
 
     const banner = await prisma.banner.create({
       data: {
+        id: randomUUID(),
         title,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
@@ -115,6 +117,7 @@ export async function POST(req: NextRequest) {
         cost: cost ? parseFloat(cost) : 0,
         imageUrl,
         createdById,
+        updatedAt: new Date(),
       },
     });
     

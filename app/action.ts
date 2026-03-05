@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import prisma from "./lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { headers } from "next/headers";
+import { randomUUID } from "crypto";
 
 export async function getUserAuth() {
   const supabase = await createClient();
@@ -154,6 +155,7 @@ export async function createAirbnbHome({ userId }: { userId: string }) {
   if (data === null) {
     const data = await prisma.home.create({
       data: {
+        id: randomUUID(),
         userId: userId,
       },
     });
@@ -188,6 +190,7 @@ export async function createAirbnbHome({ userId }: { userId: string }) {
   ) {
     const data = await prisma.home.create({
       data: {
+        id: randomUUID(),
         userId: userId,
       },
     });
@@ -373,6 +376,7 @@ export async function AddToFavorite(formData: FormData) {
 
     const data = await prisma.favorite.create({
       data: {
+        id: randomUUID(),
         homeId: homeId,
         userId: userId,
       },
@@ -577,6 +581,7 @@ export async function logAuditAction(
 
     await prisma.auditLog.create({
       data: {
+        id: randomUUID(),
         userId,
         action,
         details: details || undefined,
@@ -620,12 +625,14 @@ export async function updateNotificationPreferences(
         updatedAt: new Date(),
       },
       create: {
+        id: randomUUID(),
         userId,
         emailOnReservation: preferences.emailOnReservation ?? true,
         emailOnReview: preferences.emailOnReview ?? true,
         emailOnMessage: preferences.emailOnMessage ?? true,
         emailOnPayment: preferences.emailOnPayment ?? true,
         smsNotifications: preferences.smsNotifications ?? false,
+        updatedAt: new Date(),
       },
     });
 
@@ -650,12 +657,14 @@ export async function getNotificationPreferences(userId: string) {
       // Create default preferences if not exists
       return await prisma.notificationPreferences.create({
         data: {
+          id: randomUUID(),
           userId,
           emailOnReservation: true,
           emailOnReview: true,
           emailOnMessage: true,
           emailOnPayment: true,
           smsNotifications: false,
+          updatedAt: new Date(),
         },
       });
     }
@@ -689,12 +698,13 @@ export async function sendMessage(
 
     const message = await prisma.message.create({
       data: {
+        id: randomUUID(),
         senderId,
         recipientId,
         content: content.trim(),
       },
       include: {
-        sender: {
+        User_Message_senderIdToUser: {
           select: {
             id: true,
             firstName: true,
@@ -746,7 +756,7 @@ export async function getMessages(userId: string, otherUserId?: string) {
     const messages = await prisma.message.findMany({
       where: whereClause,
       include: {
-        sender: {
+        User_Message_senderIdToUser: {
           select: {
             id: true,
             firstName: true,
@@ -754,7 +764,7 @@ export async function getMessages(userId: string, otherUserId?: string) {
             profileImage: true,
           },
         },
-        recipient: {
+        User_Message_recipientIdToUser: {
           select: {
             id: true,
             firstName: true,
