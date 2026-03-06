@@ -72,6 +72,7 @@ export default async function CheckoutPage({
 
   // Calcular totales (tarifa por persona)
   const guestsCount = guests ? parseInt(guests) : 1;
+  // El guest paga el precio base + comisión, el host recibe el monto completo
   const subtotal = home.price * nights * guestsCount;
   const serviceFee = subtotal * 0.1; // 10% de tarifa de servicio
   const total = subtotal + serviceFee;
@@ -172,13 +173,14 @@ export default async function CheckoutPage({
                 <span className="font-medium">${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Tarifa de servicio ZERKKA</span>
+                <span className="text-gray-600">Tarifa de servicio ZERKKA (se cobra al guest)</span>
                 <span className="font-medium">${serviceFee.toFixed(2)}</span>
               </div>
               <div className="border-t pt-3 mt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold">Total (USD)</span>
+                  <span className="text-lg font-bold">Total a pagar (USD)</span>
                   <span className="text-lg font-bold text-orange-500">
+                    {/** El guest paga el subtotal + comisión */}
                     ${total.toFixed(2)}
                   </span>
                 </div>

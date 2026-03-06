@@ -131,6 +131,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
               <SelectItem value="HOST">Host</SelectItem>
               <SelectItem value="ADMIN">Admin</SelectItem>
               <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+              <SelectItem value="BANER">Baner</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -223,6 +224,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                         <SelectItem value="GUEST">Guest</SelectItem>
                         <SelectItem value="HOST">Host</SelectItem>
                         <SelectItem value="ADMIN">Admin</SelectItem>
+                        <SelectItem value="BANER">Baner</SelectItem>
                         {user.role === "SUPERADMIN" && (
                           <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
                         )}

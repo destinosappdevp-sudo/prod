@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
-import DashboardClient from "@/app/components/DashboardClient";
+import DashboardClient from "@/app/components/DashboardClient_min";
 
 async function getHostDashboardData(userId: string) {
   noStore();
@@ -158,7 +158,7 @@ async function getHostDashboardData(userId: string) {
       totalRevenue: confirmedRevenueAgg._sum.amount || 0,
       serviceFee: serviceFeeAgg._sum.serviceFee || 0,
       pendingAmount: pendingRevenueAgg._sum.amount || 0,
-      availableAmount: (confirmedRevenueAgg._sum.amount || 0) - (serviceFeeAgg._sum.serviceFee || 0),
+      availableAmount: (confirmedRevenueAgg._sum.amount || 0) - (serviceFeeAgg._sum.serviceFee || 0), // El anfitrión recibe el total menos la comisión
       activeReservations,
       occupancy,
       rating: ratingAgg._avg.rating || null,

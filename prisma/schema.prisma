@@ -254,6 +254,12 @@ enum PaymentMethod {
   TRANSFERENCIA_BANCARIA
 }
 
+model PlatformConfig {
+  id               String   @id @default(uuid())
+  commissionPercent Float   @default(10.0)
+  updatedAt        DateTime @default(now())
+}
+
 enum PaymentStatus {
   PENDING
   CONFIRMED

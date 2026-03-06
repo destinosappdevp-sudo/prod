@@ -111,6 +111,14 @@ export async function PATCH(
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
 
+    // Validaciones básicas
+    if (!title || !country || !municipality || !price) {
+      return NextResponse.json({ error: "Faltan campos obligatorios: título, país, municipio o precio" }, { status: 400 });
+    }
+    if (isNaN(Number(price)) || Number(price) <= 0) {
+      return NextResponse.json({ error: "El precio debe ser un número mayor a 0" }, { status: 400 });
+    }
+
     let photoPath: string | undefined;
     if (imageFile && imageFile.size > 0) {
       const fileExtension = imageFile.name.split(".").pop() || "jpg";

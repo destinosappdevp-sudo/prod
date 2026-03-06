@@ -22,11 +22,17 @@ export async function POST(request: Request) {
       endDate,
       nights,
       subtotal,
-      serviceFee,
-      totalAmount,
       paymentMethod,
       paymentDetails,
     } = body;
+
+    // Obtener el porcentaje de comisión actual
+    const config = await prisma.platformConfig.findFirst();
+    const commissionPercent = config?.commissionPercent ?? 10;
+
+    // Calcular serviceFee y totalAmount
+    const serviceFee = subtotal * (commissionPercent / 100);
+    const totalAmount = subtotal; // El huésped paga solo el subtotal
 
     // Validar que el usuario sea el mismo que está autenticado
     if (userId !== user.id) {
@@ -112,7 +118,7 @@ export async function POST(request: Request) {
       const payment = await tx.payment.create({
         data: {
           reservationId: reservation.id,
-          amount: totalAmount,
+          amount: subtotal + serviceFee, // Guardar el monto total pagado
           subtotal,
           serviceFee,
           paymentMethod,

@@ -1,7 +1,53 @@
+"use client";
 import { Card } from "@/components/ui/card";
-import { Bell, Mail, Shield, Database, Globe, Palette } from "lucide-react";
 
-export default async function SettingsPage() {
+import { Bell, Mail, Shield, Database, Globe, Palette } from "lucide-react";
+import { useEffect, useState } from "react";
+
+export default function SettingsPage() {
+  // Estado para la comisión
+  const [commission, setCommission] = useState<number>(10);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [success, setSuccess] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+
+  useEffect(() => {
+    fetch("/api/admin/settings/commission")
+      .then(async (res) => {
+        try {
+          const data = await res.json();
+          setCommission(data.commissionPercent ?? 10);
+        } catch {
+          setCommission(10);
+        }
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    setSuccess(false);
+    try {
+      const res = await fetch("/api/admin/settings/commission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commissionPercent: commission }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess(true);
+      } else {
+        setError(data.error || "Error al guardar");
+      }
+    } catch {
+      setError("Error de red");
+    }
+    setSaving(false);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -37,6 +83,37 @@ export default async function SettingsPage() {
                 Activo
               </button>
             </div>
+              {/* Comisión Zerkka */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium">Comisión Zerkka</p>
+                  <p className="text-sm text-gray-600">Porcentaje aplicado a cada pago</p>
+                </div>
+                <form className="flex items-center gap-2" onSubmit={handleSubmit}>
+                  <input
+                    type="number"
+                    name="commission"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={commission}
+                    onChange={e => setCommission(Number(e.target.value))}
+                    className="w-20 p-2 border rounded-lg bg-gray-50 text-right"
+                    style={{ width: '70px' }}
+                    disabled={loading || saving}
+                  />
+                  <span className="text-gray-700 font-medium">%</span>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={loading || saving}
+                  >
+                    {saving ? "Guardando..." : "Guardar"}
+                  </button>
+                  {success && <span className="text-green-600 ml-2">¡Guardado!</span>}
+                  {error && <span className="text-red-600 ml-2">{error}</span>}
+                </form>
+              </div>
           </div>
         </Card>
 

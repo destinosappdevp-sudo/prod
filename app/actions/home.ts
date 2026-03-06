@@ -415,3 +415,69 @@ export async function getUnverifiedHosts(limit = 10, offset = 0) {
     throw error;
   }
 }
+
+/**
+ * Obtiene los pagos pendientes
+ */
+export async function getPendingPayments(limit = 20, offset = 0) {
+  const prismaAny = prisma as any;
+  const payments = await prismaAny.payment.findMany({
+    where: { status: "PENDING" },
+    include: {
+      Reservation: {
+        include: {
+          User: true,
+          Home: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    skip: offset,
+  });
+  return { success: true, payments };
+}
+
+/**
+ * Actualiza el estado de un pago (CONFIRMED o REJECTED) y guarda en AuditLog
+ */
+export async function updatePaymentStatus(paymentId: string, action: "confirm" | "reject") {
+  try {
+    const supabaseServer = await createClient();
+    const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error("No autenticado");
+    }
+
+    // Verificar que sea ADMIN o SUPERADMIN
+    const adminUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true },
+    });
+    if (adminUser?.role !== "ADMIN" && adminUser?.role !== "SUPERADMIN") {
+      throw new Error("No tienes permisos para aprobar/rechazar pagos");
+    }
+
+    // Actualizar el estado del pago
+    const newStatus = action === "confirm" ? "CONFIRMED" : "REJECTED";
+    const updatedPayment = await prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status: newStatus,
+        confirmedAt: newStatus === "CONFIRMED" ? new Date() : null,
+      },
+    });
+
+    // Guardar en AuditLog
+    await logAuditAction(user.id, `PAYMENT_${newStatus}`, {
+      paymentId,
+      action,
+    });
+
+    return { success: true, payment: updatedPayment };
+  } catch (error) {
+    console.error("Error actualizando pago:", error);
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}

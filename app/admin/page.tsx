@@ -14,6 +14,7 @@ import Link from "next/link";
 
 async function getAdminStats() {
   const prismaAny = prisma as any;
+
   const [
     totalUsers,
     totalProperties,
@@ -26,7 +27,7 @@ async function getAdminStats() {
   ] = await Promise.all([
     prisma.user.count(),
     prisma.home.count(),
-    prismaAny.reservation.count(),
+    prismaAny.reservation.count({ where: { status: "CONFIRMED" } }),
     prisma.favorite.count(),
     prismaAny.user.count({ where: { role: "HOST" } }),
     prismaAny.reservation.count({

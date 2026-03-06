@@ -188,9 +188,9 @@ export default async function ReservationDetailPage({
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500 mb-1">Tarifa Servicio</p>
+                      <p className="text-sm text-slate-500 mb-1">Tarifa Servicio (descontada al anfitrión)</p>
                       <p className="font-semibold">
-                        ${reservation.Payment.serviceFee.toFixed(2)}
+                        -${reservation.Payment.serviceFee.toFixed(2)}
                       </p>
                     </div>
                     <div className="border-t-2 pt-4 md:border-t-0 md:border-l-2 md:pt-0 md:pl-4">

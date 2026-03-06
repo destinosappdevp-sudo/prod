@@ -89,9 +89,9 @@ export default function CheckoutForm({
           startDate,
           endDate,
           nights,
-          subtotal,
+          subtotal, // El guest paga subtotal + comisión
           serviceFee,
-          totalAmount: total,
+          totalAmount: total, // El guest paga el total (subtotal + comisión)
           paymentMethod: selectedMethod,
           paymentDetails: formData,
         }),
