@@ -4,7 +4,17 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
-import { getPendingPayments } from "@/app/actions/home";
+import { supabase } from "@/lib/supabase";
+
+// Lógica para obtener pagos pendientes usando Supabase
+async function getPendingPayments() {
+  const { data, error } = await supabase
+    .from("Payment")
+    .select("*, Reservation(*, User(*), Home(*))")
+    .eq("status", "PENDING");
+  if (error) return { success: false, payments: [] };
+  return { success: true, payments: data };
+}
 
 export default function PendingApprovalsClient() {
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
@@ -34,12 +44,34 @@ export default function PendingApprovalsClient() {
     loadAllHomesAndPayments();
   }, [loadAllHomesAndPayments]);
 
+<<<<<<< HEAD
   const handlePaymentAction = async (paymentId: string, action: "confirm" | "reject") => {
     if (!confirm(`¿Estás seguro de que deseas ${action === "confirm" ? "aprobar" : "rechazar"} este pago?`)) {
       return;
+=======
+  const loadAllHomes = async () => {
+    try {
+      setLoading(true);
+      const [pendingResult, approvedResult] = await Promise.all([
+        fetch("/api/admin/approvals/pending").then(res => res.json()),
+        fetch("/api/admin/approvals/approved").then(res => res.json()),
+      ]);
+
+      if (pendingResult.success) {
+        setPendingHomes(pendingResult.homes);
+      }
+      if (approvedResult.success) {
+        setApprovedHomes(approvedResult.homes);
+      }
+    } catch (error) {
+      console.error("Error cargando alojamientos:", error);
+    } finally {
+      setLoading(false);
+>>>>>>> 4fe2ff8 (feat: endpoints de reportes y dashboard super admin con gráficos)
     }
     try {
       setLoading(true);
+<<<<<<< HEAD
       // Llamar a la función server action para actualizar el estado
       const { updatePaymentStatus } = await import("@/app/actions/home");
       const result = await updatePaymentStatus(paymentId, action);
@@ -47,6 +79,11 @@ export default function PendingApprovalsClient() {
         await loadAllHomesAndPayments();
       } else {
         alert(result.error || "Error al procesar la acción");
+=======
+      const result = await fetch("/api/admin/approvals/pending").then(res => res.json());
+      if (result.success) {
+        setPendingHomes(result.homes);
+>>>>>>> 4fe2ff8 (feat: endpoints de reportes y dashboard super admin con gráficos)
       }
     } catch (error) {
       alert("Error al procesar la solicitud");
@@ -55,6 +92,7 @@ export default function PendingApprovalsClient() {
     }
   };
 
+<<<<<<< HEAD
   // Nueva función para traer historial
   async function getHistoryPayments(limit = 50, offset = 0) {
     const res = await fetch('/api/admin/payments/history', {
@@ -64,6 +102,49 @@ export default function PendingApprovalsClient() {
     const data = await res.json();
     return { success: true, payments: data.payments };
   }
+=======
+  const handleApprove = async (homeId: string) => {
+    try {
+      setIsApproving(true);
+      const res = await fetch(`/api/admin/approvals/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ homeId }),
+      });
+      const result = await res.json();
+      if (!result.success) alert("Error al aprobar el alojamiento");
+      await loadAllHomes();
+    } catch (error) {
+      console.error("Error aprobando alojamiento:", error);
+      alert("Error al aprobar el alojamiento");
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!selectedHome) return;
+    try {
+      setIsRejecting(true);
+      const res = await fetch(`/api/admin/approvals/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ homeId: selectedHome.id, reason: rejectionReason }),
+      });
+      const result = await res.json();
+      if (!result.success) alert("Error al rechazar el alojamiento");
+      setPendingHomes(pendingHomes.filter((h) => h.id !== selectedHome.id));
+      setShowRejectDialog(false);
+      setRejectionReason("");
+      setSelectedHome(null);
+    } catch (error) {
+      console.error("Error rechazando alojamiento:", error);
+      alert("Error al rechazar el alojamiento");
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+>>>>>>> 4fe2ff8 (feat: endpoints de reportes y dashboard super admin con gráficos)
 
   if (loading) {
     return (

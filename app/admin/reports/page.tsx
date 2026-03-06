@@ -1,7 +1,27 @@
+
+"use client";
 import { Card } from "@/components/ui/card";
 import { BarChart3, TrendingUp, Users, Home } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 
-export default async function ReportsPage() {
+const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+
+export default function ReportsPage() {
+  const [usersData, setUsersData] = useState([]);
+  const [homesData, setHomesData] = useState([]);
+  const [paymentsData, setPaymentsData] = useState([]);
+  const [reservationsData, setReservationsData] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/admin/reports/users").then(r => r.json()).then(setUsersData);
+    fetch("/api/admin/reports/homes").then(r => r.json()).then(setHomesData);
+    fetch("/api/admin/reports/payments").then(r => r.json()).then(setPaymentsData);
+    fetch("/api/admin/reports/reservations").then(r => r.json()).then(setReservationsData);
+  }, []);
+
+  const months = usersData.map((d: any) => d.month);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -14,50 +34,100 @@ export default async function ReportsPage() {
         </button>
       </div>
 
-      {/* Placeholder for Charts */}
       <div className="grid grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Crecimiento de Usuarios</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-            <div className="text-center text-gray-500">
-              <Users size={48} className="mx-auto mb-2" />
-              <p>Gráfico próximamente</p>
-            </div>
+          <div className="h-64">
+            {usersData.length > 0 ? (
+              <Chart
+                type="bar"
+                options={{
+                  chart: { id: "users-bar" },
+                  xaxis: { categories: months },
+                  title: { text: "Usuarios por mes" },
+                }}
+                series={[{ name: "Usuarios", data: usersData.map((d: any) => d.count) }]}
+                height={250}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <Users size={48} className="mx-auto mb-2" />
+                <p>Sin datos</p>
+              </div>
+            )}
           </div>
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Publicaciones por Mes</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-            <div className="text-center text-gray-500">
-              <Home size={48} className="mx-auto mb-2" />
-              <p>Gráfico próximamente</p>
-            </div>
+          <div className="h-64">
+            {homesData.length > 0 ? (
+              <Chart
+                type="bar"
+                options={{
+                  chart: { id: "homes-bar" },
+                  xaxis: { categories: months },
+                  title: { text: "Publicaciones por mes" },
+                }}
+                series={[{ name: "Publicaciones", data: homesData.map((d: any) => d.count) }]}
+                height={250}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <Home size={48} className="mx-auto mb-2" />
+                <p>Sin datos</p>
+              </div>
+            )}
           </div>
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Ingresos Mensuales</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-            <div className="text-center text-gray-500">
-              <TrendingUp size={48} className="mx-auto mb-2" />
-              <p>Gráfico próximamente</p>
-            </div>
+          <div className="h-64">
+            {paymentsData.length > 0 ? (
+              <Chart
+                type="line"
+                options={{
+                  chart: { id: "payments-line" },
+                  xaxis: { categories: months },
+                  title: { text: "Ingresos mensuales" },
+                }}
+                series={[{ name: "Ingresos", data: paymentsData.map((d: any) => d.total) }]}
+                height={250}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <TrendingUp size={48} className="mx-auto mb-2" />
+                <p>Sin datos</p>
+              </div>
+            )}
           </div>
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Análisis de Reservas</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-            <div className="text-center text-gray-500">
-              <BarChart3 size={48} className="mx-auto mb-2" />
-              <p>Gráfico próximamente</p>
-            </div>
+          <div className="h-64">
+            {reservationsData.length > 0 ? (
+              <Chart
+                type="bar"
+                options={{
+                  chart: { id: "reservations-bar" },
+                  xaxis: { categories: months },
+                  title: { text: "Reservas por mes" },
+                }}
+                series={[{ name: "Reservas", data: reservationsData.map((d: any) => d.count) }]}
+                height={250}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <BarChart3 size={48} className="mx-auto mb-2" />
+                <p>Sin datos</p>
+              </div>
+            )}
           </div>
         </Card>
       </div>
 
-      {/* Future Features */}
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Reportes Disponibles (Próximamente)</h3>
         <div className="grid grid-cols-3 gap-4">
