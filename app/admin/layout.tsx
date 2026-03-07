@@ -21,7 +21,8 @@ export default async function AdminLayout({
     where: { id: user.id },
   });
 
-  if (!userRecord || (userRecord.role !== "ADMIN" && userRecord.role !== "SUPERADMIN")) {
+  const allowedRoles = ["ADMIN", "SUPERADMIN", "BANER"];
+  if (!userRecord || !allowedRoles.includes(userRecord.role)) {
     redirect("/");
   }
 

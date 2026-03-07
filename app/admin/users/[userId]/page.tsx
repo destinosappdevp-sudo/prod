@@ -1,7 +1,7 @@
-import { Card } from "@/components/ui/card";
 import prisma from "@/app/lib/db";
 import { notFound } from "next/navigation";
 import { EditUserClient } from "../../components/EditUserClient";
+import { UserDocumentItem } from "@/app/components/DocumentsSection";
 
 async function getUser(userId: string) {
   const user = await prisma.user.findUnique({
@@ -20,6 +20,13 @@ async function getUser(userId: string) {
   return user;
 }
 
+async function getUserDocuments(userId: string) {
+  return prisma.$queryRawUnsafe(
+    'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
+    userId
+  ) as Promise<UserDocumentItem[]>;
+}
+
 export default async function EditUserPage({
   params,
 }: {
@@ -30,6 +37,8 @@ export default async function EditUserPage({
   if (!user) {
     notFound();
   }
+
+  const documents = await getUserDocuments(params.userId);
 
   return (
     <div className="space-y-6">
@@ -44,7 +53,7 @@ export default async function EditUserPage({
         </div>
       </div>
 
-      <EditUserClient user={user} />
+      <EditUserClient user={user} documents={documents} />
     </div>
   );
 }

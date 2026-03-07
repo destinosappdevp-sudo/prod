@@ -2,23 +2,48 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   LayoutDashboard,
   CalendarCheck,
-  List,
-  BarChart3,
   User,
   LogOut,
-  Search,
-  Bell,
+  Heart,
   CalendarDays,
   Star,
   PieChart,
   DollarSign,
-  Heart,
 } from "lucide-react";
+import { signOut } from "@/app/action";
+import { SupabaseImage } from "@/app/components/SupabaseImage";
 import { Button } from "@/components/ui/button";
+
+interface GuestReservationItem {
+  id: string;
+  homeId?: string;
+  title: string;
+  country: string;
+  municipality?: string | null;
+  price: number;
+  photo: string;
+  description: string;
+  startDate?: string | Date | null;
+  endDate?: string | Date | null;
+  status?: string | null;
+  totalAmount?: number | null;
+  favoriteId?: string;
+  isInFavoriteList?: boolean;
+}
+
+interface FavoriteItem {
+  id: string;
+  title: string;
+  country: string;
+  municipality?: string | null;
+  price: number;
+  photo: string;
+  description: string;
+  favoriteId?: string;
+}
 
 interface DashboardClientProps {
   role?: string;
@@ -35,114 +60,248 @@ interface DashboardClientProps {
   stats?: any;
   reservations?: any[];
   listings?: any[];
-  favorites?: any[];
-  guestReservations?: any[];
+  favorites?: FavoriteItem[];
+  guestReservations?: GuestReservationItem[];
 }
 
 export default function DashboardClient(props: DashboardClientProps) {
-  // Hooks siempre al inicio
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
-  const statCards = useMemo(
-    () => [
-      {
-        label: "Ingresos Totales",
-        value: `$${props.stats?.totalRevenue?.toFixed(2)}`,
-        note: "Bruto del mes",
-        icon: DollarSign,
-        color: "text-emerald-600",
-        bg: "bg-emerald-50",
-      },
-      {
-        label: "Comisión ZERKKA",
-        value: `-$${props.stats?.serviceFee?.toFixed(2)}`,
-        note: "Tarifa de servicio",
-        icon: PieChart,
-        color: "text-orange-600",
-        bg: "bg-orange-50",
-      },
-      {
-        label: "Pendiente",
-        value: `$${props.stats?.pendingAmount?.toFixed(2)}`,
-        note: "Reservas futuras",
-        icon: CalendarDays,
-        color: "text-yellow-600",
-        bg: "bg-yellow-50",
-      },
-      {
-        label: "Disponible",
-        value: `$${props.stats?.availableAmount?.toFixed(2)}`,
-        note: "Retirar fondos",
-        icon: DollarSign,
-        color: "text-green-600",
-        bg: "bg-green-50",
-      },
-    ],
-    [props.stats]
-  );
+  const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
 
-  if (props.role === "HOST") {
-    // ...lógica y JSX para HOST...
-    return (
-      <div className="min-h-screen bg-slate-50 flex">
-        {/* ...sidebar y navegación igual que HostDashboardClient... */}
-        <main className="flex-1 px-8 py-8">
-          <h1 className="text-2xl font-bold mb-4">Panel de Anfitrión</h1>
-          {/* Aquí iría el resto de la lógica de tabs, cards, reservas, anuncios, etc. */}
-          <pre className="bg-white p-4 rounded-xl text-xs text-slate-700 overflow-x-auto">
-            {JSON.stringify({ stats: props.stats, reservations: props.reservations, listings: props.listings }, null, 2)}
-          </pre>
-        </main>
-      </div>
-    );
+  function statusLabel(status?: string | null) {
+    switch (status) {
+      case "CONFIRMED": return "Confirmada";
+      case "PENDING":   return "Pendiente";
+      case "CANCELLED": return "Cancelada";
+      case "COMPLETED": return "Completada";
+      default:          return status ?? "—";
+    }
   }
 
-  // Lógica de dashboard para GUEST
+  function statusStyle(status?: string | null) {
+    switch (status) {
+      case "CONFIRMED": return "bg-green-100 text-green-700";
+      case "PENDING":   return "bg-yellow-100 text-yellow-700";
+      case "CANCELLED": return "bg-red-100 text-red-700";
+      case "COMPLETED": return "bg-blue-100 text-blue-700";
+      default:          return "bg-gray-100 text-gray-700";
+    }
+  }
+
+  function formatDate(d?: string | Date | null) {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  const menuItems = [
+    { key: "reservations", label: "Mis Reservas",  icon: CalendarCheck },
+    { key: "favorites",    label: "Favoritos",      icon: Heart },
+    { key: "profile",      label: "Perfil",         icon: User },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-8">
-      <h1 className="text-2xl font-bold mb-4">Panel de Cliente</h1>
-      <div className="w-full max-w-3xl space-y-8">
-        <section className="bg-white rounded-2xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Heart className="text-pink-500" size={18}/> Favoritos</h2>
-          {props.favorites && props.favorites.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {props.favorites.map((fav: any) => (
-                <div key={fav.id} className="border rounded-xl p-4 flex gap-4 items-center">
-                  <Image src={fav.photo || "/screenshot/no-image.png"} alt={fav.title} width={64} height={64} className="rounded-lg object-cover" />
-                  <div>
-                    <div className="font-semibold">{fav.title}</div>
-                    <div className="text-sm text-slate-500">{fav.country} {fav.municipality}</div>
-                    <div className="text-sm text-orange-600 font-bold">${fav.price}</div>
-                  </div>
-                </div>
-              ))}
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col">
+        <div className="px-6 py-6 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">Z</div>
+            <div>
+              <p className="text-sm font-semibold">ZERKKA</p>
+              <p className="text-xs text-white/60">Panel de Huésped</p>
             </div>
-          ) : (
-            <div className="text-slate-500">No tienes favoritos guardados.</div>
-          )}
-        </section>
-        <section className="bg-white rounded-2xl shadow p-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><CalendarCheck className="text-blue-500" size={18}/> Reservas</h2>
-          {props.guestReservations && props.guestReservations.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {props.guestReservations.map((res: any) => (
-                <div key={res.id} className="border rounded-xl p-4 flex gap-4 items-center">
-                  <Image src={res.photo || "/screenshot/no-image.png"} alt={res.title} width={64} height={64} className="rounded-lg object-cover" />
-                  <div>
-                    <div className="font-semibold">{res.title}</div>
-                    <div className="text-sm text-slate-500">{res.country} {res.municipality}</div>
-                    <div className="text-sm text-orange-600 font-bold">${res.price}</div>
-                    <div className="text-xs text-slate-400 mt-1">{res.description}</div>
-                  </div>
-                </div>
-              ))}
+          </div>
+        </div>
+
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setActiveTab(item.key)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                  isActive ? "bg-orange-500 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Icon size={18} />
+                <span className="text-sm font-medium">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="px-4 py-5 border-t border-white/10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-9 w-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-sm">
+              {props.profileImage ? (
+                <img src={props.profileImage} alt="Foto de perfil" className="h-full w-full object-cover" />
+              ) : (
+                props.userName?.[0]?.toUpperCase() || "G"
+              )}
             </div>
-          ) : (
-            <div className="text-slate-500">No tienes reservas recientes.</div>
-          )}
-        </section>
-      </div>
+            <div>
+              <p className="text-sm font-semibold">{props.userName || "Huésped"}</p>
+              <p className="text-xs text-white/60 truncate">{props.userEmail || ""}</p>
+            </div>
+          </div>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition"
+            >
+              <LogOut size={18} />
+              <span className="text-sm font-medium">Cerrar sesión</span>
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <main className="flex-1 px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-slate-900">
+            {activeTab === "reservations" && "Dashboard Huésped"}
+            {activeTab === "favorites" && "Mis Favoritos"}
+            {activeTab === "profile" && "Mi Perfil"}
+          </h1>
+          <p className="text-sm text-slate-500">
+            {activeTab === "reservations" && "Explora, reserva y gestiona tus alojamientos"}
+            {activeTab === "favorites" && "Alojamientos que guardaste"}
+            {activeTab === "profile" && "Tus datos personales"}
+          </p>
+        </div>
+
+        {/* MIS RESERVAS */}
+        {activeTab === "reservations" && (
+          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+            {props.guestReservations && props.guestReservations.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
+                      <th className="px-6 py-3">Alojamiento</th>
+                      <th className="px-6 py-3">Fechas</th>
+                      <th className="px-6 py-3">Total</th>
+                      <th className="px-6 py-3">Estado</th>
+                      <th className="px-6 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {props.guestReservations.map((res) => (
+                      <tr key={res.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="relative h-12 w-16 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                              {res.photo ? (
+                                <SupabaseImage
+                                  imagePath={res.photo}
+                                  alt={res.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : null}
+                            </div>
+                            <div>
+                              <div className="font-medium text-slate-900">{res.title}</div>
+                              <div className="text-xs text-slate-500">{res.country}{res.municipality ? `, ${res.municipality}` : ""}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-slate-700 whitespace-nowrap">
+                          {formatDate(res.startDate)} → {formatDate(res.endDate)}
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-slate-900">
+                          {res.totalAmount != null ? `$${Number(res.totalAmount).toFixed(2)}` : `$${res.price.toFixed(2)}`}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle(res.status)}`}>
+                            {statusLabel(res.status)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Link href={`/home/${res.homeId ?? res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
+                            Ver
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-12 text-center">
+                <CalendarCheck className="mx-auto mb-3 text-slate-300" size={48} />
+                <p className="text-slate-500">No tienes reservas aún.</p>
+                <Link href="/" className="mt-4 inline-block text-sm text-orange-600 hover:underline">Explorar alojamientos</Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* FAVORITOS */}
+        {activeTab === "favorites" && (
+          <div>
+            {props.favorites && props.favorites.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {props.favorites.map((fav) => (
+                  <div key={fav.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition">
+                    <div className="relative h-36 bg-slate-100">
+                      {fav.photo ? (
+                        <SupabaseImage imagePath={fav.photo} alt={fav.title} fill className="object-cover" />
+                      ) : null}
+                    </div>
+                    <div className="p-4">
+                      <div className="font-semibold text-slate-900">{fav.title}</div>
+                      <div className="text-sm text-slate-500">{fav.country}{fav.municipality ? `, ${fav.municipality}` : ""}</div>
+                      <div className="mt-2 text-orange-600 font-bold">${fav.price}</div>
+                      <Link href={`/home/${fav.id}`} className="mt-3 block text-center text-sm bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-xl py-2 transition">
+                        Ver alojamiento
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-12 text-center">
+                <Heart className="mx-auto mb-3 text-slate-300" size={48} />
+                <p className="text-slate-500">No tienes favoritos guardados.</p>
+                <Link href="/" className="mt-4 inline-block text-sm text-orange-600 hover:underline">Explorar alojamientos</Link>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PERFIL */}
+        {activeTab === "profile" && (
+          <div className="max-w-md bg-white rounded-2xl border border-slate-100 shadow-sm p-8 space-y-4">
+            <div className="flex items-center gap-4">
+              {props.profileImage ? (
+                <img
+                  src={props.profileImage}
+                  alt="Foto de perfil"
+                  className="h-16 w-16 rounded-full object-cover border-2 border-slate-200"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl font-bold">
+                  {props.firstName?.[0]?.toUpperCase() || props.userName?.[0]?.toUpperCase() || "G"}
+                </div>
+              )}
+              <div>
+                <div className="font-semibold text-slate-900">{props.firstName} {props.lastName}</div>
+                <div className="text-sm text-slate-500">{props.userEmail}</div>
+              </div>
+            </div>
+            {props.phoneNumber && (
+              <div className="text-sm text-slate-700"><span className="font-medium">Teléfono:</span> {props.phoneNumber}</div>
+            )}
+            <Link href="/profile" className="block text-center text-sm bg-slate-900 hover:bg-slate-700 text-white rounded-xl py-2.5 transition">
+              Editar perfil
+            </Link>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

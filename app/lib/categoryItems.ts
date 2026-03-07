@@ -15,21 +15,21 @@ interface iAppProps {
 export const categoryItems: iAppProps[] = [
   {
     id: 0,
-    name: "trending",
+    name: "vuelos",
     description: {
-      en: "This is a Property which is trending.",
-      es: "Esta es una propiedad que está en tendencia.",
+      en: "This property is near an airport or offers flight packages.",
+      es: "Esta propiedad está cerca de un aeropuerto u ofrece paquetes con vuelos.",
     },
     title: {
-      en: "Trending",
-      es: "Tendencia",
+      en: "Flights",
+      es: "Vuelos",
     },
     imageUrl:
       "https://a0.muscache.com/pictures/3726d94b-534a-42b8-bca0-a0304d912260.jpg",
   },
   {
     id: 1,
-    name: "beach",
+    name: "playa",
     description: {
       en: "This Property is close to the Beach.",
       es: "Esta propiedad está cerca de la playa.",
@@ -43,7 +43,7 @@ export const categoryItems: iAppProps[] = [
   },
   {
     id: 2,
-    name: "apartment",
+    name: "apartamento",
     description: {
       en: "This is a comfortable Apartment.",
       es: "Este es un apartamento cómodo.",
@@ -57,7 +57,7 @@ export const categoryItems: iAppProps[] = [
   },
   {
     id: 3,
-    name: "luxe",
+    name: "lujo",
     description: {
       en: "This Property is considered Luxurious.",
       es: "Esta propiedad es considerada de lujo.",
@@ -71,7 +71,7 @@ export const categoryItems: iAppProps[] = [
   },
   {
     id: 4,
-    name: "amazingView",
+    name: "vistasIncreibles",
     description: {
       en: "This property has an amazing View.",
       es: "Esta propiedad tiene vistas increíbles.",
@@ -85,35 +85,35 @@ export const categoryItems: iAppProps[] = [
   },
   {
     id: 5,
-    name: "design",
+    name: "habitacion",
     description: {
-      en: "This property puts a big focus on design.",
-      es: "Esta propiedad se enfoca mucho en el diseño.",
+      en: "This property offers a comfortable room.",
+      es: "Esta propiedad ofrece una habitación cómoda.",
     },
     title: {
-      en: "Design",
-      es: "Diseño",
+      en: "Room",
+      es: "Habitación",
     },
     imageUrl:
       "https://a0.muscache.com/pictures/50861fca-582c-4bcc-89d3-857fb7ca6528.jpg",
   },
   {
     id: 6,
-    name: "mountains",
+    name: "glamping",
     description: {
-      en: "This Property is located in the Andean Mountains.",
-      es: "Esta propiedad está ubicada en los Andes.",
+      en: "This property offers a glamping experience in nature.",
+      es: "Esta propiedad ofrece una experiencia de glamping en la naturaleza.",
     },
     title: {
-      en: "Mountains",
-      es: "Los Andes",
+      en: "Glamping",
+      es: "Glamping",
     },
     imageUrl:
       "https://a0.muscache.com/pictures/d7445031-62c4-46d0-91c3-4f29f9790f7a.jpg",
   },
   {
     id: 7,
-    name: "tiny",
+    name: "casaPequena",
     description: {
       en: "This property is considered a Tiny Home.",
       es: "Esta propiedad es considerada una casa pequeña.",
@@ -127,21 +127,21 @@ export const categoryItems: iAppProps[] = [
   },
   {
     id: 8,
-    name: "historic",
+    name: "casaCompleta",
     description: {
-      en: "This Property is considered Historic.",
-      es: "Esta propiedad es considerada histórica.",
+      en: "This is a complete house for you to enjoy.",
+      es: "Esta es una casa completa para que disfrutes.",
     },
     title: {
-      en: "Historic Home",
-      es: "Casa Histórica",
+      en: "Full House",
+      es: "Casa Completa",
     },
     imageUrl:
       "https://a0.muscache.com/pictures/33dd714a-7b4a-4654-aaf0-f58ea887a688.jpg",
   },
   {
     id: 9,
-    name: "cabin",
+    name: "cabana",
     description: {
       en: "This is a cozy Cabin.",
       es: "Esta es una cabaña acogedora.",
@@ -155,7 +155,7 @@ export const categoryItems: iAppProps[] = [
   },
   {
     id: 10,
-    name: "countryside",
+    name: "casaDeCampo",
     description: {
       en: "This Property is located in the Countryside.",
       es: "Esta propiedad está ubicada en la casa de campo.",
@@ -169,7 +169,7 @@ export const categoryItems: iAppProps[] = [
   },
   {
     id: 11,
-    name: "omg",
+    name: "espectacular",
     description: {
       en: "This Property has a wow factor.",
       es: "Esta propiedad tiene un factor espectacular.",

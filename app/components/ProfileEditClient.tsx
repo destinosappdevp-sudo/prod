@@ -8,13 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile } from "../action";
 import { Mail, Calendar, Upload } from "lucide-react";
+import DocumentsSection, { UserDocumentItem } from "./DocumentsSection";
 
 interface ProfileEditClientProps {
   userData: any;
   userId: string;
+  initialDocs?: UserDocumentItem[];
 }
 
-export default function ProfileEditClient({ userData, userId }: ProfileEditClientProps) {
+export default function ProfileEditClient({ userData, userId, initialDocs = [] }: ProfileEditClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,8 +30,6 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
   });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [document1File, setDocument1File] = useState<File | null>(null);
-  const [document2File, setDocument2File] = useState<File | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -81,12 +81,6 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
     if (selectedFile) {
       form.append("profileImage", selectedFile);
     }
-    if (document1File) {
-      form.append("document1Image", document1File);
-    }
-    if (document2File) {
-      form.append("document2Image", document2File);
-    }
 
     try {
       const result = await updateProfile(form);
@@ -103,8 +97,6 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
         setIsEditing(false);
         setPreviewImage(null);
         setSelectedFile(null);
-        setDocument1File(null);
-        setDocument2File(null);
         router.refresh();
       } else {
         setError(result.error || "Error al actualizar el perfil");
@@ -117,7 +109,7 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
     }
   };
 
-  const displayImage = previewImage || currentUserData?.profileImage || "/placeholder.webp";
+  const displayImage = previewImage || currentUserData?.profileImage || "/avatar-default.svg";
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -183,49 +175,15 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
             </div>
 
             {currentUserData?.role === "HOST" && (
-              <>
-                <div className="rounded-lg border p-4 bg-gray-50">
-                  <p className="text-sm font-semibold">Estado de verificación</p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    {getVerificationLabel(currentUserData?.verificationStatus)}
-                  </p>
-                  {currentUserData?.verificationReason && (
-                    <p className="text-xs text-gray-500 mt-1">{currentUserData.verificationReason}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="document1Image" className="text-sm font-medium">Documento 1 (imagen)</Label>
-                  <Input
-                    id="document1Image"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setDocument1File(e.target.files?.[0] || null)}
-                    className="mt-1"
-                  />
-                  {currentUserData?.document1Image && (
-                    <a href={currentUserData.document1Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
-                      Ver documento 1 actual
-                    </a>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="document2Image" className="text-sm font-medium">Documento 2 (imagen)</Label>
-                  <Input
-                    id="document2Image"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setDocument2File(e.target.files?.[0] || null)}
-                    className="mt-1"
-                  />
-                  {currentUserData?.document2Image && (
-                    <a href={currentUserData.document2Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline mt-1 inline-block">
-                      Ver documento 2 actual
-                    </a>
-                  )}
-                </div>
-              </>
+              <div className="rounded-lg border p-4 bg-gray-50">
+                <p className="text-sm font-semibold">Estado de verificación</p>
+                <p className="text-sm text-gray-700 mt-1">
+                  {getVerificationLabel(currentUserData?.verificationStatus)}
+                </p>
+                {currentUserData?.verificationReason && (
+                  <p className="text-xs text-gray-500 mt-1">{currentUserData.verificationReason}</p>
+                )}
+              </div>
             )}
 
             {/* Nombre */}
@@ -289,8 +247,6 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
                   setError(null);
                   setPreviewImage(null);
                   setSelectedFile(null);
-                  setDocument1File(null);
-                  setDocument2File(null);
                 }}
               >
                 Cancelar
@@ -303,7 +259,7 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
           <div className="flex items-start gap-6">
             <div className="relative">
               <Image
-                src={currentUserData?.profileImage || "/placeholder.webp"}
+                src={currentUserData?.profileImage || "/avatar-default.svg"}
                 alt={`${currentUserData?.firstName} ${currentUserData?.lastName}`}
                 width={120}
                 height={120}
@@ -336,6 +292,11 @@ export default function ProfileEditClient({ userData, userId }: ProfileEditClien
           </div>
         </div>
       )}
+
+      {/* Sección de documentos — visible siempre, independiente del modo edición */}
+      <div className="mt-6">
+        <DocumentsSection initialDocs={initialDocs} readOnly={false} />
+      </div>
     </div>
   );
 }

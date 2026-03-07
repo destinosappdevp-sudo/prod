@@ -31,6 +31,11 @@ async function getData(homeId: string) {
       price: true,
       country: true,
       municipality: true,
+      exactAddress: true,
+      latitude: true,
+      longitude: true,
+      checkInTime: true,
+      contactNumber: true,
       createdAt: true,
       Reservation: {
         where: {
@@ -137,6 +142,15 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           <Separator className="my-7" />
           <p className="text-muted-foreground">{data?.description}</p>
           <Separator className="my-7" />
+          {data?.exactAddress && (
+            <>
+              <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>{data.exactAddress}</span>
+              </div>
+              <Separator className="my-7" />
+            </>
+          )}
           <div>
             <h3 className="text-xl font-semibold mb-4">Lo que ofrece este lugar</h3>
             <div className="space-y-6">
@@ -198,6 +212,9 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           <HomeMap
             stateValue={state?.value as string}
             municipalityValue={data?.municipality as string}
+            exactAddress={data?.exactAddress as string | undefined}
+            latitude={data?.latitude as number | undefined}
+            longitude={data?.longitude as number | undefined}
           />
         </div>
         <HomeReservationForm

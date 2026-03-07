@@ -100,6 +100,8 @@ export default async function HostPropertyDetailPage({
     exactAddress: string | null;
     checkInTime: string | null;
     contactNumber: string | null;
+    latitude: number | null;
+    longitude: number | null;
     addedAmenities: boolean;
   };
   const propertyForForm = {
@@ -108,6 +110,8 @@ export default async function HostPropertyDetailPage({
     exactAddress: propertyDetails.exactAddress ?? null,
     checkInTime: propertyDetails.checkInTime ?? null,
     contactNumber: propertyDetails.contactNumber ?? null,
+    latitude: propertyDetails.latitude ?? null,
+    longitude: propertyDetails.longitude ?? null,
   };
   const states = getAllStates();
   const state = propertyDetails.country

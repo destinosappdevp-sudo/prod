@@ -1,18 +1,46 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/app/lib/supabase/middleware";
 
+const MAINTENANCE_BYPASS = ["/mantenimiento", "/login", "/_next", "/api", "/favicon"];
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Saltar rutas excluidas del modo mantenimiento
+  const isBypassed = MAINTENANCE_BYPASS.some((p) => pathname.startsWith(p));
+
+  if (!isBypassed) {
+    try {
+      const res = await fetch(
+        new URL("/api/maintenance-status", request.url),
+        {
+          cache: "no-store",
+          headers: {
+            // Reenviar cookies para que el API pueda identificar al usuario
+            cookie: request.headers.get("cookie") ?? "",
+          },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.maintenanceMode) {
+          // Verificar si es admin via cookie de sesión
+          const isAdmin = data.isAdmin ?? false;
+          if (!isAdmin) {
+            return NextResponse.redirect(new URL("/mantenimiento", request.url));
+          }
+        }
+      }
+    } catch {
+      // Si falla, no bloquear
+    }
+  }
+
   return await updateSession(request);
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

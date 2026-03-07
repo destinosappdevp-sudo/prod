@@ -21,6 +21,8 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
     "apexcharts": "^5.10.1",
+    "baseline-browser-mapping": "^2.10.0",
+    "caniuse-lite": "^1.0.30001777",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "leaflet": "^1.9.4",

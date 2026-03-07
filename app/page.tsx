@@ -4,9 +4,14 @@ import { Suspense } from "react";
 import ListingCard from "./components/ListingCard";
 import MapFilter from "./components/MapFilter";
 import BannerCarousel from "./components/BannerCarousel";
+import BannerMedio from "./components/BannerMedio";
 import { Nothing } from "./components/Nothing";
 import SkeletonCard from "./components/SkeletonCard";
+import { HorizontalCarousel } from "./components/HorizontalCarousel";
+import SearchResultsSplit from "./components/SearchResultsSplit";
 import prisma from "./lib/db";
+import { getStateByValue } from "./lib/venezuelaStates";
+import { getMunicipalityByValue } from "./lib/venezuelaMunicipalities";
 
 async function getData({
   searchParams,
@@ -44,6 +49,7 @@ async function getData({
       categoryName: true,
       guests: true,
       bedrooms: true,
+      exactAddress: true,
       Review: {
         select: {
           rating: true,
@@ -113,6 +119,9 @@ async function ShowPlace({
   const { data: { user } } = await supabase.auth.getUser();
   const data = await getData({ searchParams: searchParams, userId: user?.id });
 
+  // Is this a search? (any filter active)
+  const isSearch = !!(searchParams?.country || searchParams?.rooms || searchParams?.bathrooms || searchParams?.guest);
+
   if (data.length === 0) {
     return (
       <Nothing
@@ -121,6 +130,22 @@ async function ShowPlace({
       />
     );
   }
+
+  // Build pins for search map
+  const pins = data.map((item) => {
+    const muni = item.country && item.municipality
+      ? getMunicipalityByValue(item.country as string, item.municipality as string)
+      : null;
+    const state = item.country ? getStateByValue(item.country as string) : null;
+    const latLng = muni?.latLng ?? state?.latLng ?? [10.5, -66.9];
+    return {
+      id: item.id,
+      title: item.title as string,
+      price: item.price as number,
+      lat: (latLng as [number, number])[0],
+      lng: (latLng as [number, number])[1],
+    };
+  });
 
   const renderCard = (item: typeof data[0]) => (
     <ListingCard
@@ -133,7 +158,7 @@ async function ShowPlace({
       municipalityValue={item.municipality}
       userId={user?.id}
       favoriteId={item.Favorite[0]?.id}
-      isInFavoriteList={item.Favorite.length > 0 ? true : false}
+      isInFavoriteList={item.Favorite.length > 0}
       homeId={item.id}
       pathName="/"
       categoryName={item.categoryName}
@@ -144,39 +169,68 @@ async function ShowPlace({
     />
   );
 
+  if (isSearch) {
+    return (
+      <SearchResultsSplit pins={pins}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {data.map(renderCard)}
+        </div>
+      </SearchResultsSplit>
+    );
+  }
+
   // Propiedades sin región asignada o con estado desconocido
   const assignedStates = new Set(REGIONES.flatMap((r) => r.states));
-  const sinRegion = data.filter(
-    (item) => !item.country || !assignedStates.has(item.country as string)
+  const sinRegion = data
+    .filter((item) => !item.country || !assignedStates.has(item.country as string))
+    .slice(-9);
+
+  const renderCarouselCard = (item: typeof data[0]) => (
+    <div key={item.id} className="min-w-[260px] w-[260px] flex-shrink-0">
+      <ListingCard
+        title={item.title as string}
+        description={item.description as string}
+        imagePath={item.photo as string}
+        price={item.price as number}
+        stateValue={item.country as string}
+        municipalityValue={item.municipality}
+        userId={user?.id}
+        favoriteId={item.Favorite[0]?.id}
+        isInFavoriteList={item.Favorite.length > 0}
+        homeId={item.id}
+        pathName="/"
+        categoryName={item.categoryName}
+        guests={item.guests}
+        bedrooms={item.bedrooms}
+        reviews={item.Review}
+        reviewCount={item._count?.Review}
+      />
+    </div>
   );
 
   return (
     <div className="mt-8 space-y-12">
-      {REGIONES.map((region) => {
-        const items = data.filter((item) =>
-          region.states.includes(item.country as string)
-        );
+      {REGIONES.map((region, index) => {
+        const items = data
+          .filter((item) => region.states.includes(item.country as string))
+          .slice(-9);
         if (items.length === 0) return null;
         return (
-          <section key={region.title}>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-2 border-b border-gray-200">
-              {region.title}
-            </h2>
-            <div className="grid lg:grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-8">
-              {items.map(renderCard)}
-            </div>
-          </section>
+          <>
+            <HorizontalCarousel key={region.title} title={region.title}>
+              {items.map(renderCarouselCard)}
+            </HorizontalCarousel>
+            {/* Banner MEDIO1 después de Región Centro (index 0) */}
+            {index === 0 && <BannerMedio tipo="MEDIO1" />}
+            {/* Banner MEDIO2 después de Región Oriente (index 1) */}
+            {index === 1 && <BannerMedio tipo="MEDIO2" />}
+          </>
         );
       })}
       {sinRegion.length > 0 && (
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-2 border-b border-gray-200">
-            Otras Regiones
-          </h2>
-          <div className="grid lg:grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {sinRegion.map(renderCard)}
-          </div>
-        </section>
+        <HorizontalCarousel title="Otras Regiones">
+          {sinRegion.map(renderCarouselCard)}
+        </HorizontalCarousel>
       )}
     </div>
   );
@@ -184,7 +238,7 @@ async function ShowPlace({
 
 function SkeletonLoader() {
   return (
-    <div className="grid lg:grid-cols-4 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">
+    <div className="flex gap-5 overflow-hidden mt-8">
       <SkeletonCard />
       <SkeletonCard />
       <SkeletonCard />

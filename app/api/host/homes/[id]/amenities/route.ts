@@ -5,57 +5,28 @@ import prisma from "@/app/lib/db";
 const prismaAny = prisma as any;
 
 async function applyAmenityUpdates(homeId: string, amenities: { amenityId: string; status: "YES" | "NO" | "UNSPECIFIED" }[]) {
-  const deleteIds = amenities
-    .filter((item) => item.status === "UNSPECIFIED")
-    .map((item) => item.amenityId);
+  const toKeep = amenities.filter((item) => item.status !== "UNSPECIFIED");
 
-  const upserts = amenities.filter((item) => item.status !== "UNSPECIFIED");
+  await prismaAny.$transaction(async (tx: any) => {
+    // Eliminar todas las amenidades del home y re-crear solo las activas
+    await tx.homeAmenity.deleteMany({ where: { homeId } });
 
-  const operations = [];
-
-  if (deleteIds.length > 0) {
-    operations.push(
-      prismaAny.homeAmenity.deleteMany({
-        where: {
-          homeId,
-          amenityId: { in: deleteIds },
-        },
-      })
-    );
-  }
-
-  upserts.forEach((item) => {
-    operations.push(
-      prismaAny.homeAmenity.upsert({
-        where: {
-          homeId_amenityId: {
-            homeId,
-            amenityId: item.amenityId,
-          },
-        },
-        update: {
-          status: item.status,
-        },
-        create: {
+    for (const item of toKeep) {
+      await tx.homeAmenity.create({
+        data: {
+          id: crypto.randomUUID(),
           homeId,
           amenityId: item.amenityId,
           status: item.status,
         },
-      })
-    );
-  });
+      });
+    }
 
-  const hasSelected = upserts.length > 0;
-  operations.push(
-    prismaAny.home.update({
+    await tx.home.update({
       where: { id: homeId },
-      data: { addedAmenities: hasSelected },
-    })
-  );
-
-  if (operations.length > 0) {
-    await prismaAny.$transaction(operations);
-  }
+      data: { addedAmenities: toKeep.length > 0 },
+    });
+  });
 }
 
 export async function PATCH(

@@ -13,10 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, ExternalLink } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import DocumentsSection, { UserDocumentItem } from "@/app/components/DocumentsSection";
 
 interface User {
   id: string;
@@ -39,9 +40,10 @@ interface User {
 
 interface EditUserClientProps {
   user: User;
+  documents?: UserDocumentItem[];
 }
 
-export function EditUserClient({ user }: EditUserClientProps) {
+export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: user.firstName,
@@ -53,6 +55,38 @@ export function EditUserClient({ user }: EditUserClientProps) {
     verificationReason: user.verificationReason || "",
   });
   const [saving, setSaving] = useState(false);
+  const [passwordData, setPasswordData] = useState({ password: "", confirm: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const handleChangePassword = async () => {
+    if (passwordData.password.length < 8) {
+      setPasswordMsg({ type: "error", text: "La contraseña debe tener al menos 8 caracteres." });
+      return;
+    }
+    if (passwordData.password !== passwordData.confirm) {
+      setPasswordMsg({ type: "error", text: "Las contraseñas no coinciden." });
+      return;
+    }
+    setChangingPassword(true);
+    setPasswordMsg(null);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: passwordData.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error");
+      setPasswordMsg({ type: "success", text: "Contraseña actualizada correctamente." });
+      setPasswordData({ password: "", confirm: "" });
+    } catch (err: any) {
+      setPasswordMsg({ type: "error", text: err.message || "Error al cambiar la contraseña." });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -350,6 +384,78 @@ export function EditUserClient({ user }: EditUserClientProps) {
           </div>
         </Card>
       )}
+
+      {/* Cambiar Contraseña */}
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+          <KeyRound size={20} className="text-gray-500" />
+          Cambiar Contraseña
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">Establece una nueva contraseña para este usuario. Mínimo 8 caracteres.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="new-password">Nueva contraseña</Label>
+            <div className="relative">
+              <Input
+                id="new-password"
+                type={showPassword ? "text" : "password"}
+                value={passwordData.password}
+                onChange={(e) => setPasswordData({ ...passwordData, password: e.target.value })}
+                placeholder="Mínimo 8 caracteres"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="confirm-password">Confirmar contraseña</Label>
+            <Input
+              id="confirm-password"
+              type={showPassword ? "text" : "password"}
+              value={passwordData.confirm}
+              onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })}
+              placeholder="Repite la contraseña"
+              autoComplete="new-password"
+            />
+          </div>
+        </div>
+
+        {passwordMsg && (
+          <div
+            className={`mt-3 px-4 py-2 rounded-lg text-sm font-medium ${
+              passwordMsg.type === "success"
+                ? "bg-green-50 text-green-700 border border-green-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+            }`}
+          >
+            {passwordMsg.text}
+          </div>
+        )}
+
+        <div className="mt-4 flex justify-end">
+          <Button
+            type="button"
+            onClick={handleChangePassword}
+            disabled={changingPassword || !passwordData.password || !passwordData.confirm}
+            variant="outline"
+            className="border-gray-300"
+          >
+            <KeyRound size={15} className="mr-2" />
+            {changingPassword ? "Actualizando..." : "Actualizar contraseña"}
+          </Button>
+        </div>
+      </Card>
+
+      {/* Documentos del usuario */}
+      <DocumentsSection initialDocs={documents} readOnly={true} />
 
       {/* Botón de guardar al final */}
       <div className="flex justify-end">

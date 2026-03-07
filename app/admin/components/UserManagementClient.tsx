@@ -18,6 +18,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
+  profileImage?: string | null;
   role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN" | "BANER";
   isVerified?: boolean;
   verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
@@ -35,11 +36,14 @@ interface UserManagementClientProps {
   initialUsers: User[];
 }
 
+const PAGE_SIZE = 10;
+
 export function UserManagementClient({ initialUsers }: UserManagementClientProps) {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [updating, setUpdating] = useState<{ [key: string]: boolean }>({});
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
@@ -51,6 +55,22 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
 
     return matchesSearch && matchesRole;
   });
+
+  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleRoleFilterChange = (value: string) => {
+    setRoleFilter(value);
+    setCurrentPage(1);
+  };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     setUpdating({ ...updating, [userId]: true });
@@ -117,11 +137,11 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
               type="text"
               placeholder="Buscar por nombre o email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10"
             />
           </div>
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
             <SelectTrigger className="w-full md:w-[200px]">
               <SelectValue placeholder="Filtrar por rol" />
             </SelectTrigger>
@@ -192,14 +212,18 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-700">
-                          {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                        </span>
+                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                        {user.profileImage && !user.profileImage.includes('avatar.vercel.sh') ? (
+                          <img src={user.profileImage} alt={user.firstName} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-sm font-medium text-gray-700">
+                            {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                          </span>
+                        )}
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
@@ -290,6 +314,69 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
       {filteredUsers.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500">No se encontraron usuarios</p>
+        </div>
+      )}
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-gray-600">
+            Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredUsers.length)} de {filteredUsers.length} usuarios
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+            >
+              «
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => p - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+            >
+              ‹ Anterior
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+              .reduce<(number | "...")[]>((acc, p, idx, arr) => {
+                if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === "..." ? (
+                  <span key={`dots-${i}`} className="px-2 text-gray-400">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setCurrentPage(p as number)}
+                    className={`px-3 py-1 text-sm rounded border ${
+                      currentPage === p
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+            <button
+              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+            >
+              Siguiente ›
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+            >
+              »
+            </button>
+          </div>
         </div>
       )}
     </div>

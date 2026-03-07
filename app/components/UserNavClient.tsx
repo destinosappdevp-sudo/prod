@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +15,7 @@ import { signOut } from "../action";
 interface UserNavClientProps {
   user: any;
   createHomeAction: (formData: FormData) => Promise<void>;
-  userPicture: string;
+  userPicture: string | null;
   userName?: string;
   userRole?: string | null;
 }
@@ -26,14 +27,27 @@ export function UserNavClient({
   userName,
   userRole,
 }: UserNavClientProps) {
+  const [imgSrc, setImgSrc] = useState<string | null>(userPicture || null);
+
+  useEffect(() => {
+    setImgSrc(userPicture || null);
+  }, [userPicture]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <img
-          src={userPicture}
-          alt="Pic of user"
-          className="rounded-full h-10 w-10 border border-gray-300 cursor-pointer hover:opacity-80 transition"
-        />
+        {imgSrc ? (
+          <img
+            src={imgSrc}
+            alt="Pic of user"
+            onError={() => setImgSrc(null)}
+            className="rounded-full h-10 w-10 border border-gray-300 cursor-pointer hover:opacity-80 transition object-cover bg-gray-100"
+          />
+        ) : (
+          <div className="rounded-full h-10 w-10 border border-gray-300 cursor-pointer hover:opacity-80 transition bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
+            {userName?.[0]?.toUpperCase() || "U"}
+          </div>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[240px]">
         {user ? (

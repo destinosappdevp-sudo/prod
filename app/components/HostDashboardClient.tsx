@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import {
   LayoutDashboard,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import HostListingCard from "@/app/components/HostListingCard";
+import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { Button } from "@/components/ui/button";
 
 interface HostStats {
@@ -66,6 +66,10 @@ interface HostDashboardClientProps {
   stats: HostStats;
   reservations: HostReservationItem[];
   listings: HostListingItem[];
+  createHomeAction?: (formData: FormData) => Promise<void>;
+  userData?: any;
+  userId?: string;
+  initialDocs?: any[];
 }
 
 const menuItems = [
@@ -117,6 +121,10 @@ export default function HostDashboardClient({
   stats,
   reservations,
   listings,
+  createHomeAction,
+  userData,
+  userId,
+  initialDocs = [],
 }: HostDashboardClientProps) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
@@ -230,8 +238,12 @@ export default function HostDashboardClient({
 
         <div className="px-4 py-5 border-t border-white/10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-sm">
-              {userName?.[0]?.toUpperCase() || "H"}
+            <div className="h-9 w-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-sm">
+              {profileImage && !profileImage.includes('avatar.vercel.sh') ? (
+                <img src={profileImage} alt="avatar" className="h-full w-full object-cover" />
+              ) : (
+                firstName?.[0]?.toUpperCase() || userName?.[0]?.toUpperCase() || "H"
+              )}
             </div>
             <div>
               <p className="text-sm font-semibold">{userName || "Anfitrion"}</p>
@@ -253,7 +265,7 @@ export default function HostDashboardClient({
       <main className="flex-1 px-8 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Dashboard Anfitrión</h1>
             <p className="text-sm text-slate-500">Gestiona tus propiedades y reservas</p>
           </div>
           <div className="flex items-center gap-4">
@@ -538,9 +550,15 @@ export default function HostDashboardClient({
           <div>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">Mis anuncios</h3>
-              <Link href="/create" className="text-sm text-orange-600 hover:underline">
-                Publicar nuevo
-              </Link>
+              {createHomeAction ? (
+                <form action={createHomeAction}>
+                  <button type="submit" className="text-sm text-orange-600 hover:underline">
+                    Publicar nuevo
+                  </button>
+                </form>
+              ) : (
+                <span className="text-sm text-gray-400">Publicar nuevo</span>
+              )}
             </div>
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
               {listings.map((item) => (
@@ -570,6 +588,9 @@ export default function HostDashboardClient({
 
         {activeTab === "profile" && (
           <div className="max-w-2xl">
+            {userData && userId ? (
+              <ProfileEditClient userData={userData} userId={userId} initialDocs={initialDocs} />
+            ) : (
             <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
               <h3 className="text-2xl font-semibold mb-6">Editar Perfil</h3>
               
@@ -704,6 +725,7 @@ export default function HostDashboardClient({
                 </div>
               </form>
             </div>
+            )}
           </div>
         )}
       </main>

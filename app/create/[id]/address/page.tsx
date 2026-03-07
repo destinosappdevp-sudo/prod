@@ -26,6 +26,25 @@ function AddressRoute({ params }: { params: { id: string } }) {
   const [municipalityValue, setMunicipalityValue] = useState(
     getDefaultMunicipalityByState("CC")?.value || ""
   );
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [coordsInput, setCoordsInput] = useState("");
+  const [coordsParsed, setCoordsParsed] = useState(false);
+
+  const parseCoords = (value: string) => {
+    setCoordsInput(value);
+    // Acepta formato: "7.80878, -72.23072" o "7.80878 -72.23072"
+    const match = value.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+    if (match) {
+      setLatitude(match[1]);
+      setLongitude(match[2]);
+      setCoordsParsed(true);
+    } else {
+      setLatitude("");
+      setLongitude("");
+      setCoordsParsed(false);
+    }
+  };
   const LazyMap = dynamic(() => import("@/app/components/Map"), {
     ssr: false,
     loading: () => <Skeleton className="h-[50vh] w-full" />,
@@ -42,11 +61,9 @@ function AddressRoute({ params }: { params: { id: string } }) {
       <form action={createLocation}>
         <input type="hidden" name="homeId" value={params.id} />
         <input type="hidden" name="stateValue" value={stateValue} />
-        <input
-          type="hidden"
-          name="municipalityValue"
-          value={municipalityValue}
-        />
+        <input type="hidden" name="municipalityValue" value={municipalityValue} />
+        <input type="hidden" name="latitude" value={latitude} />
+        <input type="hidden" name="longitude" value={longitude} />
         <div className="w-3/5 mx-auto mb-36">
           <div className="mb-5">
             <Select
@@ -108,8 +125,27 @@ function AddressRoute({ params }: { params: { id: string } }) {
                 placeholder="Ej: Av. Principal, calle 10, casa 2"
                 className="text-sm"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            </div>            <div>
+              <Label className="text-sm font-medium">Coordenadas GPS <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                En Google Maps: clic derecho sobre el lugar → copia las coordenadas → pégalas aquí
+              </p>
+              <Input
+                type="text"
+                value={coordsInput}
+                onChange={(e) => parseCoords(e.target.value)}
+                placeholder="Pega aquí: 7.80878, -72.23072"
+                className={`text-sm ${
+                  coordsInput && !coordsParsed ? "border-red-400 focus-visible:ring-red-400" : ""
+                }`}
+              />
+              {coordsParsed && (
+                <p className="text-xs text-green-600 mt-1">✓ Lat: {latitude} · Lng: {longitude}</p>
+              )}
+              {coordsInput && !coordsParsed && (
+                <p className="text-xs text-red-500 mt-1">Formato no reconocido. Ejemplo: 7.80878, -72.23072</p>
+              )}
+            </div>            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="checkInTime">Hora de ingreso</Label>
                 <Input

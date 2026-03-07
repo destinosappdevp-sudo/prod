@@ -24,10 +24,13 @@ async function UserNav() {
     userId: user?.id as string,
   });
 
-  const userPicture =
-    userProfileImage ??
-    user?.user_metadata?.avatar_url ??
-    "/placeholder.webp";
+  const isRealPhoto = (url?: string | null) => !!url && !url.includes('avatar.vercel.sh');
+
+  const userPicture = isRealPhoto(userProfileImage)
+    ? userProfileImage!
+    : isRealPhoto(user?.user_metadata?.avatar_url)
+    ? user!.user_metadata.avatar_url
+    : null;
 
   const userName = user?.user_metadata?.first_name ? 
     `${user.user_metadata.first_name} ${user.user_metadata.last_name || ""}`.trim() :

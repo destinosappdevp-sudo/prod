@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
-import DashboardClient from "@/app/components/DashboardClient_min";
+import HostDashboardClient from "@/app/components/HostDashboardClient";
+import GuestDashboardClient from "@/app/components/DashboardClient_min";
+import { createAirbnbHome } from "@/app/action";
 
 async function getHostDashboardData(userId: string) {
   noStore();
@@ -224,13 +226,18 @@ async function getGuestDashboardData(userId: string) {
       description: fav.Home.description || "",
     })),
     guestReservations: reservations.map((res: any) => ({
-      id: res.Home.id,
+      id: res.id,
+      homeId: res.Home.id,
       title: res.Home.title || "Sin título",
       country: res.Home.country || "",
       municipality: res.Home.municipality,
       price: res.Home.price || 0,
       photo: res.Home.photo || "",
       description: res.Home.description || "",
+      startDate: res.startDate,
+      endDate: res.endDate,
+      status: res.status,
+      totalAmount: res.totalAmount,
       favoriteId: res.Home.Favorite[0]?.id,
       isInFavoriteList: (res.Home.Favorite.length || 0) > 0,
     })),
@@ -257,6 +264,11 @@ export default async function DashboardPage({
       lastName: true,
       phoneNumber: true,
       profileImage: true,
+      document1Image: true,
+      document2Image: true,
+      verificationStatus: true,
+      isVerified: true,
+      email: true,
     },
   });
 
@@ -268,33 +280,46 @@ export default async function DashboardPage({
     ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ""}`.trim()
     : user.email?.split("@")[0];
 
+  // Roles administrativos van directo a su panel
+  if (userRecord.role === "ADMIN" || userRecord.role === "SUPERADMIN") {
+    redirect("/admin");
+  }
+  if (userRecord.role === "BANER") {
+    redirect("/admin/banners");
+  }
+
   const role = userRecord.role as "HOST" | "GUEST";
   const initialTab = searchParams.tab;
 
   if (role === "HOST") {
     const data = await getHostDashboardData(user.id);
+    const createHomeAction = createAirbnbHome.bind(null, { userId: user.id });
+    const initialDocs = await (prisma as any).$queryRawUnsafe(
+      `SELECT id, url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" ASC`,
+      user.id
+    ).catch(() => []);
     return (
-      <DashboardClient
-        role="HOST"
+      <HostDashboardClient
         userName={userName}
         userEmail={user.email}
-        userId={user.id}
         firstName={userRecord?.firstName}
         lastName={userRecord?.lastName}
-        phoneNumber={userRecord?.phoneNumber}
         profileImage={userRecord?.profileImage}
         country="Venezuela"
         city="Caracas"
-        initialTab={initialTab}
         stats={data.stats}
         reservations={data.reservations}
         listings={data.listings}
+        createHomeAction={createHomeAction}
+        userData={{ ...userRecord, email: userRecord?.email || user.email }}
+        userId={user.id}
+        initialDocs={initialDocs || []}
       />
     );
   } else {
     const data = await getGuestDashboardData(user.id);
     return (
-      <DashboardClient
+      <GuestDashboardClient
         role="GUEST"
         userName={userName}
         userEmail={user.email}

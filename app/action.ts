@@ -111,7 +111,13 @@ export async function signInWithEmail(email: string, password: string) {
 
   if (error) {
     console.error("Error en login:", error);
-    return { error: error.message };
+    const errorMap: Record<string, string> = {
+      "Invalid login credentials": "Correo o contraseña incorrectos",
+      "Email not confirmed": "Debes confirmar tu correo antes de iniciar sesión",
+      "Too many requests": "Demasiados intentos. Por favor intenta más tarde",
+      "User not found": "No existe una cuenta con ese correo",
+    };
+    return { error: errorMap[error.message] ?? "Error al iniciar sesión. Intenta de nuevo" };
   }
 
   // Asegurar que el usuario existe en la base de datos
@@ -290,6 +296,10 @@ export async function createLocation(formData: FormData) {
   const exactAddress = formData.get("exactAddress") as string;
   const checkInTime = formData.get("checkInTime") as string;
   const contactNumber = formData.get("contactNumber") as string;
+  const latRaw = formData.get("latitude") as string;
+  const lngRaw = formData.get("longitude") as string;
+  const latitude = latRaw ? parseFloat(latRaw) : null;
+  const longitude = lngRaw ? parseFloat(lngRaw) : null;
 
   // Obtener el usuario autenticado
   const supabaseServer = await createClient();
@@ -321,6 +331,8 @@ export async function createLocation(formData: FormData) {
       country: stateValue,
       municipality: municipalityValue,
       exactAddress: exactAddress || null,
+      latitude: latitude,
+      longitude: longitude,
       checkInTime: checkInTime || null,
       contactNumber: contactNumber || null,
       publishStatus: publishStatus as any,
@@ -558,6 +570,7 @@ export async function updateProfile(formData: FormData) {
     console.log("Usuario actualizado:", updatedUser);
     revalidatePath("/profile");
     revalidatePath("/my-dashboard");
+    revalidatePath("/", "layout");
     return { success: true, user: updatedUser };
   } catch (error) {
     console.error("Error en updateProfile:", error);

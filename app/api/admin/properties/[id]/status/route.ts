@@ -4,7 +4,7 @@ import { createClient } from "@/app/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-type AllowedStatus = "APPROVED" | "PENDING_APPROVAL" | "DRAFT";
+type AllowedStatus = "APPROVED" | "PENDING_APPROVAL" | "DRAFT" | "REJECTED";
 
 export async function PATCH(
   request: Request,
@@ -33,7 +33,7 @@ export async function PATCH(
     const body = await request.json();
     const nextStatus = body?.publishStatus as AllowedStatus | undefined;
 
-    if (!nextStatus || !["APPROVED", "PENDING_APPROVAL", "DRAFT"].includes(nextStatus)) {
+    if (!nextStatus || !["APPROVED", "PENDING_APPROVAL", "DRAFT", "REJECTED"].includes(nextStatus)) {
       return NextResponse.json(
         { error: "Estado inválido" },
         { status: 400 }

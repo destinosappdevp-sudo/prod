@@ -103,9 +103,9 @@ export default async function CheckoutPage({
             )}
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-1">
-                {home.categoryName === "apartment" ? "Apartamento entero" :
-                 home.categoryName === "house" ? "Casa entera" :
-                 home.categoryName === "villa" ? "Villa entera" :
+                {home.categoryName === "apartamento" ? "Apartamento entero" :
+                 home.categoryName === "casa" ? "Casa entera" :
+                 home.categoryName === "lujo" ? "Villa de lujo" :
                  "Alojamiento entero"}
               </p>
               <h3 className="font-semibold text-lg mb-1">{home.title}</h3>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import { createAdminClient } from "@/app/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -160,6 +161,71 @@ export async function GET(
     console.error("Error fetching user:", error);
     return NextResponse.json(
       { error: "Error al obtener usuario" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/admin/users/[userId] — cambiar contraseña
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true },
+    });
+
+    if (!currentUser || (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERADMIN")) {
+      return NextResponse.json(
+        { error: "No tienes permisos para realizar esta acción" },
+        { status: 403 }
+      );
+    }
+
+    const { password } = await req.json();
+
+    if (!password || typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "La contraseña debe tener al menos 8 caracteres" },
+        { status: 400 }
+      );
+    }
+
+    const adminClient = createAdminClient();
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: "Configuración de servidor incompleta" },
+        { status: 500 }
+      );
+    }
+
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(
+      params.userId,
+      { password }
+    );
+
+    if (updateError) {
+      console.error("Supabase error:", updateError);
+      return NextResponse.json(
+        { error: "Error al cambiar la contraseña" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    return NextResponse.json(
+      { error: "Error al cambiar la contraseña" },
       { status: 500 }
     );
   }

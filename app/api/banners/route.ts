@@ -6,15 +6,12 @@ export async function GET() {
   try {
     const now = new Date();
 
-    // Obtener banners activos dentro del rango de fechas
+    // Solo banners tipo HERO para el carrusel principal
     const banners = await prisma.banner.findMany({
       where: {
-        startDate: {
-          lte: now,
-        },
-        endDate: {
-          gte: now,
-        },
+        startDate: { lte: now },
+        endDate: { gte: now },
+        tipo: { in: ["HERO1", "HERO2"] },
       },
       select: {
         id: true,

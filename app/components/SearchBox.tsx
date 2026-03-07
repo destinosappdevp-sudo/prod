@@ -19,8 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search } from "lucide-react";
-import { useState, useRef } from "react";
+import { Search, MapPin } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
 import Counter from "./Counter";
@@ -29,8 +29,49 @@ import SelectCalendar from "./SelectCalendar";
 
 function SearchBox() {
   const router = useRouter();
-  const { getAllStates } = useVenezuelaStates();
+  const { getAllStates, getStateByValue } = useVenezuelaStates();
   const [locationValue, setLocationValue] = useState("");
+  const [availableStates, setAvailableStates] = useState<{ value: string; label: string }[]>([]);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/states-with-homes")
+      .then((r) => r.json())
+      .then((stateValues: string[]) => {
+        const all = getAllStates();
+        const withHomes = all.filter((s) => stateValues.includes(s.value));
+        // Sort: Caracas first (CC), then alphabetically
+        const caracas = withHomes.find((s) => s.value === "CC");
+        const rest = withHomes
+          .filter((s) => s.value !== "CC")
+          .sort((a, b) => a.label.localeCompare(b.label, "es"));
+        setAvailableStates(caracas ? [caracas, ...rest] : rest);
+      })
+      .catch(() => setAvailableStates(getAllStates()));
+  }, []);
+
+  function handleNearMe() {
+    if (!navigator.geolocation) return;
+    setLoadingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLoadingLocation(false);
+        // Use CC (Caracas) as nearest fallback — real reverse geocoding would need an API key
+        // For now, set location to nearest known state via lat/lng distance
+        const { latitude, longitude } = pos.coords;
+        const all = getAllStates();
+        let nearest = all[0];
+        let minDist = Infinity;
+        for (const s of all) {
+          const [slat, slng] = s.latLng as [number, number];
+          const d = Math.hypot(slat - latitude, slng - longitude);
+          if (d < minDist) { minDist = d; nearest = s; }
+        }
+        setLocationValue(nearest.value);
+      },
+      () => setLoadingLocation(false)
+    );
+  }
   const [guests, setGuests] = useState(0);
   const [rooms, setRooms] = useState(0);
   const [bathrooms, setBathrooms] = useState(0);
@@ -98,7 +139,7 @@ function SearchBox() {
           >
             <p className="text-xs font-semibold text-gray-800">Dónde</p>
             <p className="text-sm text-gray-500 truncate">
-              {locationValue ? getAllStates().find(s => s.value === locationValue)?.label : "Explora destinos"}
+              {locationValue ? getStateByValue(locationValue)?.label : "Explora destinos"}
             </p>
           </div>
           <div 
@@ -139,6 +180,7 @@ function SearchBox() {
 
               <Select
                 required
+                value={locationValue}
                 onValueChange={(value) => setLocationValue(value)}
               >
                 <SelectTrigger className="w-full">
@@ -146,8 +188,16 @@ function SearchBox() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectLabel>Estados de Venezuela</SelectLabel>
-                    {getAllStates().map((item) => (
+                    <SelectItem value="__near__" onPointerDown={(e) => { e.preventDefault(); handleNearMe(); }}>
+                      <span className="flex items-center gap-2">
+                        <MapPin size={14} className="text-orange-500" />
+                        {loadingLocation ? "Detectando ubicación..." : "Cerca de mí"}
+                      </span>
+                    </SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Estados con alojamientos</SelectLabel>
+                    {availableStates.map((item) => (
                       <SelectItem key={item.value} value={item.value}>
                         {item.label}
                       </SelectItem>

@@ -34,6 +34,8 @@ interface PropertyEditFormProps {
     exactAddress: string | null;
     checkInTime: string | null;
     contactNumber: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     photo: string | null;
     price: number | null;
     categoryName: string | null;
@@ -74,9 +76,29 @@ export default function PropertyEditForm({
     exactAddress: property.exactAddress || "",
     checkInTime: property.checkInTime || "",
     contactNumber: property.contactNumber || "",
+    latitude: property.latitude?.toString() || "",
+    longitude: property.longitude?.toString() || "",
     price: property.price?.toString() || "",
     categoryName: property.categoryName || "",
   });
+  const existingCoords =
+    property.latitude != null && property.longitude != null
+      ? `${property.latitude}, ${property.longitude}`
+      : "";
+  const [coordsInput, setCoordsInput] = useState(existingCoords);
+  const [coordsParsed, setCoordsParsed] = useState(existingCoords !== "");
+
+  const parseCoords = (value: string) => {
+    setCoordsInput(value);
+    const match = value.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+    if (match) {
+      setFormData((prev) => ({ ...prev, latitude: match[1], longitude: match[2] }));
+      setCoordsParsed(true);
+    } else {
+      setFormData((prev) => ({ ...prev, latitude: "", longitude: "" }));
+      setCoordsParsed(false);
+    }
+  };
   const initialAmenityMap = useMemo(() => {
     const map: Record<string, AmenityStatus> = {};
     amenityCategories.forEach((category) => {
@@ -108,6 +130,8 @@ export default function PropertyEditForm({
       payload.append("exactAddress", formData.exactAddress);
       payload.append("checkInTime", formData.checkInTime);
       payload.append("contactNumber", formData.contactNumber);
+      if (formData.latitude) payload.append("latitude", formData.latitude);
+      if (formData.longitude) payload.append("longitude", formData.longitude);
       payload.append("price", formData.price);
       payload.append("categoryName", formData.categoryName);
       payload.append(
@@ -382,6 +406,27 @@ export default function PropertyEditForm({
                 placeholder="Ej: Av. Principal, calle 10, casa 2"
                 className="text-sm"
               />
+            </div>
+            <div className="mt-4">
+              <Label className="text-sm font-medium">Coordenadas GPS <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                En Google Maps: clic derecho sobre el lugar → copia las coordenadas → pégalas aquí
+              </p>
+              <Input
+                type="text"
+                value={coordsInput}
+                onChange={(e) => parseCoords(e.target.value)}
+                placeholder="Pega aquí: 7.80878, -72.23072"
+                className={`text-sm ${
+                  coordsInput && !coordsParsed ? "border-red-400 focus-visible:ring-red-400" : ""
+                }`}
+              />
+              {coordsParsed && (
+                <p className="text-xs text-green-600 mt-1">✓ Lat: {formData.latitude} · Lng: {formData.longitude}</p>
+              )}
+              {coordsInput && !coordsParsed && (
+                <p className="text-xs text-red-500 mt-1">Formato no reconocido. Ejemplo: 7.80878, -72.23072</p>
+              )}
             </div>
           </div>
 

@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import prisma from "../lib/db";
 import { User, Mail, Calendar, Home, Heart, BookmarkCheck } from "lucide-react";
 import ProfileEditClient from "../components/ProfileEditClient";
+import { UserDocumentItem } from "@/app/components/DocumentsSection";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,13 @@ async function getUserData(userId: string) {
   return userData as any;
 }
 
+async function getUserDocuments(userId: string) {
+  return prisma.$queryRawUnsafe(
+    'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
+    userId
+  ) as Promise<UserDocumentItem[]>;
+}
+
 async function ProfilePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -36,10 +44,11 @@ async function ProfilePage() {
   }
 
   const userData = await getUserData(user.id);
+  const userDocuments = await getUserDocuments(user.id);
 
   return (
     <section className="container mx-auto px-5 lg:px-10 mt-10 mb-12">
-      <ProfileEditClient userData={userData} userId={user.id} />
+      <ProfileEditClient userData={userData} userId={user.id} initialDocs={userDocuments} />
 
       <div className="max-w-4xl mx-auto mt-8">
         <div className="grid md:grid-cols-3 gap-4 mb-6">

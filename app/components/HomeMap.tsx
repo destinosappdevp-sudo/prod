@@ -4,9 +4,15 @@ import dynamic from "next/dynamic";
 function HomeMap({
   stateValue,
   municipalityValue,
+  exactAddress,
+  latitude,
+  longitude,
 }: {
   stateValue: string;
   municipalityValue?: string;
+  exactAddress?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }) {
   const LazyMap = dynamic(() => import("@/app/components/Map"), {
     ssr: false,
@@ -17,6 +23,9 @@ function HomeMap({
     <LazyMap
       stateValue={stateValue}
       municipalityValue={municipalityValue}
+      exactAddress={exactAddress}
+      latitude={latitude}
+      longitude={longitude}
     />
   );
 }

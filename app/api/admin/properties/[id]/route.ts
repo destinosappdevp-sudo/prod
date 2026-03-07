@@ -20,57 +20,28 @@ async function applyAmenityUpdates(homeId: string, payload?: string | null) {
 
   if (!Array.isArray(amenities)) return;
 
-  const deleteIds = amenities
-    .filter((item) => item.status === "UNSPECIFIED")
-    .map((item) => item.amenityId);
+  const toKeep = amenities.filter((item) => item.status !== "UNSPECIFIED");
 
-  const upserts = amenities.filter((item) => item.status !== "UNSPECIFIED");
+  await prismaAny.$transaction(async (tx: any) => {
+    // Eliminar todas las amenidades del home y re-crear solo las activas
+    await tx.homeAmenity.deleteMany({ where: { homeId } });
 
-  const operations = [];
-
-  if (deleteIds.length > 0) {
-    operations.push(
-      prismaAny.homeAmenity.deleteMany({
-        where: {
-          homeId,
-          amenityId: { in: deleteIds },
-        },
-      })
-    );
-  }
-
-  upserts.forEach((item) => {
-    operations.push(
-      prismaAny.homeAmenity.upsert({
-        where: {
-          homeId_amenityId: {
-            homeId,
-            amenityId: item.amenityId,
-          },
-        },
-        update: {
-          status: item.status,
-        },
-        create: {
+    for (const item of toKeep) {
+      await tx.homeAmenity.create({
+        data: {
+          id: crypto.randomUUID(),
           homeId,
           amenityId: item.amenityId,
           status: item.status,
         },
-      })
-    );
-  });
+      });
+    }
 
-  const hasSelected = upserts.length > 0;
-  operations.push(
-    prismaAny.home.update({
+    await tx.home.update({
       where: { id: homeId },
-      data: { addedAmenities: hasSelected },
-    })
-  );
-
-  if (operations.length > 0) {
-    await prismaAny.$transaction(operations);
-  }
+      data: { addedAmenities: toKeep.length > 0 },
+    });
+  });
 }
 
 export async function PATCH(
@@ -106,6 +77,10 @@ export async function PATCH(
     const exactAddress = (formData.get("exactAddress") as string) || "";
     const checkInTime = (formData.get("checkInTime") as string) || "";
     const contactNumber = (formData.get("contactNumber") as string) || "";
+    const latRaw = formData.get("latitude") as string | null;
+    const lngRaw = formData.get("longitude") as string | null;
+    const latitude = latRaw ? parseFloat(latRaw) : null;
+    const longitude = lngRaw ? parseFloat(lngRaw) : null;
     const price = (formData.get("price") as string) || "";
     const categoryName = (formData.get("categoryName") as string) || "";
     const amenitiesPayload = formData.get("amenities") as string | null;
@@ -162,6 +137,8 @@ export async function PATCH(
         exactAddress: exactAddress || null,
         checkInTime: checkInTime || null,
         contactNumber: contactNumber || null,
+        latitude: latitude,
+        longitude: longitude,
         price: price ? parseInt(price) : null,
         categoryName: categoryName || null,
         ...(photoPath ? { photo: photoPath } : {}),

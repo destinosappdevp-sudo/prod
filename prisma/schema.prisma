@@ -96,6 +96,8 @@ model Home {
   checkInTime                  String?
   contactNumber                String?
   exactAddress                 String?
+  latitude                     Float?
+  longitude                    Float?
   addedAmenities               Boolean        @default(false)
   approvalRejectionReason      String?
   approvedAt                   DateTime?
@@ -228,6 +230,18 @@ model User {
   Reservation                       Reservation[]
   Review                            Review[]
   usersessions                      usersessions[]
+  UserDocument                      UserDocument[]
+}
+
+model UserDocument {
+  id         String   @id @default(uuid())
+  userId     String
+  url        String
+  fileName   String
+  fileSize   Int?
+  mimeType   String?
+  uploadedAt DateTime @default(now())
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model usersessions {
@@ -264,9 +278,10 @@ enum PaymentMethod {
 }
 
 model PlatformConfig {
-  id               String   @id @default(uuid())
-  commissionPercent Float   @default(10.0)
-  updatedAt        DateTime @default(now())
+  id                String   @id @default(uuid())
+  commissionPercent Float    @default(10.0)
+  maintenanceMode   Boolean  @default(false)
+  updatedAt         DateTime @default(now())
 }
 
 enum PaymentStatus {

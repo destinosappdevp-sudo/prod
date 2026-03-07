@@ -1,13 +1,14 @@
 import { Card } from "@/components/ui/card";
 import prisma from "@/app/lib/db";
+import { redirect } from "next/navigation";
+import { createClient } from "@/app/lib/supabase/server";
 import { 
   Users, 
   Home, 
   DollarSign, 
-  TrendingUp,
+  Wallet,
   Calendar,
-  Star,
-  BarChart3,
+  TrendingDown,
   AlertCircle
 } from "lucide-react";
 import Link from "next/link";
@@ -15,49 +16,62 @@ import Link from "next/link";
 async function getAdminStats() {
   const prismaAny = prisma as any;
 
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
   const [
     totalUsers,
     totalProperties,
-    totalReservations,
-    totalFavorites,
-    activeHosts,
-    pendingReservations,
+    reservationsThisMonth,
     pendingPayments,
-    confirmedRevenue
+    confirmedRevenueThisMonth,
+    pendingPayoutAmount,
+    zerkkaRevenueThisMonth,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.home.count(),
-    prismaAny.reservation.count({ where: { status: "CONFIRMED" } }),
-    prisma.favorite.count(),
-    prismaAny.user.count({ where: { role: "HOST" } }),
     prismaAny.reservation.count({
-      where: {
-        startDate: {
-          gte: new Date()
-        },
-        status: "CONFIRMED"
-      }
+      where: { createdAt: { gte: startOfMonth } },
     }),
     prismaAny.payment.count({ where: { status: "PENDING" } }),
     prismaAny.payment.aggregate({
-      where: { status: "CONFIRMED" },
+      where: { status: "CONFIRMED", confirmedAt: { gte: startOfMonth } },
       _sum: { amount: true },
+    }),
+    prismaAny.payment.aggregate({
+      where: { status: "CONFIRMED" },
+      _sum: { subtotal: true },
+    }),
+    prismaAny.payment.aggregate({
+      where: { status: "CONFIRMED", confirmedAt: { gte: startOfMonth } },
+      _sum: { serviceFee: true },
     }),
   ]);
 
   return {
     totalUsers,
     totalProperties,
-    totalReservations,
-    totalFavorites,
-    activeHosts,
-    pendingReservations,
+    reservationsThisMonth,
     pendingPayments,
-    confirmedRevenue: confirmedRevenue._sum.amount || 0,
+    confirmedRevenueThisMonth: confirmedRevenueThisMonth._sum.amount || 0,
+    pendingPayoutAmount: pendingPayoutAmount._sum.subtotal || 0,
+    zerkkaRevenueThisMonth: zerkkaRevenueThisMonth._sum.serviceFee || 0,
   };
 }
 
 export default async function AdminDashboard() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const userRecord = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true },
+    });
+    if (userRecord?.role === "BANER") {
+      redirect("/admin/banners");
+    }
+  }
+
   const stats = await getAdminStats();
 
   const statCards = [
@@ -65,58 +79,61 @@ export default async function AdminDashboard() {
       title: "Total Usuarios",
       value: stats.totalUsers,
       icon: Users,
-      change: "+12%",
-      changeType: "positive" as const,
-      color: "blue"
+      color: "blue",
+      format: "number",
     },
     {
       title: "Propiedades",
       value: stats.totalProperties,
       icon: Home,
-      change: "+8%",
-      changeType: "positive" as const,
-      color: "green"
+      color: "green",
+      format: "number",
     },
     {
-      title: "Reservas Totales",
-      value: stats.totalReservations,
+      title: "Reservas este mes",
+      value: stats.reservationsThisMonth,
       icon: Calendar,
-      change: "+23%",
-      changeType: "positive" as const,
-      color: "purple"
+      color: "purple",
+      format: "number",
     },
     {
       title: "Ingresos Confirmados",
-      value: `$${stats.confirmedRevenue.toFixed(2)}`,
+      value: stats.confirmedRevenueThisMonth,
       icon: DollarSign,
-      change: stats.confirmedRevenue > 0 ? "Confirmado" : "Sin ingresos",
-      changeType: "neutral" as const,
-      color: "yellow"
+      color: "yellow",
+      format: "money",
     },
     {
-      title: "Anfitriones Activos",
-      value: stats.activeHosts,
-      icon: TrendingUp,
-      change: "+5%",
-      changeType: "positive" as const,
-      color: "indigo"
+      title: "Ingresos por retirar",
+      value: stats.pendingPayoutAmount,
+      icon: Wallet,
+      color: "indigo",
+      format: "money",
     },
     {
-      title: "Favoritos",
-      value: stats.totalFavorites,
-      icon: Star,
-      change: "+18%",
-      changeType: "positive" as const,
-      color: "pink"
+      title: "Ingresos ZerKKa",
+      value: stats.zerkkaRevenueThisMonth,
+      icon: TrendingDown,
+      color: "pink",
+      format: "money",
     },
   ];
+
+  const bgColors: Record<string, string> = {
+    blue: "bg-blue-100", green: "bg-green-100", purple: "bg-purple-100",
+    yellow: "bg-yellow-100", indigo: "bg-indigo-100", pink: "bg-pink-100",
+  };
+  const iconColors: Record<string, string> = {
+    blue: "text-blue-600", green: "text-green-600", purple: "text-purple-600",
+    yellow: "text-yellow-600", indigo: "text-indigo-600", pink: "text-pink-600",
+  };
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Bienvenido al panel de administración de Zerkka</p>
+        <p className="text-gray-600 mt-1">Bienvenido al panel de administración de ZerKKa</p>
       </div>
 
       {/* Alert for pending payments */}
@@ -124,19 +141,12 @@ export default async function AdminDashboard() {
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-5 w-5 text-yellow-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  Tienes <span className="font-bold">{stats.pendingPayments}</span> pago(s) pendiente(s) de confirmación.
-                </p>
-              </div>
+              <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+              <p className="ml-3 text-sm text-yellow-700">
+                Tienes <span className="font-bold">{stats.pendingPayments}</span> pago(s) pendiente(s) de confirmación.
+              </p>
             </div>
-            <Link
-              href="/admin/payments"
-              className="text-sm font-medium text-yellow-700 hover:text-yellow-800 underline"
-            >
+            <Link href="/admin/payments" className="text-sm font-medium text-yellow-700 hover:text-yellow-800 underline">
               Ver pagos →
             </Link>
           </div>
@@ -147,94 +157,28 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat) => {
           const Icon = stat.icon;
-          const bgColor = {
-            blue: "bg-blue-100",
-            green: "bg-green-100",
-            purple: "bg-purple-100",
-            yellow: "bg-yellow-100",
-            indigo: "bg-indigo-100",
-            pink: "bg-pink-100"
-          }[stat.color];
-
-          const iconColor = {
-            blue: "text-blue-600",
-            green: "text-green-600",
-            purple: "text-purple-600",
-            yellow: "text-yellow-600",
-            indigo: "text-indigo-600",
-            pink: "text-pink-600"
-          }[stat.color];
+          const displayValue = stat.format === "money"
+            ? `$${(stat.value as number).toFixed(2)}`
+            : stat.value;
 
           return (
             <Card key={stat.title} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                  <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                  <p className={`text-sm mt-2 ${
-                    stat.changeType === "positive" ? "text-green-600" : "text-gray-500"
-                  }`}>
-                    {stat.change} desde el mes anterior
-                  </p>
+                  <p className="text-3xl font-bold mt-2">{displayValue}</p>
+                  {stat.format === "money" && (
+                    <p className="text-xs text-gray-400 mt-1">Mes actual</p>
+                  )}
                 </div>
-                <div className={`p-3 rounded-lg ${bgColor}`}>
-                  <Icon className={iconColor} size={24} />
+                <div className={`p-3 rounded-lg ${bgColors[stat.color]}`}>
+                  <Icon className={iconColors[stat.color]} size={24} />
                 </div>
               </div>
             </Card>
           );
         })}
       </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Acciones Rápidas</h3>
-          <div className="space-y-3">
-            <button className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-left">
-              ✉️ Enviar notificación a todos los usuarios
-            </button>
-            <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-left" disabled>
-              📊 Generar reporte mensual (Próximamente)
-            </button>
-            <button className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-left" disabled>
-              🔧 Modo mantenimiento (Próximamente)
-            </button>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Actividad Reciente</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <p className="text-sm text-gray-700">Nuevo usuario registrado</p>
-              <span className="ml-auto text-xs text-gray-500">Hace 2h</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <p className="text-sm text-gray-700">Propiedad publicada</p>
-              <span className="ml-auto text-xs text-gray-500">Hace 3h</span>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-              <p className="text-sm text-gray-700">Nueva reserva confirmada</p>
-              <span className="ml-auto text-xs text-gray-500">Hace 5h</span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Chart Placeholder */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Estadísticas de Crecimiento</h3>
-        <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-          <div className="text-center text-gray-500">
-            <BarChart3 size={48} className="mx-auto mb-2" />
-            <p>Gráficos de analytics próximamente</p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }
