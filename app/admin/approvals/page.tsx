@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
-import PendingApprovalsClient from "./PendingApprovalsClient";
+// import PendingApprovalsClient from "./PendingApprovalsClient";
 
 export default async function PendingApprovalsPage() {
   const supabase = await createClient();
@@ -26,7 +26,7 @@ export default async function PendingApprovalsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <PendingApprovalsClient />
+      {/* <PendingApprovalsClient /> */}
     </div>
   );
 }

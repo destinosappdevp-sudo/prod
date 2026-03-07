@@ -29,6 +29,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
   const [existingImages, setExistingImages] = useState<StorageImage[]>([]);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
   const [loadingImages, setLoadingImages] = useState(false);
+  const [tipo, setTipo] = useState("HERO1");
 
   useEffect(() => {
     if (banner) {
@@ -39,6 +40,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
       setClientPhone(banner.clientPhone || "");
       setClientEmail(banner.clientEmail || "");
       setCost(banner.cost?.toString() || "");
+      setTipo(banner.tipo || "HERO1");
     } else {
       // Reset form
       setTitle("");
@@ -51,6 +53,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
       setImage(null);
       setSelectedImageUrl("");
       setUploadMode("upload");
+      setTipo("HERO1");
     }
   }, [banner]);
 
@@ -110,6 +113,9 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
     // Eliminar el campo image del FormData si existe (para evitar duplicados)
     formData.delete("image");
     
+    // Asegurar que tipo esté en el formData
+    formData.set("tipo", tipo);
+    
     // Agregar la imagen según el modo
     if (uploadMode === "upload" && image) {
       formData.append("image", image);
@@ -135,6 +141,23 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
           required 
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
         />
+      </div>
+
+      <div>
+        <label className="block font-medium mb-1 text-sm">Tipo de Banner *</label>
+        <select
+          name="tipo"
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value)}
+          required
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-white"
+        >
+          <option value="HERO1">Hero 1</option>
+          <option value="HERO2">Hero 2</option>
+          <option value="MEDIO1">Medio 1</option>
+          <option value="MEDIO2">Medio 2</option>
+          <option value="POP">POP</option>
+        </select>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

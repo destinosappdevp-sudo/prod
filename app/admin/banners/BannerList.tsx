@@ -13,19 +13,37 @@ export interface Banner {
   clientEmail?: string;
   cost?: number;
   imageUrl: string;
+  tipo?: string;
 }
 
 interface BannerListProps {
   banners: Banner[];
   onEdit?: (banner: Banner) => void;
   onDelete?: (bannerId: string) => void;
+  emptyMessage?: string;
 }
 
-export default function BannerList({ banners, onEdit, onDelete }: BannerListProps) {
+const TIPO_LABELS: Record<string, string> = {
+  HERO1: "Hero 1",
+  HERO2: "Hero 2",
+  MEDIO1: "Medio 1",
+  MEDIO2: "Medio 2",
+  POP: "POP",
+};
+
+const TIPO_COLORS: Record<string, string> = {
+  HERO1: "bg-indigo-600",
+  HERO2: "bg-violet-600",
+  MEDIO1: "bg-sky-600",
+  MEDIO2: "bg-teal-600",
+  POP: "bg-rose-600",
+};
+
+export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "No hay banners registrados." }: BannerListProps) {
   if (!banners.length) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8 text-center mt-6">
-        <p className="text-gray-500">No hay banners registrados.</p>
+        <p className="text-gray-500">{emptyMessage}</p>
       </div>
     );
   }
@@ -39,14 +57,20 @@ export default function BannerList({ banners, onEdit, onDelete }: BannerListProp
   };
 
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold mb-4">Banners Existentes</h2>
+    <div className="mt-2">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {banners.map((banner) => {
           const bannerUrl = normalizeExternalUrl(banner.url);
 
           return (
             <div key={banner.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+              {/* Barra de tipo en la parte superior */}
+              <div className={`${TIPO_COLORS[banner.tipo ?? ""] ?? "bg-gray-500"} px-4 py-1.5 flex items-center justify-between`}>
+                <span className="text-white text-xs font-bold tracking-wide uppercase">
+                  {TIPO_LABELS[banner.tipo ?? ""] ?? banner.tipo ?? "Sin tipo"}
+                </span>
+                <span className="text-white/70 text-xs">{banner.title}</span>
+              </div>
               <div className="relative h-48 w-full">
                 <Image
                   src={banner.imageUrl}
@@ -57,7 +81,7 @@ export default function BannerList({ banners, onEdit, onDelete }: BannerListProp
               </div>
               
               <div className="p-4">
-                <h3 className="font-bold text-lg mb-2 text-gray-900">{banner.title}</h3>
+                <h3 className="font-bold text-base text-gray-900 mb-2">{banner.title}</h3>
                 
                 <div className="space-y-1.5 mb-3">
                   <p className="text-sm text-gray-600">

@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     const image = formData.get("image") as File;
     const existingImageUrl = formData.get("existingImageUrl") as string;
     const createdById = formData.get("createdById") as string;
+    const tipo = (formData.get("tipo") as string) || "HERO1";
     const normalizedUrl = normalizeExternalUrl(url);
 
     // Validaciones básicas
@@ -116,6 +117,7 @@ export async function POST(req: NextRequest) {
         clientEmail: clientEmail || "",
         cost: cost ? parseFloat(cost) : 0,
         imageUrl,
+        tipo: tipo as any,
         createdById,
         updatedAt: new Date(),
       },

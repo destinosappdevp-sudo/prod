@@ -40,51 +40,50 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient(props: DashboardClientProps) {
+  // Hooks siempre al inicio
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
+  const statCards = useMemo(
+    () => [
+      {
+        label: "Ingresos Totales",
+        value: `$${props.stats?.totalRevenue?.toFixed(2)}`,
+        note: "Bruto del mes",
+        icon: DollarSign,
+        color: "text-emerald-600",
+        bg: "bg-emerald-50",
+      },
+      {
+        label: "Comisión ZERKKA",
+        value: `-$${props.stats?.serviceFee?.toFixed(2)}`,
+        note: "Tarifa de servicio",
+        icon: PieChart,
+        color: "text-orange-600",
+        bg: "bg-orange-50",
+      },
+      {
+        label: "Pendiente",
+        value: `$${props.stats?.pendingAmount?.toFixed(2)}`,
+        note: "Reservas futuras",
+        icon: CalendarDays,
+        color: "text-yellow-600",
+        bg: "bg-yellow-50",
+      },
+      {
+        label: "Disponible",
+        value: `$${props.stats?.availableAmount?.toFixed(2)}`,
+        note: "Retirar fondos",
+        icon: DollarSign,
+        color: "text-green-600",
+        bg: "bg-green-50",
+      },
+    ],
+    [props.stats]
+  );
+
   if (props.role === "HOST") {
-    // Lógica de dashboard para HOST (idéntica a HostDashboardClient)
-    const [activeTab, setActiveTab] = useState("dashboard");
-    const [searchTerm, setSearchTerm] = useState("");
-    const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
-
-    const statCards = useMemo(
-      () => [
-        {
-          label: "Ingresos Totales",
-          value: `$${props.stats?.totalRevenue?.toFixed(2)}`,
-          note: "Bruto del mes",
-          icon: DollarSign,
-          color: "text-emerald-600",
-          bg: "bg-emerald-50",
-        },
-        {
-          label: "Comisión ZERKKA",
-          value: `-$${props.stats?.serviceFee?.toFixed(2)}`,
-          note: "Tarifa de servicio",
-          icon: PieChart,
-          color: "text-orange-600",
-          bg: "bg-orange-50",
-        },
-        {
-          label: "Pendiente",
-          value: `$${props.stats?.pendingAmount?.toFixed(2)}`,
-          note: "Reservas futuras",
-          icon: CalendarDays,
-          color: "text-yellow-600",
-          bg: "bg-yellow-50",
-        },
-        {
-          label: "Disponible",
-          value: `$${props.stats?.availableAmount?.toFixed(2)}`,
-          note: "Retirar fondos",
-          icon: DollarSign,
-          color: "text-green-600",
-          bg: "bg-green-50",
-        },
-      ],
-      [props.stats]
-    );
-
-    // ...existing code for smallStats, sidebar, main, tabs, etc. (idéntico a HostDashboardClient)
+    // ...lógica y JSX para HOST...
     return (
       <div className="min-h-screen bg-slate-50 flex">
         {/* ...sidebar y navegación igual que HostDashboardClient... */}

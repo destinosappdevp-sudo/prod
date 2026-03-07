@@ -13,11 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CheckCircle, XCircle, Loader2, Shield } from "lucide-react";
-import {
-  verifyHost,
-  unverifyHost,
-  getUnverifiedHosts,
-} from "@/app/actions/home";
+// import {
+//   verifyHost,
+//   unverifyHost,
+//   getUnverifiedHosts,
+// } from "@/app/actions/home";
 
 interface UnverifiedHost {
   id: string;
@@ -53,10 +53,10 @@ export default function HostVerificationClient() {
   const loadUnverifiedHosts = async () => {
     try {
       setLoading(true);
-      const result = await getUnverifiedHosts();
-      if (result.success) {
-        setUnverifiedHosts(result.hosts);
-      }
+      // const result = await getUnverifiedHosts();
+      // if (result.success) {
+      //   setUnverifiedHosts(result.hosts);
+      // }
     } catch (error) {
       console.error("Error cargando hosts no verificados:", error);
     } finally {
@@ -69,7 +69,7 @@ export default function HostVerificationClient() {
 
     try {
       setIsProcessing(true);
-      await verifyHost(selectedHost.id, verificationReason);
+      // await verifyHost(selectedHost.id, verificationReason);
       setUnverifiedHosts(unverifiedHosts.filter((h) => h.id !== selectedHost.id));
       setShowVerifyDialog(false);
       setVerificationReason("Verificado por administración");

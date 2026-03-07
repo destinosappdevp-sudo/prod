@@ -23,7 +23,7 @@ interface AdminSidebarProps {
 const getMenuItems = (role?: string) => {
   if (role === "BANER") {
     return [
-      { href: "/admin/banners", icon: BarChart3, label: "Banners" },
+      { href: "/admin/banners", icon: BarChart3, label: "Publicidad" },
     ];
   }
   const items = [
@@ -37,7 +37,7 @@ const getMenuItems = (role?: string) => {
     { href: "/admin/settings", icon: Settings, label: "Configuración" },
   ];
   if (role === "SUPERADMIN") {
-    items.splice(1, 0, { href: "/admin/banners", icon: BarChart3, label: "Banners" });
+    items.splice(1, 0, { href: "/admin/banners", icon: BarChart3, label: "Publicidad" });
   }
   return items;
 };

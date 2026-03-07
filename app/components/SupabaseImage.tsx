@@ -23,8 +23,12 @@ export function SupabaseImage({
   sizes,
 }: SupabaseImageProps) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let fixedPath = imagePath || "";
+  if (fixedPath && !fixedPath.startsWith("/") && !fixedPath.startsWith("http")) {
+    fixedPath = "/" + fixedPath;
+  }
   const initialSrc = imagePath
-    ? `${supabaseUrl}/storage/v1/object/public/images/${imagePath}`
+    ? `${supabaseUrl}/storage/v1/object/public/images${fixedPath}`
     : "/placeholder.webp";
   const [imgSrc, setImgSrc] = useState<string>(initialSrc);
 

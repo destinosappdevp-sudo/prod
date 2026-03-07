@@ -40,6 +40,14 @@ model AuditLog {
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+enum BannerTipo {
+  HERO1
+  HERO2
+  MEDIO1
+  MEDIO2
+  POP
+}
+
 model Banner {
   id          String   @id
   title       String
@@ -52,6 +60,7 @@ model Banner {
   createdById String
   createdAt   DateTime @default(now())
   imageUrl    String
+  tipo        BannerTipo @default(HERO1)
   updatedAt   DateTime
   User        User     @relation(fields: [createdById], references: [id])
 }

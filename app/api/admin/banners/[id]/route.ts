@@ -46,6 +46,7 @@ export async function PATCH(
     const cost = formData.get("cost") as string;
     const image = formData.get("image") as File | null;
     const existingImageUrl = formData.get("existingImageUrl") as string;
+    const tipo = formData.get("tipo") as string | null;
     const normalizedUrl = normalizeExternalUrl(url);
 
     // Validar que el banner existe
@@ -109,6 +110,8 @@ export async function PATCH(
         clientEmail: clientEmail || "",
         cost: cost ? parseFloat(cost) : existingBanner.cost,
         imageUrl,
+        ...(tipo ? { tipo: tipo as any } : {}),
+        updatedAt: new Date(),
       },
     });
 
