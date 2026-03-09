@@ -27,13 +27,18 @@ async function getData({
   };
 }) {
   noStore();
+  const categoryFilter =
+    searchParams?.filter && searchParams.filter !== "todos"
+      ? searchParams.filter
+      : undefined;
+
   const data = await prisma.home.findMany({
     where: {
       publishStatus: "APPROVED",
       addedCategory: true,
       addedLocation: true,
       addedDescription: true,
-      categoryName: searchParams?.filter ?? undefined,
+      categoryName: categoryFilter,
       country: searchParams?.country ?? undefined,
       bedrooms: searchParams?.rooms ?? undefined,
       bathrooms: searchParams?.bathrooms ?? undefined,
@@ -50,6 +55,8 @@ async function getData({
       guests: true,
       bedrooms: true,
       exactAddress: true,
+      latitude: true,
+      longitude: true,
       Review: {
         select: {
           rating: true,
@@ -132,18 +139,36 @@ async function ShowPlace({
   }
 
   // Build pins for search map
-  const pins = data.map((item) => {
+  const pins = data.map((item, index) => {
+    // Usar coordenadas específicas de la propiedad si están disponibles
+    if (item.latitude && item.longitude) {
+      return {
+        id: item.id,
+        title: item.title as string,
+        price: item.price as number,
+        lat: item.latitude,
+        lng: item.longitude,
+        image: item.photo as string,
+      };
+    }
+    
+    // Fallback a coordenadas del municipio/estado
     const muni = item.country && item.municipality
       ? getMunicipalityByValue(item.country as string, item.municipality as string)
       : null;
     const state = item.country ? getStateByValue(item.country as string) : null;
     const latLng = muni?.latLng ?? state?.latLng ?? [10.5, -66.9];
+    
+    // Si las propiedades tienen la misma ubicación, añadir un pequeño offset para separarlas
+    const offset = index * 0.001;
+    
     return {
       id: item.id,
       title: item.title as string,
       price: item.price as number,
-      lat: (latLng as [number, number])[0],
-      lng: (latLng as [number, number])[1],
+      lat: (latLng as [number, number])[0] + offset,
+      lng: (latLng as [number, number])[1] + offset,
+      image: item.photo as string,
     };
   });
 

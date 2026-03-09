@@ -129,28 +129,52 @@ function SearchBox() {
     }
   }
 
+  const locationLabel = locationValue
+    ? getStateByValue(locationValue)?.label
+    : undefined;
+  const mobileSearchLabel = locationLabel
+    ? `Buscar en ${locationLabel}`
+    : "Buscar destino, ciudad...";
+
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <div className="rounded-full py-2 px-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex items-center bg-white cursor-pointer">
-        <div className="flex h-full divide-x divide-gray-300 flex-1" ref={triggerRef}>
+      <div className="w-full">
+        <button
+          type="button"
+          className="lg:hidden w-full flex items-center gap-3 rounded-full border border-gray-200 bg-white py-3 px-4 shadow-sm hover:shadow-md transition-shadow"
+          onClick={() => {
+            setStep(1);
+            setIsOpen(true);
+          }}
+          aria-label="Abrir busqueda"
+        >
+          <Search className="h-4 w-4 text-gray-500" />
+          <span className="truncate text-sm text-gray-500">{mobileSearchLabel}</span>
+        </button>
+
+        <div className="hidden lg:flex rounded-full py-2 px-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow items-center bg-white cursor-pointer w-full">
+          <div
+            className="flex h-full min-w-0 divide-x divide-gray-300 flex-1"
+            ref={triggerRef}
+          >
           <div 
-            className="px-6 py-2 hover:bg-gray-50 rounded-full transition cursor-pointer flex flex-col justify-center min-w-[140px]" 
+            className="px-5 py-2 hover:bg-gray-50 rounded-full transition cursor-pointer flex flex-col justify-center min-w-[120px]" 
             onClick={() => { setStep(1); setIsOpen(true); }}
           >
             <p className="text-xs font-semibold text-gray-800">Dónde</p>
             <p className="text-sm text-gray-500 truncate">
-              {locationValue ? getStateByValue(locationValue)?.label : "Explora destinos"}
+              {locationLabel ?? "Explora destinos"}
             </p>
           </div>
           <div 
-            className="px-6 py-2 hover:bg-gray-50 rounded-full transition cursor-pointer flex flex-col justify-center min-w-[140px]" 
+            className="px-5 py-2 hover:bg-gray-50 rounded-full transition cursor-pointer flex flex-col justify-center min-w-[120px]" 
             onClick={() => { setStep(2); setIsOpen(true); }}
           >
             <p className="text-xs font-semibold text-gray-800">Fechas</p>
             <p className="text-sm text-gray-500">Agrega fechas</p>
           </div>
           <div 
-            className="px-6 py-2 hover:bg-gray-50 rounded-full transition cursor-pointer flex flex-col justify-center min-w-[130px]" 
+            className="px-5 py-2 hover:bg-gray-50 rounded-full transition cursor-pointer flex flex-col justify-center min-w-[115px]" 
             onClick={() => { setStep(3); setIsOpen(true); }}
           >
             <p className="text-xs font-semibold text-gray-800">Quién</p>
@@ -160,13 +184,14 @@ function SearchBox() {
           </div>
         </div>
         <button 
-          className="bg-primary hover:bg-primary/90 flex justify-center items-center rounded-full h-12 w-12 ml-2 transition-colors"
+          className="bg-primary hover:bg-primary/90 flex justify-center items-center rounded-full h-11 w-11 ml-2 transition-colors"
           onClick={() => setIsOpen(true)}
         >
           <Search className="text-white h-4 w-4" />
         </button>
       </div>
-      <DialogContent className="sm:max-w-[425px]">
+      </div>
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[425px]">
         <form className="gap-4 flex flex-col">
           <input type="hidden" name="country" value={locationValue} />
           {step === 1 ? (
