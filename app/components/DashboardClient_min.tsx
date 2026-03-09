@@ -235,7 +235,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <Link href={`/home/${res.homeId ?? res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
+                          <Link href={`/reservation/${res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
                             Ver
                           </Link>
                         </td>
