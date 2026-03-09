@@ -40,8 +40,9 @@ async function getData({
       addedDescription: true,
       categoryName: categoryFilter,
       country: searchParams?.country ?? undefined,
-      bedrooms: searchParams?.rooms ?? undefined,
-      bathrooms: searchParams?.bathrooms ?? undefined,
+      guests: searchParams?.guest ? { gte: searchParams.guest } : undefined,
+      bedrooms: searchParams?.rooms ? { gte: searchParams.rooms } : undefined,
+      bathrooms: searchParams?.bathrooms ? { gte: searchParams.bathrooms } : undefined,
     },
     select: {
       title: true,
