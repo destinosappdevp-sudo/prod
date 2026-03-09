@@ -36,6 +36,9 @@ function LoginContent() {
   const [success, setSuccess] = useState("");
   const [role, setRole] = useState<"GUEST" | "HOST">("GUEST");
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const getOrCreateDeviceId = () => {
     const existingDeviceId = localStorage.getItem("xerkka_device_id");
@@ -160,6 +163,32 @@ function LoginContent() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setResetting(true);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        setError(error.message || "Error al enviar el email de recuperación");
+      } else {
+        setSuccess("¡Email de recuperación enviado! Revisa tu bandeja de entrada.");
+        setResetEmail("");
+        setTimeout(() => setShowForgotPassword(false), 2000);
+      }
+    } catch (err: any) {
+      setError(err.message || "Error al procesar la solicitud");
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <Card className="w-full max-w-md">
@@ -170,84 +199,142 @@ function LoginContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="tu@email.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <div className="relative">
+          {showForgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Ingresa tu email y te enviaremos un enlace para resetear tu contraseña.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="reset-email"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
                   required
-                  placeholder="••••••••"
-                  minLength={6}
-                  className="pr-10"
+                  placeholder="tu@email.com"
                 />
+              </div>
+
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="text-sm text-green-600 bg-green-50 p-3 rounded">
+                  {success}
+                </div>
+              )}
+
+              <Button type="submit" className="w-full" disabled={resetting}>
+                {resetting ? "Enviando..." : "Enviar Email de Recuperación"}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setError("");
+                  setSuccess("");
+                  setResetEmail("");
+                }}
+                className="w-full text-sm text-gray-600 hover:underline"
+              >
+                Volver al login
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="tu@email.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="role">Tipo de cuenta</Label>
+                  <Select
+                    value={role}
+                    onValueChange={(value) => setRole(value as "GUEST" | "HOST")}
+                  >
+                    <SelectTrigger id="role">
+                      <SelectValue placeholder="Selecciona un tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="GUEST">Huesped</SelectItem>
+                      <SelectItem value="HOST">Anfitrion</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="text-sm text-green-600 bg-green-50 p-3 rounded">
+                  {success}
+                </div>
+              )}
+
+              <Button type="submit" className="w-full">
+                {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
+              </Button>
+
+              {isLogin && (
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  tabIndex={-1}
+                  onClick={() => setShowForgotPassword(true)}
+                  className="w-full text-sm text-blue-600 hover:underline"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  ¿Olvidaste la contraseña?
                 </button>
-              </div>
-            </div>
+              )}
 
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="role">Tipo de cuenta</Label>
-                <Select
-                  value={role}
-                  onValueChange={(value) => setRole(value as "GUEST" | "HOST")}
-                >
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Selecciona un tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GUEST">Huesped</SelectItem>
-                    <SelectItem value="HOST">Anfitrion</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-                {error}
-              </div>
-            )}
-
-            {success && (
-              <div className="text-sm text-green-600 bg-green-50 p-3 rounded">
-                {success}
-              </div>
-            )}
-
-            <Button type="submit" className="w-full">
-              {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
-            </Button>
-
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="w-full text-sm text-gray-600 hover:underline"
-            >
-              {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-            </button>
-          </form>
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="w-full text-sm text-gray-600 hover:underline"
+              >
+                {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+              </button>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

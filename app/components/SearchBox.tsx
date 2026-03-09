@@ -48,7 +48,7 @@ function SearchBox() {
         setAvailableStates(caracas ? [caracas, ...rest] : rest);
       })
       .catch(() => setAvailableStates(getAllStates()));
-  }, []);
+  }, [getAllStates]);
 
   function handleNearMe() {
     if (!navigator.geolocation) return;

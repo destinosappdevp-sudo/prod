@@ -1,6 +1,11 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import { resend, FROM_EMAIL } from "@/app/lib/resend";
+import {
+  generateGuestConfirmationEmail,
+  generateHostNotificationEmail,
+} from "@/app/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -51,12 +56,19 @@ export async function PATCH(
             Home: {
               select: {
                 title: true,
+                exactAddress: true,
+                municipality: true,
+                country: true,
+                guests: true,
+                userId: true,
               },
             },
             User: {
               select: {
                 firstName: true,
+                lastName: true,
                 email: true,
+                phoneNumber: true,
               },
             },
           },
@@ -89,6 +101,78 @@ export async function PATCH(
 
       return { payment: updatedPayment, reservation: updatedReservation };
     });
+
+    // Si se confirmó, enviar emails
+    if (action === "confirm" && payment.Reservation) {
+      try {
+        // Obtener información del host
+        const host = await prismaAny.user.findUnique({
+          where: { id: payment.Reservation.Home?.userId },
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+          },
+        });
+
+        if (host && payment.Reservation.User) {
+          const reservation = payment.Reservation;
+          const home = reservation.Home;
+          const guest = reservation.User;
+
+          const emailData = {
+            guestName: `${guest.firstName} ${guest.lastName}`,
+            guestEmail: guest.email,
+            guestPhone: guest.phoneNumber || undefined,
+            hostName: `${host.firstName} ${host.lastName}`,
+            hostEmail: host.email,
+            hostPhone: host.phoneNumber || undefined,
+            propertyTitle: home?.title || "Propiedad",
+            propertyAddress: home?.exactAddress
+              ? `${home.exactAddress}, ${home.municipality || ""}, ${home.country || ""}`.trim()
+              : `${home?.municipality || ""}, ${home?.country || ""}`.trim(),
+            checkIn: new Date(reservation.startDate).toLocaleDateString("es-ES", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            checkOut: new Date(reservation.endDate).toLocaleDateString("es-ES", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }),
+            nights: reservation.nights,
+            guests: home?.guests || "N/A",
+            totalAmount: reservation.totalAmount,
+            reservationId: reservation.id,
+          };
+
+          // Enviar email al guest
+          await resend.emails.send({
+            from: FROM_EMAIL,
+            to: guest.email,
+            subject: `🎉 Reserva Confirmada - ${home?.title || "Tu estadía"}`,
+            html: generateGuestConfirmationEmail(emailData),
+          });
+
+          // Enviar email al host
+          await resend.emails.send({
+            from: FROM_EMAIL,
+            to: host.email,
+            subject: `🔔 Nueva Reserva - ${home?.title || "Tu propiedad"}`,
+            html: generateHostNotificationEmail(emailData),
+          });
+
+          console.log("Emails de confirmación enviados exitosamente");
+        }
+      } catch (emailError) {
+        console.error("Error enviando emails de confirmación:", emailError);
+        // No falla la operación si el email falla
+      }
+    }
 
     return NextResponse.json({
       success: true,

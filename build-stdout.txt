@@ -1,0 +1,108 @@
+
+> airbnb@0.1.0 build
+> next build
+
+   ▲ Next.js 14.1.0
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/53) ...
+   Generating static pages (13/53) 
+   Generating static pages (26/53) 
+   Generating static pages (39/53) 
+ ✓ Generating static pages (53/53) 
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ λ /                                    10.7 kB         126 kB
+├ λ /_not-found                          0 B                0 B
+├ λ /admin                               189 B          91.9 kB
+├ λ /admin/alojamientos                  4.8 kB          114 kB
+├ λ /admin/amenities                     3.85 kB        95.6 kB
+├ λ /admin/banners                       5.55 kB         102 kB
+├ λ /admin/payments                      3.23 kB          95 kB
+├ λ /admin/properties                    189 B          91.9 kB
+├ λ /admin/properties/[id]               1.32 kB         140 kB
+├ λ /admin/reports                       3.05 kB        94.8 kB
+├ λ /admin/settings                      4.14 kB        95.9 kB
+├ λ /admin/users                         3.85 kB         128 kB
+├ λ /admin/users/[userId]                6.54 kB         136 kB
+├ λ /analytics                           189 B          91.9 kB
+├ λ /api/admin/amenities                 0 B                0 B
+├ λ /api/admin/amenities/[id]            0 B                0 B
+├ λ /api/admin/amenity-categories        0 B                0 B
+├ λ /api/admin/amenity-categories/[id]   0 B                0 B
+├ λ /api/admin/approvals/approve         0 B                0 B
+├ ○ /api/admin/approvals/approved        0 B                0 B
+├ ○ /api/admin/approvals/pending         0 B                0 B
+├ λ /api/admin/approvals/reject          0 B                0 B
+├ λ /api/admin/banners                   0 B                0 B
+├ λ /api/admin/banners/[id]              0 B                0 B
+├ λ /api/admin/banners/images            0 B                0 B
+├ λ /api/admin/homes                     0 B                0 B
+├ λ /api/admin/payments/[id]             0 B                0 B
+├ λ /api/admin/payments/history          0 B                0 B
+├ λ /api/admin/properties/[id]           0 B                0 B
+├ λ /api/admin/properties/[id]/status    0 B                0 B
+├ ○ /api/admin/reports/homes             0 B                0 B
+├ ○ /api/admin/reports/payments          0 B                0 B
+├ ○ /api/admin/reports/reservations      0 B                0 B
+├ ○ /api/admin/reports/users             0 B                0 B
+├ λ /api/admin/settings/commission       0 B                0 B
+├ λ /api/admin/settings/maintenance      0 B                0 B
+├ λ /api/admin/users                     0 B                0 B
+├ λ /api/admin/users/[userId]            0 B                0 B
+├ ○ /api/banners                         0 B                0 B
+├ ○ /api/banners/medio                   0 B                0 B
+├ λ /api/checkout                        0 B                0 B
+├ λ /api/host/homes/[id]/amenities       0 B                0 B
+├ λ /api/host/properties/[id]            0 B                0 B
+├ ○ /api/maintenance-status              0 B                0 B
+├ λ /auth/callback                       0 B                0 B
+├ λ /ayuda                               218 B          85.2 kB
+├ λ /checkout/[homeId]                   5.01 kB         134 kB
+├ λ /coanfitrion                         217 B          85.2 kB
+├ λ /contacto                            217 B          85.2 kB
+├ λ /create/[id]/address                 8.4 kB          133 kB
+├ λ /create/[id]/amenities               4.28 kB         101 kB
+├ λ /create/[id]/description             5.8 kB          104 kB
+├ λ /create/[id]/structure               5.94 kB         109 kB
+├ λ /debug                               3.8 kB         95.6 kB
+├ λ /eliminar-cuenta                     217 B          85.2 kB
+├ λ /experiencias                        217 B          85.2 kB
+├ λ /favorites                           217 B          85.2 kB
+├ λ /home/[id]                           51.7 kB         199 kB
+├ λ /login                               5.49 kB         179 kB
+├ λ /mantenimiento                       217 B          85.2 kB
+├ λ /messages                            200 B          96.9 kB
+├ λ /messages/[userId]                   200 B          96.9 kB
+├ λ /my-dashboard                        13.3 kB         117 kB
+├ λ /my-listing                          217 B          85.2 kB
+├ λ /my-listing/[id]                     213 B           139 kB
+├ λ /novedades                           217 B          85.2 kB
+├ λ /prensa                              217 B          85.2 kB
+├ λ /privacidad                          217 B          85.2 kB
+├ λ /profile                             7.26 kB         104 kB
+├ λ /publicar                            217 B          85.2 kB
+├ λ /reservation                         217 B          85.2 kB
+├ λ /reservation/[id]                    200 B          96.9 kB
+├ λ /reviews                             200 B          96.9 kB
+├ λ /settings                            3.28 kB          95 kB
+├ λ /socio-premium                       217 B          85.2 kB
+├ λ /terminos                            217 B          85.2 kB
+└ λ /unete-flota                         217 B          85.2 kB
++ First Load JS shared by all            84.9 kB
+  ├ chunks/8069-058cc93f99c3aea9.js      29.1 kB
+  ├ chunks/fd9d1056-0f097ca9d8d7d3b2.js  53.4 kB
+  └ other shared chunks (total)          2.52 kB
+
+
+ƒ Middleware                             163 kB
+
+○  (Static)   prerendered as static content
+λ  (Dynamic)  server-rendered on demand using Node.js
+

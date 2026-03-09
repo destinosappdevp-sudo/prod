@@ -410,7 +410,7 @@ export default function PropertyEditForm({
             <div className="mt-4">
               <Label className="text-sm font-medium">Coordenadas GPS <span className="text-muted-foreground font-normal">(opcional)</span></Label>
               <p className="text-xs text-muted-foreground mb-2">
-                En Google Maps: clic derecho sobre el lugar → copia las coordenadas → pégalas aquí
+                En <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">openstreetmap.org</a>: clic derecho sobre el lugar → copia las coordenadas → pégalas aquí
               </p>
               <Input
                 type="text"

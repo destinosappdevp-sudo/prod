@@ -5,6 +5,37 @@ import { createAdminClient } from "@/app/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
+type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
+
+async function findAuthUserIdByEmail(adminClient: AdminClient, email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  let page = 1;
+  const perPage = 200;
+
+  while (page <= 10) {
+    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+
+    if (error) {
+      return { authUserId: null, error };
+    }
+
+    const users = data?.users ?? [];
+    const match = users.find((u) => (u.email ?? "").toLowerCase() === normalizedEmail);
+
+    if (match) {
+      return { authUserId: match.id, error: null };
+    }
+
+    if (users.length < perPage) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return { authUserId: null, error: null };
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { userId: string } }
@@ -200,6 +231,18 @@ export async function PUT(
       );
     }
 
+    const targetUser = await prisma.user.findUnique({
+      where: { id: params.userId },
+      select: { id: true, email: true },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
+    }
+
     const adminClient = createAdminClient();
     if (!adminClient) {
       return NextResponse.json(
@@ -208,20 +251,54 @@ export async function PUT(
       );
     }
 
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(
+    let authUserId = params.userId;
+    let { error: updateError } = await adminClient.auth.admin.updateUserById(
       params.userId,
       { password }
     );
 
+    // Fallback para datos legacy: si el ID local no existe en Supabase Auth,
+    // intentamos localizar al usuario por email y volver a aplicar el cambio.
+    if (updateError && targetUser.email) {
+      const { authUserId: fallbackAuthUserId, error: lookupError } = await findAuthUserIdByEmail(
+        adminClient,
+        targetUser.email
+      );
+
+      if (lookupError) {
+        console.error("Supabase lookup error:", lookupError);
+        return NextResponse.json(
+          {
+            error: "Error al verificar el usuario en autenticación",
+            details: lookupError.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      if (fallbackAuthUserId) {
+        authUserId = fallbackAuthUserId;
+        const retry = await adminClient.auth.admin.updateUserById(fallbackAuthUserId, { password });
+        updateError = retry.error;
+      }
+    }
+
     if (updateError) {
       console.error("Supabase error:", updateError);
       return NextResponse.json(
-        { error: "Error al cambiar la contraseña" },
+        {
+          error: "Error al cambiar la contraseña",
+          details: updateError.message,
+        },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      authUserId,
+      resolvedByEmail: authUserId !== params.userId,
+    });
   } catch (error) {
     console.error("Error changing password:", error);
     return NextResponse.json(

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -136,7 +137,14 @@ export default function DashboardClient(props: DashboardClientProps) {
           <div className="flex items-center gap-3 mb-4">
             <div className="h-9 w-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-sm">
               {props.profileImage ? (
-                <img src={props.profileImage} alt="Foto de perfil" className="h-full w-full object-cover" />
+                <Image
+                  src={props.profileImage}
+                  alt="Foto de perfil"
+                  width={36}
+                  height={36}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
               ) : (
                 props.userName?.[0]?.toUpperCase() || "G"
               )}
@@ -278,10 +286,13 @@ export default function DashboardClient(props: DashboardClientProps) {
           <div className="max-w-md bg-white rounded-2xl border border-slate-100 shadow-sm p-8 space-y-4">
             <div className="flex items-center gap-4">
               {props.profileImage ? (
-                <img
+                <Image
                   src={props.profileImage}
                   alt="Foto de perfil"
+                  width={64}
+                  height={64}
                   className="h-16 w-16 rounded-full object-cover border-2 border-slate-200"
+                  unoptimized
                 />
               ) : (
                 <div className="h-16 w-16 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl font-bold">

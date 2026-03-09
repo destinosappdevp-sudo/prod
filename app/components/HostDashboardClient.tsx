@@ -240,7 +240,14 @@ export default function HostDashboardClient({
           <div className="flex items-center gap-3 mb-4">
             <div className="h-9 w-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-sm">
               {profileImage && !profileImage.includes('avatar.vercel.sh') ? (
-                <img src={profileImage} alt="avatar" className="h-full w-full object-cover" />
+                <Image
+                  src={profileImage}
+                  alt="avatar"
+                  width={36}
+                  height={36}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
               ) : (
                 firstName?.[0]?.toUpperCase() || userName?.[0]?.toUpperCase() || "H"
               )}

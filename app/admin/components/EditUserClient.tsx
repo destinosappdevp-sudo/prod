@@ -78,8 +78,13 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
         body: JSON.stringify({ password: passwordData.password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error");
-      setPasswordMsg({ type: "success", text: "Contraseña actualizada correctamente." });
+      if (!res.ok) throw new Error(data.details || data.error || "Error");
+      setPasswordMsg({
+        type: "success",
+        text: data.resolvedByEmail
+          ? "Contraseña actualizada correctamente (registro legacy resuelto por email)."
+          : "Contraseña actualizada correctamente.",
+      });
       setPasswordData({ password: "", confirm: "" });
     } catch (err: any) {
       setPasswordMsg({ type: "error", text: err.message || "Error al cambiar la contraseña." });

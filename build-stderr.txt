@@ -1,0 +1,1 @@
+Compiler edge-server unexpectedly exited with code: null and signal: SIGTERM
