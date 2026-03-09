@@ -19,6 +19,7 @@ interface ProfileEditClientProps {
 export default function ProfileEditClient({ userData, userId, initialDocs = [] }: ProfileEditClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(true); // Siempre inicia en modo edición
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

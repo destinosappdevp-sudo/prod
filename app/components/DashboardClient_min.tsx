@@ -1,22 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  LayoutDashboard,
   CalendarCheck,
   User,
   LogOut,
   Heart,
-  CalendarDays,
-  Star,
-  PieChart,
-  DollarSign,
 } from "lucide-react";
 import { signOut } from "@/app/action";
+import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
-import { Button } from "@/components/ui/button";
 
 interface GuestReservationItem {
   id: string;
@@ -63,10 +58,21 @@ interface DashboardClientProps {
   listings?: any[];
   favorites?: FavoriteItem[];
   guestReservations?: GuestReservationItem[];
+  userData?: any;
+  initialDocs?: any[];
 }
 
 export default function DashboardClient(props: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
+
+  const profileUserData = props.userData || {
+    firstName: props.firstName || "",
+    lastName: props.lastName || "",
+    phoneNumber: props.phoneNumber || "",
+    profileImage: props.profileImage || null,
+    email: props.userEmail || "",
+    role: "GUEST",
+  };
 
   function statusLabel(status?: string | null) {
     switch (status) {
@@ -172,12 +178,12 @@ export default function DashboardClient(props: DashboardClientProps) {
           <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard Huésped"}
             {activeTab === "favorites" && "Mis Favoritos"}
-            {activeTab === "profile" && "Mi Perfil"}
+            {activeTab === "profile" && "Editar Perfil"}
           </h1>
           <p className="text-sm text-slate-500">
             {activeTab === "reservations" && "Explora, reserva y gestiona tus alojamientos"}
             {activeTab === "favorites" && "Alojamientos que guardaste"}
-            {activeTab === "profile" && "Tus datos personales"}
+            {activeTab === "profile" && "Actualiza tus datos personales"}
           </p>
         </div>
 
@@ -283,33 +289,12 @@ export default function DashboardClient(props: DashboardClientProps) {
 
         {/* PERFIL */}
         {activeTab === "profile" && (
-          <div className="max-w-md bg-white rounded-2xl border border-slate-100 shadow-sm p-8 space-y-4">
-            <div className="flex items-center gap-4">
-              {props.profileImage ? (
-                <Image
-                  src={props.profileImage}
-                  alt="Foto de perfil"
-                  width={64}
-                  height={64}
-                  className="h-16 w-16 rounded-full object-cover border-2 border-slate-200"
-                  unoptimized
-                />
-              ) : (
-                <div className="h-16 w-16 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl font-bold">
-                  {props.firstName?.[0]?.toUpperCase() || props.userName?.[0]?.toUpperCase() || "G"}
-                </div>
-              )}
-              <div>
-                <div className="font-semibold text-slate-900">{props.firstName} {props.lastName}</div>
-                <div className="text-sm text-slate-500">{props.userEmail}</div>
-              </div>
-            </div>
-            {props.phoneNumber && (
-              <div className="text-sm text-slate-700"><span className="font-medium">Teléfono:</span> {props.phoneNumber}</div>
-            )}
-            <Link href="/profile" className="block text-center text-sm bg-slate-900 hover:bg-slate-700 text-white rounded-xl py-2.5 transition">
-              Editar perfil
-            </Link>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6">
+            <ProfileEditClient
+              userData={profileUserData}
+              userId={props.userId || ""}
+              initialDocs={props.initialDocs || []}
+            />
           </div>
         )}
       </main>

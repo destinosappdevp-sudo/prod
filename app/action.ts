@@ -601,7 +601,6 @@ export async function updateProfile(formData: FormData) {
     });
 
     console.log("Usuario actualizado:", updatedUser);
-    revalidatePath("/profile");
     revalidatePath("/my-dashboard");
     revalidatePath("/", "layout");
     return { success: true, user: updatedUser };

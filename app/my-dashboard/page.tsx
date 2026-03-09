@@ -6,6 +6,15 @@ import HostDashboardClient from "@/app/components/HostDashboardClient";
 import GuestDashboardClient from "@/app/components/DashboardClient_min";
 import { createAirbnbHome } from "@/app/action";
 
+async function getUserDocuments(userId: string) {
+  return (prisma as any)
+    .$queryRawUnsafe(
+      'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
+      userId
+    )
+    .catch(() => []);
+}
+
 async function getHostDashboardData(userId: string) {
   noStore();
   const prismaAny = prisma as any;
@@ -294,10 +303,7 @@ export default async function DashboardPage({
   if (role === "HOST") {
     const data = await getHostDashboardData(user.id);
     const createHomeAction = createAirbnbHome.bind(null, { userId: user.id });
-    const initialDocs = await (prisma as any).$queryRawUnsafe(
-      `SELECT id, url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" ASC`,
-      user.id
-    ).catch(() => []);
+    const initialDocs = await getUserDocuments(user.id);
     return (
       <HostDashboardClient
         userName={userName}
@@ -318,6 +324,7 @@ export default async function DashboardPage({
     );
   } else {
     const data = await getGuestDashboardData(user.id);
+    const initialDocs = await getUserDocuments(user.id);
     return (
       <GuestDashboardClient
         role="GUEST"
@@ -333,6 +340,8 @@ export default async function DashboardPage({
         initialTab={initialTab}
         favorites={data.favorites}
         guestReservations={data.guestReservations}
+        userData={{ ...userRecord, email: userRecord?.email || user.email }}
+        initialDocs={initialDocs || []}
       />
     );
   }

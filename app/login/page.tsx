@@ -162,7 +162,7 @@ function LoginContent() {
         const loginResult = await signInWithEmail(email, password);
         if (loginResult?.success) {
           await trackActiveSession(loginResult.userId);
-          router.push("/profile");
+          router.push("/my-dashboard?tab=profile");
           router.refresh();
         } else {
           // Si falla el auto-login, mostrar mensaje para que inicie sesión manualmente

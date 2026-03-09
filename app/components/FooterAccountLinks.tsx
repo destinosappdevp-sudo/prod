@@ -6,8 +6,8 @@ import { createClient } from "@/app/lib/supabase/client";
 
 const accountLinks = [
   { label: "Mis reservas", href: "/reservation" },
-  { label: "Mi perfil", href: "/profile" },
-  { label: "Eliminar mi cuenta", href: "/profile" },
+  { label: "Mi perfil", href: "/my-dashboard?tab=profile" },
+  { label: "Eliminar mi cuenta", href: "/eliminar-cuenta" },
 ];
 
 export default function FooterAccountLinks() {
