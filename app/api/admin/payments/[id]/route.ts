@@ -116,6 +116,10 @@ export async function PATCH(
           },
         });
 
+        console.log("📧 Preparando envío de emails de confirmación...");
+        console.log(`Host encontrado: ${host?.email || "NO ENCONTRADO"}`);
+        console.log(`Guest: ${payment.Reservation.User?.email || "NO ENCONTRADO"}`);
+
         if (host && payment.Reservation.User) {
           const resend = getResendClient();
           const reservation = payment.Reservation;
@@ -153,30 +157,36 @@ export async function PATCH(
 
           if (!resend) {
             console.warn(
-              "RESEND_API_KEY no configurada; se omite el envio de emails de confirmacion."
+              "⚠️ RESEND_API_KEY no configurada; se omite el envio de emails de confirmacion."
             );
           } else {
             // Enviar email al guest
-            await resend.emails.send({
+            console.log(`📨 Enviando email al guest: ${guest.email}`);
+            const guestResult = await resend.emails.send({
               from: FROM_EMAIL,
               to: guest.email,
               subject: `🎉 Reserva Confirmada - ${home?.title || "Tu estadía"}`,
               html: generateGuestConfirmationEmail(emailData),
             });
+            console.log(`✅ Email al guest enviado exitosamente. ID: ${guestResult.data?.id}`);
 
             // Enviar email al host
-            await resend.emails.send({
+            console.log(`📨 Enviando email al host: ${host.email}`);
+            const hostResult = await resend.emails.send({
               from: FROM_EMAIL,
               to: host.email,
               subject: `🔔 Nueva Reserva - ${home?.title || "Tu propiedad"}`,
               html: generateHostNotificationEmail(emailData),
             });
+            console.log(`✅ Email al host enviado exitosamente. ID: ${hostResult.data?.id}`);
 
-            console.log("Emails de confirmación enviados exitosamente");
+            console.log("✅ Ambos emails de confirmación enviados exitosamente");
           }
+        } else {
+          console.error("❌ No se pudo enviar emails: Host o Guest no encontrado");
         }
       } catch (emailError) {
-        console.error("Error enviando emails de confirmación:", emailError);
+        console.error("❌ Error enviando emails de confirmación:", emailError);
         // No falla la operación si el email falla
       }
     }
