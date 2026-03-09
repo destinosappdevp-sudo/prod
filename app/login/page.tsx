@@ -157,8 +157,18 @@ function LoginContent() {
       if (result?.error) {
         setError(result.error);
       } else {
-        setSuccess("¡Cuenta creada! Por favor inicia sesión.");
-        setIsLogin(true);
+        setSuccess("¡Cuenta creada! Redirigiendo...");
+        // Hacer login automático después del registro
+        const loginResult = await signInWithEmail(email, password);
+        if (loginResult?.success) {
+          await trackActiveSession(loginResult.userId);
+          router.push("/profile");
+          router.refresh();
+        } else {
+          // Si falla el auto-login, mostrar mensaje para que inicie sesión manualmente
+          setSuccess("¡Cuenta creada! Por favor inicia sesión.");
+          setIsLogin(true);
+        }
       }
     }
   };

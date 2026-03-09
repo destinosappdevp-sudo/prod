@@ -271,3 +271,69 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
 </html>
   `;
 }
+
+interface WelcomeEmailData {
+  email: string;
+  displayName?: string;
+}
+
+export function generateWelcomeEmail(data: WelcomeEmailData): string {
+  const safeName = (data.displayName || "nuevo usuario").replace(/[<>]/g, "");
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido a Zerkka</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background:linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%);padding:36px 28px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;">Bienvenido a Zerkka</h1>
+              <p style="margin:10px 0 0 0;color:#eaf6ff;font-size:15px;">Tu cuenta ya esta lista para empezar a reservar</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:34px 30px;">
+              <p style="margin:0 0 16px 0;color:#1f2937;font-size:16px;line-height:1.6;">
+                Hola <strong>${safeName}</strong>,
+              </p>
+              <p style="margin:0 0 16px 0;color:#4b5563;font-size:15px;line-height:1.7;">
+                Gracias por registrarte en Zerkka. Ya puedes explorar alojamientos, guardar favoritos y gestionar tus reservas desde tu panel.
+              </p>
+              <p style="margin:0 0 22px 0;color:#4b5563;font-size:15px;line-height:1.7;">
+                Tu cuenta fue creada con el correo: <strong>${data.email}</strong>
+              </p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;">
+                <tr>
+                  <td>
+                    <p style="margin:0;color:#1e3a8a;font-size:13px;line-height:1.6;">
+                      Si no fuiste tu, responde este correo para que nuestro equipo te ayude de inmediato.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 30px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;color:#6b7280;font-size:12px;text-align:center;">
+                © ${new Date().getFullYear()} Zerkka. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+}

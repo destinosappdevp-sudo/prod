@@ -1,7 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
-import { resend, FROM_EMAIL } from "@/app/lib/resend";
+import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
 import {
   generateGuestConfirmationEmail,
   generateHostNotificationEmail,
@@ -117,6 +117,7 @@ export async function PATCH(
         });
 
         if (host && payment.Reservation.User) {
+          const resend = getResendClient();
           const reservation = payment.Reservation;
           const home = reservation.Home;
           const guest = reservation.User;
@@ -150,23 +151,29 @@ export async function PATCH(
             reservationId: reservation.id,
           };
 
-          // Enviar email al guest
-          await resend.emails.send({
-            from: FROM_EMAIL,
-            to: guest.email,
-            subject: `🎉 Reserva Confirmada - ${home?.title || "Tu estadía"}`,
-            html: generateGuestConfirmationEmail(emailData),
-          });
+          if (!resend) {
+            console.warn(
+              "RESEND_API_KEY no configurada; se omite el envio de emails de confirmacion."
+            );
+          } else {
+            // Enviar email al guest
+            await resend.emails.send({
+              from: FROM_EMAIL,
+              to: guest.email,
+              subject: `🎉 Reserva Confirmada - ${home?.title || "Tu estadía"}`,
+              html: generateGuestConfirmationEmail(emailData),
+            });
 
-          // Enviar email al host
-          await resend.emails.send({
-            from: FROM_EMAIL,
-            to: host.email,
-            subject: `🔔 Nueva Reserva - ${home?.title || "Tu propiedad"}`,
-            html: generateHostNotificationEmail(emailData),
-          });
+            // Enviar email al host
+            await resend.emails.send({
+              from: FROM_EMAIL,
+              to: host.email,
+              subject: `🔔 Nueva Reserva - ${home?.title || "Tu propiedad"}`,
+              html: generateHostNotificationEmail(emailData),
+            });
 
-          console.log("Emails de confirmación enviados exitosamente");
+            console.log("Emails de confirmación enviados exitosamente");
+          }
         }
       } catch (emailError) {
         console.error("Error enviando emails de confirmación:", emailError);

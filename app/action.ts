@@ -5,6 +5,35 @@ import prisma from "./lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { headers } from "next/headers";
 import { randomUUID } from "crypto";
+import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
+import { generateWelcomeEmail } from "@/app/lib/email-templates";
+
+async function sendWelcomeEmail(email: string) {
+  const resend = getResendClient();
+
+  if (!resend) {
+    console.warn("RESEND_API_KEY no configurada; se omite email de bienvenida.");
+    return;
+  }
+
+  const displayName = email.split("@")[0] || "nuevo usuario";
+
+  try {
+    console.log(`📧 Enviando email de bienvenida a: ${email}`);
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: "Bienvenido a Zerkka",
+      html: generateWelcomeEmail({
+        email,
+        displayName,
+      }),
+    });
+    console.log(`✅ Email de bienvenida enviado exitosamente a ${email}`, result);
+  } catch (error) {
+    console.error("❌ Error enviando email de bienvenida:", error);
+  }
+}
 
 export async function getUserAuth() {
   const supabase = await createClient();
@@ -61,6 +90,8 @@ export async function signUp(email: string, password: string) {
     } catch (e) {
       console.log("Usuario ya existe en BD, continuando...");
     }
+
+    await sendWelcomeEmail(data.user.email ?? email);
   }
 
   return { success: true };
@@ -96,6 +127,8 @@ export async function signUpWithRole(email: string, password: string, role: 'GUE
     } catch (e) {
       console.log("Usuario ya existe en BD, continuando...");
     }
+
+    await sendWelcomeEmail(data.user.email ?? email);
   }
 
   return { success: true };

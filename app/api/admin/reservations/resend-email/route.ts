@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
-import { resend } from "@/app/lib/resend";
+import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
 import { generateGuestConfirmationEmail } from "@/app/lib/email-templates";
-
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@zerkk.com";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,14 +16,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    // Verificar que sea admin
+    // Verificar que sea admin o superadmin
     const prismaAny = prisma as any;
     const dbUser = await prismaAny.user.findUnique({
       where: { id: user.id },
       select: { role: true },
     });
 
-    if (!dbUser || dbUser.role !== "ADMIN") {
+    if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "SUPERADMIN")) {
       return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
     }
 
@@ -90,6 +88,15 @@ export async function POST(request: NextRequest) {
 
     const home = reservation.Home;
     const guest = reservation.User;
+    const resend = getResendClient();
+
+    if (!resend) {
+      console.error("RESEND_API_KEY no configurada; no se pudo reenviar email.");
+      return NextResponse.json(
+        { error: "Servicio de email no configurado" },
+        { status: 500 }
+      );
+    }
 
     const emailData = {
       guestName: `${guest.firstName} ${guest.lastName}`,
