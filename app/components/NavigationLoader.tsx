@@ -51,10 +51,10 @@ export function NavigationLoader() {
     setLoading(false);
   }, [pathname]);
 
-  // Fallback: ocultar después de 8s por si algo falla
+  // Fallback: ocultar después de 2.5s por si algo falla
   useEffect(() => {
     if (!loading) return;
-    const timer = setTimeout(() => setLoading(false), 8000);
+    const timer = setTimeout(() => setLoading(false), 2500);
     return () => clearTimeout(timer);
   }, [loading]);
 
@@ -63,7 +63,7 @@ export function NavigationLoader() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/75 backdrop-blur-sm">
       <div className="relative flex items-center justify-center w-24 h-24">
-        <div className="absolute inset-0 rounded-full border-4 border-orange-100 border-t-orange-500 animate-spin" />
+        <div className="absolute inset-0 rounded-full border-4 border-orange-100 border-t-orange-500 animate-spin-fast" />
         <span className="text-orange-500 font-black text-5xl leading-none select-none">
           Z
         </span>
