@@ -18,7 +18,7 @@ interface ProfileEditClientProps {
 
 export default function ProfileEditClient({ userData, userId, initialDocs = [] }: ProfileEditClientProps) {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true); // Siempre inicia en modo edición
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -94,7 +94,7 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
           phoneNumber: updatedData?.phoneNumber || "",
         });
         setSuccess(true);
-        setIsEditing(false);
+        // Ya no volvemos al modo no-edición, mantenemos el formulario visible
         setPreviewImage(null);
         setSelectedFile(null);
         router.refresh();
@@ -243,10 +243,7 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setIsEditing(false);
-                  setError(null);
-                  setPreviewImage(null);
-                  setSelectedFile(null);
+                  router.push('/my-dashboard');
                 }}
               >
                 Cancelar
