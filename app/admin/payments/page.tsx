@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import prisma from "@/app/lib/db";
-import { DollarSign, Calendar, TrendingUp, CreditCard, AlertCircle } from "lucide-react";
-import PaymentActions from "./PaymentActions";
+import { DollarSign, Calendar, CreditCard, AlertCircle } from "lucide-react";
+import PaymentsClient from "./PaymentsClient";
 
 async function getPaymentsData() {
   const prismaAny = prisma as any;
@@ -61,33 +61,6 @@ async function getStats() {
 export default async function PaymentsPage() {
   const reservations = await getPaymentsData();
   const stats = await getStats();
-
-  const getPaymentMethodLabel = (method: string) => {
-    const methods: Record<string, string> = {
-      PAGO_MOVIL: "Pago Móvil",
-      ZELLE: "Zelle",
-      ZILLI: "Zilli",
-      TARJETA_INTERNACIONAL: "Tarjeta Internacional",
-      TRANSFERENCIA_BANCARIA: "Transferencia Bancaria",
-    };
-    return methods[method] || method;
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; color: string }> = {
-      PENDING: { label: "Pendiente", color: "bg-yellow-100 text-yellow-700" },
-      CONFIRMED: { label: "Confirmado", color: "bg-green-100 text-green-700" },
-      REJECTED: { label: "Rechazado", color: "bg-red-100 text-red-700" },
-      CANCELLED: { label: "Cancelado", color: "bg-gray-100 text-gray-700" },
-      COMPLETED: { label: "Completado", color: "bg-blue-100 text-blue-700" },
-    };
-    const config = statusConfig[status] || { label: status, color: "bg-gray-100 text-gray-700" };
-    return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.color}`}>
-        {config.label}
-      </span>
-    );
-  };
 
   return (
     <div className="space-y-6">
@@ -162,109 +135,7 @@ export default async function PaymentsPage() {
       </div>
 
       {/* Reservations Table */}
-      <Card className="overflow-hidden">
-        <div className="p-6 border-b">
-          <h3 className="text-lg font-semibold">Reservas y Pagos Recientes</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Usuario
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Propiedad
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fechas
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Noches
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Método de Pago
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado Pago
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado Reserva
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {reservations.map((reservation: any) => (
-                <tr key={reservation.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {reservation.User?.firstName} {reservation.User?.lastName}
-                    </div>
-                    <div className="text-sm text-gray-500">{reservation.User?.email}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{reservation.Home?.title || "Sin título"}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {new Date(reservation.startDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(reservation.endDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm font-medium">{reservation.nights || "-"}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm font-semibold">
-                      {reservation.totalAmount ? `$${reservation.totalAmount.toFixed(2)}` : "-"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {reservation.Payment
-                        ? getPaymentMethodLabel(reservation.Payment.paymentMethod)
-                        : "N/A"}
-                    </div>
-                    {reservation.Payment?.referenceNumber && (
-                      <div className="text-xs text-gray-500">
-                        Ref: {reservation.Payment.referenceNumber}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {reservation.Payment ? getStatusBadge(reservation.Payment.status) : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {getStatusBadge(reservation.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {reservation.Payment && reservation.Payment.status === "PENDING" && (
-                      <PaymentActions 
-                        paymentId={reservation.Payment.id}
-                        reservationId={reservation.id}
-                      />
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      {reservations.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No hay reservas registradas</p>
-        </div>
-      )}
+      <PaymentsClient reservations={reservations} />
     </div>
   );
 }
