@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/app/lib/supabase/client";
 import { buildPublicUrl } from "@/app/lib/public-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,24 +21,28 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const redirectTo = buildPublicUrl("/auth/reset-password");
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo,
+      const redirectUrl = buildPublicUrl("/auth/reset-password");
+
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, redirectUrl }),
       });
 
-      if (error) {
-        setError(error.message || "Error al enviar el email de recuperación");
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.error === "Configura NEXT_PUBLIC_SITE_URL con tu dominio para enviar enlaces de recuperación al sitio correcto."
+            ? data.error
+            : data.error || "Error al enviar el email de recuperación"
+        );
       } else {
         setSuccess("Te enviamos un enlace para cambiar tu contraseña.");
         setEmail("");
       }
     } catch (err: any) {
-      const message =
-        err?.message === "NEXT_PUBLIC_SITE_URL no esta configurada para generar enlaces publicos."
-          ? "Configura NEXT_PUBLIC_SITE_URL con tu dominio para enviar enlaces de recuperación al sitio correcto."
-          : err?.message || "Error al procesar la solicitud";
-      setError(message);
+      setError(err.message || "Error al procesar la solicitud");
     } finally {
       setLoading(false);
     }

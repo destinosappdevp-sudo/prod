@@ -337,3 +337,102 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
 </html>
   `;
 }
+
+interface PasswordResetEmailData {
+  email: string;
+  resetLink: string;
+}
+
+export function generatePasswordResetEmail(data: PasswordResetEmailData): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar Contraseña - Zerkka</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">🔑 Recuperar Contraseña</h1>
+              <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Te ayudamos a restablecer tu acceso</p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
+                Hola,
+              </p>
+              <p style="margin: 0 0 30px 0; color: #666666; font-size: 15px; line-height: 1.6;">
+                Recibimos una solicitud para cambiar la contraseña asociada a esta cuenta. Si fuiste tú, haz clic en el botón de abajo para crear una nueva contraseña segura.
+              </p>
+
+              <!-- CTA Button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.resetLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                      Cambiar contraseña
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Info Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; margin-bottom: 30px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0; color: #1e3a8a; font-size: 13px; line-height: 1.6;">
+                      <strong>⏰ El enlace expira en:</strong> 24 horas<br>
+                      <strong>📧 Esta solicitud fue para:</strong> ${data.email}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Security Notice -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-left: 4px solid #667eea; padding-left: 15px; margin-bottom: 20px;">
+                <tr>
+                  <td>
+                    <h3 style="margin: 0 0 10px 0; color: #333333; font-size: 16px; font-weight: 600;">🔐 Seguridad</h3>
+                    <p style="margin: 0 0 8px 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                      Si no solicitaste cambiar tu contraseña, puedes ignorar este correo. Tu cuenta permanece segura.
+                    </p>
+                    <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                      Nunca compartas tu contraseña con nadie y sospecha de correos sospechosos.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+              <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
+                ¿Necesitas ayuda? Contáctanos en <a href="mailto:support@zerkka.com" style="color: #667eea; text-decoration: none;">support@zerkka.com</a>
+              </p>
+              <p style="margin: 0; color: #999999; font-size: 12px;">
+                © ${new Date().getFullYear()} Zerkka. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+}
