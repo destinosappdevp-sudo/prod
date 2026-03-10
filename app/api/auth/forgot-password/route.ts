@@ -22,8 +22,20 @@ export async function POST(request: NextRequest) {
     // Get Supabase admin client for generating reset link
     const adminClient = createAdminClient();
     if (!adminClient) {
+      const missingVars: string[] = [];
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.SUPABASE_URL) {
+        missingVars.push("NEXT_PUBLIC_SUPABASE_URL o SUPABASE_URL");
+      }
+      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        missingVars.push("SUPABASE_SERVICE_ROLE_KEY");
+      }
+
+      console.error(
+        `[forgot-password] Configuración incompleta. Faltan: ${missingVars.join(", ") || "variables requeridas"}`
+      );
+
       return NextResponse.json(
-        { error: "Configuración de servidor incompleta" },
+        { error: "Configuración de servidor incompleta", missing: missingVars },
         { status: 500 }
       );
     }
