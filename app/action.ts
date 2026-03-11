@@ -253,60 +253,14 @@ export async function signOut() {
 }
 
 export async function createAirbnbHome({ userId }: { userId: string }) {
-  const data = await prisma.home.findFirst({
-    where: {
-      userId: userId,
-    },
-    orderBy: {
-      createdAt: "desc",
+  const data = await prisma.home.create({
+    data: {
+      id: randomUUID(),
+      userId,
     },
   });
 
-  if (data === null) {
-    const data = await prisma.home.create({
-      data: {
-        id: randomUUID(),
-        userId: userId,
-      },
-    });
-
-    return redirect(`/create/${data.id}/structure`);
-  } else if (
-    !data.addedCategory &&
-    !data.addedDescription &&
-    !data.addedLocation
-  ) {
-    return redirect(`/create/${data.id}/structure`);
-  } else if (data.addedCategory && !data.addedDescription) {
-    return redirect(`/create/${data.id}/description`);
-  } else if (
-    data.addedCategory &&
-    data.addedDescription &&
-    !data.addedAmenities
-  ) {
-    return redirect(`/create/${data.id}/amenities`);
-  } else if (
-    data.addedCategory &&
-    data.addedDescription &&
-    data.addedAmenities &&
-    !data.addedLocation
-  ) {
-    return redirect(`/create/${data.id}/address`);
-  } else if (
-    data.addedCategory &&
-    data.addedDescription &&
-    data.addedAmenities &&
-    data.addedLocation
-  ) {
-    const data = await prisma.home.create({
-      data: {
-        id: randomUUID(),
-        userId: userId,
-      },
-    });
-
-    return redirect(`/create/${data.id}/structure`);
-  }
+  return redirect(`/create/${data.id}/structure`);
 }
 
 export async function createCategoryPage(formData: FormData) {
