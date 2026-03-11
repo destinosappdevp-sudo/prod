@@ -128,7 +128,7 @@ export default function AmenityManagerClient({
   return (
     <div className="space-y-6">
       <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold">Categorias</h2>
+        <h2 className="text-xl font-semibold">Grupos de servicios</h2>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="categoryName">Nombre</Label>
@@ -151,7 +151,7 @@ export default function AmenityManagerClient({
           </div>
           <div className="flex items-end">
             <Button type="button" onClick={handleCreateCategory}>
-              Crear categoria
+              Crear grupo
             </Button>
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function AmenityManagerClient({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amenityCategory">Categoria</Label>
+            <Label htmlFor="amenityCategory">Grupo de servicios</Label>
             <select
               id="amenityCategory"
               value={amenityCategoryId}
