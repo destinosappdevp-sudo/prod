@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { Menu, CircleUserRound, HelpCircle } from "lucide-react";
 import { signOut } from "../action";
+import { AuthDialog } from "./AuthDialog";
 
 interface UserNavClientProps {
   user: any;
@@ -27,83 +30,159 @@ export function UserNavClient({
   userName,
   userRole,
 }: UserNavClientProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [imgSrc, setImgSrc] = useState<string | null>(userPicture || null);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [authDialogMode, setAuthDialogMode] = useState<"login" | "register">("login");
+  const [authDialogRole, setAuthDialogRole] = useState<"GUEST" | "HOST">("GUEST");
+
+  const currentPath = searchParams.toString()
+    ? `${pathname}?${searchParams.toString()}`
+    : pathname;
+
+  const menuItemClassName =
+    "rounded-lg px-4 py-3 text-sm font-medium text-gray-700 focus:bg-gray-50";
+
+  const menuItemContentClassName = "flex w-full items-center gap-2 text-left";
 
   useEffect(() => {
     setImgSrc(userPicture || null);
   }, [userPicture]);
 
+  const openLoginDialog = () => {
+    setAuthDialogMode("login");
+    setAuthDialogRole("GUEST");
+    setAuthDialogOpen(true);
+  };
+
+  const openRegisterDialog = (role: "GUEST" | "HOST") => {
+    setAuthDialogMode("register");
+    setAuthDialogRole(role);
+    setAuthDialogOpen(true);
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        {imgSrc ? (
-          <img
-            src={imgSrc}
-            alt="Pic of user"
-            onError={() => setImgSrc(null)}
-            className="rounded-full h-10 w-10 border border-gray-300 cursor-pointer hover:opacity-80 transition object-cover bg-gray-100"
-          />
-        ) : (
-          <div className="rounded-full h-10 w-10 border border-gray-300 cursor-pointer hover:opacity-80 transition bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
-            {userName?.[0]?.toUpperCase() || "U"}
-          </div>
-        )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[240px]">
-        {user ? (
-          <>
-            <DropdownMenuItem disabled className="font-semibold text-sm">
-              {userName || "Mi Cuenta"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {userRole === "HOST" && (
-              <DropdownMenuItem>
-                <form action={createHomeAction} className="w-full">
-                  <button type="submit" className="w-full text-start">
-                    Publicar en Zerkka
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            aria-label="Abrir menú"
+            className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 transition-shadow hover:shadow-md focus:outline-none"
+          >
+            <Menu size={18} className="text-gray-700" strokeWidth={1.8} />
+            {user && imgSrc ? (
+              <img
+                src={imgSrc}
+                alt="avatar"
+                onError={() => setImgSrc(null)}
+                className="h-7 w-7 rounded-full border border-gray-200 bg-gray-100 object-cover"
+              />
+            ) : (
+              <CircleUserRound size={26} className="text-gray-500" strokeWidth={1.4} />
+            )}
+          </button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-[220px] rounded-2xl border border-gray-100 py-2 shadow-lg">
+          {user ? (
+            <>
+              <DropdownMenuItem asChild className={menuItemClassName}>
+                <Link href="/ayuda" className={menuItemContentClassName}>
+                  <HelpCircle size={15} className="text-gray-500" />
+                  ayuda
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="my-1" />
+
+              <DropdownMenuItem
+                disabled
+                className="rounded-lg px-4 py-3 text-sm font-semibold text-gray-500 data-[disabled]:opacity-100"
+              >
+                {userName || "Mi Cuenta"}
+              </DropdownMenuItem>
+
+              {userRole === "HOST" && (
+                <DropdownMenuItem asChild className={menuItemClassName}>
+                  <form action={createHomeAction} className="w-full">
+                    <button type="submit" className={menuItemContentClassName}>
+                      Publicar en Zerkka
+                    </button>
+                  </form>
+                </DropdownMenuItem>
+              )}
+
+              <DropdownMenuItem asChild className={menuItemClassName}>
+                <Link href="/my-dashboard" className={menuItemContentClassName}>
+                  Escritorio
+                </Link>
+              </DropdownMenuItem>
+
+              {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
+                <>
+                  <DropdownMenuSeparator className="my-1" />
+                  <DropdownMenuItem asChild className="rounded-lg px-4 py-3 text-sm font-semibold text-blue-600 focus:bg-blue-50">
+                    <Link href="/admin" className={menuItemContentClassName}>
+                      🏠 Panel de Admin
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
+
+              <DropdownMenuSeparator className="my-1" />
+              <DropdownMenuItem asChild className={menuItemClassName}>
+                <form action={signOut} className="w-full">
+                  <button type="submit" className={menuItemContentClassName}>
+                    Cerrar Sesión
                   </button>
                 </form>
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem>
-              <Link href="/my-dashboard" className="w-full">
-                Escritorio
-              </Link>
-            </DropdownMenuItem>
-            {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link href="/admin" className="w-full font-semibold text-blue-600">
-                    🏠 Panel de Admin
-                  </Link>
-                </DropdownMenuItem>
-              </>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <form action={signOut} className="w-full">
-                <button type="submit" className="w-full text-start">
-                  Cerrar Sesión
-                </button>
-              </form>
-            </DropdownMenuItem>
-          </>
-        ) : (
-          <>
-            <DropdownMenuItem>
-              <Link href="/login" className="w-full">
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem asChild className={menuItemClassName}>
+                <Link href="/ayuda" className={menuItemContentClassName}>
+                  <HelpCircle size={15} className="text-gray-500" />
+                  ayuda
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1" />
+
+              <DropdownMenuItem
+                onSelect={openLoginDialog}
+                className="rounded-lg px-4 py-3 text-sm font-medium text-gray-800 focus:bg-gray-50"
+              >
                 Iniciar Sesión
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/login" className="w-full">
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onSelect={() => openRegisterDialog("GUEST")}
+                className={menuItemClassName}
+              >
                 Registrarse
-              </Link>
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1" />
+
+              <DropdownMenuItem
+                onSelect={() => openRegisterDialog("HOST")}
+                className={menuItemClassName}
+              >
+                Conviértete en anfitrión
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AuthDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
+        nextPath={currentPath}
+        initialMode={authDialogMode}
+        initialRole={authDialogRole}
+      />
+    </>
   );
 }

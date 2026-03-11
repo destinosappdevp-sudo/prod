@@ -66,7 +66,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive
                   ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                  : "text-gray-300 hover:bg-gray-800 hover:text-primary"
               }`}
             >
               <Icon size={20} />
@@ -80,7 +80,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
       <div className="p-4 border-t border-gray-800">
         <Link
           href="/"
-          className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors mb-2"
+          className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 transition-colors hover:bg-gray-800 hover:text-primary"
         >
           <Home size={20} />
           <span>Volver al sitio</span>
@@ -88,7 +88,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
         <form action={signOut} className="w-full">
           <button
             type="submit"
-            className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors w-full"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-gray-300 transition-colors hover:bg-gray-800 hover:text-primary"
           >
             <LogOut size={20} />
             <span>Cerrar sesión</span>

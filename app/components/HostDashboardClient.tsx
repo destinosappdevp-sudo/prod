@@ -226,7 +226,7 @@ export default function HostDashboardClient({
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
                   isActive
                     ? "bg-orange-500 text-white"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                    : "text-white/70 hover:bg-white/10 hover:text-primary"
                 }`}
               >
                 <Icon size={18} />
@@ -260,7 +260,7 @@ export default function HostDashboardClient({
           <form action={signOut}>
             <button
               type="submit"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 hover:text-primary transition"
             >
               <LogOut size={18} />
               <span className="text-sm font-medium">Cerrar sesion</span>

@@ -7,6 +7,49 @@ import { headers } from "next/headers";
 import { randomUUID } from "crypto";
 import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
 import { generateWelcomeEmail } from "@/app/lib/email-templates";
+import { getStateByValue } from "@/app/lib/venezuelaStates";
+
+type RegistrationProfile = {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  stateCode: string;
+};
+
+function normalizeRegistrationProfile(profile: RegistrationProfile) {
+  return {
+    firstName: profile.firstName.trim(),
+    lastName: profile.lastName.trim(),
+    phoneNumber: profile.phoneNumber.trim(),
+    stateCode: profile.stateCode.trim().toUpperCase(),
+  };
+}
+
+function validateRegistrationProfile(profile: RegistrationProfile) {
+  const normalizedProfile = normalizeRegistrationProfile(profile);
+
+  if (!normalizedProfile.firstName) {
+    return { error: "Debes ingresar tu nombre" };
+  }
+
+  if (!normalizedProfile.lastName) {
+    return { error: "Debes ingresar tu apellido" };
+  }
+
+  if (!normalizedProfile.phoneNumber) {
+    return { error: "Debes ingresar tu teléfono" };
+  }
+
+  if (normalizedProfile.phoneNumber.length < 7) {
+    return { error: "Ingresa un número de teléfono válido" };
+  }
+
+  if (!normalizedProfile.stateCode || !getStateByValue(normalizedProfile.stateCode)) {
+    return { error: "Debes seleccionar un estado de Venezuela" };
+  }
+
+  return { data: normalizedProfile };
+}
 
 async function sendWelcomeEmail(email: string) {
   const resend = getResendClient();
@@ -98,8 +141,34 @@ export async function signUp(email: string, password: string) {
 }
 
 
-export async function signUpWithRole(email: string, password: string, role: 'GUEST' | 'HOST' | 'ADMIN' | 'SUPERADMIN' = 'GUEST') {
+export async function signUpWithRole(
+  email: string,
+  password: string,
+  role: 'GUEST' | 'HOST' | 'ADMIN' | 'SUPERADMIN' = 'GUEST',
+  profile?: RegistrationProfile
+) {
   const supabase = await createClient();
+  let normalizedProfile: RegistrationProfile;
+
+  if (!profile) {
+    if (role === "GUEST" || role === "HOST") {
+      return { error: "Faltan datos del perfil para crear la cuenta" };
+    }
+
+    normalizedProfile = {
+      firstName: "Usuario",
+      lastName: "",
+      phoneNumber: "",
+      stateCode: "CC",
+    };
+  } else {
+    const validatedProfile = validateRegistrationProfile(profile);
+    if ("error" in validatedProfile) {
+      return validatedProfile;
+    }
+
+    normalizedProfile = validatedProfile.data;
+  }
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -118,10 +187,12 @@ export async function signUpWithRole(email: string, password: string, role: 'GUE
         data: {
           id: data.user.id,
           email: data.user.email ?? email,
-          firstName: "Usuario",
-          lastName: "",
+          firstName: normalizedProfile.firstName,
+          lastName: normalizedProfile.lastName,
           profileImage: `https://avatar.vercel.sh/${email}`,
           role: role,
+          phoneNumber: normalizedProfile.phoneNumber,
+          stateCode: normalizedProfile.stateCode,
         },
       });
     } catch (e) {

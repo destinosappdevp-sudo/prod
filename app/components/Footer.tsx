@@ -90,7 +90,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-gray-400 hover:text-white transition-colors"
+                      className="text-sm text-gray-400 hover:text-primary transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -107,8 +107,8 @@ export default function Footer() {
         <div className="container mx-auto px-5 lg:px-10 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
           <p>© {currentYear} ZerKKa · Venezuela · Todos los derechos reservados</p>
           <div className="flex gap-4">
-            <Link href="/terminos" className="hover:text-gray-300 transition-colors">Términos</Link>
-            <Link href="/privacidad" className="hover:text-gray-300 transition-colors">Privacidad</Link>
+            <Link href="/terminos" className="hover:text-primary transition-colors">Términos</Link>
+            <Link href="/privacidad" className="hover:text-primary transition-colors">Privacidad</Link>
           </div>
         </div>
       </div>

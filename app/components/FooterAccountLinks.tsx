@@ -36,7 +36,7 @@ export default function FooterAccountLinks() {
         <li key={link.label}>
           <button
             onClick={(e) => handleClick(e, link.href)}
-            className="text-sm text-gray-400 hover:text-white transition-colors text-left"
+            className="text-left text-sm text-gray-400 transition-colors hover:text-primary"
           >
             {link.label}
           </button>

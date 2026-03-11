@@ -213,6 +213,7 @@ model User {
   profileImage                      String?
   role                              UserRole                 @default(GUEST)
   phoneNumber                       String?
+  stateCode                         String?
   isVerified                        Boolean                  @default(false)
   verificationReason                String?
   verifiedAt                        DateTime?

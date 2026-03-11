@@ -5,6 +5,45 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 
+const supabaseImagesBase = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images`
+  : "";
+
+function resolveImageSrc(imagePath?: string | null) {
+  if (!imagePath) {
+    return null;
+  }
+
+  const trimmedPath = imagePath.trim();
+  if (!trimmedPath) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(trimmedPath)) {
+    return trimmedPath;
+  }
+
+  if (trimmedPath.startsWith("/storage/v1/object/public/images/")) {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL
+      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}${trimmedPath}`
+      : trimmedPath;
+  }
+
+  if (trimmedPath.startsWith("storage/v1/object/public/images/")) {
+    return supabaseImagesBase
+      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/${trimmedPath}`
+      : `/${trimmedPath}`;
+  }
+
+  if (trimmedPath.startsWith("/")) {
+    return trimmedPath;
+  }
+
+  return supabaseImagesBase
+    ? `${supabaseImagesBase}/${trimmedPath.replace(/^\/+/, "")}`
+    : `/${trimmedPath.replace(/^\/+/, "")}`;
+}
+
 export default async function ReservationDetailPage({
   params,
 }: {
@@ -43,6 +82,15 @@ export default async function ReservationDetailPage({
             municipality: true,
             country: true,
             userId: true,
+            User: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                profileImage: true,
+              },
+            },
           },
         },
         Payment: true,
@@ -56,15 +104,15 @@ export default async function ReservationDetailPage({
 
     // Check authorization
     const isGuest = reservation.userId === user.id;
-    const homeUser = await (prisma as any).home.findUnique({
-      where: { id: reservation.homeId || "" },
-      select: { userId: true },
-    });
-    const isHost = homeUser?.userId === user.id;
+    const isHost = reservation.Home?.userId === user.id;
 
     if (!isGuest && !isHost) {
       redirect("/my-dashboard");
     }
+
+    const propertyImageSrc = resolveImageSrc(reservation.Home?.photo);
+    const contactUser = isHost ? reservation.User : reservation.Home?.User;
+    const userImageSrc = resolveImageSrc(contactUser?.profileImage);
 
     // Format dates
     const startDate = new Date(reservation.startDate);
@@ -146,9 +194,9 @@ export default async function ReservationDetailPage({
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4">Propiedad</h2>
                 <div className="flex gap-6">
-                  {reservation.Home.photo && (
+                  {propertyImageSrc && (
                     <Image
-                      src={reservation.Home.photo}
+                      src={propertyImageSrc}
                       alt={reservation.Home.title}
                       width={128}
                       height={128}
@@ -231,7 +279,7 @@ export default async function ReservationDetailPage({
             )}
 
             {/* Guest/Host Info */}
-            {reservation.User && (
+            {contactUser && (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4">
                   {isHost
@@ -239,10 +287,10 @@ export default async function ReservationDetailPage({
                     : "Información del Anfitrión"}
                 </h2>
                 <div className="flex items-center gap-4">
-                  {reservation.User.profileImage && (
+                  {userImageSrc && (
                     <Image
-                      src={reservation.User.profileImage}
-                      alt={reservation.User.firstName}
+                      src={userImageSrc}
+                      alt={contactUser.firstName}
                       width={64}
                       height={64}
                       className="w-16 h-16 rounded-full object-cover"
@@ -250,9 +298,9 @@ export default async function ReservationDetailPage({
                   )}
                   <div>
                     <h3 className="font-semibold text-lg">
-                      {reservation.User.firstName} {reservation.User.lastName}
+                      {contactUser.firstName} {contactUser.lastName}
                     </h3>
-                    <p className="text-slate-600">{reservation.User.email}</p>
+                    <p className="text-slate-600">{contactUser.email}</p>
                   </div>
                 </div>
               </div>

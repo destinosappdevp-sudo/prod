@@ -1,0 +1,421 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import { signInWithEmail, signUpWithRole } from "@/app/action";
+import { createClient } from "@/app/lib/supabase/client";
+import { getAllStates } from "@/app/lib/venezuelaStates";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
+type AuthMode = "login" | "register";
+type AuthRole = "GUEST" | "HOST";
+
+interface AuthPanelProps {
+  initialMode?: AuthMode;
+  initialRole?: AuthRole;
+  nextPath?: string;
+  onSuccess?: () => void;
+  variant?: "page" | "dialog";
+}
+
+export function AuthPanel({
+  initialMode = "login",
+  initialRole = "GUEST",
+  nextPath = "/",
+  onSuccess,
+  variant = "page",
+}: AuthPanelProps) {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [stateCode, setStateCode] = useState("");
+  const [isLogin, setIsLogin] = useState(initialMode === "login");
+  const [role, setRole] = useState<AuthRole>(initialRole);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const stateOptions = getAllStates();
+  const registerTitle = role === "HOST" ? "Crear cuenta anfitrión" : "Crear cuenta huésped";
+
+  useEffect(() => {
+    setIsLogin(initialMode === "login");
+  }, [initialMode]);
+
+  useEffect(() => {
+    setRole(initialRole);
+  }, [initialRole]);
+
+  const getOrCreateDeviceId = () => {
+    const existingDeviceId = localStorage.getItem("xerkka_device_id");
+    if (existingDeviceId) {
+      return existingDeviceId;
+    }
+
+    const newDeviceId = `device-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    localStorage.setItem("xerkka_device_id", newDeviceId);
+    return newDeviceId;
+  };
+
+  const detectBrowser = (userAgent: string) => {
+    if (userAgent.includes("Edg")) return "Edge";
+    if (userAgent.includes("Firefox")) return "Firefox";
+    if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) return "Safari";
+    if (userAgent.includes("Chrome")) return "Chrome";
+    return "Unknown";
+  };
+
+  const detectOS = (userAgent: string) => {
+    if (userAgent.includes("Windows NT 10.0")) return "Windows 10/11";
+    if (userAgent.includes("Mac OS X")) return "macOS";
+    if (userAgent.includes("Linux")) return "Linux";
+    return "Unknown";
+  };
+
+  const getIpAndLocation = async () => {
+    let ipAddress: string | null = null;
+    let location: string | null = null;
+
+    try {
+      const ipResponse = await fetch("https://api.ipify.org?format=json");
+      if (ipResponse.ok) {
+        const ipData = await ipResponse.json();
+        ipAddress = ipData?.ip ?? null;
+      }
+    } catch {
+      ipAddress = null;
+    }
+
+    if (ipAddress) {
+      try {
+        const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+        if (locationResponse.ok) {
+          const locationData = await locationResponse.json();
+          if (locationData?.city && locationData?.country_name) {
+            location = `${locationData.city}, ${locationData.country_name}`;
+          }
+        }
+      } catch {
+        location = null;
+      }
+    }
+
+    return { ipAddress, location };
+  };
+
+  const trackActiveSession = async (fallbackUserId?: string) => {
+    try {
+      const supabase = createClient();
+      const deviceId = getOrCreateDeviceId();
+      const userAgent = navigator.userAgent;
+      const browser = detectBrowser(userAgent);
+      const os = detectOS(userAgent);
+      const { ipAddress, location } = await getIpAndLocation();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const userId = user?.id ?? fallbackUserId;
+
+      if (!userId) {
+        return;
+      }
+
+      await supabase.from("usersessions").upsert(
+        {
+          user_id: userId,
+          device_id: deviceId,
+          device_name: `${browser} en ${os}`,
+          os,
+          browser,
+          ip_address: ipAddress,
+          location,
+          last_active: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          is_active: true,
+        },
+        {
+          onConflict: "user_id,device_id",
+        }
+      );
+    } catch (sessionError) {
+      console.error("No se pudo registrar la sesión activa:", sessionError);
+    }
+  };
+
+  const resetFeedback = () => {
+    setError("");
+    setSuccess("");
+  };
+
+  const toggleMode = () => {
+    resetFeedback();
+    setIsLogin((currentValue) => !currentValue);
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    resetFeedback();
+    setIsSubmitting(true);
+
+    try {
+      if (isLogin) {
+        const result = await signInWithEmail(email, password);
+
+        if (result?.error) {
+          setError(result.error);
+          return;
+        }
+
+        if (result?.success) {
+          await trackActiveSession(result.userId);
+          onSuccess?.();
+          if (nextPath) {
+            router.push(nextPath);
+          }
+          router.refresh();
+        }
+
+        return;
+      }
+
+      const result = await signUpWithRole(email, password, role, {
+        firstName,
+        lastName,
+        phoneNumber,
+        stateCode,
+      });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+
+      setSuccess("¡Cuenta creada! Redirigiendo...");
+      const loginResult = await signInWithEmail(email, password);
+
+      if (loginResult?.success) {
+        await trackActiveSession(loginResult.userId);
+        onSuccess?.();
+        router.push("/my-dashboard?tab=profile");
+        router.refresh();
+      } else {
+        setSuccess("¡Cuenta creada! Por favor inicia sesión.");
+        setIsLogin(true);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const inputClassName =
+    variant === "dialog"
+      ? "h-12 rounded-2xl border-gray-300 px-4 text-base shadow-sm focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:ring-offset-0"
+      : undefined;
+
+  const selectClassName =
+    variant === "dialog"
+      ? "h-12 rounded-2xl border-gray-300 px-4 text-base shadow-sm focus:ring-1 focus:ring-orange-500 focus:ring-offset-0"
+      : undefined;
+
+  const formBody = (
+    <form onSubmit={handleSubmit} className={cn("space-y-4", variant === "dialog" && "space-y-4") }>
+      {!isLogin && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor={`auth-first-name-${variant}`}>Nombre</Label>
+            <Input
+              id={`auth-first-name-${variant}`}
+              type="text"
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              required={!isLogin}
+              placeholder="Juan"
+              className={inputClassName}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`auth-last-name-${variant}`}>Apellido</Label>
+            <Input
+              id={`auth-last-name-${variant}`}
+              type="text"
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              required={!isLogin}
+              placeholder="Pérez"
+              className={inputClassName}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label htmlFor={`auth-email-${variant}`}>Correo electrónico</Label>
+        <Input
+          id={`auth-email-${variant}`}
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+          placeholder="tu@email.com"
+          className={inputClassName}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`auth-password-${variant}`}>Contraseña</Label>
+        <div className="relative">
+          <Input
+            id={`auth-password-${variant}`}
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            placeholder="••••••••"
+            minLength={6}
+            className={cn("pr-10", inputClassName)}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((value) => !value)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {!isLogin && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor={`auth-phone-${variant}`}>Teléfono</Label>
+            <Input
+              id={`auth-phone-${variant}`}
+              type="tel"
+              value={phoneNumber}
+              onChange={(event) => setPhoneNumber(event.target.value)}
+              required={!isLogin}
+              placeholder="0414-1234567"
+              className={inputClassName}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`auth-state-${variant}`}>Estado</Label>
+            <Select value={stateCode} onValueChange={setStateCode}>
+              <SelectTrigger id={`auth-state-${variant}`} className={selectClassName}>
+                <SelectValue placeholder="Selecciona..." />
+              </SelectTrigger>
+              <SelectContent>
+                {stateOptions.map((state) => (
+                  <SelectItem key={state.value} value={state.value}>
+                    {state.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {error && <div className="rounded-2xl bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+
+      {success && <div className="rounded-2xl bg-green-50 p-3 text-sm text-green-600">{success}</div>}
+
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className={cn(
+          "w-full",
+          variant === "dialog" &&
+            "h-11 rounded-2xl bg-[#ff6b35] text-base font-semibold text-white hover:bg-[#f45b24]"
+        )}
+      >
+        {isSubmitting
+          ? "Procesando..."
+          : isLogin
+          ? "Iniciar sesión"
+          : "Crear cuenta"}
+      </Button>
+
+      {isLogin && (
+        <Link
+          href="/auth/forgot-password"
+          className="block w-full text-center text-sm text-blue-600 hover:underline"
+        >
+          ¿Olvidaste la contraseña?
+        </Link>
+      )}
+
+      <button
+        type="button"
+        onClick={toggleMode}
+        className="w-full text-sm text-gray-600 hover:underline"
+      >
+        {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+      </button>
+
+      {variant === "dialog" && (
+        <p className="pt-1 text-center text-xs leading-relaxed text-gray-400">
+          Al continuar, aceptas nuestros{' '}
+          <Link href="/terminos" className="underline hover:text-gray-500">
+            Términos y Condiciones
+          </Link>
+          .
+        </p>
+      )}
+    </form>
+  );
+
+  if (variant === "dialog") {
+    return (
+      <div className="px-5 pb-6 pt-6 md:px-8 md:pb-8 md:pt-7">
+        <div className="mb-4 text-center md:mb-5">
+          <h2 className="text-2xl font-semibold text-gray-900 md:text-3xl">
+            {isLogin ? "Iniciar sesión" : registerTitle}
+          </h2>
+          <p className="mt-1.5 text-sm text-gray-500">
+            {isLogin
+              ? "Accede a tu cuenta para reservar, guardar favoritos y gestionar tus viajes."
+              : role === "HOST"
+              ? "Crea tu cuenta de anfitrión para publicar propiedades y recibir reservas."
+              : "Crea tu cuenta para comenzar a reservar o guardar favoritos."}
+          </p>
+        </div>
+        {formBody}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>{isLogin ? "Iniciar Sesión" : registerTitle}</CardTitle>
+          <CardDescription>
+            {isLogin ? "Ingresa con tu email y contraseña" : "Registra una nueva cuenta"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>{formBody}</CardContent>
+      </Card>
+    </div>
+  );
+}
