@@ -51,6 +51,7 @@ async function sendWelcomeEmail(email: string) {
   const resend = getResendClient();
 
   if (!resend) {
+    console.warn("[register-mobile] RESEND_API_KEY no configurada; se omite email de bienvenida para:", email);
     return;
   }
 
