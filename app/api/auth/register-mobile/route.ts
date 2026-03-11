@@ -58,7 +58,7 @@ async function sendWelcomeEmail(email: string) {
   const displayName = email.split("@")[0] || "nuevo usuario";
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: "Bienvenido a Zerkka",
@@ -67,6 +67,10 @@ async function sendWelcomeEmail(email: string) {
         displayName,
       }),
     });
+
+    if (result.error) {
+      console.error("[register-mobile] Resend rechazó el email:", result.error);
+    }
   } catch (error) {
     console.error("[register-mobile] error enviando email:", error);
   }

@@ -1,6 +1,26 @@
 import { Resend } from "resend";
 
-export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+function normalizeFromEmail(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  const withoutDoubleQuotes =
+    trimmed.startsWith('"') && trimmed.endsWith('"')
+      ? trimmed.slice(1, -1)
+      : trimmed;
+  const withoutSingleQuotes =
+    withoutDoubleQuotes.startsWith("'") && withoutDoubleQuotes.endsWith("'")
+      ? withoutDoubleQuotes.slice(1, -1)
+      : withoutDoubleQuotes;
+  const normalized = withoutSingleQuotes.trim();
+
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+export const FROM_EMAIL =
+  normalizeFromEmail(process.env.RESEND_FROM_EMAIL) || "onboarding@resend.dev";
 
 let resendClient: Resend | null = null;
 

@@ -72,7 +72,13 @@ async function sendWelcomeEmail(email: string) {
         displayName,
       }),
     });
-    console.log(`✅ Email de bienvenida enviado exitosamente a ${email}`, result);
+
+    if (result.error) {
+      console.error(`❌ Resend rechazó el email de bienvenida a ${email}:`, result.error);
+      return;
+    }
+
+    console.log(`✅ Email de bienvenida enviado exitosamente a ${email}`, result.data);
   } catch (error) {
     console.error("❌ Error enviando email de bienvenida:", error);
   }

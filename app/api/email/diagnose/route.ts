@@ -30,7 +30,8 @@ export async function GET(request: Request) {
         subject: "Test de configuración Zerkka",
         html: "<p>Este es un email de prueba para verificar que Resend está configurado correctamente.</p>",
       });
-      return NextResponse.json({ config, testSend: { ok: true, result } });
+      const ok = !result.error;
+      return NextResponse.json({ config, testSend: { ok, result } });
     } catch (error) {
       return NextResponse.json({
         config,
