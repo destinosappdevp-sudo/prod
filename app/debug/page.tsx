@@ -17,7 +17,7 @@ export default function DebugPage() {
 
     const result = await signUpWithRole(email, password, "SUPERADMIN");
 
-    if (result.error) {
+    if ("error" in result && result.error) {
       setMessage(`❌ Error: ${result.error}`);
     } else {
       setMessage(

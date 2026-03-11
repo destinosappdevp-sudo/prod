@@ -202,7 +202,7 @@ export function AuthPanel({
         phoneNumber,
         stateCode,
       });
-      if (result?.error) {
+      if (result && "error" in result && result.error) {
         setError(result.error);
         return;
       }
