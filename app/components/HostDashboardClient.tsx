@@ -53,6 +53,8 @@ interface HostListingItem {
   municipalityValue?: string | null;
   price: number;
   title: string;
+  publishStatus: "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
+  approvalRejectionReason?: string | null;
 }
 
 interface HostDashboardClientProps {
@@ -66,6 +68,7 @@ interface HostDashboardClientProps {
   stats: HostStats;
   reservations: HostReservationItem[];
   listings: HostListingItem[];
+  initialTab?: string;
   createHomeAction?: (formData: FormData) => Promise<void>;
   userData?: any;
   userId?: string;
@@ -121,12 +124,19 @@ export default function HostDashboardClient({
   stats,
   reservations,
   listings,
+  initialTab,
   createHomeAction,
   userData,
   userId,
   initialDocs = [],
 }: HostDashboardClientProps) {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(() => {
+    const allowedTabs = new Set(menuItems.map((item) => item.key));
+    if (initialTab && allowedTabs.has(initialTab)) {
+      return initialTab;
+    }
+    return "dashboard";
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
 
@@ -556,7 +566,12 @@ export default function HostDashboardClient({
         {activeTab === "listings" && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Mis anuncios</h3>
+              <div>
+                <h3 className="text-lg font-semibold">Mis anuncios</h3>
+                <p className="text-sm text-slate-500">
+                  Aqui veras publicados, pendientes, borradores y rechazados.
+                </p>
+              </div>
               {createHomeAction ? (
                 <form action={createHomeAction}>
                   <button type="submit" className="text-sm text-orange-600 hover:underline">
@@ -578,6 +593,8 @@ export default function HostDashboardClient({
                   stateValue={item.stateValue}
                   municipalityValue={item.municipalityValue}
                   title={item.title}
+                  publishStatus={item.publishStatus}
+                  approvalRejectionReason={item.approvalRejectionReason}
                 />
               ))}
             </div>

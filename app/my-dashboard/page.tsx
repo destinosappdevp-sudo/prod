@@ -46,9 +46,6 @@ async function getHostDashboardData(userId: string) {
     prismaAny.home.findMany({
       where: {
         userId,
-        addedCategory: true,
-        addedDescription: true,
-        addedLocation: true,
       },
       select: {
         id: true,
@@ -159,7 +156,7 @@ async function getHostDashboardData(userId: string) {
       stateValue: item.country || "",
       municipalityValue: item.municipality,
       price: item.price || 0,
-      title: item.title || "Sin titulo",
+      title: item.title || "Borrador sin titulo",
       publishStatus: item.publishStatus || "DRAFT",
       approvalRejectionReason: item.approvalRejectionReason,
       createdAt: item.createdAt,
@@ -316,6 +313,7 @@ export default async function DashboardPage({
         stats={data.stats}
         reservations={data.reservations}
         listings={data.listings}
+        initialTab={initialTab}
         createHomeAction={createHomeAction}
         userData={{ ...userRecord, email: userRecord?.email || user.email }}
         userId={user.id}
