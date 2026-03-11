@@ -155,12 +155,28 @@ export async function POST(request: NextRequest) {
       await sendWelcomeEmail(data.user.email ?? email);
     }
 
+    let session = data.session;
+
+    // Fallback para apps móviles: si signUp no devuelve sesión, intentamos login inmediato.
+    if (!session) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        console.warn("[register-mobile] cuenta creada sin sesión automática:", signInError.message);
+      } else {
+        session = signInData.session;
+      }
+    }
+
     return jsonResponse({
       success: true,
       message: "Cuenta creada correctamente",
       user: data.user,
-      session: data.session,
-      needsEmailConfirmation: !data.session,
+      session,
+      needsEmailConfirmation: !session,
     });
   } catch (error: any) {
     console.error("[register-mobile] error:", error);
