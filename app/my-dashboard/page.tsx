@@ -6,6 +6,25 @@ import HostDashboardClient from "@/app/components/HostDashboardClient";
 import GuestDashboardClient from "@/app/components/DashboardClient_min";
 import { createAirbnbHome } from "@/app/action";
 
+type HostPublishStatus =
+  | "DRAFT"
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "REJECTED";
+
+function normalizePublishStatus(status?: string | null): HostPublishStatus {
+  if (
+    status === "DRAFT" ||
+    status === "PENDING_APPROVAL" ||
+    status === "APPROVED" ||
+    status === "REJECTED"
+  ) {
+    return status;
+  }
+
+  return "DRAFT";
+}
+
 async function getUserDocuments(userId: string) {
   return (prisma as any)
     .$queryRawUnsafe(
@@ -27,7 +46,7 @@ async function getHostDashboardData(userId: string) {
     title: string | null;
     description: string | null;
     price: number | null;
-    publishStatus?: string;
+    publishStatus?: string | null;
     approvalRejectionReason?: string;
     createdAt?: Date;
   };
@@ -157,7 +176,7 @@ async function getHostDashboardData(userId: string) {
       municipalityValue: item.municipality,
       price: item.price || 0,
       title: item.title || "Borrador sin titulo",
-      publishStatus: item.publishStatus || "DRAFT",
+      publishStatus: normalizePublishStatus(item.publishStatus),
       approvalRejectionReason: item.approvalRejectionReason,
       createdAt: item.createdAt,
     })),
