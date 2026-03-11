@@ -1,4 +1,5 @@
 import prisma from "../app/lib/db";
+import { randomUUID } from "crypto";
 
 async function main() {
   console.log("🌱 Inicializando amenidades...\n");
@@ -10,62 +11,67 @@ async function main() {
 
   const categoriesData = [
     {
-      name: "Baño",
+      name: "Vistas panorámicas",
       order: 1,
       amenities: [
-        { name: "Agua caliente", iconKey: "droplets", iconUrl: null },
-        { name: "Gel de ducha", iconKey: "soap", iconUrl: null },
+        { name: "Vista al horizonte de la ciudad", iconKey: "city", iconUrl: null },
+        { name: "Vista a la playa", iconKey: "waves", iconUrl: null },
       ],
     },
     {
-      name: "Dormitorio y Lavadero",
+      name: "Baño",
       order: 2,
       amenities: [
-        { name: "Lavadora en la vivienda", iconKey: "washer", iconUrl: null },
-        { name: "Secadora en la vivienda", iconKey: "dryer", iconUrl: null },
+        { name: "Tina", iconKey: "bath", iconUrl: null },
+        { name: "Agua caliente", iconKey: "droplets", iconUrl: null },
+      ],
+    },
+    {
+      name: "Dormitorio y lavadero",
+      order: 3,
+      amenities: [
+        { name: "Lavadora", iconKey: "washer", iconUrl: null },
+        { name: "Secadora", iconKey: "dryer", iconUrl: null },
+      ],
+    },
+    {
+      name: "Servicios básicos",
+      order: 4,
+      amenities: [
+        {
+          name: "Toallas, sábanas, jabón y papel higiénico",
+          iconKey: "package",
+          iconUrl: null,
+        },
         { name: "Ganchos para la ropa", iconKey: "coat-rack", iconUrl: null },
-        { name: "Sábanas", iconKey: "bed", iconUrl: null },
-        {
-          name: "Almohadas y mantas adicionales",
-          iconKey: "pillow",
-          iconUrl: null,
-        },
-        { name: "Persianas o cortinas opacas", iconKey: "window-shade", iconUrl: null },
-        { name: "Tendedero de ropa", iconKey: "clothesline", iconUrl: null },
-        {
-          name: "Espacio para guardar ropa",
-          iconKey: "closet",
-          iconUrl: null,
-        },
       ],
     },
     {
       name: "Entretenimiento",
-      order: 3,
-      amenities: [
-        { name: "TV", iconKey: "tv", iconUrl: null },
-        { name: "Sistema de sonido", iconKey: "speaker", iconUrl: null },
-        { name: "Equipo para hacer ejercicio", iconKey: "dumbbell", iconUrl: null },
-      ],
-    },
-    {
-      name: "Familia",
-      order: 4,
-      amenities: [
-        {
-          name: "Parque infantil al aire libre",
-          iconKey: "play",
-          iconUrl: null,
-        },
-      ],
-    },
-    {
-      name: "Seguridad del Hogar",
       order: 5,
       amenities: [
+        { name: "Televisor con cable estándar", iconKey: "tv", iconUrl: null },
+      ],
+    },
+    {
+      name: "Calefacción y refrigeración",
+      order: 6,
+      amenities: [
+        { name: "Aire acondicionado", iconKey: "air-vent", iconUrl: null },
+      ],
+    },
+    {
+      name: "Seguridad en el hogar",
+      order: 7,
+      amenities: [
         {
-          name: "Cámaras de seguridad exterior",
+          name: "Cámaras de seguridad en la parte exterior de la propiedad",
           iconKey: "camera-security",
+          iconUrl: null,
+        },
+        {
+          name: "Monitorea zona de vehículos y zona de ascensores",
+          iconKey: "cctv",
           iconUrl: null,
         },
         {
@@ -82,89 +88,109 @@ async function main() {
     },
     {
       name: "Internet y Oficina",
-      order: 6,
+      order: 8,
       amenities: [
-        { name: "WiFi", iconKey: "wifi", iconUrl: null },
-        { name: "Zona de trabajo", iconKey: "briefcase", iconUrl: null },
+        { name: "Wifi", iconKey: "wifi", iconUrl: null },
       ],
     },
     {
-      name: "Cocina",
-      order: 7,
+      name: "Utensilios y vajilla",
+      order: 9,
       amenities: [
         { name: "Cocina", iconKey: "chef-hat", iconUrl: null },
-        { name: "Congelador", iconKey: "snowflake", iconUrl: null },
+        {
+          name: "Los huéspedes pueden cocinar en este espacio",
+          iconKey: "info",
+          iconUrl: null,
+        },
+        { name: "Refrigerador", iconKey: "refrigerator", iconUrl: null },
         {
           name: "Utensilios básicos para cocinar",
           iconKey: "utensils",
           iconUrl: null,
         },
-        { name: "Ollas y sartenes", iconKey: "pot", iconUrl: null },
+        {
+          name: "Ollas y sartenes, aceite, sal y pimienta",
+          iconKey: "pot",
+          iconUrl: null,
+        },
         { name: "Platos y cubiertos", iconKey: "spoon-fork", iconUrl: null },
-        { name: "Bols y platos", iconKey: "bowl", iconUrl: null },
-        { name: "Copas de vino", iconKey: "wine-glass", iconUrl: null },
+        {
+          name: "Bols, palitos chinos, platos, tazas, etc.",
+          iconKey: "bowl",
+          iconUrl: null,
+        },
+        { name: "Horno", iconKey: "oven", iconUrl: null },
         { name: "Cafetera", iconKey: "coffee", iconUrl: null },
-        { name: "Licuadora", iconKey: "blender", iconUrl: null },
-        { name: "Arrocera", iconKey: "rice-bowl", iconUrl: null },
-        { name: "Compactador de basura", iconKey: "trash", iconUrl: null },
-        { name: "Mesa del comedor", iconKey: "table-2", iconUrl: null },
       ],
     },
     {
       name: "Características de la Ubicación",
-      order: 8,
+      order: 10,
       amenities: [
+        { name: "Litoral", iconKey: "map-pin", iconUrl: null },
         {
-          name: "Entrada independiente",
-          iconKey: "door-open",
+          name: "Acceso a la playa - Frente a la playa",
+          iconKey: "umbrella",
           iconUrl: null,
         },
         {
-          name: "Lavandería cercana",
-          iconKey: "washing-machine",
+          name: "Los huéspedes pueden disfrutar de una playa cercana",
+          iconKey: "waves",
+          iconUrl: null,
+        },
+        {
+          name: "Acceso al complejo turístico",
+          iconKey: "building-2",
+          iconUrl: null,
+        },
+        {
+          name: "Los huéspedes pueden usar las instalaciones de resort cercanas",
+          iconKey: "building",
           iconUrl: null,
         },
       ],
     },
     {
       name: "Exterior",
-      order: 9,
+      order: 11,
       amenities: [
-        { name: "Patio o balcón", iconKey: "tree-palms", iconUrl: null },
+        { name: "Patio o balcón privado", iconKey: "tree-palms", iconUrl: null },
+        { name: "Patio trasero", iconKey: "trees", iconUrl: null },
+        {
+          name: "Un espacio abierto en la propiedad generalmente cubierto de pasto",
+          iconKey: "leaf",
+          iconUrl: null,
+        },
+        { name: "Zona de comida al aire libre", iconKey: "utensils", iconUrl: null },
+        { name: "Parrilla", iconKey: "grill", iconUrl: null },
       ],
     },
     {
       name: "Estacionamiento e Instalaciones",
-      order: 10,
+      order: 12,
       amenities: [
+        {
+          name: "Estacionamiento gratuito en las instalaciones",
+          iconKey: "car",
+          iconUrl: null,
+        },
+        { name: "Piscina compartida", iconKey: "waves", iconUrl: null },
+        { name: "Jacuzzi compartido", iconKey: "bath", iconUrl: null },
         { name: "Ascensor", iconKey: "elevator", iconUrl: null },
-        { name: "Gimnasio compartido", iconKey: "barbell", iconUrl: null },
       ],
     },
     {
       name: "Servicios",
-      order: 11,
+      order: 13,
       amenities: [
-        { name: "Se permiten mascotas", iconKey: "paw-print", iconUrl: null },
-        {
-          name: "Disponible para estadías largas",
-          iconKey: "calendar",
-          iconUrl: null,
-        },
-        { name: "Llegada autónoma", iconKey: "key", iconUrl: null },
-        {
-          name: "Servicio de limpieza disponible",
-          iconKey: "sparkles",
-          iconUrl: null,
-        },
+        { name: "Apto para fumadores", iconKey: "cigarette", iconUrl: null },
       ],
     },
     {
-      name: "No Disponible",
-      order: 12,
+      name: "No incluidos",
+      order: 14,
       amenities: [
-        { name: "Aire acondicionado", iconKey: "air-vent", iconUrl: null },
-        { name: "Servicios básicos", iconKey: "zap", iconUrl: null },
         { name: "Calefacción", iconKey: "fire", iconUrl: null },
       ],
     },
@@ -173,28 +199,67 @@ async function main() {
   const prismaAny = prisma as any;
 
   for (const categoryData of categoriesData) {
-    console.log(`📦 Creando categoría: "${categoryData.name}"`);
+    console.log(`📦 Sincronizando categoría: "${categoryData.name}"`);
 
-    const category = await prismaAny.amenityCategory.create({
-      data: {
-        name: categoryData.name,
-        order: categoryData.order,
-        isActive: true,
-      },
+    let category = await prismaAny.amenityCategory.findFirst({
+      where: { name: categoryData.name },
+      orderBy: { createdAt: "asc" },
     });
 
-    for (const amenityData of categoryData.amenities) {
-      await prismaAny.amenity.create({
+    if (!category) {
+      category = await prismaAny.amenityCategory.create({
         data: {
-          name: amenityData.name,
-          iconKey: amenityData.iconKey,
-          iconUrl: amenityData.iconUrl,
+          id: randomUUID(),
+          name: categoryData.name,
+          order: categoryData.order,
           isActive: true,
-          categoryId: category.id,
         },
       });
+      console.log("  + categoría creada");
+    } else {
+      await prismaAny.amenityCategory.update({
+        where: { id: category.id },
+        data: {
+          order: categoryData.order,
+          isActive: true,
+        },
+      });
+      console.log("  = categoría existente actualizada");
+    }
 
-      console.log(`  ✓ ${amenityData.name}`);
+    for (const amenityData of categoryData.amenities) {
+      const existingAmenity = await prismaAny.amenity.findFirst({
+        where: {
+          name: amenityData.name,
+          categoryId: category.id,
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
+      if (!existingAmenity) {
+        await prismaAny.amenity.create({
+          data: {
+            id: randomUUID(),
+            name: amenityData.name,
+            iconKey: amenityData.iconKey,
+            iconUrl: amenityData.iconUrl,
+            isActive: true,
+            categoryId: category.id,
+          },
+        });
+        console.log(`  + ${amenityData.name}`);
+      } else {
+        await prismaAny.amenity.update({
+          where: { id: existingAmenity.id },
+          data: {
+            iconKey: amenityData.iconKey,
+            iconUrl: amenityData.iconUrl,
+            isActive: true,
+            categoryId: category.id,
+          },
+        });
+        console.log(`  = ${amenityData.name}`);
+      }
     }
 
     console.log("");
