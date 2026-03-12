@@ -12,6 +12,7 @@ import SearchResultsSplit from "./components/SearchResultsSplit";
 import prisma from "./lib/db";
 import { getStateByValue } from "./lib/venezuelaStates";
 import { getMunicipalityByValue } from "./lib/venezuelaMunicipalities";
+import MobileMapStrip from "./components/MobileMapStrip";
 
 async function getData({
   searchParams,
@@ -236,6 +237,7 @@ async function ShowPlace({
 
   return (
     <div className="mt-8 space-y-12">
+      <MobileMapStrip pins={pins} />
       {REGIONES.map((region, index) => {
         const items = data
           .filter((item) => region.states.includes(item.country as string))

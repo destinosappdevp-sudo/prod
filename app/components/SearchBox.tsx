@@ -192,7 +192,7 @@ function SearchBox() {
       </div>
       </div>
       <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[425px]">
-        <form className="gap-4 flex flex-col">
+        <form className="gap-4 flex flex-col max-h-[85dvh] overflow-y-auto pr-1">
           <input type="hidden" name="country" value={locationValue} />
           {step === 1 ? (
             <>
@@ -230,7 +230,9 @@ function SearchBox() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <HomeMap stateValue={locationValue} />
+              <div className="h-[160px] sm:h-[200px] overflow-hidden rounded-lg">
+                <HomeMap stateValue={locationValue} />
+              </div>
             </>
           ) : step === 2 ? (
             <>
