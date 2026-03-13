@@ -40,16 +40,8 @@ model AuditLog {
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum BannerTipo {
-  HERO1
-  HERO2
-  MEDIO1
-  MEDIO2
-  POP
-}
-
 model Banner {
-  id          String   @id
+  id          String     @id
   title       String
   startDate   DateTime
   endDate     DateTime
@@ -58,11 +50,11 @@ model Banner {
   clientEmail String
   cost        Float
   createdById String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
   imageUrl    String
-  tipo        BannerTipo @default(HERO1)
   updatedAt   DateTime
-  User        User     @relation(fields: [createdById], references: [id])
+  tipo        BannerTipo @default(HERO1)
+  User        User       @relation(fields: [createdById], references: [id])
 }
 
 model Favorite {
@@ -77,43 +69,44 @@ model Favorite {
 }
 
 model Home {
-  id                           String         @id
-  title                        String?
-  description                  String?
-  guests                       String?
-  bedrooms                     String?
-  bathrooms                    String?
-  country                      String?
-  photo                        String?
-  price                        Int?
-  categoryName                 String?
-  addedCategory                Boolean        @default(false)
-  addedDescription             Boolean        @default(false)
-  addedLocation                Boolean        @default(false)
-  createdAt                    DateTime       @default(now())
-  userId                       String?
-  municipality                 String?
-  checkInTime                  String?
-  contactNumber                String?
-  exactAddress                 String?
-  latitude                     Float?
-  longitude                    Float?
-  addedAmenities               Boolean        @default(false)
-  approvalRejectionReason      String?
-  approvedAt                   DateTime?
-  approvedById                 String?
-  publishStatus                PublishStatus  @default(DRAFT)
-  paymentAmount                Float?
-  paymentBank                  String?
-  paymentDate                  DateTime?
-  paymentMethod                PaymentMethod?
-  paymentReference             String?
-  Favorite                     Favorite[]
-  approvedBy                   User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
-  User                         User?          @relation(fields: [userId], references: [id])
-  HomeAmenity                  HomeAmenity[]
-  Reservation                  Reservation[]
-  Review                       Review[]
+  id                      String         @id
+  title                   String?
+  description             String?
+  guests                  String?
+  bedrooms                String?
+  bathrooms               String?
+  country                 String?
+  photo                   String?
+  price                   Int?
+  categoryName            String?
+  addedCategory           Boolean        @default(false)
+  addedDescription        Boolean        @default(false)
+  addedLocation           Boolean        @default(false)
+  createdAt               DateTime       @default(now())
+  userId                  String?
+  municipality            String?
+  checkInTime             String?
+  contactNumber           String?
+  exactAddress            String?
+  addedAmenities          Boolean        @default(false)
+  approvalRejectionReason String?
+  approvedAt              DateTime?
+  approvedById            String?
+  publishStatus           PublishStatus  @default(DRAFT)
+  paymentAmount           Float?
+  paymentBank             String?
+  paymentDate             DateTime?
+  paymentMethod           PaymentMethod?
+  paymentReference        String?
+  latitude                Float?
+  longitude               Float?
+  Favorite                Favorite[]
+  approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  User                    User?          @relation(fields: [userId], references: [id])
+  HomeAmenity             HomeAmenity[]
+  Reservation             Reservation[]
+  Review                  Review[]
+  BlockedDate             BlockedDate[]
 }
 
 model HomeAmenity {
@@ -213,25 +206,26 @@ model User {
   profileImage                      String?
   role                              UserRole                 @default(GUEST)
   phoneNumber                       String?
-  stateCode                         String?
   isVerified                        Boolean                  @default(false)
   verificationReason                String?
   verifiedAt                        DateTime?
   document1Image                    String?
   document2Image                    String?
   verificationStatus                VerificationStatus       @default(NOT_SUBMITTED)
+  stateCode                         String?
   AuditLog                          AuditLog[]
   Banner                            Banner[]
   Favorite                          Favorite[]
-  Home                              Home[]
   ApprovalsGiven                    Home[]                   @relation("ApprovedBy")
+  Home                              Home[]
   Message_Message_recipientIdToUser Message[]                @relation("Message_recipientIdToUser")
   Message_Message_senderIdToUser    Message[]                @relation("Message_senderIdToUser")
   NotificationPreferences           NotificationPreferences?
   Reservation                       Reservation[]
   Review                            Review[]
-  usersessions                      usersessions[]
   UserDocument                      UserDocument[]
+  usersessions                      usersessions[]
+  WithdrawalRequest                 WithdrawalRequest[]
 }
 
 model UserDocument {
@@ -264,6 +258,50 @@ model usersessions {
   @@index([user_id], map: "idx_user_sessions_user_id")
 }
 
+model PlatformConfig {
+  id                String   @id @default(uuid())
+  commissionPercent Float    @default(10.0)
+  updatedAt         DateTime @default(now())
+  maintenanceMode   Boolean  @default(false)
+}
+
+model BlockedDate {
+  id        String   @id @default(uuid())
+  homeId    String
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+  Home      Home     @relation(fields: [homeId], references: [id], onDelete: Cascade)
+}
+
+model WithdrawalRequest {
+  id             String           @id @default(uuid())
+  hostId         String
+  amount         Float
+  status         WithdrawalStatus @default(PENDING)
+  paymentMethod  String?
+  paymentDetails Json?
+  adminNotes     String?
+  createdAt      DateTime         @default(now())
+  processedAt    DateTime?
+  User           User             @relation(fields: [hostId], references: [id])
+}
+
+model property_types {
+  id   Int     @id @default(autoincrement())
+  name String
+  icon String? @default("home")
+}
+
+enum BannerTipo {
+  HERO1
+  HERO2
+  MEDIO1
+  MEDIO2
+  POP
+}
+
 enum AmenityStatus {
   YES
   NO
@@ -276,13 +314,6 @@ enum PaymentMethod {
   ZILLI
   TARJETA_INTERNACIONAL
   TRANSFERENCIA_BANCARIA
-}
-
-model PlatformConfig {
-  id                String   @id @default(uuid())
-  commissionPercent Float    @default(10.0)
-  maintenanceMode   Boolean  @default(false)
-  updatedAt         DateTime @default(now())
 }
 
 enum PaymentStatus {
@@ -318,5 +349,12 @@ enum VerificationStatus {
   NOT_SUBMITTED
   PENDING
   APPROVED
+  REJECTED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
   REJECTED
 }

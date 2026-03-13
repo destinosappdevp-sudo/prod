@@ -22,14 +22,22 @@ export function HomeReservationForm({
 }: HomeReservationFormProps) {
   const router = useRouter();
   const [guests, setGuests] = useState(1);
+  const initialStartDate = new Date();
+  const initialEndDate = new Date(initialStartDate);
+  initialEndDate.setDate(initialStartDate.getDate() + 1);
   const [dates, setDates] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: initialStartDate,
+    endDate: initialEndDate,
   });
 
   const handleReservation = () => {
     if (!userId) {
       router.push("/api/auth/login");
+      return;
+    }
+
+    if (dates.endDate.getTime() <= dates.startDate.getTime()) {
+      alert("Selecciona una fecha de salida posterior a la de entrada.");
       return;
     }
 

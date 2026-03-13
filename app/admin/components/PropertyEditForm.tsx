@@ -38,12 +38,12 @@ interface PropertyEditFormProps {
     longitude?: number | null;
     photo: string | null;
     price: number | null;
-    categoryName: string | null;
+    propertyTypeId: number | null;
     addedCategory: boolean;
     addedDescription: boolean;
     addedLocation: boolean;
   };
-  categories: Array<{ name: string; title: string }>;
+  categories: Array<{ id: number; name: string; title: string }>;
   states: Array<{ value: string; label: string }>;
   amenityCategories: AmenityCategoryOption[];
   updateEndpoint?: string;
@@ -79,7 +79,7 @@ export default function PropertyEditForm({
     latitude: property.latitude?.toString() || "",
     longitude: property.longitude?.toString() || "",
     price: property.price?.toString() || "",
-    categoryName: property.categoryName || "",
+    propertyTypeId: property.propertyTypeId || null,
   });
   const existingCoords =
     property.latitude != null && property.longitude != null
@@ -133,7 +133,12 @@ export default function PropertyEditForm({
       if (formData.latitude) payload.append("latitude", formData.latitude);
       if (formData.longitude) payload.append("longitude", formData.longitude);
       payload.append("price", formData.price);
-      payload.append("categoryName", formData.categoryName);
+      const selectedCategory = categories.find(
+        (category) =>
+          category.id.toString() === (formData.propertyTypeId?.toString() || "")
+      );
+      payload.append("categoryName", selectedCategory?.name || "");
+      payload.append("propertyTypeId", formData.propertyTypeId?.toString() || "");
       payload.append(
         "amenities",
         JSON.stringify(
@@ -244,18 +249,18 @@ export default function PropertyEditForm({
                 />
               </div>
               <div>
-                <Label htmlFor="categoryName">Categoría</Label>
+                <Label htmlFor="propertyTypeId">Categoría</Label>
                 <Select
-                  value={formData.categoryName}
-                  onValueChange={(value) => handleChange("categoryName", value)}
+                  value={formData.propertyTypeId?.toString() || ""}
+                  onValueChange={(value) => handleChange("propertyTypeId", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona una categoría" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
-                      <SelectItem key={cat.name} value={cat.name}>
-                        {cat.title}
+                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

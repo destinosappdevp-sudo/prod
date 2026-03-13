@@ -32,7 +32,6 @@ import prisma from "@/app/lib/db";
 import { Card } from "@/components/ui/card";
 import PropertyEditForm from "@/app/admin/components/PropertyEditForm";
 import PropertyStatusControl from "@/app/admin/components/PropertyStatusControl";
-import { categoryItems } from "@/app/lib/categoryItems";
 import { getAllStates, getStateByValue } from "@/app/lib/venezuelaStates";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { ArrowLeft, Calendar, Heart } from "lucide-react";
@@ -124,11 +123,23 @@ export default async function PropertyDetailPage({
       ? getMunicipalityByValue(property.country, property.municipality)
       : null;
 
-  // Preparar categorías para el formulario
-  const categoriesForForm = categoryItems.map((cat) => ({
+  // Preparar categorías para el formulario desde la base de datos
+  const propertyTypes = await prisma.property_types.findMany({
+    orderBy: [{ name: "asc" }],
+  });
+  const categoriesForForm = propertyTypes.map((cat: any) => ({
+    id: cat.id,
     name: cat.name,
-    title: cat.title.es,
+    title: cat.title_es || cat.name,
   }));
+  const currentCategory = categoriesForForm.find((cat: any) => {
+    if (property.propertyTypeId != null) {
+      return cat.id === property.propertyTypeId;
+    }
+    return cat.name === property.categoryName;
+  });
+  const currentCategoryLabel =
+    currentCategory?.title || property.categoryName || "Sin categoría";
 
   // Preparar estados para el formulario
   const statesForForm = states.map((s) => ({
@@ -222,10 +233,7 @@ export default async function PropertyDetailPage({
           <div className="space-y-2">
             <div>
               <p className="text-sm text-gray-600">Categoría</p>
-              <p className="font-medium">
-                {categoryItems.find((c) => c.name === property.categoryName)
-                  ?.title.es || "Sin categoría"}
-              </p>
+              <p className="font-medium">{currentCategoryLabel}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Ubicación</p>
@@ -349,7 +357,10 @@ export default async function PropertyDetailPage({
       <div>
         <h2 className="text-2xl font-bold mb-4">Editar Propiedad</h2>
         <PropertyEditForm
-          property={property}
+          property={{
+            ...property,
+            propertyTypeId: property.propertyTypeId ?? null,
+          }}
           categories={categoriesForForm}
           states={statesForForm}
           amenityCategories={amenityCategoriesForForm}

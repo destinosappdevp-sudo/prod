@@ -15,24 +15,46 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {
-      homeId,
-      userId,
-      startDate,
-      endDate,
-      nights,
-      subtotal,
-      paymentMethod,
-      paymentDetails,
-    } = body;
+    const homeId = typeof body?.homeId === "string" ? body.homeId : "";
+    const userId = typeof body?.userId === "string" ? body.userId : "";
+    const startDate = typeof body?.startDate === "string" ? body.startDate : "";
+    const endDate = typeof body?.endDate === "string" ? body.endDate : "";
+    const guests = Number(body?.guests ?? 1);
+    const paymentMethod =
+      typeof body?.paymentMethod === "string" ? body.paymentMethod : "";
+    const paymentDetailsRaw =
+      body?.paymentDetails && typeof body.paymentDetails === "object"
+        ? body.paymentDetails
+        : {};
 
-    // Obtener el porcentaje de comisión actual
-    const config = await prisma.platformConfig.findFirst();
-    const commissionPercent = config?.commissionPercent ?? 10;
+    const validPaymentMethods = new Set([
+      "PAGO_MOVIL",
+      "ZELLE",
+      "ZILLI",
+      "TARJETA_INTERNACIONAL",
+      "TRANSFERENCIA_BANCARIA",
+    ]);
 
-    // Calcular serviceFee y totalAmount
-    const serviceFee = subtotal * (commissionPercent / 100);
-    const totalAmount = subtotal; // El huésped paga solo el subtotal
+    if (!homeId || !userId || !startDate || !endDate) {
+      return NextResponse.json(
+        { error: "Faltan datos requeridos para completar la reserva" },
+        { status: 400 }
+      );
+    }
+
+    if (!validPaymentMethods.has(paymentMethod)) {
+      return NextResponse.json(
+        { error: "Método de pago inválido" },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isInteger(guests) || guests <= 0) {
+      return NextResponse.json(
+        { error: "Cantidad de huéspedes inválida" },
+        { status: 400 }
+      );
+    }
 
     // Validar que el usuario sea el mismo que está autenticado
     if (userId !== user.id) {
@@ -42,7 +64,21 @@ export async function POST(request: Request) {
     // Validar fechas
     const start = new Date(startDate);
     const end = new Date(endDate);
-    if (start >= end) {
+    const startTime = start.getTime();
+    const endTime = end.getTime();
+
+    if (Number.isNaN(startTime) || Number.isNaN(endTime) || start >= end) {
+      return NextResponse.json(
+        { error: "Las fechas no son válidas" },
+        { status: 400 }
+      );
+    }
+
+    const calculatedNights = Math.ceil(
+      (endTime - startTime) / (1000 * 60 * 60 * 24)
+    );
+
+    if (calculatedNights <= 0) {
       return NextResponse.json(
         { error: "Las fechas no son válidas" },
         { status: 400 }
@@ -62,42 +98,58 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verificar disponibilidad
-    const conflictingReservations = await (prisma as any).reservation.findMany({
-      where: {
-        homeId: homeId,
-        status: {
-          in: ["PENDING", "CONFIRMED"],
-        },
-        OR: [
-          {
-            AND: [
-              { startDate: { lte: start } },
-              { endDate: { gte: start } },
-            ],
-          },
-          {
-            AND: [
-              { startDate: { lte: end } },
-              { endDate: { gte: end } },
-            ],
-          },
-          {
-            AND: [
-              { startDate: { gte: start } },
-              { endDate: { lte: end } },
-            ],
-          },
-        ],
-      },
-    });
+    if (!home.price || home.price <= 0) {
+      return NextResponse.json(
+        { error: "La propiedad no tiene un precio válido" },
+        { status: 400 }
+      );
+    }
 
-    if (conflictingReservations.length > 0) {
+    // Obtener el porcentaje de comisión actual
+    let commissionPercent = 10;
+    try {
+      const config = await (prisma as any).platformConfig.findFirst({
+        select: { commissionPercent: true },
+      });
+      commissionPercent =
+        typeof config?.commissionPercent === "number"
+          ? config.commissionPercent
+          : 10;
+    } catch (configError) {
+      console.warn("No se pudo leer PlatformConfig en checkout:", configError);
+    }
+
+    const subtotal = home.price * calculatedNights * guests;
+    const serviceFee = subtotal * (commissionPercent / 100);
+    const totalAmount = subtotal; // El huésped paga solo el subtotal
+
+    // Verificar disponibilidad (reservas activas + fechas bloqueadas por el host)
+    const [conflictingReservationsCount, conflictingBlockedCount] = await Promise.all([
+      (prisma as any).reservation.count({
+        where: {
+          homeId: homeId,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          startDate: { lt: end },
+          endDate: { gt: start },
+        },
+      }),
+      (prisma as any).blockedDate.count({
+        where: {
+          homeId: homeId,
+          startDate: { lt: end },
+          endDate: { gt: start },
+        },
+      }),
+    ]);
+
+    if (conflictingReservationsCount > 0 || conflictingBlockedCount > 0) {
       return NextResponse.json(
         { error: "Las fechas seleccionadas no están disponibles" },
         { status: 409 }
       );
     }
+
+    const paymentDetails = paymentDetailsRaw as Record<string, any>;
 
     // Crear la reserva y el pago en una transacción
     const result = await prisma.$transaction(async (tx: any) => {
@@ -108,7 +160,7 @@ export async function POST(request: Request) {
           homeId,
           startDate: start,
           endDate: end,
-          nights,
+          nights: calculatedNights,
           totalAmount,
           status: "PENDING",
         },
@@ -118,7 +170,7 @@ export async function POST(request: Request) {
       const payment = await tx.payment.create({
         data: {
           reservationId: reservation.id,
-          amount: subtotal + serviceFee, // Guardar el monto total pagado
+          amount: totalAmount,
           subtotal,
           serviceFee,
           paymentMethod,

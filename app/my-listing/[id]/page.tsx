@@ -4,7 +4,6 @@ import { createClient } from "@/app/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PropertyEditForm from "@/app/admin/components/PropertyEditForm";
-import { categoryItems } from "@/app/lib/categoryItems";
 import { getAllStates, getStateByValue } from "@/app/lib/venezuelaStates";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { ArrowLeft, Calendar, Heart, CheckCircle, XCircle } from "lucide-react";
@@ -104,6 +103,10 @@ export default async function HostPropertyDetailPage({
     longitude: number | null;
     addedAmenities: boolean;
   };
+  // Obtener property_types desde la base de datos
+  const propertyTypes = await prismaAny.property_types.findMany({ orderBy: [{ name: "asc" }] });
+  // Mapear propertyTypeId según categoryName
+  const propertyType = propertyTypes.find((pt: any) => pt.name === propertyDetails.categoryName);
   const propertyForForm = {
     ...propertyDetails,
     municipality: propertyDetails.municipality ?? null,
@@ -112,6 +115,7 @@ export default async function HostPropertyDetailPage({
     contactNumber: propertyDetails.contactNumber ?? null,
     latitude: propertyDetails.latitude ?? null,
     longitude: propertyDetails.longitude ?? null,
+    propertyTypeId: propertyType?.id ?? null,
   };
   const states = getAllStates();
   const state = propertyDetails.country
@@ -131,9 +135,11 @@ export default async function HostPropertyDetailPage({
     propertyDetails.addedAmenities &&
     propertyDetails.addedLocation;
 
-  const categoriesForForm = categoryItems.map((cat) => ({
+  // Usar property_types para el selector de categorías
+  const categoriesForForm = propertyTypes.map((cat: any) => ({
+    id: cat.id,
     name: cat.name,
-    title: cat.title.es,
+    title: cat.title_es || cat.name,
   }));
 
   const statesForForm = states.map((s) => ({
@@ -235,8 +241,12 @@ export default async function HostPropertyDetailPage({
             <div>
               <p className="text-sm text-gray-600">Categoría</p>
               <p className="font-medium">
-                {categoryItems.find((c) => c.name === propertyDetails.categoryName)
-                  ?.title.es || "Sin categoría"}
+                {(() => {
+                  const catById = propertyTypes.find((c: any) => c.id === propertyForForm.propertyTypeId);
+                  if (catById) return catById.title_es || catById.name;
+                  if (propertyDetails.categoryName) return propertyDetails.categoryName;
+                  return "Sin categoría";
+                })()}
               </p>
             </div>
             <div>

@@ -78,7 +78,19 @@ export async function PATCH(
     const latitude = latRaw ? parseFloat(latRaw) : null;
     const longitude = lngRaw ? parseFloat(lngRaw) : null;
     const price = (formData.get("price") as string) || "";
-    const categoryName = (formData.get("categoryName") as string) || "";
+    const categoryNameRaw = (formData.get("categoryName") as string) || "";
+    const propertyTypeIdRaw = formData.get("propertyTypeId") as string;
+    const propertyTypeId = propertyTypeIdRaw ? parseInt(propertyTypeIdRaw) : null;
+    let categoryName = categoryNameRaw;
+
+    if (!categoryName && propertyTypeId) {
+      const propertyType = await prismaAny.property_types.findUnique({
+        where: { id: propertyTypeId },
+        select: { name: true },
+      });
+      categoryName = propertyType?.name || "";
+    }
+
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
 
@@ -124,6 +136,7 @@ export async function PATCH(
       contactNumber: contactNumber || null,
       price: price ? parseInt(price) : null,
       categoryName: categoryName || null,
+      propertyTypeId: propertyTypeId,
       ...(photoPath ? { photo: photoPath } : {}),
       addedCategory: !!categoryName,
       addedDescription: !!(title && description),

@@ -270,17 +270,69 @@ export async function createAirbnbHome({ userId }: { userId: string }) {
 }
 
 export async function createCategoryPage(formData: FormData) {
-  const categoryName = formData.get("categoryName") as string;
-  const homeId = formData.get("homeId") as string;
-  const data = await prisma.home.update({
-    where: {
-      id: homeId,
-    },
-    data: {
-      categoryName: categoryName,
-      addedCategory: true,
-    },
+  const homeId = (formData.get("homeId") as string | null)?.trim() || "";
+  const categoryNameRaw =
+    (formData.get("categoryName") as string | null)?.trim() || "";
+  const propertyTypeIdRaw =
+    (formData.get("propertyTypeId") as string | null)?.trim() || "";
+
+  if (!homeId) {
+    return redirect("/my-dashboard?tab=listings");
+  }
+
+  const prismaAny = prisma as any;
+
+  let selectedCategory: { id: number; name: string } | null = null;
+
+  if (propertyTypeIdRaw) {
+    const propertyTypeId = Number(propertyTypeIdRaw);
+    if (Number.isInteger(propertyTypeId) && propertyTypeId > 0) {
+      selectedCategory = await prismaAny.property_types.findUnique({
+        where: { id: propertyTypeId },
+        select: { id: true, name: true },
+      });
+    }
+  }
+
+  if (!selectedCategory && categoryNameRaw) {
+    selectedCategory = await prismaAny.property_types.findFirst({
+      where: { name: categoryNameRaw },
+      select: { id: true, name: true },
+    });
+  }
+
+  if (!selectedCategory) {
+    return redirect(`/create/${homeId}/structure?error=category-required`);
+  }
+
+  const homeExists = await prismaAny.home.findUnique({
+    where: { id: homeId },
+    select: { id: true },
   });
+
+  if (!homeExists) {
+    return redirect("/my-dashboard?tab=listings");
+  }
+
+  try {
+    await prismaAny.home.update({
+      where: { id: homeId },
+      data: {
+        categoryName: selectedCategory.name,
+        propertyTypeId: selectedCategory.id,
+        addedCategory: true,
+      },
+    });
+  } catch {
+    // Fallback si el schema local no expone propertyTypeId.
+    await prisma.home.update({
+      where: { id: homeId },
+      data: {
+        categoryName: selectedCategory.name,
+        addedCategory: true,
+      },
+    });
+  }
 
   return redirect(`/create/${homeId}/description`);
 }

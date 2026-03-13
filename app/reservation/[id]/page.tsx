@@ -49,6 +49,14 @@ export default async function ReservationDetailPage({
 }: {
   params: { id: string };
 }) {
+  const userSummarySelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    email: true,
+    profileImage: true,
+  } as const;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -64,13 +72,7 @@ export default async function ReservationDetailPage({
       where: { id: params.id },
       include: {
         User: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            profileImage: true,
-          },
+          select: userSummarySelect,
         },
         Home: {
           select: {
@@ -83,13 +85,7 @@ export default async function ReservationDetailPage({
             country: true,
             userId: true,
             User: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                profileImage: true,
-              },
+              select: userSummarySelect,
             },
           },
         },
@@ -111,8 +107,22 @@ export default async function ReservationDetailPage({
     }
 
     const propertyImageSrc = resolveImageSrc(reservation.Home?.photo);
-    const contactUser = isHost ? reservation.User : reservation.Home?.User;
+    const guestUser = reservation.User ?? null;
+    let hostUser = reservation.Home?.User ?? null;
+
+    if (
+      reservation.Home?.userId &&
+      (!hostUser || hostUser.id !== reservation.Home.userId)
+    ) {
+      hostUser = await (prisma as any).user.findUnique({
+        where: { id: reservation.Home.userId },
+        select: userSummarySelect,
+      });
+    }
+
+    const contactUser = isHost ? guestUser : hostUser;
     const userImageSrc = resolveImageSrc(contactUser?.profileImage);
+    const showServiceFee = isHost;
 
     // Format dates
     const startDate = new Date(reservation.startDate);
@@ -228,19 +238,25 @@ export default async function ReservationDetailPage({
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4">Información de Pago</h2>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div
+                    className={`grid grid-cols-1 gap-4 ${
+                      showServiceFee ? "md:grid-cols-3" : "md:grid-cols-2"
+                    }`}
+                  >
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Subtotal</p>
                       <p className="font-semibold">
                         ${reservation.Payment.subtotal.toFixed(2)}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">Tarifa Servicio (descontada al anfitrión)</p>
-                      <p className="font-semibold">
-                        -${reservation.Payment.serviceFee.toFixed(2)}
-                      </p>
-                    </div>
+                    {showServiceFee && (
+                      <div>
+                        <p className="text-sm text-slate-500 mb-1">Tarifa Servicio (descontada al anfitrión)</p>
+                        <p className="font-semibold">
+                          -${reservation.Payment.serviceFee.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
                     <div className="border-t-2 pt-4 md:border-t-0 md:border-l-2 md:pt-0 md:pl-4">
                       <p className="text-sm text-slate-500 mb-1">Total</p>
                       <p className="font-bold text-lg text-orange-600">

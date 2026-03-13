@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   LayoutDashboard,
@@ -15,6 +15,16 @@ import {
   Star,
   PieChart,
   DollarSign,
+  Lock,
+  Wallet,
+  X,
+  Trash2,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Loader2,
+  ChevronRight,
+  ArrowDownToLine,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import HostListingCard from "@/app/components/HostListingCard";
@@ -139,6 +149,146 @@ export default function HostDashboardClient({
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
+
+  // ── Modal Bloquear Fechas ─────────────────────────────────────────────────
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [blockForm, setBlockForm] = useState({
+    homeId: listings[0]?.id ?? "",
+    startDate: "",
+    endDate: "",
+    reason: "",
+  });
+  const [blockedDates, setBlockedDates] = useState<any[]>([]);
+  const [blockLoading, setBlockLoading] = useState(false);
+  const [blockMsg, setBlockMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const blockFetched = useRef<string | null>(null);
+
+  const fetchBlockedDates = useCallback(async (homeId: string) => {
+    if (!homeId) return;
+    try {
+      const res = await fetch(`/api/host/blocked-dates?homeId=${encodeURIComponent(homeId)}`);
+      const json = await res.json();
+      if (json.blocked) setBlockedDates(json.blocked);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (showBlockModal && blockForm.homeId && blockFetched.current !== blockForm.homeId) {
+      blockFetched.current = blockForm.homeId;
+      fetchBlockedDates(blockForm.homeId);
+    }
+  }, [showBlockModal, blockForm.homeId, fetchBlockedDates]);
+
+  const handleBlockDateChange = (field: string, value: string) => {
+    setBlockForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "homeId") {
+        blockFetched.current = null;
+        setBlockedDates([]);
+      }
+      return next;
+    });
+  };
+
+  const submitBlockDate = async () => {
+    setBlockMsg(null);
+    setBlockLoading(true);
+    try {
+      const res = await fetch("/api/host/blocked-dates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(blockForm),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setBlockMsg({ ok: false, text: json.error ?? "No se pudo bloquear" });
+      } else {
+        setBlockMsg({ ok: true, text: "Fechas bloqueadas exitosamente" });
+        setBlockForm((p) => ({ ...p, startDate: "", endDate: "", reason: "" }));
+        blockFetched.current = null;
+        fetchBlockedDates(blockForm.homeId);
+      }
+    } catch {
+      setBlockMsg({ ok: false, text: "Error de conexión" });
+    } finally {
+      setBlockLoading(false);
+    }
+  };
+
+  const deleteBlockedDate = async (id: string) => {
+    try {
+      const res = await fetch(`/api/host/blocked-dates/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setBlockedDates((prev) => prev.filter((b) => b.id !== id));
+      }
+    } catch {}
+  };
+
+  // ── Modal Retirar Fondos ──────────────────────────────────────────────────
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawData, setWithdrawData] = useState<any>(null);
+  const [withdrawDataLoading, setWithdrawDataLoading] = useState(false);
+  const [withdrawForm, setWithdrawForm] = useState({
+    amount: "",
+    paymentMethod: "PAGO_MOVIL",
+    holderName: "",
+    bankName: "",
+    phoneNumber: "",
+    accountNumber: "",
+  });
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [withdrawMsg, setWithdrawMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const fetchWithdrawData = useCallback(async () => {
+    setWithdrawDataLoading(true);
+    try {
+      const res = await fetch("/api/host/withdrawals");
+      const json = await res.json();
+      if (res.ok) {
+        setWithdrawData(json);
+        setWithdrawForm((p) => ({ ...p, amount: json.availableToWithdraw.toFixed(2) }));
+      }
+    } catch {}
+    setWithdrawDataLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (showWithdrawModal && !withdrawData) {
+      fetchWithdrawData();
+    }
+  }, [showWithdrawModal, withdrawData, fetchWithdrawData]);
+
+  const submitWithdrawal = async () => {
+    setWithdrawMsg(null);
+    setWithdrawLoading(true);
+    const paymentDetails: Record<string, string> = {};
+    if (withdrawForm.holderName) paymentDetails.holderName = withdrawForm.holderName;
+    if (withdrawForm.bankName) paymentDetails.bankName = withdrawForm.bankName;
+    if (withdrawForm.phoneNumber) paymentDetails.phoneNumber = withdrawForm.phoneNumber;
+    if (withdrawForm.accountNumber) paymentDetails.accountNumber = withdrawForm.accountNumber;
+    try {
+      const res = await fetch("/api/host/withdrawals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: parseFloat(withdrawForm.amount),
+          paymentMethod: withdrawForm.paymentMethod,
+          paymentDetails,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setWithdrawMsg({ ok: false, text: json.error ?? "No se pudo solicitar" });
+      } else {
+        setWithdrawMsg({ ok: true, text: "¡Solicitud enviada! El equipo la procesará pronto." });
+        fetchWithdrawData();
+      }
+    } catch {
+      setWithdrawMsg({ ok: false, text: "Error de conexión" });
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
 
   const statCards = useMemo(
     () => [
@@ -397,20 +547,363 @@ export default function HostDashboardClient({
             </div>
 
             <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white">
-              <h3 className="text-lg font-semibold">Acciones de Anfitrion</h3>
-              <p className="text-sm text-white/70 mt-1">Gestiona tus propiedades</p>
+              <h3 className="text-lg font-semibold">Acciones de Anfitrión</h3>
+              <p className="text-sm text-white/70 mt-1">Gestiona tus propiedades y fondos</p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <Button className="bg-white/10 hover:bg-white/20 text-white" variant="secondary">
+                <button
+                  type="button"
+                  onClick={() => { setShowBlockModal(true); setBlockMsg(null); }}
+                  className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 text-sm font-medium transition"
+                >
+                  <Lock size={16} />
                   Bloquear Fechas
-                </Button>
-                <Button className="bg-white/10 hover:bg-white/20 text-white" variant="secondary">
-                  Editar Propiedad
-                </Button>
-                <Button className="bg-white/10 hover:bg-white/20 text-white" variant="secondary">
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowWithdrawModal(true); setWithdrawMsg(null); }}
+                  className="flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 text-sm font-medium transition"
+                >
+                  <Wallet size={16} />
                   Retirar Fondos
-                </Button>
+                  {stats.availableAmount > 0 && (
+                    <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs">
+                      ${stats.availableAmount.toFixed(0)}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
+
+            {/* ─── Modal Bloquear Fechas ─────────────────────────────────── */}
+            {showBlockModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <Lock size={18} className="text-slate-700" />
+                      <h2 className="text-lg font-semibold text-slate-900">Bloquear Fechas</h2>
+                    </div>
+                    <button type="button" onClick={() => setShowBlockModal(false)} className="text-slate-400 hover:text-slate-700 transition">
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                    {listings.length === 0 ? (
+                      <p className="text-sm text-slate-500">No tienes propiedades aún.</p>
+                    ) : (
+                      <>
+                        {/* Selector de propiedad */}
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Propiedad
+                          </label>
+                          <select
+                            value={blockForm.homeId}
+                            onChange={(e) => handleBlockDateChange("homeId", e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
+                          >
+                            {listings.map((l) => (
+                              <option key={l.id} value={l.id}>{l.title || "Sin título"}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Fechas */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Desde</label>
+                            <input
+                              type="date"
+                              value={blockForm.startDate}
+                              min={new Date().toISOString().split("T")[0]}
+                              onChange={(e) => handleBlockDateChange("startDate", e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Hasta</label>
+                            <input
+                              type="date"
+                              value={blockForm.endDate}
+                              min={blockForm.startDate || new Date().toISOString().split("T")[0]}
+                              onChange={(e) => handleBlockDateChange("endDate", e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Motivo */}
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Motivo (opcional)</label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Mantenimiento, uso personal…"
+                            value={blockForm.reason}
+                            onChange={(e) => handleBlockDateChange("reason", e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
+                          />
+                        </div>
+
+                        {blockMsg && (
+                          <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${
+                            blockMsg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                          }`}>
+                            {blockMsg.ok ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                            {blockMsg.text}
+                          </div>
+                        )}
+
+                        <Button
+                          type="button"
+                          disabled={blockLoading || !blockForm.startDate || !blockForm.endDate}
+                          onClick={submitBlockDate}
+                          className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
+                        >
+                          {blockLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Lock size={16} className="mr-2" />}
+                          Bloquear período
+                        </Button>
+
+                        {/* Listado de bloqueos existentes */}
+                        {blockedDates.length > 0 && (
+                          <div className="pt-2">
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Períodos bloqueados</p>
+                            <div className="space-y-2">
+                              {blockedDates.map((b: any) => (
+                                <div key={b.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
+                                  <div>
+                                    <p className="text-sm font-medium text-slate-800">
+                                      {new Date(b.startDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                      {" – "}
+                                      {new Date(b.endDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                    </p>
+                                    {b.reason && <p className="text-xs text-slate-500">{b.reason}</p>}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteBlockedDate(b.id)}
+                                    className="ml-3 p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ─── Modal Retirar Fondos ──────────────────────────────────── */}
+            {showWithdrawModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-900 to-slate-800">
+                    <div className="flex items-center gap-2 text-white">
+                      <Wallet size={18} />
+                      <h2 className="text-lg font-semibold">Retirar Fondos</h2>
+                    </div>
+                    <button type="button" onClick={() => setShowWithdrawModal(false)} className="text-white/60 hover:text-white transition">
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div className="max-h-[80vh] overflow-y-auto">
+                    {withdrawDataLoading ? (
+                      <div className="flex items-center justify-center py-16">
+                        <Loader2 size={28} className="animate-spin text-slate-400" />
+                      </div>
+                    ) : withdrawData ? (
+                      <>
+                        {/* Balance cards */}
+                        <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
+                          <div className="p-5 text-center border-r border-slate-100">
+                            <p className="text-xs text-slate-500 mb-1">Ganado (neto)</p>
+                            <p className="text-xl font-bold text-slate-900">${withdrawData.netEarned.toFixed(2)}</p>
+                          </div>
+                          <div className="p-5 text-center border-r border-slate-100">
+                            <p className="text-xs text-slate-500 mb-1">Ya retirado</p>
+                            <p className="text-xl font-bold text-orange-600">${withdrawData.totalWithdrawn.toFixed(2)}</p>
+                          </div>
+                          <div className="p-5 text-center">
+                            <p className="text-xs text-slate-500 mb-1">Disponible</p>
+                            <p className="text-2xl font-bold text-green-600">${withdrawData.availableToWithdraw.toFixed(2)}</p>
+                          </div>
+                        </div>
+
+                        {withdrawData.availableToWithdraw <= 0 ? (
+                          <div className="px-6 py-8 text-center">
+                            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                              <Clock size={24} className="text-slate-400" />
+                            </div>
+                            <p className="font-semibold text-slate-700">Sin fondos disponibles</p>
+                            <p className="text-sm text-slate-500 mt-1">
+                              Los fondos se liberan una vez que finaliza la estadía del huésped.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="px-6 py-5 space-y-4">
+                            {/* Monto */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monto a retirar ($)</label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">$</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  step="0.01"
+                                  max={withdrawData.availableToWithdraw}
+                                  value={withdrawForm.amount}
+                                  onChange={(e) => setWithdrawForm((p) => ({ ...p, amount: e.target.value }))}
+                                  className="w-full rounded-xl border border-slate-200 pl-7 pr-4 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
+                                />
+                              </div>
+                              <p className="text-xs text-slate-400 mt-1">
+                                Máximo disponible: <strong>${withdrawData.availableToWithdraw.toFixed(2)}</strong>
+                              </p>
+                            </div>
+
+                            {/* Método de pago */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Método de cobro</label>
+                              <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                                {(["PAGO_MOVIL", "ZELLE", "TRANSFERENCIA"] as const).map((m) => (
+                                  <button
+                                    key={m}
+                                    type="button"
+                                    onClick={() => setWithdrawForm((p) => ({ ...p, paymentMethod: m }))}
+                                    className={`rounded-xl border py-2.5 font-medium transition text-xs ${
+                                      withdrawForm.paymentMethod === m
+                                        ? "border-orange-500 bg-orange-50 text-orange-700"
+                                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                                    }`}
+                                  >
+                                    {m === "PAGO_MOVIL" ? "📱 Pago Móvil" : m === "ZELLE" ? "💵 Zelle" : "🏦 Transferencia"}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Detalles del pago */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs text-slate-500 mb-1">Nombre del titular</label>
+                                <input
+                                  type="text"
+                                  placeholder="Juan Pérez"
+                                  value={withdrawForm.holderName}
+                                  onChange={(e) => setWithdrawForm((p) => ({ ...p, holderName: e.target.value }))}
+                                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
+                                />
+                              </div>
+                              {withdrawForm.paymentMethod === "PAGO_MOVIL" && (
+                                <>
+                                  <div>
+                                    <label className="block text-xs text-slate-500 mb-1">Banco receptor</label>
+                                    <input
+                                      type="text"
+                                      placeholder="Ej. Banesco"
+                                      value={withdrawForm.bankName}
+                                      onChange={(e) => setWithdrawForm((p) => ({ ...p, bankName: e.target.value }))}
+                                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
+                                    />
+                                  </div>
+                                  <div className="col-span-2">
+                                    <label className="block text-xs text-slate-500 mb-1">Teléfono</label>
+                                    <input
+                                      type="tel"
+                                      placeholder="04XX-XXXXXXX"
+                                      value={withdrawForm.phoneNumber}
+                                      onChange={(e) => setWithdrawForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+                                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              {(withdrawForm.paymentMethod === "ZELLE" || withdrawForm.paymentMethod === "TRANSFERENCIA") && (
+                                <div className="col-span-2">
+                                  <label className="block text-xs text-slate-500 mb-1">
+                                    {withdrawForm.paymentMethod === "ZELLE" ? "Email / teléfono Zelle" : "Número de cuenta"}
+                                  </label>
+                                  <input
+                                    type="text"
+                                    placeholder={withdrawForm.paymentMethod === "ZELLE" ? "email@ejemplo.com" : "0001-0001-XX-XXXXXXXX"}
+                                    value={withdrawForm.accountNumber}
+                                    onChange={(e) => setWithdrawForm((p) => ({ ...p, accountNumber: e.target.value }))}
+                                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            {withdrawMsg && (
+                              <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${
+                                withdrawMsg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                              }`}>
+                                {withdrawMsg.ok ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                                {withdrawMsg.text}
+                              </div>
+                            )}
+
+                            <Button
+                              type="button"
+                              disabled={withdrawLoading || !withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0}
+                              onClick={submitWithdrawal}
+                              className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3 font-semibold"
+                            >
+                              {withdrawLoading
+                                ? <><Loader2 size={16} className="animate-spin mr-2" />Enviando…</>
+                                : <><ArrowDownToLine size={16} className="mr-2" />Solicitar retiro de ${withdrawForm.amount || "0"}</>}
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Historial */}
+                        {withdrawData.withdrawals?.length > 0 && (
+                          <div className="px-6 pb-6">
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Historial de retiros</p>
+                            <div className="space-y-2">
+                              {withdrawData.withdrawals.map((w: any) => {
+                                const statusCfg: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
+                                  PENDING:    { label: "Pendiente",   icon: <Clock size={14} />,         cls: "bg-yellow-50 text-yellow-700" },
+                                  PROCESSING: { label: "En proceso",  icon: <Loader2 size={14} />,        cls: "bg-blue-50 text-blue-700" },
+                                  COMPLETED:  { label: "Completado",  icon: <CheckCircle2 size={14} />,  cls: "bg-green-50 text-green-700" },
+                                  REJECTED:   { label: "Rechazado",   icon: <XCircle size={14} />,        cls: "bg-red-50 text-red-700" },
+                                };
+                                const cfg = statusCfg[w.status] ?? statusCfg.PENDING;
+                                return (
+                                  <div key={w.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                                    <div>
+                                      <p className="text-sm font-semibold text-slate-800">${Number(w.amount).toFixed(2)}</p>
+                                      <p className="text-xs text-slate-500">
+                                        {w.paymentMethod?.replace(/_/g, " ")} · {new Date(w.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                      </p>
+                                      {w.adminNotes && <p className="text-xs text-slate-500 mt-0.5 italic">{w.adminNotes}</p>}
+                                    </div>
+                                    <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${cfg.cls}`}>
+                                      {cfg.icon}
+                                      {cfg.label}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="py-10 text-center text-sm text-slate-500">No se pudo cargar la información.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

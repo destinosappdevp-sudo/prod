@@ -23,6 +23,7 @@ interface CheckoutFormProps {
   userId: string;
   startDate: string;
   endDate: string;
+  guests: number;
   nights: number;
   subtotal: number;
   total: number;
@@ -33,6 +34,7 @@ export default function CheckoutForm({
   userId,
   startDate,
   endDate,
+  guests,
   nights,
   subtotal,
   total,
@@ -63,6 +65,7 @@ export default function CheckoutForm({
           userId,
           startDate,
           endDate,
+          guests,
           nights,
           subtotal,
           serviceFee: 0,
@@ -73,7 +76,11 @@ export default function CheckoutForm({
       });
       const data = await response.json();
       if (response.ok) {
-        router.push("/reservation?success=true");
+        if (data?.reservationId) {
+          router.push(`/reservation/${data.reservationId}`);
+        } else {
+          router.push("/my-dashboard?tab=reservations");
+        }
       } else {
         alert(data.error || "Error al procesar el pago");
       }

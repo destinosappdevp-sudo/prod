@@ -1,7 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import logo from "../../public/screenshot/logodesktop.svg";
-import mobileLogo from "../../public/z.webp";
 import SearchBox from "./SearchBox";
 import UserNav from "./UserNav";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -34,12 +32,22 @@ async function Navbar() {
       <div className="container mx-auto px-4 sm:px-5 lg:px-10 py-3 lg:py-5">
         <div className="flex flex-wrap items-center justify-between gap-3 lg:flex-nowrap lg:gap-6">
           <Link href={"/"} className="shrink-0 flex items-center gap-2">
-            <Image src={logo} alt="logo" className="w-32 hidden lg:block" />
+            <Image
+              src="/screenshot/logodesktop.svg"
+              alt="logo"
+              width={128}
+              height={32}
+              className="w-32 h-auto hidden lg:block"
+              priority
+            />
             <div className="flex items-center gap-2 lg:hidden">
               <Image
-                src={mobileLogo}
+                src="/z.webp"
                 alt="Mobile Logo"
-                className="w-10"
+                width={40}
+                height={40}
+                className="w-10 h-10"
+                priority
               />
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-gray-900">Hola, {userName}</span>

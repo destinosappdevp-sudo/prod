@@ -64,14 +64,22 @@ export default async function CheckoutPage({
   // Calcular cantidad de noches
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const startTime = start.getTime();
+  const endTime = end.getTime();
+
+  if (Number.isNaN(startTime) || Number.isNaN(endTime)) {
+    return redirect(`/home/${params.homeId}`);
+  }
+
+  const nights = Math.ceil((endTime - startTime) / (1000 * 60 * 60 * 24));
 
   if (nights <= 0) {
     return redirect(`/home/${params.homeId}`);
   }
 
   // Calcular totales (tarifa por persona)
-  const guestsCount = guests ? parseInt(guests) : 1;
+  const parsedGuests = guests ? parseInt(guests, 10) : 1;
+  const guestsCount = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 1;
   // El guest paga el precio base + comisión, el host recibe el monto completo
   const subtotal = home.price * nights * guestsCount;
   const serviceFee = subtotal * 0.1; // 10% de tarifa de servicio
@@ -192,6 +200,7 @@ export default async function CheckoutPage({
           userId={user.id}
           startDate={startDate}
           endDate={endDate}
+          guests={guestsCount}
           nights={nights}
           subtotal={subtotal}
           total={total}

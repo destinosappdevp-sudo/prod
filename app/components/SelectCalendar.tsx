@@ -17,10 +17,14 @@ function SelectCalendar({
     | undefined;
   onDatesChange?: (dates: { startDate: Date; endDate: Date }) => void;
 }) {
+  const initialStartDate = new Date();
+  const initialEndDate = new Date(initialStartDate);
+  initialEndDate.setDate(initialStartDate.getDate() + 1);
+
   const [dates, setDates] = useState([
     {
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: initialStartDate,
+      endDate: initialEndDate,
       key: "selection",
     },
   ]);

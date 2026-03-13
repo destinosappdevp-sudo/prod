@@ -28,10 +28,22 @@ async function getData({
   };
 }) {
   noStore();
-  const categoryFilter =
-    searchParams?.filter && searchParams.filter !== "todos"
-      ? searchParams.filter
-      : undefined;
+  const rawCategoryFilter = searchParams?.filter;
+  let categoryFilter: string | undefined;
+
+  if (rawCategoryFilter && rawCategoryFilter !== "todos") {
+    if (/^\d+$/.test(rawCategoryFilter)) {
+      const category = await (prisma as any).property_types.findUnique({
+        where: { id: Number(rawCategoryFilter) },
+        select: { name: true },
+      });
+
+      categoryFilter = category?.name || "__no_category_match__";
+    } else {
+      // Compatibilidad con URLs antiguas que usan nombre en vez de id.
+      categoryFilter = rawCategoryFilter;
+    }
+  }
 
   const data = await prisma.home.findMany({
     where: {
