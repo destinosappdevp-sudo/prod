@@ -29,6 +29,7 @@ const getMenuItems = (role?: string) => {
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/users", icon: Users, label: "Usuarios" },
     { href: "/admin/properties", icon: Home, label: "Propiedades" },
+    { href: "/admin/categories", icon: BarChart3, label: "Categorías" },
     { href: "/admin/amenities", icon: Home, label: "Servicios" },
     { href: "/admin/payments", icon: CreditCard, label: "Pagos & Reservas" },
     { href: "/admin/reports", icon: BarChart3, label: "Informes" },
