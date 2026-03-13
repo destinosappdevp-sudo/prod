@@ -153,6 +153,7 @@ export async function PATCH(
         longitude: longitude,
         price: price ? parseInt(price) : null,
         categoryName: categoryName || null,
+        propertyTypeId: propertyTypeId,
         ...(photoPath ? { photo: photoPath } : {}),
         // Actualizar flags de completitud
         addedCategory: !!categoryName,

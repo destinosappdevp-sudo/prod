@@ -98,10 +98,12 @@ model Home {
   paymentDate             DateTime?
   paymentMethod           PaymentMethod?
   paymentReference        String?
+  propertyTypeId          Int?
   latitude                Float?
   longitude               Float?
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
+  propertyType            property_types? @relation(fields: [propertyTypeId], references: [id])
   User                    User?          @relation(fields: [userId], references: [id])
   HomeAmenity             HomeAmenity[]
   Reservation             Reservation[]
@@ -292,6 +294,7 @@ model property_types {
   id   Int     @id @default(autoincrement())
   name String
   icon String? @default("home")
+  Home Home[]
 }
 
 enum BannerTipo {

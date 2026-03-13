@@ -80,7 +80,9 @@ export async function PATCH(
     const price = (formData.get("price") as string) || "";
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = formData.get("propertyTypeId") as string;
-    const propertyTypeId = propertyTypeIdRaw ? parseInt(propertyTypeIdRaw) : null;
+    const propertyTypeId = propertyTypeIdRaw
+      ? parseInt(propertyTypeIdRaw, 10)
+      : null;
     let categoryName = categoryNameRaw;
 
     if (!categoryName && propertyTypeId) {
