@@ -51,8 +51,8 @@ export function HomeReservationForm({
   };
 
   return (
-    <div className="w-1/3">
-      <div className="border rounded-xl p-6 sticky top-20">
+    <div className="w-full lg:w-1/3">
+      <div className="border rounded-xl p-6 lg:sticky lg:top-20">
         <div className="flex items-baseline gap-2 mb-4">
           <h3 className="text-2xl font-bold">${price}</h3>
           <span className="text-gray-600">noche por persona</span>

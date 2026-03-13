@@ -1,7 +1,6 @@
 import HomeMap from "@/app/components/HomeMap";
 import { HomeHostInfo } from "@/app/components/HomeHostInfo";
 import { HomeReservationForm } from "@/app/components/HomeReservationForm";
-import SelectCalendar from "@/app/components/SelectCalendar";
 import ShowCaseCategory from "@/app/components/ShowCaseCategory";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
 import prisma from "@/app/lib/db";
@@ -108,9 +107,9 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return (
-    <div className="w-[75%] mx-auto mt-10 mb-12">
+    <div className="mx-auto mt-6 mb-12 w-full max-w-7xl px-4 sm:px-6 lg:mt-10 lg:px-8">
       <h1 className="font-medium text-2xl mb-5">{data?.title}</h1>
-      <div className="relative h-[550px]">
+      <div className="relative h-[260px] sm:h-[360px] lg:h-[550px]">
         <SupabaseImage
           imagePath={data?.photo as string}
           alt={data?.title as string}
@@ -119,14 +118,17 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
         />
       </div>
 
-      <div className="flex justify-between gap-x-24 mt-8">
-        <div className="w-2/3">
+      <div className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-14">
+        <div className="w-full lg:w-2/3">
           <h3 className="text-xl font-medium">
             {municipality ? municipality.label : state?.label}
           </h3>
-          <div className="flex gap-x-2 text-muted-foreground">
-            <p>{data?.guests} Huéspedes</p> · <p>{data?.bedrooms} Dormitorios</p>·{" "}
-            {data?.bathrooms} Baños
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
+            <p>{data?.guests} Huéspedes</p>
+            <span>·</span>
+            <p>{data?.bedrooms} Dormitorios</p>
+            <span>·</span>
+            <p>{data?.bathrooms} Baños</p>
           </div>
 
           <div className="flex items-center mt-6">

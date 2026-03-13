@@ -67,7 +67,7 @@ export default function MultiPinMap({ pins }: { pins: MapPin[] }) {
       zoom={pins.length === 1 ? 12 : 7}
       bounds={bounds}
       scrollWheelZoom={false}
-      className="h-full w-full rounded-xl"
+      className="h-full w-full rounded-xl relative z-0"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
