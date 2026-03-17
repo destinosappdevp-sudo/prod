@@ -101,12 +101,36 @@ export default async function HostPropertyDetailPage({
     contactNumber: string | null;
     latitude: number | null;
     longitude: number | null;
+    propertyTypeIds?: number[] | null;
+    categoryNames?: string[] | null;
     addedAmenities: boolean;
   };
   // Obtener property_types desde la base de datos
   const propertyTypes = await prismaAny.property_types.findMany({ orderBy: [{ name: "asc" }] });
-  // Mapear propertyTypeId según categoryName
-  const propertyType = propertyTypes.find((pt: any) => pt.name === propertyDetails.categoryName);
+  const selectedTypeIdsFromProperty =
+    Array.isArray(propertyDetails.propertyTypeIds) && propertyDetails.propertyTypeIds.length > 0
+      ? propertyDetails.propertyTypeIds
+      : propertyDetails.propertyTypeId != null
+      ? [propertyDetails.propertyTypeId]
+      : [];
+  const fallbackTypeIdFromCategory =
+    selectedTypeIdsFromProperty.length === 0 && propertyDetails.categoryName
+      ? propertyTypes.find((pt: any) => pt.name === propertyDetails.categoryName)?.id
+      : null;
+  const selectedPropertyTypeIds =
+    selectedTypeIdsFromProperty.length > 0
+      ? selectedTypeIdsFromProperty
+      : fallbackTypeIdFromCategory
+      ? [fallbackTypeIdFromCategory]
+      : [];
+  const selectedCategoryLabels =
+    selectedPropertyTypeIds.length > 0
+      ? propertyTypes
+          .filter((pt: any) => selectedPropertyTypeIds.includes(pt.id))
+          .map((pt: any) => pt.title_es || pt.name)
+      : propertyDetails.categoryName
+      ? [propertyDetails.categoryName]
+      : [];
   const propertyForForm = {
     ...propertyDetails,
     municipality: propertyDetails.municipality ?? null,
@@ -115,7 +139,8 @@ export default async function HostPropertyDetailPage({
     contactNumber: propertyDetails.contactNumber ?? null,
     latitude: propertyDetails.latitude ?? null,
     longitude: propertyDetails.longitude ?? null,
-    propertyTypeId: propertyType?.id ?? null,
+    propertyTypeId: selectedPropertyTypeIds[0] ?? null,
+    propertyTypeIds: selectedPropertyTypeIds,
   };
   const states = getAllStates();
   const state = propertyDetails.country
@@ -240,14 +265,7 @@ export default async function HostPropertyDetailPage({
           <div className="space-y-2">
             <div>
               <p className="text-sm text-gray-600">Categoría</p>
-              <p className="font-medium">
-                {(() => {
-                  const catById = propertyTypes.find((c: any) => c.id === propertyForForm.propertyTypeId);
-                  if (catById) return catById.title_es || catById.name;
-                  if (propertyDetails.categoryName) return propertyDetails.categoryName;
-                  return "Sin categoría";
-                })()}
-              </p>
+              <p className="font-medium">{selectedCategoryLabels.join(", ") || "Sin categoría"}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Ubicacion</p>

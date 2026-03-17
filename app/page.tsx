@@ -13,6 +13,12 @@ import prisma from "./lib/db";
 import { getStateByValue } from "./lib/venezuelaStates";
 import { getMunicipalityByValue } from "./lib/venezuelaMunicipalities";
 import MobileMapStrip from "./components/MobileMapStrip";
+import {
+  getPrimaryCategoryName,
+  parseMultiCategoryFilter,
+} from "./lib/property-categories";
+
+const prismaAny = prisma as any;
 
 async function getData({
   searchParams,
@@ -29,34 +35,57 @@ async function getData({
 }) {
   noStore();
   const rawCategoryFilter = searchParams?.filter;
-  let categoryFilter: string | undefined;
+  const categoryFilterTokens = parseMultiCategoryFilter(rawCategoryFilter);
+  let categoryNamesFilter: string[] = [];
 
-  if (rawCategoryFilter && rawCategoryFilter !== "todos") {
-    if (/^\d+$/.test(rawCategoryFilter)) {
-      const category = await (prisma as any).property_types.findUnique({
-        where: { id: Number(rawCategoryFilter) },
-        select: { name: true },
-      });
+  if (categoryFilterTokens.length > 0) {
+    const categoryIds = categoryFilterTokens
+      .filter((token) => /^\d+$/.test(token))
+      .map((token) => Number(token));
 
-      categoryFilter = category?.name || "__no_category_match__";
-    } else {
-      // Compatibilidad con URLs antiguas que usan nombre en vez de id.
-      categoryFilter = rawCategoryFilter;
-    }
+    const namesFromIds =
+      categoryIds.length > 0
+        ? ((await prismaAny.property_types.findMany({
+            where: { id: { in: categoryIds } },
+            select: { id: true, name: true },
+          })) as Array<{ id: number; name: string }>).sort(
+            (a, b) => categoryIds.indexOf(a.id) - categoryIds.indexOf(b.id)
+          )
+        : [];
+
+    const namesFromLegacyTokens = categoryFilterTokens.filter(
+      (token) => !/^\d+$/.test(token)
+    );
+
+    categoryNamesFilter = Array.from(
+      new Set([
+        ...namesFromIds.map((category) => category.name),
+        ...namesFromLegacyTokens,
+      ])
+    );
   }
 
-  const data = await prisma.home.findMany({
-    where: {
-      publishStatus: "APPROVED",
-      addedCategory: true,
-      addedLocation: true,
-      addedDescription: true,
-      categoryName: categoryFilter,
-      country: searchParams?.country ?? undefined,
-      guests: searchParams?.guest ? { gte: searchParams.guest } : undefined,
-      bedrooms: searchParams?.rooms ? { gte: searchParams.rooms } : undefined,
-      bathrooms: searchParams?.bathrooms ? { gte: searchParams.bathrooms } : undefined,
-    },
+  const where: any = {
+    publishStatus: "APPROVED",
+    addedCategory: true,
+    addedLocation: true,
+    addedDescription: true,
+    country: searchParams?.country ?? undefined,
+    guests: searchParams?.guest ? { gte: searchParams.guest } : undefined,
+    bedrooms: searchParams?.rooms ? { gte: searchParams.rooms } : undefined,
+    bathrooms: searchParams?.bathrooms ? { gte: searchParams.bathrooms } : undefined,
+  };
+
+  if (categoryNamesFilter.length > 0) {
+    where.OR = categoryNamesFilter.flatMap((categoryName) => [
+      { categoryName },
+      { categoryNames: { has: categoryName } },
+      { categoryName: { contains: categoryName } },
+    ]);
+  }
+
+  const data = await prismaAny.home.findMany({
+    where,
     select: {
       title: true,
       photo: true,
@@ -66,6 +95,7 @@ async function getData({
       country: true,
       municipality: true,
       categoryName: true,
+      categoryNames: true,
       guests: true,
       bedrooms: true,
       exactAddress: true,
@@ -200,12 +230,37 @@ async function ShowPlace({
       isInFavoriteList={item.Favorite.length > 0}
       homeId={item.id}
       pathName="/"
-      categoryName={item.categoryName}
+      categoryName={getPrimaryCategoryName(item.categoryNames, item.categoryName)}
+      categoryNames={item.categoryNames}
       guests={item.guests}
       bedrooms={item.bedrooms}
       reviews={item.Review}
       reviewCount={item._count?.Review}
     />
+  );
+
+  const renderCarouselCard = (item: typeof data[0]) => (
+    <div key={item.id} className="min-w-[260px] w-[260px] flex-shrink-0">
+      <ListingCard
+        title={item.title as string}
+        description={item.description as string}
+        imagePath={item.photo as string}
+        price={item.price as number}
+        stateValue={item.country as string}
+        municipalityValue={item.municipality}
+        userId={user?.id}
+        favoriteId={item.Favorite[0]?.id}
+        isInFavoriteList={item.Favorite.length > 0}
+        homeId={item.id}
+        pathName="/"
+        categoryName={getPrimaryCategoryName(item.categoryNames, item.categoryName)}
+        categoryNames={item.categoryNames}
+        guests={item.guests}
+        bedrooms={item.bedrooms}
+        reviews={item.Review}
+        reviewCount={item._count?.Review}
+      />
+    </div>
   );
 
   if (isSearch) {
@@ -223,29 +278,6 @@ async function ShowPlace({
   const sinRegion = data
     .filter((item) => !item.country || !assignedStates.has(item.country as string))
     .slice(-9);
-
-  const renderCarouselCard = (item: typeof data[0]) => (
-    <div key={item.id} className="min-w-[260px] w-[260px] flex-shrink-0">
-      <ListingCard
-        title={item.title as string}
-        description={item.description as string}
-        imagePath={item.photo as string}
-        price={item.price as number}
-        stateValue={item.country as string}
-        municipalityValue={item.municipality}
-        userId={user?.id}
-        favoriteId={item.Favorite[0]?.id}
-        isInFavoriteList={item.Favorite.length > 0}
-        homeId={item.id}
-        pathName="/"
-        categoryName={item.categoryName}
-        guests={item.guests}
-        bedrooms={item.bedrooms}
-        reviews={item.Review}
-        reviewCount={item._count?.Review}
-      />
-    </div>
-  );
 
   return (
     <div className="mt-8 space-y-12">

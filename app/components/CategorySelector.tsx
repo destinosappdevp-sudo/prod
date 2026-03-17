@@ -57,8 +57,8 @@ const iconMap = {
 } as const;
 
 function CategorySelector({ hasError = false }: CategorySelectorProps) {
-  const [categorySelected, setCategorySelected] = useState("");
-  const [propertyTypeId, setPropertyTypeId] = useState("");
+  const [selectedCategoryNames, setSelectedCategoryNames] = useState<string[]>([]);
+  const [selectedPropertyTypeIds, setSelectedPropertyTypeIds] = useState<number[]>([]);
   const [categories, setCategories] = useState<PropertyType[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -94,9 +94,21 @@ function CategorySelector({ hasError = false }: CategorySelectorProps) {
       <input
         type="hidden"
         name="categoryName"
-        value={categorySelected}
+        value={selectedCategoryNames.join(",")}
       />
-      <input type="hidden" name="propertyTypeId" value={propertyTypeId} />
+      <input
+        type="hidden"
+        name="propertyTypeId"
+        value={selectedPropertyTypeIds[0]?.toString() || ""}
+      />
+      {selectedPropertyTypeIds.map((propertyTypeId) => (
+        <input
+          key={propertyTypeId}
+          type="hidden"
+          name="propertyTypeIds"
+          value={propertyTypeId}
+        />
+      ))}
 
       {loading ? (
         <p>Cargando categorías...</p>
@@ -106,15 +118,26 @@ function CategorySelector({ hasError = false }: CategorySelectorProps) {
         <div key={item.id} className="cursor-pointer">
           <Card
             className={
-              categorySelected === item.name
+              selectedPropertyTypeIds.includes(item.id)
                 ? "border-primary"
-                : hasError && !categorySelected
+                : hasError && selectedPropertyTypeIds.length === 0
                 ? "border-red-300"
                 : ""
             }
             onClick={() => {
-              setCategorySelected(item.name);
-              setPropertyTypeId(item.id.toString());
+              setSelectedPropertyTypeIds((prev) => {
+                if (prev.includes(item.id)) {
+                  return prev.filter((id) => id !== item.id);
+                }
+                return [...prev, item.id];
+              });
+
+              setSelectedCategoryNames((prev) => {
+                if (prev.includes(item.name)) {
+                  return prev.filter((name) => name !== item.name);
+                }
+                return [...prev, item.name];
+              });
             }}
           >
             <CardHeader>
@@ -128,9 +151,17 @@ function CategorySelector({ hasError = false }: CategorySelectorProps) {
         </div>
       ))}
 
-      {hasError && !categorySelected && !loading && (
+      {!loading && !loadError && (
+        <p className="col-span-4 text-sm text-gray-600">
+          {selectedPropertyTypeIds.length > 0
+            ? `${selectedPropertyTypeIds.length} categoría(s) seleccionada(s)`
+            : "Selecciona una o varias categorías"}
+        </p>
+      )}
+
+      {hasError && selectedPropertyTypeIds.length === 0 && !loading && (
         <p className="col-span-4 text-sm text-red-600">
-          Debes elegir una categoría para continuar.
+          Debes elegir al menos una categoría para continuar.
         </p>
       )}
     </div>

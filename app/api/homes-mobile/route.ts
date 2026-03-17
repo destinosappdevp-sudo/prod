@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import {
+  getPrimaryCategoryName,
+  normalizeCategoryNames,
+  parseMultiCategoryFilter,
+} from "@/app/lib/property-categories";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +68,7 @@ export async function GET(request: NextRequest) {
     const country = normalizeText(searchParams.get("country"));
     const municipality = normalizeText(searchParams.get("municipality"));
     const category = normalizeText(searchParams.get("category"));
+    const categoryTokens = parseMultiCategoryFilter(category);
     const minPrice = parseNumber(searchParams.get("minPrice"));
     const maxPrice = parseNumber(searchParams.get("maxPrice"));
     const guests = parseNumber(searchParams.get("guests"));
@@ -74,6 +80,31 @@ export async function GET(request: NextRequest) {
 
     const limitParam = parseNumber(searchParams.get("limit"));
     const take = Math.min(Math.max(Math.floor(limitParam ?? 120), 20), 300);
+
+    let categoryNamesFilter: string[] = [];
+
+    if (categoryTokens.length > 0) {
+      const categoryIds = categoryTokens
+        .filter((token) => /^\d+$/.test(token))
+        .map((token) => Number(token));
+
+      const categoriesById =
+        categoryIds.length > 0
+          ? ((await (prisma as any).property_types.findMany({
+              where: { id: { in: categoryIds } },
+              select: { id: true, name: true },
+            })) as Array<{ id: number; name: string }>).sort(
+              (a, b) => categoryIds.indexOf(a.id) - categoryIds.indexOf(b.id)
+            )
+          : [];
+
+      categoryNamesFilter = Array.from(
+        new Set([
+          ...categoriesById.map((categoryItem) => categoryItem.name),
+          ...categoryTokens.filter((token) => !/^\d+$/.test(token)),
+        ])
+      );
+    }
 
     const homes = await prisma.home.findMany({
       where: {
@@ -92,6 +123,7 @@ export async function GET(request: NextRequest) {
         municipality: true,
         exactAddress: true,
         categoryName: true,
+        categoryNames: true,
         guests: true,
         bedrooms: true,
         bathrooms: true,
@@ -124,7 +156,15 @@ export async function GET(request: NextRequest) {
           return false;
         }
 
-        if (category && (home.categoryName ?? "").toLowerCase() !== category.toLowerCase()) {
+        const normalizedHomeCategories = normalizeCategoryNames(
+          (home as any).categoryNames as string[] | null | undefined,
+          home.categoryName
+        ).map((item) => item.toLowerCase());
+
+        if (
+          categoryNamesFilter.length > 0 &&
+          !categoryNamesFilter.some((item) => normalizedHomeCategories.includes(item.toLowerCase()))
+        ) {
           return false;
         }
 
@@ -164,7 +204,10 @@ export async function GET(request: NextRequest) {
           home.country,
           home.municipality,
           home.exactAddress,
-          home.categoryName,
+          ...normalizeCategoryNames(
+            (home as any).categoryNames as string[] | null | undefined,
+            home.categoryName
+          ),
         ]
           .filter(Boolean)
           .join(" ")
@@ -180,7 +223,10 @@ export async function GET(request: NextRequest) {
         country: home.country,
         municipality: home.municipality,
         exactAddress: home.exactAddress,
-        categoryName: home.categoryName,
+        categoryName: getPrimaryCategoryName(
+          (home as any).categoryNames as string[] | null | undefined,
+          home.categoryName
+        ),
         guests: home.guests,
         bedrooms: home.bedrooms,
         bathrooms: home.bathrooms,

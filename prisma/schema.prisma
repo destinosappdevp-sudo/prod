@@ -99,6 +99,8 @@ model Home {
   paymentMethod           PaymentMethod?
   paymentReference        String?
   propertyTypeId          Int?
+  propertyTypeIds         Int[]          @default([])
+  categoryNames           String[]       @default([])
   latitude                Float?
   longitude               Float?
   Favorite                Favorite[]

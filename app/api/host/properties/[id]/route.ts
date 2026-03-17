@@ -81,18 +81,66 @@ export async function PATCH(
     const price = (formData.get("price") as string) || "";
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = formData.get("propertyTypeId") as string;
-    const propertyTypeId = propertyTypeIdRaw
-      ? parseInt(propertyTypeIdRaw, 10)
-      : null;
-    let categoryName = categoryNameRaw;
+    const propertyTypeIdsRaw = formData
+      .getAll("propertyTypeIds")
+      .map((value) => (typeof value === "string" ? value.trim() : ""))
+      .filter(Boolean);
 
-    if (!categoryName && propertyTypeId) {
-      const propertyType = await prismaAny.property_types.findUnique({
-        where: { id: propertyTypeId },
-        select: { name: true },
-      });
-      categoryName = propertyType?.name || "";
+    const selectedTypeIds = Array.from(
+      new Set(
+        [...propertyTypeIdsRaw, propertyTypeIdRaw]
+          .map((value) => parseInt(value, 10))
+          .filter((value) => Number.isInteger(value) && value > 0)
+      )
+    ) as number[];
+
+    let selectedCategories: Array<{ id: number; name: string }> = [];
+
+    if (selectedTypeIds.length > 0) {
+      const categoriesFromIds = (await prismaAny.property_types.findMany({
+        where: { id: { in: selectedTypeIds } },
+        select: { id: true, name: true },
+      })) as Array<{ id: number; name: string }>;
+
+      const categoryById = new Map(
+        categoriesFromIds.map((category) => [category.id, category])
+      );
+
+      selectedCategories = selectedTypeIds
+        .map((typeId) => categoryById.get(typeId))
+        .filter((category): category is { id: number; name: string } => !!category);
     }
+
+    if (selectedCategories.length === 0 && categoryNameRaw) {
+      const requestedNames = Array.from(
+        new Set(
+          categoryNameRaw
+            .split(",")
+            .map((name) => name.trim())
+            .filter(Boolean)
+        )
+      );
+
+      if (requestedNames.length > 0) {
+        const categoriesFromNames = (await prismaAny.property_types.findMany({
+          where: { name: { in: requestedNames } },
+          select: { id: true, name: true },
+        })) as Array<{ id: number; name: string }>;
+
+        const categoryByName = new Map(
+          categoriesFromNames.map((category) => [category.name, category])
+        );
+
+        selectedCategories = requestedNames
+          .map((name) => categoryByName.get(name))
+          .filter((category): category is { id: number; name: string } => !!category);
+      }
+    }
+
+    const selectedCategoryNames = selectedCategories.map((category) => category.name);
+    const selectedPropertyTypeIds = selectedCategories.map((category) => category.id);
+    const primaryCategoryName = selectedCategoryNames[0] || "";
+    const primaryPropertyTypeId = selectedPropertyTypeIds[0] ?? null;
 
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
@@ -128,7 +176,7 @@ export async function PATCH(
       photoPath = filePath;
     }
 
-    const updateData = {
+    const baseUpdateData = {
       title: title || null,
       description: description || null,
       guests: guests || null,
@@ -142,17 +190,21 @@ export async function PATCH(
       checkInTime: checkInTime || null,
       contactNumber: contactNumber || null,
       price: price ? parseInt(price) : null,
-      categoryName: categoryName || null,
-      propertyTypeId: propertyTypeId,
       ...(photoPath ? { photo: photoPath } : {}),
-      addedCategory: !!categoryName,
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
     };
 
     const updated = await prisma.home.update({
       where: { id: params.id },
-      data: updateData as never,
+      data: {
+        ...baseUpdateData,
+        categoryName: primaryCategoryName || null,
+        propertyTypeId: primaryPropertyTypeId,
+        categoryNames: selectedCategoryNames,
+        propertyTypeIds: selectedPropertyTypeIds,
+        addedCategory: selectedCategoryNames.length > 0,
+      },
     });
 
     await applyAmenityUpdates(params.id, amenitiesPayload);

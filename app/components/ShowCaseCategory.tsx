@@ -1,10 +1,20 @@
 import { categoryItems } from "../lib/categoryItems";
+import { normalizeCategoryNames } from "@/app/lib/property-categories";
 
-function ShowCaseCategory({ categoryName }: { categoryName: string }) {
-  const category = categoryItems.find((item) => item.name === categoryName);
-  const categoryTitle = (category?.title.es || categoryName || "Categoría").trim();
+function ShowCaseCategory({
+  categoryName,
+  categoryNames,
+}: {
+  categoryName?: string | null;
+  categoryNames?: string[] | null;
+}) {
+  const normalizedCategories = normalizeCategoryNames(categoryNames, categoryName);
+  const primaryCategory = normalizedCategories[0] || "";
+  const category = categoryItems.find((item) => item.name === primaryCategory);
+  const categoryTitle = (category?.title.es || primaryCategory || "Categoría").trim();
   const categoryDescription =
     category?.description.es || "Categoría del alojamiento";
+  const extraCategories = normalizedCategories.slice(1);
 
   return (
     <div className="flex items-center">
@@ -13,8 +23,16 @@ function ShowCaseCategory({ categoryName }: { categoryName: string }) {
       </div>
 
       <div className="ml-4 flex flex-col">
-        <h3 className="font-medium">{categoryTitle}</h3>
+        <h3 className="font-medium">
+          {categoryTitle}
+          {extraCategories.length > 0 ? ` +${extraCategories.length}` : ""}
+        </h3>
         <p className="text-sm text-muted-foreground">{categoryDescription}</p>
+        {extraCategories.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Tambien: {extraCategories.join(", ")}
+          </p>
+        )}
       </div>
     </div>
   );

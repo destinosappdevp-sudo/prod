@@ -27,6 +27,7 @@ async function getData(homeId: string) {
       bedrooms: true,
       bathrooms: true,
       categoryName: true,
+      categoryNames: true,
       price: true,
       country: true,
       municipality: true,
@@ -140,7 +141,10 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           </div>
 
           <Separator className="my-7" />
-          <ShowCaseCategory categoryName={data?.categoryName as string} />
+          <ShowCaseCategory
+            categoryName={data?.categoryName}
+            categoryNames={(data as any)?.categoryNames as string[] | null | undefined}
+          />
           <Separator className="my-7" />
           <p className="text-muted-foreground">{data?.description}</p>
           <Separator className="my-7" />

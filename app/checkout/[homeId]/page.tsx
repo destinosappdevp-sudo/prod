@@ -5,6 +5,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import CheckoutForm from "@/app/components/CheckoutForm";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
 import Link from "next/link";
+import { getPrimaryCategoryName } from "@/app/lib/property-categories";
 
 async function getHomeData(homeId: string) {
   noStore();
@@ -18,6 +19,7 @@ async function getHomeData(homeId: string) {
       country: true,
       municipality: true,
       categoryName: true,
+      categoryNames: true,
       Review: {
         select: {
           rating: true,
@@ -90,6 +92,10 @@ export default async function CheckoutPage({
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
+  const primaryCategory = getPrimaryCategoryName(
+    (home as any).categoryNames as string[] | null | undefined,
+    home.categoryName
+  );
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-2xl">
@@ -111,9 +117,9 @@ export default async function CheckoutPage({
             )}
             <div className="flex-1">
               <p className="text-sm text-gray-600 mb-1">
-                {home.categoryName === "apartamento" ? "Apartamento entero" :
-                 home.categoryName === "casa" ? "Casa entera" :
-                 home.categoryName === "lujo" ? "Villa de lujo" :
+                 {primaryCategory === "apartamento" ? "Apartamento entero" :
+                  primaryCategory === "casa" ? "Casa entera" :
+                  primaryCategory === "lujo" ? "Villa de lujo" :
                  "Alojamiento entero"}
               </p>
               <h3 className="font-semibold text-lg mb-1">{home.title}</h3>

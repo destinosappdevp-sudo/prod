@@ -286,6 +286,10 @@ export async function createCategoryPage(formData: FormData) {
     (formData.get("categoryName") as string | null)?.trim() || "";
   const propertyTypeIdRaw =
     (formData.get("propertyTypeId") as string | null)?.trim() || "";
+  const propertyTypeIdsRaw = formData
+    .getAll("propertyTypeIds")
+    .map((value) => (typeof value === "string" ? value.trim() : ""))
+    .filter(Boolean);
 
   if (!homeId) {
     return redirect("/my-dashboard?tab=listings");
@@ -293,28 +297,67 @@ export async function createCategoryPage(formData: FormData) {
 
   const prismaAny = prisma as any;
 
-  let selectedCategory: { id: number; name: string } | null = null;
+  const selectedTypeIds = Array.from(
+    new Set(
+      [
+        ...propertyTypeIdsRaw,
+        propertyTypeIdRaw,
+      ]
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value > 0)
+    )
+  ) as number[];
 
-  if (propertyTypeIdRaw) {
-    const propertyTypeId = Number(propertyTypeIdRaw);
-    if (Number.isInteger(propertyTypeId) && propertyTypeId > 0) {
-      selectedCategory = await prismaAny.property_types.findUnique({
-        where: { id: propertyTypeId },
+  let selectedCategories: Array<{ id: number; name: string }> = [];
+
+  if (selectedTypeIds.length > 0) {
+    const categoriesFromIds = (await prismaAny.property_types.findMany({
+      where: { id: { in: selectedTypeIds } },
+      select: { id: true, name: true },
+    })) as Array<{ id: number; name: string }>;
+
+    const categoryById = new Map(
+      categoriesFromIds.map((category) => [category.id, category])
+    );
+
+    selectedCategories = selectedTypeIds
+      .map((typeId) => categoryById.get(typeId))
+      .filter((category): category is { id: number; name: string } => !!category);
+  }
+
+  if (selectedCategories.length === 0 && categoryNameRaw) {
+    const requestedNames = Array.from(
+      new Set(
+        categoryNameRaw
+          .split(",")
+          .map((name) => name.trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (requestedNames.length > 0) {
+      const categoriesFromNames = (await prismaAny.property_types.findMany({
+        where: { name: { in: requestedNames } },
         select: { id: true, name: true },
-      });
+      })) as Array<{ id: number; name: string }>;
+
+      const categoryByName = new Map(
+        categoriesFromNames.map((category) => [category.name, category])
+      );
+
+      selectedCategories = requestedNames
+        .map((name) => categoryByName.get(name))
+        .filter((category): category is { id: number; name: string } => !!category);
     }
   }
 
-  if (!selectedCategory && categoryNameRaw) {
-    selectedCategory = await prismaAny.property_types.findFirst({
-      where: { name: categoryNameRaw },
-      select: { id: true, name: true },
-    });
-  }
-
-  if (!selectedCategory) {
+  if (selectedCategories.length === 0) {
     return redirect(`/create/${homeId}/structure?error=category-required`);
   }
+
+  const selectedCategoryNames = selectedCategories.map((category) => category.name);
+  const selectedCategoryIds = selectedCategories.map((category) => category.id);
+  const primaryCategory = selectedCategories[0];
 
   const homeExists = await prismaAny.home.findUnique({
     where: { id: homeId },
@@ -325,25 +368,16 @@ export async function createCategoryPage(formData: FormData) {
     return redirect("/my-dashboard?tab=listings");
   }
 
-  try {
-    await prismaAny.home.update({
-      where: { id: homeId },
-      data: {
-        categoryName: selectedCategory.name,
-        propertyTypeId: selectedCategory.id,
-        addedCategory: true,
-      },
-    });
-  } catch {
-    // Fallback si el schema local no expone propertyTypeId.
-    await prisma.home.update({
-      where: { id: homeId },
-      data: {
-        categoryName: selectedCategory.name,
-        addedCategory: true,
-      },
-    });
-  }
+  await prisma.home.update({
+    where: { id: homeId },
+    data: {
+      categoryName: primaryCategory.name,
+      propertyTypeId: primaryCategory.id,
+      categoryNames: selectedCategoryNames,
+      propertyTypeIds: selectedCategoryIds,
+      addedCategory: true,
+    },
+  });
 
   return redirect(`/create/${homeId}/description`);
 }

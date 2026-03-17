@@ -39,6 +39,7 @@ interface PropertyEditFormProps {
     photo: string | null;
     price: number | null;
     propertyTypeId: number | null;
+    propertyTypeIds?: number[] | null;
     addedCategory: boolean;
     addedDescription: boolean;
     addedLocation: boolean;
@@ -63,6 +64,7 @@ export default function PropertyEditForm({
   const router = useRouter();
   const { getMunicipalitiesByState, getDefaultMunicipalityByState } =
     useVenezuelaMunicipalities();
+
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
@@ -79,8 +81,14 @@ export default function PropertyEditForm({
     latitude: property.latitude?.toString() || "",
     longitude: property.longitude?.toString() || "",
     price: property.price?.toString() || "",
-    propertyTypeId: property.propertyTypeId || null,
+    propertyTypeIds:
+      property.propertyTypeIds && property.propertyTypeIds.length > 0
+        ? property.propertyTypeIds
+        : property.propertyTypeId
+        ? [property.propertyTypeId]
+        : [],
   });
+
   const existingCoords =
     property.latitude != null && property.longitude != null
       ? `${property.latitude}, ${property.longitude}`
@@ -99,6 +107,7 @@ export default function PropertyEditForm({
       setCoordsParsed(false);
     }
   };
+
   const initialAmenityMap = useMemo(() => {
     const map: Record<string, AmenityStatus> = {};
     amenityCategories.forEach((category) => {
@@ -108,17 +117,39 @@ export default function PropertyEditForm({
     });
     return map;
   }, [amenityCategories]);
+
   const [amenityMap, setAmenityMap] = useState(initialAmenityMap);
 
   const municipalities = useMemo(() => {
     return getMunicipalitiesByState(formData.country);
   }, [formData.country, getMunicipalitiesByState]);
 
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const togglePropertyType = (typeId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      propertyTypeIds: prev.propertyTypeIds.includes(typeId)
+        ? prev.propertyTypeIds.filter((id) => id !== typeId)
+        : [...prev.propertyTypeIds, typeId],
+    }));
+  };
+
+  const handleAmenityChange = (amenityId: string, status: AmenityStatus) => {
+    setAmenityMap((prev) => ({ ...prev, [amenityId]: status }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      if (formData.propertyTypeIds.length === 0) {
+        throw new Error("Debes seleccionar al menos una categoría");
+      }
+
       const payload = new FormData();
       payload.append("title", formData.title);
       payload.append("description", formData.description);
@@ -133,12 +164,18 @@ export default function PropertyEditForm({
       if (formData.latitude) payload.append("latitude", formData.latitude);
       if (formData.longitude) payload.append("longitude", formData.longitude);
       payload.append("price", formData.price);
-      const selectedCategory = categories.find(
-        (category) =>
-          category.id.toString() === (formData.propertyTypeId?.toString() || "")
+
+      const selectedCategories = categories.filter((category) =>
+        formData.propertyTypeIds.includes(category.id)
       );
-      payload.append("categoryName", selectedCategory?.name || "");
-      payload.append("propertyTypeId", formData.propertyTypeId?.toString() || "");
+      const primaryCategory = selectedCategories[0];
+
+      payload.append("categoryName", primaryCategory?.name || "");
+      payload.append("propertyTypeId", primaryCategory?.id?.toString() || "");
+      formData.propertyTypeIds.forEach((propertyTypeId) => {
+        payload.append("propertyTypeIds", propertyTypeId.toString());
+      });
+
       payload.append(
         "amenities",
         JSON.stringify(
@@ -148,12 +185,12 @@ export default function PropertyEditForm({
           }))
         )
       );
+
       if (imageFile) {
         payload.append("image", imageFile);
       }
 
-      const endpoint =
-        updateEndpoint ?? `/api/admin/properties/${property.id}`;
+      const endpoint = updateEndpoint ?? `/api/admin/properties/${property.id}`;
       const response = await fetch(endpoint, {
         method: "PATCH",
         body: payload,
@@ -182,13 +219,6 @@ export default function PropertyEditForm({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-  const handleAmenityChange = (amenityId: string, status: AmenityStatus) => {
-    setAmenityMap((prev) => ({ ...prev, [amenityId]: status }));
   };
 
   const handleDelete = async () => {
@@ -238,7 +268,7 @@ export default function PropertyEditForm({
         <div className="space-y-6">
           <div>
             <h3 className="text-lg font-semibold mb-4">Información Básica</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="title">Título</Label>
                 <Input
@@ -248,23 +278,37 @@ export default function PropertyEditForm({
                   placeholder="Título de la propiedad"
                 />
               </div>
+
               <div>
-                <Label htmlFor="propertyTypeId">Categoría</Label>
-                <Select
-                  value={formData.propertyTypeId?.toString() || ""}
-                  onValueChange={(value) => handleChange("propertyTypeId", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
+                <Label>Categorías</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Selecciona una o varias categorías para esta propiedad.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {categories.map((cat) => {
+                    const selected = formData.propertyTypeIds.includes(cat.id);
+
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => togglePropertyType(cat.id)}
+                        className={`rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                          selected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
                         {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {formData.propertyTypeIds.length > 0
+                    ? `${formData.propertyTypeIds.length} categoría(s) seleccionada(s)`
+                    : "Sin categorías seleccionadas"}
+                </p>
               </div>
             </div>
           </div>
@@ -413,7 +457,9 @@ export default function PropertyEditForm({
               />
             </div>
             <div className="mt-4">
-              <Label className="text-sm font-medium">Coordenadas GPS <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+              <Label className="text-sm font-medium">
+                Coordenadas GPS <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
               <p className="text-xs text-muted-foreground mb-2">
                 En <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">openstreetmap.org</a>: clic derecho sobre el lugar → copia las coordenadas → pégalas aquí
               </p>

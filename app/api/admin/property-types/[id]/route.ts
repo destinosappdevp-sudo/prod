@@ -129,9 +129,20 @@ export async function PATCH(
         updateData.name !== existingCategory.name
       ) {
         await tx.home.updateMany({
-          where: { categoryName: existingCategory.name },
+          where: {
+            OR: [
+              { categoryName: existingCategory.name },
+              { propertyTypeId: categoryId },
+            ],
+          },
           data: { categoryName: updateData.name },
         });
+
+        await tx.$executeRawUnsafe(
+          'UPDATE "Home" SET "categoryNames" = array_replace("categoryNames", $1, $2) WHERE $1 = ANY("categoryNames")',
+          existingCategory.name,
+          updateData.name
+        );
       }
 
       return updated;
@@ -168,9 +179,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    const homesUsingCategory = await prismaAny.home.count({
+    const homesUsingCategory = await prisma.home.count({
       where: {
-        categoryName: existingCategory.name,
+        OR: [
+          { categoryName: existingCategory.name },
+          { propertyTypeId: categoryId },
+          { categoryNames: { has: existingCategory.name } },
+          { propertyTypeIds: { has: categoryId } },
+        ],
       },
     });
 

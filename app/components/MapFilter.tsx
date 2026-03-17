@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Home } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { parseMultiCategoryFilter } from "@/app/lib/property-categories";
 
 type PropertyType = {
   id: number;
@@ -62,18 +63,26 @@ function MapFilter() {
   const searchParams = useSearchParams();
   const search = searchParams.get("filter");
   const pathname = usePathname();
-  const createQueryString = useCallback(
-    (name: string, value: string) => {
+  const selectedTokens = parseMultiCategoryFilter(search);
+  const selectedSet = new Set(selectedTokens);
+
+  const buildFilterHref = useCallback(
+    (nextTokens: string[]) => {
       const params = new URLSearchParams(searchParams.toString());
-      params.set(name, value);
-      return params.toString();
+
+      if (nextTokens.length === 0) {
+        params.set("filter", "todos");
+      } else {
+        params.set("filter", nextTokens.join(","));
+      }
+
+      return `${pathname}?${params.toString()}`;
     },
-    [searchParams] // Correctly include the dependency array
+    [pathname, searchParams]
   );
 
   const [categories, setCategories] = useState<PropertyType[]>([]);
   const [loading, setLoading] = useState(false);
-  const selectedFilter = search || "todos";
 
   useEffect(() => {
     async function fetchCategories() {
@@ -103,9 +112,9 @@ function MapFilter() {
   return (
     <div className="flex gap-x-10 mt-5 w-full overflow-x-scroll hide-scrollbar">
       <Link
-        href={pathname + "?" + createQueryString("filter", "todos")}
+        href={buildFilterHref([])}
         className={cn(
-          selectedFilter === "todos"
+          selectedTokens.length === 0
             ? "border-b-2 border-black pb-2 flex-shrink-0"
             : "opacity-70 flex-shrink-0",
           "flex flex-col gap-y-3 items-center"
@@ -125,43 +134,54 @@ function MapFilter() {
 
       {loading ? (
         <span>Cargando...</span>
-      ) : categories.map((item) => (
-        <Link
-          key={item.id}
-          href={pathname + "?" + createQueryString("filter", item.id.toString())}
-          className={cn(
-            selectedFilter === item.id.toString() || selectedFilter === item.name
-              ? "border-b-2 border-black pb-2 flex-shrink-0"
-              : "opacity-70 flex-shrink-0",
-            "flex flex-col gap-y-3 items-center"
-          )}
-        >
-          <div className="relative w-6 h-6">
-            {(() => {
-              const imageUrl = item.icon
-                ? iconMap[item.icon as keyof typeof iconMap]
-                : undefined;
+      ) : categories.map((item) => {
+        const categoryId = item.id.toString();
+        const isActive = selectedSet.has(categoryId) || selectedSet.has(item.name);
+        const withoutCurrent = selectedTokens.filter(
+          (token) => token !== categoryId && token !== item.name
+        );
+        const nextTokens = isActive
+          ? withoutCurrent
+          : Array.from(new Set([...withoutCurrent, categoryId]));
 
-              if (!imageUrl) {
-                return <Home className="w-6 h-6" />;
-              }
+        return (
+          <Link
+            key={item.id}
+            href={buildFilterHref(nextTokens)}
+            className={cn(
+              isActive
+                ? "border-b-2 border-black pb-2 flex-shrink-0"
+                : "opacity-70 flex-shrink-0",
+              "flex flex-col gap-y-3 items-center"
+            )}
+          >
+            <div className="relative w-6 h-6">
+              {(() => {
+                const imageUrl = item.icon
+                  ? iconMap[item.icon as keyof typeof iconMap]
+                  : undefined;
 
-              return (
-                <Image
-                  src={imageUrl}
-                  alt={normalizeCategoryLabel(item.name)}
-                  className="w-6 h-6 object-cover rounded-sm"
-                  width={24}
-                  height={24}
-                />
-              );
-            })()}
-          </div>
-          <p className="text-xs font-medium text-center leading-tight max-w-[88px]">
-            {normalizeCategoryLabel(item.name)}
-          </p>
-        </Link>
-      ))}
+                if (!imageUrl) {
+                  return <Home className="w-6 h-6" />;
+                }
+
+                return (
+                  <Image
+                    src={imageUrl}
+                    alt={normalizeCategoryLabel(item.name)}
+                    className="w-6 h-6 object-cover rounded-sm"
+                    width={24}
+                    height={24}
+                  />
+                );
+              })()}
+            </div>
+            <p className="text-xs font-medium text-center leading-tight max-w-[88px]">
+              {normalizeCategoryLabel(item.name)}
+            </p>
+          </Link>
+        );
+      })}
     </div>
   );
 }

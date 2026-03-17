@@ -132,14 +132,29 @@ export default async function PropertyDetailPage({
     name: cat.name,
     title: cat.title_es || cat.name,
   }));
-  const currentCategory = categoriesForForm.find((cat: any) => {
-    if (property.propertyTypeId != null) {
-      return cat.id === property.propertyTypeId;
-    }
-    return cat.name === property.categoryName;
-  });
+  const selectedTypeIdsFromProperty =
+    Array.isArray((property as any).propertyTypeIds) && (property as any).propertyTypeIds.length > 0
+      ? ((property as any).propertyTypeIds as number[])
+      : property.propertyTypeId != null
+      ? [property.propertyTypeId]
+      : [];
+  const fallbackTypeIdFromCategory =
+    selectedTypeIdsFromProperty.length === 0 && property.categoryName
+      ? categoriesForForm.find((cat: any) => cat.name === property.categoryName)?.id
+      : null;
+  const selectedPropertyTypeIds =
+    selectedTypeIdsFromProperty.length > 0
+      ? selectedTypeIdsFromProperty
+      : fallbackTypeIdFromCategory
+      ? [fallbackTypeIdFromCategory]
+      : [];
   const currentCategoryLabel =
-    currentCategory?.title || property.categoryName || "Sin categoría";
+    selectedPropertyTypeIds.length > 0
+      ? categoriesForForm
+          .filter((cat: any) => selectedPropertyTypeIds.includes(cat.id))
+          .map((cat: any) => cat.title)
+          .join(", ")
+      : property.categoryName || "Sin categoría";
 
   // Preparar estados para el formulario
   const statesForForm = states.map((s) => ({
@@ -360,6 +375,7 @@ export default async function PropertyDetailPage({
           property={{
             ...property,
             propertyTypeId: property.propertyTypeId ?? null,
+            propertyTypeIds: selectedPropertyTypeIds,
           }}
           categories={categoriesForForm}
           states={statesForForm}

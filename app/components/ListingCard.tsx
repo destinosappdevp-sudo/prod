@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { normalizeCategoryNames } from "@/app/lib/property-categories";
 
 interface iAppProps {
   imagePath: string;
@@ -32,6 +33,7 @@ interface iAppProps {
   homeId: string;
   pathName: string;
   categoryName?: string | null;
+  categoryNames?: string[] | null;
   guests?: string | null;
   bedrooms?: string | null;
   reviews?: { rating: number }[];
@@ -51,6 +53,7 @@ function ListingCard({
   homeId,
   pathName,
   categoryName,
+  categoryNames,
   guests,
   bedrooms,
   reviews,
@@ -69,14 +72,21 @@ function ListingCard({
     reviews && reviews.length > 0
       ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
       : null;
-  const categoryLabel = categoryName
-    ? categoryName === "apartment"
+  const normalizedCategories = normalizeCategoryNames(categoryNames, categoryName);
+  const primaryCategory = normalizedCategories[0] || null;
+  const primaryCategoryLabel = primaryCategory
+    ? primaryCategory === "apartment"
       ? "Apartamento"
-      : categoryName === "house"
+      : primaryCategory === "house"
       ? "Casa"
-      : categoryName === "villa"
+      : primaryCategory === "villa"
       ? "Villa"
-      : categoryName.replace(/_/g, " ")
+      : primaryCategory.replace(/_/g, " ")
+    : null;
+  const categoryLabel = primaryCategoryLabel
+    ? normalizedCategories.length > 1
+      ? `${primaryCategoryLabel} +${normalizedCategories.length - 1}`
+      : primaryCategoryLabel
     : null;
   const encodedNextPath = encodeURIComponent(`/home/${homeId}`);
   const loginHref = `/login?next=${encodedNextPath}`;

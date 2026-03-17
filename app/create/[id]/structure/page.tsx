@@ -17,7 +17,7 @@ function RouteIStruktures({ params }: { params: { id: string } }) {
         </h2>
         {hasCategoryError && (
           <p className="mt-3 text-sm text-red-600">
-            Debes seleccionar una categoría para continuar.
+            Debes seleccionar al menos una categoría para continuar.
           </p>
         )}
       </div>
