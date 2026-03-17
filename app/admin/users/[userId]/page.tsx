@@ -21,10 +21,24 @@ async function getUser(userId: string) {
 }
 
 async function getUserDocuments(userId: string) {
-  return prisma.$queryRawUnsafe(
-    'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
-    userId
-  ) as Promise<UserDocumentItem[]>;
+  try {
+    return await prisma.$queryRawUnsafe(
+      'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
+      userId
+    ) as UserDocumentItem[];
+  } catch (error) {
+    const err = error as { code?: string; meta?: { code?: string; message?: string }; message?: string };
+    const message = `${err?.message ?? ""} ${err?.meta?.message ?? ""}`.toLowerCase();
+    const hasMissingRelationCode = err?.meta?.code === "42P01" || err?.code === "42P01";
+    const hasMissingRelationMessage = message.includes('relation "userdocument" does not exist');
+
+    // Compatibilidad con bases antiguas donde la tabla UserDocument todavía no existe.
+    if (hasMissingRelationCode || hasMissingRelationMessage) {
+      return [];
+    }
+
+    throw error;
+  }
 }
 
 export default async function EditUserPage({
