@@ -2,6 +2,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createAdminClient } from "@/app/lib/supabase/admin";
+import { optimizeImageForUpload } from "@/app/lib/image-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -108,19 +109,23 @@ export async function PATCH(
 
     let photoPath: string | undefined;
     if (imageFile && imageFile.size > 0) {
-      const fileExtension = imageFile.name.split(".").pop() || "jpg";
+      const optimizedImage = await optimizeImageForUpload(imageFile, {
+        maxWidth: 1920,
+        maxHeight: 1920,
+        quality: 82,
+      });
       const uniqueFileName = `${Date.now()}-${Math.random()
         .toString(36)
-        .substring(7)}.${fileExtension}`;
+        .substring(7)}.${optimizedImage.extension}`;
       const filePath = `user-${user.id}/${uniqueFileName}`;
 
       const storageClient = createAdminClient() ?? supabase;
 
       const { error: uploadError } = await storageClient.storage
         .from("images")
-        .upload(filePath, imageFile, {
+        .upload(filePath, optimizedImage.file, {
           cacheControl: "3600",
-          contentType: imageFile.type,
+          contentType: optimizedImage.contentType,
           upsert: false,
         });
 

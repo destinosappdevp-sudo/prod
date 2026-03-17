@@ -12,6 +12,7 @@ import {
   ensureAtLeastOneSuperadmin,
   getRoleForNewUserBootstrap,
 } from "@/app/lib/user-role-bootstrap";
+import { optimizeImageForUpload } from "@/app/lib/image-upload";
 
 type RegistrationProfile = {
   firstName: string;
@@ -367,17 +368,22 @@ export async function createDescription(formData: FormData) {
   const roomsNumber = formData.get("rooms") as string;
   const bathroomsNumber = formData.get("bathrooms") as string;
 
+  const optimizedImage = await optimizeImageForUpload(imageFiles, {
+    maxWidth: 1920,
+    maxHeight: 1920,
+    quality: 82,
+  });
+
   // Generar nombre de archivo único y válido
-  const fileExtension = imageFiles.name.split('.').pop();
-  const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+  const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${optimizedImage.extension}`;
   const filePath = `user-${user.id}/${uniqueFileName}`;
 
   // Subir imagen a Supabase usando cliente de servidor
-  const { data: imageData, error } = await supabaseServer.storage
+  const { error } = await supabaseServer.storage
     .from("images")
-    .upload(filePath, imageFiles, {
+    .upload(filePath, optimizedImage.file, {
       cacheControl: "3600",
-      contentType: imageFiles.type,
+      contentType: optimizedImage.contentType,
       upsert: false,
     });
 
@@ -621,10 +627,16 @@ export async function updateProfile(formData: FormData) {
 
     // Si hay una nueva foto, subirla a Supabase Storage
     if (profileImageFile && profileImageFile.size > 0) {
-      const fileName = `${user.id}-${Date.now()}`;
+      const optimizedProfileImage = await optimizeImageForUpload(profileImageFile, {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 82,
+      });
+      const fileName = `${user.id}-${Date.now()}.${optimizedProfileImage.extension}`;
       const { data: storageData, error: storageError } = await supabase.storage
         .from("images")
-        .upload(`profiles/${fileName}`, profileImageFile, {
+        .upload(`profiles/${fileName}`, optimizedProfileImage.file, {
+          contentType: optimizedProfileImage.contentType,
           upsert: true,
         });
 
@@ -637,10 +649,16 @@ export async function updateProfile(formData: FormData) {
     }
 
     if (document1File && document1File.size > 0) {
-      const fileName = `${user.id}-doc1-${Date.now()}`;
+      const optimizedDocument1 = await optimizeImageForUpload(document1File, {
+        maxWidth: 2200,
+        maxHeight: 2200,
+        quality: 88,
+      });
+      const fileName = `${user.id}-doc1-${Date.now()}.${optimizedDocument1.extension}`;
       const { data: storageData, error: storageError } = await supabase.storage
         .from("images")
-        .upload(`verification-docs/${fileName}`, document1File, {
+        .upload(`verification-docs/${fileName}`, optimizedDocument1.file, {
+          contentType: optimizedDocument1.contentType,
           upsert: true,
         });
 
@@ -653,10 +671,16 @@ export async function updateProfile(formData: FormData) {
     }
 
     if (document2File && document2File.size > 0) {
-      const fileName = `${user.id}-doc2-${Date.now()}`;
+      const optimizedDocument2 = await optimizeImageForUpload(document2File, {
+        maxWidth: 2200,
+        maxHeight: 2200,
+        quality: 88,
+      });
+      const fileName = `${user.id}-doc2-${Date.now()}.${optimizedDocument2.extension}`;
       const { data: storageData, error: storageError } = await supabase.storage
         .from("images")
-        .upload(`verification-docs/${fileName}`, document2File, {
+        .upload(`verification-docs/${fileName}`, optimizedDocument2.file, {
+          contentType: optimizedDocument2.contentType,
           upsert: true,
         });
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
+import { optimizeImageForUpload } from "@/app/lib/image-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -57,12 +58,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El archivo supera el límite de 10 MB" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop() || "bin";
-    const storagePath = `verification-docs/${user.id}-${Date.now()}.${ext}`;
+    const optimizedFile = await optimizeImageForUpload(file, {
+      maxWidth: 2200,
+      maxHeight: 2200,
+      quality: 88,
+    });
+    const storagePath = `verification-docs/${user.id}-${Date.now()}.${optimizedFile.extension}`;
 
     const { data: storageData, error: storageError } = await supabase.storage
       .from("images")
-      .upload(storagePath, file, { upsert: false });
+      .upload(storagePath, optimizedFile.file, {
+        upsert: false,
+        contentType: optimizedFile.contentType,
+      });
 
     if (storageError) {
       console.error("Error subiendo a storage:", storageError);
@@ -78,8 +86,8 @@ export async function POST(request: Request) {
       user.id,
       url,
       file.name,
-      file.size,
-      file.type
+      optimizedFile.file.size,
+      optimizedFile.contentType
     ) as any[];
     const doc = rows[0];
 

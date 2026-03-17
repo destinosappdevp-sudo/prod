@@ -3,6 +3,7 @@ import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { normalizeExternalUrl } from "@/lib/utils";
 import { randomUUID } from "crypto";
+import { optimizeImageForUpload } from "@/app/lib/image-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -87,11 +88,17 @@ export async function POST(req: NextRequest) {
 
     // Subir imagen nueva si se proporcionó
     if (image && image.size > 0) {
-      const fileExt = image.name.split(".").pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const optimizedImage = await optimizeImageForUpload(image, {
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 82,
+      });
+      const fileName = `${Date.now()}.${optimizedImage.extension}`;
       const { data, error } = await supabase.storage
         .from("images")
-        .upload(fileName, image, { contentType: image.type });
+        .upload(fileName, optimizedImage.file, {
+          contentType: optimizedImage.contentType,
+        });
       
       if (error) {
         console.error("Error subiendo imagen:", error);

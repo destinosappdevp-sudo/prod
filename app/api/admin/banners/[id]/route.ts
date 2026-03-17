@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { normalizeExternalUrl } from "@/lib/utils";
+import { optimizeImageForUpload } from "@/app/lib/image-upload";
 
 export const dynamic = "force-dynamic";
 
@@ -70,11 +71,17 @@ export async function PATCH(
     }
     // Si hay nueva imagen, subirla
     else if (image && image.size > 0) {
-      const fileExt = image.name.split(".").pop();
-      const fileName = `${Date.now()}.${fileExt}`;
+      const optimizedImage = await optimizeImageForUpload(image, {
+        maxWidth: 1920,
+        maxHeight: 1080,
+        quality: 82,
+      });
+      const fileName = `${Date.now()}.${optimizedImage.extension}`;
       const { error } = await supabase.storage
         .from("images")
-        .upload(fileName, image, { contentType: image.type });
+        .upload(fileName, optimizedImage.file, {
+          contentType: optimizedImage.contentType,
+        });
 
       if (error) {
         console.error("Error subiendo imagen:", error);
