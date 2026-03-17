@@ -1,8 +1,10 @@
 import { Card } from "@/components/ui/card";
 import prisma from "@/app/lib/db";
+import { unstable_noStore as noStore } from "next/cache";
 import { UserManagementClient } from "../components/UserManagementClient";
 
 async function getUsers() {
+  noStore();
   const users = await prisma.user.findMany({
     include: {
       _count: {

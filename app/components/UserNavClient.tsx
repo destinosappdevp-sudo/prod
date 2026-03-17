@@ -118,17 +118,6 @@ export function UserNavClient({
                 </Link>
               </DropdownMenuItem>
 
-              {(userRole === "ADMIN" || userRole === "SUPERADMIN") && (
-                <>
-                  <DropdownMenuSeparator className="my-1" />
-                  <DropdownMenuItem asChild className="rounded-lg px-4 py-3 text-sm font-semibold text-blue-600 focus:bg-blue-50">
-                    <Link href="/admin" className={menuItemContentClassName}>
-                      🏠 Panel de Admin
-                    </Link>
-                  </DropdownMenuItem>
-                </>
-              )}
-
               <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem asChild className={menuItemClassName}>
                 <form action={signOut} className="w-full">

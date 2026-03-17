@@ -1,7 +1,12 @@
+import { unstable_noStore } from 'next/cache';
 import prisma from "@/app/lib/db";
 import { PropertiesClient } from "../components/PropertiesClient";
 
 async function getProperties() {
+  unstable_noStore();
+  
+  // Optimized: use select instead of include _count to avoid extra joins
+  // Limit to prevent loading too many properties at once
   const properties = await prisma.home.findMany({
     select: {
       id: true,
@@ -32,6 +37,7 @@ async function getProperties() {
     orderBy: {
       createdAt: "desc",
     },
+    take: 500, // Limit to prevent overwhelming the page - client-side pagination handles rest
   });
 
   return properties;

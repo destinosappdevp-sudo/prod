@@ -263,8 +263,20 @@ model usersessions {
 model PlatformConfig {
   id                String   @id @default(uuid())
   commissionPercent Float    @default(10.0)
+  bcvRate           Decimal  @default(0.0) @db.Decimal(18, 8)
+  bcvRateDate       DateTime?
+  bcvProximaRate    Decimal? @db.Decimal(18, 8)
+  bcvProximaRateDate DateTime?
   updatedAt         DateTime @default(now())
   maintenanceMode   Boolean  @default(false)
+}
+
+model BcvRateHistory {
+  id            String   @id @default(uuid())
+  effectiveDate DateTime @unique
+  rate          Decimal  @db.Decimal(18, 8)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model BlockedDate {

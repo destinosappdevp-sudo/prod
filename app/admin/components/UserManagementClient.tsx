@@ -74,7 +74,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
-    setUpdating({ ...updating, [userId]: true });
+    setUpdating((prev) => ({ ...prev, [userId]: true }));
     try {
       const response = await fetch("/api/admin/users/role", {
         method: "POST",
@@ -84,10 +84,14 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
         body: JSON.stringify({ userId, newRole }),
       });
 
-      if (!response.ok) throw new Error("Error updating role");
+      const result = await response.json().catch(() => null);
 
-      setUsers(
-        users.map((user) =>
+      if (!response.ok) {
+        throw new Error(result?.error || "Error updating role");
+      }
+
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
           user.id === userId
             ? { ...user, role: newRole as User["role"] }
             : user
@@ -95,9 +99,9 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
       );
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al cambiar el rol");
+      alert(error instanceof Error ? error.message : "Error al cambiar el rol");
     } finally {
-      setUpdating({ ...updating, [userId]: false });
+      setUpdating((prev) => ({ ...prev, [userId]: false }));
     }
   };
 

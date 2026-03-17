@@ -1,9 +1,11 @@
+import { unstable_noStore } from 'next/cache';
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import AlojamientosClient from "./client";
 import { redirect } from "next/navigation";
 
 export default async function AlojamientosPage() {
+  unstable_noStore();
   const supabase = await createClient();
   const {
     data: { user },

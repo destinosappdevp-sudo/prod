@@ -51,10 +51,10 @@ export function NavigationLoader() {
     setLoading(false);
   }, [pathname]);
 
-  // Fallback: ocultar después de 2.5s por si algo falla
+  // Fallback: ocultar después de 1.5s por si algo falla
   useEffect(() => {
     if (!loading) return;
-    const timer = setTimeout(() => setLoading(false), 2500);
+    const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
   }, [loading]);
 

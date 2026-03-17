@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { unstable_noStore } from 'next/cache';
 import prisma from "@/app/lib/db";
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
@@ -9,11 +10,15 @@ import {
   Wallet,
   Calendar,
   TrendingDown,
-  AlertCircle
+  AlertCircle,
+  CalendarDays,
+  Clock,
+  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 
 async function getAdminStats() {
+  unstable_noStore();
   const prismaAny = prisma as any;
 
   const now = new Date();
@@ -27,6 +32,7 @@ async function getAdminStats() {
     confirmedRevenueThisMonth,
     pendingPayoutAmount,
     zerkkaRevenueThisMonth,
+    platformConfig,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.home.count(),
@@ -46,7 +52,28 @@ async function getAdminStats() {
       where: { status: "CONFIRMED", confirmedAt: { gte: startOfMonth } },
       _sum: { serviceFee: true },
     }),
+    prismaAny.platformConfig.findFirst({
+      select: { bcvRate: true, bcvRateDate: true },
+    }),
   ]);
+
+  // Server time in Venezuela timezone
+  const venezuelaTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Caracas" }));
+  const serverDate = venezuelaTime.toLocaleDateString("es-VE", {
+    weekday: "long", day: "2-digit", month: "long", year: "numeric",
+  });
+  const serverTime = venezuelaTime.toLocaleTimeString("es-VE", {
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true,
+  });
+
+  const bcvRate = platformConfig?.bcvRate
+    ? Number(platformConfig.bcvRate).toFixed(2)
+    : "—";
+  const bcvDate = platformConfig?.bcvRateDate
+    ? new Date(platformConfig.bcvRateDate).toLocaleDateString("es-VE", {
+        day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC",
+      })
+    : null;
 
   return {
     totalUsers,
@@ -56,6 +83,10 @@ async function getAdminStats() {
     confirmedRevenueThisMonth: confirmedRevenueThisMonth._sum.amount || 0,
     pendingPayoutAmount: pendingPayoutAmount._sum.subtotal || 0,
     zerkkaRevenueThisMonth: zerkkaRevenueThisMonth._sum.serviceFee || 0,
+    serverDate,
+    serverTime,
+    bcvRate,
+    bcvDate,
   };
 }
 
@@ -152,6 +183,57 @@ export default async function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Info Cards: Fecha, Hora, Tasa BCV */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Fecha */}
+        <Card className="p-6 border-l-4 border-l-blue-500">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Fecha del Servidor</p>
+              <p className="text-lg font-bold text-gray-900 mt-1 capitalize">{stats.serverDate}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <CalendarDays className="text-blue-600" size={22} />
+            </div>
+          </div>
+        </Card>
+
+        {/* Hora */}
+        <Card className="p-6 border-l-4 border-l-violet-500">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Hora del Servidor</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1 font-mono">{stats.serverTime}</p>
+              <p className="text-xs text-gray-400 mt-1">Hora Venezuela (VET)</p>
+            </div>
+            <div className="p-3 bg-violet-100 rounded-lg">
+              <Clock className="text-violet-600" size={22} />
+            </div>
+          </div>
+        </Card>
+
+        {/* Tasa BCV */}
+        <Card className="p-6 border-l-4 border-l-emerald-500">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Tasa BCV</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {stats.bcvRate !== "—" ? `Bs. ${stats.bcvRate}` : "—"}
+              </p>
+              {stats.bcvDate && (
+                <p className="text-xs text-gray-400 mt-1">Actualizada: {stats.bcvDate}</p>
+              )}
+              {!stats.bcvDate && (
+                <p className="text-xs text-gray-400 mt-1">Sin configurar</p>
+              )}
+            </div>
+            <div className="p-3 bg-emerald-100 rounded-lg">
+              <TrendingUp className="text-emerald-600" size={22} />
+            </div>
+          </div>
+        </Card>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

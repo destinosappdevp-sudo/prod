@@ -1,7 +1,27 @@
 -- Arreglar la tabla Favorite en Supabase
 -- Ejecuta esto en Supabase SQL Editor
 
--- Paso 1: Eliminar constraints foráneos existentes
+-- Paso 0: Limpiar filas invalidas y duplicadas antes de crear UNIQUE
+-- Eliminar favoritos con claves nulas (el schema actual exige NOT NULL)
+DELETE FROM "Favorite"
+WHERE "userId" IS NULL OR "homeId" IS NULL;
+
+-- Eliminar duplicados conservando el mas reciente por (userId, homeId)
+WITH ranked AS (
+  SELECT
+    "id",
+    ROW_NUMBER() OVER (
+      PARTITION BY "userId", "homeId"
+      ORDER BY "createAt" DESC, "id" DESC
+    ) AS rn
+  FROM "Favorite"
+)
+DELETE FROM "Favorite" f
+USING ranked r
+WHERE f."id" = r."id"
+  AND r.rn > 1;
+
+-- Paso 1: Eliminar constraints foraneos existentes
 ALTER TABLE "Favorite" DROP CONSTRAINT IF EXISTS "Favorite_userId_fkey";
 ALTER TABLE "Favorite" DROP CONSTRAINT IF EXISTS "Favorite_homeId_fkey";
 
@@ -10,7 +30,7 @@ ALTER TABLE "Favorite"
   ALTER COLUMN "userId" SET NOT NULL,
   ALTER COLUMN "homeId" SET NOT NULL;
 
--- Paso 3: Agregar constraint único en (userId, homeId)
+-- Paso 3: Agregar constraint unico en (userId, homeId)
 ALTER TABLE "Favorite" 
   ADD CONSTRAINT "Favorite_userId_homeId_key" UNIQUE ("userId", "homeId");
 

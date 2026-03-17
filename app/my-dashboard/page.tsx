@@ -26,6 +26,7 @@ function normalizePublishStatus(status?: string | null): HostPublishStatus {
 }
 
 async function getUserDocuments(userId: string) {
+  noStore();
   return (prisma as any)
     .$queryRawUnsafe(
       'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
@@ -79,15 +80,22 @@ async function getHostDashboardData(userId: string) {
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
+      take: 100, // Limit listings
     }),
     prismaAny.reservation.findMany({
       where: {
         Home: { userId },
       },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+        totalAmount: true,
         User: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } },
         Home: { select: { guests: true } },
-        Payment: true,
+        Payment: { select: { amount: true } },
       },
       orderBy: { createdAt: "desc" },
       take: 6,
@@ -199,7 +207,7 @@ async function getGuestDashboardData(userId: string) {
   noStore();
   const prismaAny = prisma as any;
 
-  const [favorites, reservations] = await Promise.all([
+  const [favorites, reservations, favoriteIds] = await Promise.all([
     prismaAny.favorite.findMany({
       where: { userId },
       select: {
@@ -216,10 +224,18 @@ async function getGuestDashboardData(userId: string) {
           },
         },
       },
+      take: 50,
     }),
     prismaAny.reservation.findMany({
       where: { userId },
-      include: {
+      select: {
+        id: true,
+        homeId: true,
+        startDate: true,
+        endDate: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
         Home: {
           select: {
             id: true,
@@ -229,15 +245,24 @@ async function getGuestDashboardData(userId: string) {
             municipality: true,
             price: true,
             description: true,
-            Favorite: {
-              where: { userId },
-            },
           },
         },
       },
       orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    // Separate query: get all favorite homeIds for this user
+    prismaAny.favorite.findMany({
+      where: { userId },
+      select: { homeId: true },
     }),
   ]);
+
+  // Create set of favorited homeIds for fast lookup
+  const favoriteHomeIds = new Set(favoriteIds.map((f: any) => f.homeId));
+  const favoriteByHomeId = new Map(
+    favorites.map((fav: any) => [fav.Home.id, fav.id])
+  );
 
   return {
     favorites: favorites.map((fav: any) => ({
@@ -263,8 +288,8 @@ async function getGuestDashboardData(userId: string) {
       endDate: res.endDate,
       status: res.status,
       totalAmount: res.totalAmount,
-      favoriteId: res.Home.Favorite[0]?.id,
-      isInFavoriteList: (res.Home.Favorite.length || 0) > 0,
+      favoriteId: favoriteByHomeId.get(res.Home.id),
+      isInFavoriteList: favoriteHomeIds.has(res.Home.id),
     })),
   };
 }

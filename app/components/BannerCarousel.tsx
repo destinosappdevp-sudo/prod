@@ -23,9 +23,10 @@ export default function BannerCarousel() {
       try {
         const response = await fetch("/api/banners");
         const data = await response.json();
-        setBanners(data);
+        setBanners(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching banners:", error);
+        setBanners([]);
       } finally {
         setLoading(false);
       }

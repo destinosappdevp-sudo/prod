@@ -1,13 +1,24 @@
+import { unstable_noStore } from 'next/cache';
 import { Card } from "@/components/ui/card";
 import prisma from "@/app/lib/db";
 import { DollarSign, Calendar, CreditCard, AlertCircle } from "lucide-react";
 import PaymentsClient from "./PaymentsClient";
 
 async function getPaymentsData() {
+  unstable_noStore();
   const prismaAny = prisma as any;
   
   const reservations = await prismaAny.reservation.findMany({
-    include: {
+    select: {
+      id: true,
+      homeId: true,
+      userId: true,
+      checkInDate: true,
+      checkOutDate: true,
+      numberOfGuests: true,
+      status: true,
+      totalPrice: true,
+      createdAt: true,
       User: {
         select: {
           firstName: true,
@@ -21,7 +32,14 @@ async function getPaymentsData() {
           price: true,
         },
       },
-      Payment: true,
+      Payment: {
+        select: {
+          id: true,
+          status: true,
+          amount: true,
+          confirmedAt: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -33,6 +51,7 @@ async function getPaymentsData() {
 }
 
 async function getStats() {
+  unstable_noStore();
   const prismaAny = prisma as any;
   
   const [

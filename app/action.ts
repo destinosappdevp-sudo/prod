@@ -8,6 +8,10 @@ import { randomUUID } from "crypto";
 import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
 import { generateWelcomeEmail } from "@/app/lib/email-templates";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
+import {
+  ensureAtLeastOneSuperadmin,
+  getRoleForNewUserBootstrap,
+} from "@/app/lib/user-role-bootstrap";
 
 type RegistrationProfile = {
   firstName: string;
@@ -127,6 +131,7 @@ export async function signUp(email: string, password: string) {
   // Crear usuario en la base de datos
   if (data.user) {
     try {
+      const initialRole = await getRoleForNewUserBootstrap();
       await prisma.user.create({
         data: {
           id: data.user.id,
@@ -134,6 +139,7 @@ export async function signUp(email: string, password: string) {
           firstName: "Usuario",
           lastName: "",
           profileImage: `https://avatar.vercel.sh/${email}`,
+          role: initialRole,
         },
       });
     } catch (e) {
@@ -237,6 +243,7 @@ export async function signInWithEmail(email: string, password: string) {
     });
 
     if (!userExists) {
+      const initialRole = await getRoleForNewUserBootstrap();
       await prisma.user.create({
         data: {
           id: data.user.id,
@@ -244,9 +251,12 @@ export async function signInWithEmail(email: string, password: string) {
           firstName: "Usuario",
           lastName: "",
           profileImage: `https://avatar.vercel.sh/${email}`,
+          role: initialRole,
         },
       });
     }
+
+    await ensureAtLeastOneSuperadmin(data.user.id);
   }
 
   return { success: true, userId: data.user?.id };

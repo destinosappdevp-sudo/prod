@@ -1,7 +1,9 @@
+import { unstable_noStore } from 'next/cache';
 import prisma from "@/app/lib/db";
 import AmenityManagerClient from "../components/AmenityManagerClient";
 
 async function getAmenityData() {
+  unstable_noStore();
   const categories = await prisma.amenityCategory.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],
     include: {

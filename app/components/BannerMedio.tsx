@@ -22,8 +22,9 @@ export default function BannerMedio({ tipo }: BannerMedioProps) {
   useEffect(() => {
     fetch("/api/banners/medio")
       .then((r) => r.json())
-      .then((data: MedioBanner[]) => {
-        const match = data.find((b) => b.tipo === tipo);
+      .then((data: MedioBanner[] | { error?: string }) => {
+        const list = Array.isArray(data) ? data : [];
+        const match = list.find((b) => b.tipo === tipo);
         setBanner(match ?? null);
       })
       .catch(() => {});

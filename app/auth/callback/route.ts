@@ -1,6 +1,10 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import {
+  ensureAtLeastOneSuperadmin,
+  getRoleForNewUserBootstrap,
+} from "@/app/lib/user-role-bootstrap";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -18,6 +22,7 @@ export async function GET(request: Request) {
       });
 
       if (!userExists) {
+        const initialRole = await getRoleForNewUserBootstrap();
         await prisma.user.create({
           data: {
             id: data.user.id,
@@ -26,9 +31,12 @@ export async function GET(request: Request) {
             lastName: data.user.user_metadata?.family_name ?? "",
             profileImage: data.user.user_metadata?.avatar_url ?? 
               `https://avatar.vercel.sh/${data.user.user_metadata?.given_name ?? "user"}`,
+            role: initialRole,
           },
         });
       }
+
+      await ensureAtLeastOneSuperadmin(data.user.id);
 
       return NextResponse.redirect(`${origin}${next}`);
     }

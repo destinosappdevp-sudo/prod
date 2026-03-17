@@ -1,7 +1,54 @@
 ﻿"use client";
 import { Card } from "@/components/ui/card";
-import { Bell, Mail, Shield, Database, Globe, Palette, Wrench } from "lucide-react";
+import { Bell, Shield, Database, Globe, Palette, Wrench, Landmark } from "lucide-react";
 import { useEffect, useState } from "react";
+
+const RATE_DECIMALS = 8;
+
+type RateHistoryItem = {
+  fecha: string | null;
+  tasa: string;
+};
+
+function formatRateForInput(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toFixed(RATE_DECIMALS).replace(".", ",");
+  }
+
+  if (value && typeof value === "object" && "toString" in value) {
+    const raw = (value as { toString: () => string }).toString();
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed)) {
+      return parsed.toFixed(RATE_DECIMALS).replace(".", ",");
+    }
+
+    return raw.replace(".", ",");
+  }
+
+  return "";
+}
+
+function formatHistoryDate(value: string | null): string {
+  if (!value) {
+    return "Sin fecha";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value);
+  }
+
+  return new Intl.DateTimeFormat("es-VE", {
+    timeZone: "UTC",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(parsed);
+}
 
 export default function SettingsPage() {
   // Comisión
@@ -16,6 +63,26 @@ export default function SettingsPage() {
   const [maintenanceLoading, setMaintenanceLoading] = useState<boolean>(true);
   const [maintenanceSaving, setMaintenanceSaving] = useState<boolean>(false);
   const [maintenanceMsg, setMaintenanceMsg] = useState<string>("");
+
+  // Tasa BCV
+  const [bcvRate, setBcvRate] = useState<string>("");
+  const [bcvRateDate, setBcvRateDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [proximaTasa, setProximaTasa] = useState<string>("");
+  const [proximaTasaDate, setProximaTasaDate] = useState<string>("");
+  const [tasasAnteriores, setTasasAnteriores] = useState<RateHistoryItem[]>([]);
+  const [bcvLoading, setBcvLoading] = useState<boolean>(true);
+  const [bcvSaving, setBcvSaving] = useState<boolean>(false);
+  const [bcvSuccess, setBcvSuccess] = useState<boolean>(false);
+  const [bcvError, setBcvError] = useState<string>("");
+
+  // Reset Base de Datos
+  const [resetLoading, setResetLoading] = useState<boolean>(false);
+  const [resetConfirm, setResetConfirm] = useState<boolean>(false);
+  const [resetMsg, setResetMsg] = useState<string>("");
+
+  // Sincronizar Usuarios
+  const [syncLoading, setSyncLoading] = useState<boolean>(false);
+  const [syncMsg, setSyncMsg] = useState<string>("");
 
   useEffect(() => {
     fetch("/api/admin/settings/commission").then(async (res) => {
@@ -36,6 +103,38 @@ export default function SettingsPage() {
         setMaintenance(false);
       }
       setMaintenanceLoading(false);
+    });
+
+    fetch("/api/admin/settings/bcv-rate").then(async (res) => {
+      try {
+        const data = await res.json();
+        setBcvRate(formatRateForInput(data.bcvRate));
+        if (data.bcvRateDate) {
+          setBcvRateDate(String(data.bcvRateDate).slice(0, 10));
+        }
+
+        const nextRate = data.proximaTasa ?? data.bcvRateNextDay;
+        const nextRateDate = data.proximaTasaDate ?? data.bcvRateNextDayDate;
+        setProximaTasa(formatRateForInput(nextRate));
+        if (nextRateDate) {
+          setProximaTasaDate(String(nextRateDate).slice(0, 10));
+        }
+
+        const history = Array.isArray(data.tasasAnteriores)
+          ? data.tasasAnteriores
+          : [];
+        setTasasAnteriores(
+          history.map((item: any) => ({
+            fecha: typeof item?.fecha === "string" ? item.fecha : null,
+            tasa: formatRateForInput(item?.tasa),
+          }))
+        );
+      } catch {
+        setBcvRate("");
+        setProximaTasa("");
+        setTasasAnteriores([]);
+      }
+      setBcvLoading(false);
     });
   }, []);
 
@@ -81,6 +180,111 @@ export default function SettingsPage() {
     }
     setMaintenanceSaving(false);
     setTimeout(() => setMaintenanceMsg(""), 3000);
+  };
+
+  const handleBcvSubmit = async (e: any) => {
+    e.preventDefault();
+    setBcvSaving(true);
+    setBcvError("");
+    setBcvSuccess(false);
+
+    try {
+      const res = await fetch("/api/admin/settings/bcv-rate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bcvRate,
+          bcvRateDate,
+          proximaTasa,
+          proximaTasaDate,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setBcvSuccess(true);
+        setBcvRate(formatRateForInput(data.bcvRate));
+        if (data.bcvRateDate) {
+          setBcvRateDate(String(data.bcvRateDate).slice(0, 10));
+        }
+
+        const nextRate = data.proximaTasa ?? data.bcvRateNextDay;
+        const nextRateDate = data.proximaTasaDate ?? data.bcvRateNextDayDate;
+        setProximaTasa(formatRateForInput(nextRate));
+        setProximaTasaDate(nextRateDate ? String(nextRateDate).slice(0, 10) : "");
+
+        const history = Array.isArray(data.tasasAnteriores)
+          ? data.tasasAnteriores
+          : [];
+        setTasasAnteriores(
+          history.map((item: any) => ({
+            fecha: typeof item?.fecha === "string" ? item.fecha : null,
+            tasa: formatRateForInput(item?.tasa),
+          }))
+        );
+      } else {
+        setBcvError(data.error || "Error al guardar");
+      }
+    } catch {
+      setBcvError("Error de red");
+    }
+
+    setBcvSaving(false);
+  };
+
+  const handleResetDatabase = async () => {
+    if (!resetConfirm) {
+      setResetMsg("Por favor, confirma que deseas reiniciar la base de datos.");
+      setTimeout(() => setResetMsg(""), 3000);
+      return;
+    }
+
+    setResetLoading(true);
+    setResetMsg("");
+
+    try {
+      const res = await fetch("/api/admin/settings/reset-database", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setResetMsg("✓ Base de datos reiniciada correctamente. Solo el superadmin permanece.");
+        setResetConfirm(false);
+      } else {
+        setResetMsg(`Error: ${data.error || "No se pudo reiniciar la base de datos"}`);
+      }
+    } catch (err) {
+      setResetMsg("Error de red al reiniciar la base de datos");
+    }
+
+    setResetLoading(false);
+    setTimeout(() => setResetMsg(""), 5000);
+  };
+
+  const handleSyncUsers = async () => {
+    setSyncLoading(true);
+    setSyncMsg("");
+
+    try {
+      const res = await fetch("/api/admin/settings/sync-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSyncMsg(`✓ ${data.message} (Sincronizados: ${data.synced}, Ya existían: ${data.skipped})`);
+      } else {
+        setSyncMsg(`Error: ${data.error || "No se pudo sincronizar usuarios"}`);
+      }
+    } catch (err) {
+      setSyncMsg("Error de red al sincronizar usuarios");
+    }
+
+    setSyncLoading(false);
+    setTimeout(() => setSyncMsg(""), 5000);
   };
 
   return (
@@ -210,33 +414,105 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        {/* Email Configuration */}
+        {/* Tasa BCV del día */}
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Mail className="text-green-600" size={20} />
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <Landmark className="text-emerald-600" size={20} />
             </div>
-            <h3 className="text-lg font-semibold">Configuración de Email</h3>
+            <h3 className="text-lg font-semibold">Tasa BCV del día y próxima tasa</h3>
           </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Servidor SMTP</label>
-              <input type="text" placeholder="smtp.ejemplo.com" className="w-full p-2 border rounded-lg bg-gray-50" disabled />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+          <form className="space-y-4" onSubmit={handleBcvSubmit}>
+            <p className="text-sm text-gray-600">
+              Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La próxima tasa se guarda con la fecha que selecciones.
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
-                <input type="text" placeholder="usuario@ejemplo.com" className="w-full p-2 border rounded-lg bg-gray-50" disabled />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tasa BCV del día (Bs/USD)</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="448,36860000"
+                  value={bcvRate}
+                  onChange={(e) => setBcvRate(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white"
+                  disabled={bcvLoading || bcvSaving}
+                />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Puerto</label>
-                <input type="text" placeholder="587" className="w-full p-2 border rounded-lg bg-gray-50" disabled />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de referencia del día</label>
+                <input
+                  type="date"
+                  value={bcvRateDate}
+                  onChange={(e) => setBcvRateDate(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white"
+                  disabled={bcvLoading || bcvSaving}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Próxima tasa (Bs/USD)</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="448,36860000"
+                  value={proximaTasa}
+                  onChange={(e) => setProximaTasa(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white"
+                  disabled={bcvLoading || bcvSaving}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de la próxima tasa</label>
+                <input
+                  type="date"
+                  value={proximaTasaDate}
+                  onChange={(e) => setProximaTasaDate(e.target.value)}
+                  className="w-full p-2 border rounded-lg bg-white"
+                  disabled={bcvLoading || bcvSaving}
+                />
               </div>
             </div>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
-              Guardar Configuración
-            </button>
-          </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                disabled={bcvLoading || bcvSaving}
+                type="submit"
+              >
+                {bcvSaving ? "Guardando..." : "Guardar tasa BCV"}
+              </button>
+
+              {bcvSuccess && <span className="text-green-600 text-sm">¡Guardado!</span>}
+              {bcvError && <span className="text-red-600 text-sm">{bcvError}</span>}
+            </div>
+
+            <p className="text-xs text-gray-500">
+              Fechas seleccionadas: día {bcvRateDate || "Sin fecha"} y próxima tasa {proximaTasaDate || "Sin fecha"}
+            </p>
+
+            <div className="rounded-lg border bg-gray-50 p-3">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">Tasas anteriores</h4>
+              {tasasAnteriores.length === 0 ? (
+                <p className="text-xs text-gray-600">Aún no hay historial registrado.</p>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                  {tasasAnteriores.map((item, index) => (
+                    <div
+                      key={`${item.fecha ?? "sin-fecha"}-${index}`}
+                      className="flex items-center justify-between rounded-md bg-white px-3 py-2 border"
+                    >
+                      <span className="text-sm text-gray-700">{formatHistoryDate(item.fecha)}</span>
+                      <span className="text-sm font-medium text-gray-900">{item.tasa || "0,00000000"}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </form>
         </Card>
 
         {/* Security */}
@@ -278,6 +554,28 @@ export default function SettingsPage() {
             <h3 className="text-lg font-semibold">Base de Datos</h3>
           </div>
           <div className="space-y-4">
+            {/* Sincronizar Usuarios */}
+            <div className="border-b pb-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-700">🔄 Sincronizar Usuarios</p>
+                  <p className="text-sm text-gray-600">Trae todos los usuarios de Supabase auth.users a la base de datos</p>
+                  {syncMsg && (
+                    <p className={`text-xs mt-2 ${syncMsg.includes("✓") ? "text-green-600" : "text-red-600"}`}>
+                      {syncMsg}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={handleSyncUsers}
+                  disabled={syncLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
+                >
+                  {syncLoading ? "Sincronizando..." : "Sincronizar Usuarios"}
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Backup Automático</p>
@@ -295,6 +593,53 @@ export default function SettingsPage() {
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
                 Optimizar
               </button>
+            </div>
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-red-700">⚠️ Reiniciar Base de Datos</p>
+                  <p className="text-sm text-gray-600">Elimina TODOS los datos excepto el superadmin actual. Esta acción no se puede deshacer.</p>
+                  {resetMsg && (
+                    <p className={`text-xs mt-2 ${resetMsg.includes("✓") ? "text-green-600" : "text-red-600"}`}>
+                      {resetMsg}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  {resetConfirm && (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={resetConfirm}
+                        onChange={() => setResetConfirm(!resetConfirm)}
+                        className="w-4 h-4"
+                      />
+                      Confirmar eliminación
+                    </label>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (!resetConfirm) {
+                        setResetConfirm(true);
+                      } else {
+                        handleResetDatabase();
+                      }
+                    }}
+                    disabled={resetLoading}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      resetConfirm
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-red-100 text-red-700 hover:bg-red-200"
+                    } disabled:opacity-60`}
+                  >
+                    {resetLoading
+                      ? "Reiniciando..."
+                      : resetConfirm
+                      ? "Confirmar Reinicio"
+                      : "Reiniciar Base de Datos"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </Card>
