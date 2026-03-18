@@ -31,7 +31,7 @@ async function getAdminStats() {
     reservationsThisMonth,
     pendingPayments,
     confirmedRevenueThisMonth,
-    pendingPayoutAmount,
+    pendingPayoutTotals,
     zerkkaRevenueThisMonth,
     platformConfig,
   ] = await Promise.all([
@@ -47,7 +47,7 @@ async function getAdminStats() {
     }),
     prismaAny.payment.aggregate({
       where: { status: "CONFIRMED" },
-      _sum: { subtotal: true },
+      _sum: { amount: true, serviceFee: true },
     }),
     prismaAny.payment.aggregate({
       where: { status: "CONFIRMED", confirmedAt: { gte: startOfMonth } },
@@ -80,7 +80,11 @@ async function getAdminStats() {
     reservationsThisMonth,
     pendingPayments,
     confirmedRevenueThisMonth: confirmedRevenueThisMonth._sum.amount || 0,
-    pendingPayoutAmount: pendingPayoutAmount._sum.subtotal || 0,
+    pendingPayoutAmount: Math.max(
+      0,
+      (pendingPayoutTotals._sum.amount || 0) -
+        (pendingPayoutTotals._sum.serviceFee || 0)
+    ),
     zerkkaRevenueThisMonth: zerkkaRevenueThisMonth._sum.serviceFee || 0,
     serverDate,
     serverTime,
