@@ -133,20 +133,24 @@ export default async function PropertyDetailPage({
     title: cat.title_es || cat.name,
   }));
   const selectedTypeIdsFromProperty =
-    Array.isArray((property as any).propertyTypeIds) && (property as any).propertyTypeIds.length > 0
-      ? ((property as any).propertyTypeIds as number[])
-      : property.propertyTypeId != null
-      ? [property.propertyTypeId]
+    Array.isArray((property as any).propertyTypeId) && (property as any).propertyTypeId.length > 0
+      ? ((property as any).propertyTypeId as number[])
       : [];
-  const fallbackTypeIdFromCategory =
-    selectedTypeIdsFromProperty.length === 0 && property.categoryName
-      ? categoriesForForm.find((cat: any) => cat.name === property.categoryName)?.id
-      : null;
+  const categoryNamesFromProperty =
+    Array.isArray((property as any).categoryName) && (property as any).categoryName.length > 0
+      ? ((property as any).categoryName as string[])
+      : [];
+  const fallbackTypeIdsFromCategory =
+    selectedTypeIdsFromProperty.length === 0
+      ? categoriesForForm
+          .filter((cat: any) => categoryNamesFromProperty.includes(cat.name))
+          .map((cat: any) => cat.id)
+      : [];
   const selectedPropertyTypeIds =
     selectedTypeIdsFromProperty.length > 0
       ? selectedTypeIdsFromProperty
-      : fallbackTypeIdFromCategory
-      ? [fallbackTypeIdFromCategory]
+      : fallbackTypeIdsFromCategory.length > 0
+      ? fallbackTypeIdsFromCategory
       : [];
   const currentCategoryLabel =
     selectedPropertyTypeIds.length > 0
@@ -154,7 +158,7 @@ export default async function PropertyDetailPage({
           .filter((cat: any) => selectedPropertyTypeIds.includes(cat.id))
           .map((cat: any) => cat.title)
           .join(", ")
-      : property.categoryName || "Sin categoría";
+      : categoryNamesFromProperty.join(", ") || "Sin categoría";
 
   // Preparar estados para el formulario
   const statesForForm = states.map((s) => ({
@@ -374,7 +378,7 @@ export default async function PropertyDetailPage({
         <PropertyEditForm
           property={{
             ...property,
-            propertyTypeId: property.propertyTypeId ?? null,
+            propertyTypeId: selectedPropertyTypeIds[0] ?? null,
             propertyTypeIds: selectedPropertyTypeIds,
           }}
           categories={categoriesForForm}

@@ -13,6 +13,10 @@ import {
   getRoleForNewUserBootstrap,
 } from "@/app/lib/user-role-bootstrap";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
+import {
+  revalidateHomeVisibilityPaths,
+  syncHomeVisibilityFlags,
+} from "@/app/lib/home-visibility";
 
 type RegistrationProfile = {
   firstName: string;
@@ -357,7 +361,6 @@ export async function createCategoryPage(formData: FormData) {
 
   const selectedCategoryNames = selectedCategories.map((category) => category.name);
   const selectedCategoryIds = selectedCategories.map((category) => category.id);
-  const primaryCategory = selectedCategories[0];
 
   const homeExists = await prismaAny.home.findUnique({
     where: { id: homeId },
@@ -371,10 +374,8 @@ export async function createCategoryPage(formData: FormData) {
   await prisma.home.update({
     where: { id: homeId },
     data: {
-      categoryName: primaryCategory.name,
-      propertyTypeId: primaryCategory.id,
-      categoryNames: selectedCategoryNames,
-      propertyTypeIds: selectedCategoryIds,
+      categoryName: selectedCategoryNames,
+      propertyTypeId: selectedCategoryIds,
       addedCategory: true,
     },
   });
@@ -1040,12 +1041,15 @@ export async function publishHome(homeId: string, userId: string) {
     // Si no, enviar a aprobación
     const publishStatus = userRecord.isVerified ? "APPROVED" : "PENDING_APPROVAL";
 
-    const home = await prisma.home.update({
+    await prisma.home.update({
       where: { id: homeId },
       data: {
         publishStatus: publishStatus as any,
       },
     });
+
+    await syncHomeVisibilityFlags(homeId);
+    revalidateHomeVisibilityPaths(homeId);
 
     // Log the action
     await logAuditAction(userId, "HOME_PUBLISHED", {
@@ -1089,7 +1093,7 @@ export async function approveHome(homeId: string, superAdminId: string) {
       return { success: false, error: "Solo superadmins pueden aprobar alojamientos" };
     }
 
-    const home = await prisma.home.update({
+    await prisma.home.update({
       where: { id: homeId },
       data: {
         publishStatus: "APPROVED",
@@ -1098,6 +1102,9 @@ export async function approveHome(homeId: string, superAdminId: string) {
         approvalRejectionReason: null,
       },
     });
+
+    await syncHomeVisibilityFlags(homeId);
+    revalidateHomeVisibilityPaths(homeId);
 
     // Log the action
     await logAuditAction(superAdminId, "HOME_APPROVED", { homeId });
@@ -1134,13 +1141,15 @@ export async function rejectHome(
       return { success: false, error: "Solo superadmins pueden rechazar alojamientos" };
     }
 
-    const home = await prisma.home.update({
+    await prisma.home.update({
       where: { id: homeId },
       data: {
         publishStatus: "REJECTED",
         approvalRejectionReason: reason,
       },
     });
+
+    revalidateHomeVisibilityPaths(homeId);
 
     // Log the action
     await logAuditAction(superAdminId, "HOME_REJECTED", {

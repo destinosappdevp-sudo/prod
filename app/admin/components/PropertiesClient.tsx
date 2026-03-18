@@ -7,6 +7,7 @@ import { Search, Home, CheckCircle, Clock, XCircle } from "lucide-react";
 import Link from "next/link";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
+import { normalizeCategoryNames } from "@/app/lib/property-categories";
 
 type PublishStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
 
@@ -37,7 +38,7 @@ interface Property {
   price: number | null;
   country: string | null;
   municipality: string | null;
-  categoryName: string | null;
+  categoryName: string[] | null;
   addedCategory: boolean;
   addedDescription: boolean;
   addedLocation: boolean;
@@ -84,12 +85,15 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
 
   const filtered = properties.filter((p) => {
     const q = search.toLowerCase();
+    const normalizedCategories = normalizeCategoryNames(p.categoryName).map((item) =>
+      item.toLowerCase()
+    );
     return (
       (p.title?.toLowerCase().includes(q) ?? false) ||
       (p.User?.email?.toLowerCase().includes(q) ?? false) ||
       (p.User?.firstName?.toLowerCase().includes(q) ?? false) ||
       (p.User?.lastName?.toLowerCase().includes(q) ?? false) ||
-      (p.categoryName?.toLowerCase().includes(q) ?? false)
+      normalizedCategories.some((item) => item.includes(q))
     );
   });
 
@@ -206,6 +210,14 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {paginated.map((property) => {
+                const normalizedCategories = normalizeCategoryNames(property.categoryName);
+                const categoryLabel =
+                  normalizedCategories.length > 0
+                    ? normalizedCategories.length > 1
+                      ? `${normalizedCategories[0]} +${normalizedCategories.length - 1}`
+                      : normalizedCategories[0]
+                    : "Sin categoría";
+
                 return (
                   <tr key={property.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
@@ -229,7 +241,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 text-xs font-medium bg-gray-100 rounded-full">
-                        {property.categoryName || "Sin categoría"}
+                        {categoryLabel}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">

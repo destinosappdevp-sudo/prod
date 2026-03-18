@@ -25,7 +25,7 @@ interface PendingHome {
   municipality: string | null;
   price: number;
   photo: string;
-  categoryName: string | null;
+  categoryName: string[] | null;
   publishStatus: string;
   User: {
     id: string;

@@ -32,10 +32,18 @@ import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { Button } from "@/components/ui/button";
 
 interface HostStats {
-  totalRevenue: number;
-  serviceFee: number;
-  pendingAmount: number;
-  availableAmount: number;
+  walletUsd: {
+    totalRevenue: number;
+    serviceFee: number;
+    pendingAmount: number;
+    availableAmount: number;
+  };
+  walletBs: {
+    totalRevenue: number;
+    serviceFee: number;
+    pendingAmount: number;
+    availableAmount: number;
+  };
   activeReservations: number;
   occupancy: number;
   rating: number | null;
@@ -51,6 +59,8 @@ interface HostReservationItem {
   dates: string;
   pax: string;
   amount: number;
+  amountCurrency: "USD" | "VES";
+  amountLabel: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   propertyName?: string;
 }
@@ -226,11 +236,12 @@ export default function HostDashboardClient({
 
   // ── Modal Retirar Fondos ──────────────────────────────────────────────────
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawCurrency, setWithdrawCurrency] = useState<"USD" | "VES">("USD");
   const [withdrawData, setWithdrawData] = useState<any>(null);
   const [withdrawDataLoading, setWithdrawDataLoading] = useState(false);
   const [withdrawForm, setWithdrawForm] = useState({
     amount: "",
-    paymentMethod: "PAGO_MOVIL",
+    paymentMethod: "ZELLE",
     holderName: "",
     bankName: "",
     phoneNumber: "",
@@ -246,11 +257,32 @@ export default function HostDashboardClient({
       const json = await res.json();
       if (res.ok) {
         setWithdrawData(json);
-        setWithdrawForm((p) => ({ ...p, amount: json.availableToWithdraw.toFixed(2) }));
+        const available = Number(json?.wallets?.[withdrawCurrency]?.availableToWithdraw ?? 0);
+        setWithdrawForm((p) => ({ ...p, amount: available.toFixed(2) }));
       }
     } catch {}
     setWithdrawDataLoading(false);
-  }, []);
+  }, [withdrawCurrency]);
+
+  useEffect(() => {
+    if (!withdrawData?.wallets) {
+      return;
+    }
+
+    const available = Number(withdrawData.wallets?.[withdrawCurrency]?.availableToWithdraw ?? 0);
+    setWithdrawForm((p) => ({
+      ...p,
+      amount: available.toFixed(2),
+      paymentMethod:
+        withdrawCurrency === "VES"
+          ? p.paymentMethod === "PAGO_MOVIL" || p.paymentMethod === "TRANSFERENCIA"
+            ? p.paymentMethod
+            : "PAGO_MOVIL"
+          : p.paymentMethod === "ZELLE" || p.paymentMethod === "TRANSFERENCIA"
+          ? p.paymentMethod
+          : "ZELLE",
+    }));
+  }, [withdrawCurrency, withdrawData]);
 
   useEffect(() => {
     if (showWithdrawModal && !withdrawData) {
@@ -272,6 +304,7 @@ export default function HostDashboardClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: parseFloat(withdrawForm.amount),
+          currency: withdrawCurrency,
           paymentMethod: withdrawForm.paymentMethod,
           paymentDetails,
         }),
@@ -293,33 +326,33 @@ export default function HostDashboardClient({
   const statCards = useMemo(
     () => [
       {
-        label: "Ingresos Totales",
-        value: `$${stats.totalRevenue.toFixed(2)}`,
-        note: "Bruto del mes",
+        label: "Ingresos Totales (USD)",
+        value: `$${stats.walletUsd.totalRevenue.toFixed(2)}`,
+        note: `Comisión: $${stats.walletUsd.serviceFee.toFixed(2)}`,
         icon: DollarSign,
         color: "text-emerald-600",
         bg: "bg-emerald-50",
       },
       {
-        label: "Comision ZERKKA",
-        value: `-$${stats.serviceFee.toFixed(2)}`,
-        note: "Tarifa de servicio",
+        label: "Disponible (USD)",
+        value: `$${stats.walletUsd.availableAmount.toFixed(2)}`,
+        note: `Pendiente: $${stats.walletUsd.pendingAmount.toFixed(2)}`,
         icon: PieChart,
         color: "text-orange-600",
         bg: "bg-orange-50",
       },
       {
-        label: "Pendiente",
-        value: `$${stats.pendingAmount.toFixed(2)}`,
-        note: "Reservas futuras",
+        label: "Ingresos Totales (Bs)",
+        value: `Bs ${stats.walletBs.totalRevenue.toFixed(2)}`,
+        note: `Comisión: Bs ${stats.walletBs.serviceFee.toFixed(2)}`,
         icon: CalendarDays,
-        color: "text-yellow-600",
-        bg: "bg-yellow-50",
+        color: "text-blue-600",
+        bg: "bg-blue-50",
       },
       {
-        label: "Disponible",
-        value: `$${stats.availableAmount.toFixed(2)}`,
-        note: "Retirar fondos",
+        label: "Disponible (Bs)",
+        value: `Bs ${stats.walletBs.availableAmount.toFixed(2)}`,
+        note: `Pendiente: Bs ${stats.walletBs.pendingAmount.toFixed(2)}`,
         icon: DollarSign,
         color: "text-green-600",
         bg: "bg-green-50",
@@ -358,6 +391,21 @@ export default function HostDashboardClient({
       color: "text-red-600",
     },
   ];
+
+  const selectedWithdrawWallet =
+    withdrawData?.wallets?.[withdrawCurrency] ?? {
+      totalEarned: 0,
+      totalWithdrawn: 0,
+      availableToWithdraw: 0,
+      pendingRelease: 0,
+    };
+
+  const withdrawCurrencyLabel = withdrawCurrency === "USD" ? "USD" : "Bs";
+  const withdrawCurrencyPrefix = withdrawCurrency === "USD" ? "$" : "Bs ";
+  const allowedWithdrawMethods =
+    withdrawCurrency === "VES"
+      ? (["PAGO_MOVIL", "TRANSFERENCIA"] as const)
+      : (["ZELLE", "TRANSFERENCIA"] as const);
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -560,14 +608,18 @@ export default function HostDashboardClient({
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowWithdrawModal(true); setWithdrawMsg(null); }}
+                  onClick={() => {
+                    setWithdrawCurrency("USD");
+                    setShowWithdrawModal(true);
+                    setWithdrawMsg(null);
+                  }}
                   className="flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 text-sm font-medium transition"
                 >
                   <Wallet size={16} />
                   Retirar Fondos
-                  {stats.availableAmount > 0 && (
+                  {(stats.walletUsd.availableAmount > 0 || stats.walletBs.availableAmount > 0) && (
                     <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs">
-                      ${stats.availableAmount.toFixed(0)}
+                      USD ${stats.walletUsd.availableAmount.toFixed(0)} · Bs {stats.walletBs.availableAmount.toFixed(0)}
                     </span>
                   )}
                 </button>
@@ -722,22 +774,62 @@ export default function HostDashboardClient({
                     ) : withdrawData ? (
                       <>
                         {/* Balance cards */}
-                        <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
-                          <div className="p-5 text-center border-r border-slate-100">
-                            <p className="text-xs text-slate-500 mb-1">Ganado (neto)</p>
-                            <p className="text-xl font-bold text-slate-900">${withdrawData.netEarned.toFixed(2)}</p>
+                        <div className="border-b border-slate-100">
+                          <div className="grid grid-cols-2 gap-0 border-b border-slate-100">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setWithdrawCurrency("USD");
+                                setWithdrawMsg(null);
+                              }}
+                              className={`p-5 text-left transition ${
+                                withdrawCurrency === "USD" ? "bg-slate-50" : "bg-white hover:bg-slate-50"
+                              }`}
+                            >
+                              <p className="text-xs text-slate-500 mb-1">Disponible USD</p>
+                              <p className="text-2xl font-bold text-emerald-600">
+                                ${Number(withdrawData.wallets?.USD?.availableToWithdraw ?? 0).toFixed(2)}
+                              </p>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setWithdrawCurrency("VES");
+                                setWithdrawMsg(null);
+                              }}
+                              className={`p-5 text-left border-l border-slate-100 transition ${
+                                withdrawCurrency === "VES" ? "bg-slate-50" : "bg-white hover:bg-slate-50"
+                              }`}
+                            >
+                              <p className="text-xs text-slate-500 mb-1">Disponible Bs</p>
+                              <p className="text-2xl font-bold text-blue-600">
+                                Bs {Number(withdrawData.wallets?.VES?.availableToWithdraw ?? 0).toFixed(2)}
+                              </p>
+                            </button>
                           </div>
-                          <div className="p-5 text-center border-r border-slate-100">
-                            <p className="text-xs text-slate-500 mb-1">Ya retirado</p>
-                            <p className="text-xl font-bold text-orange-600">${withdrawData.totalWithdrawn.toFixed(2)}</p>
-                          </div>
-                          <div className="p-5 text-center">
-                            <p className="text-xs text-slate-500 mb-1">Disponible</p>
-                            <p className="text-2xl font-bold text-green-600">${withdrawData.availableToWithdraw.toFixed(2)}</p>
+                          <div className="grid grid-cols-3 gap-0">
+                            <div className="p-4 text-center border-r border-slate-100">
+                              <p className="text-xs text-slate-500 mb-1">Ganado ({withdrawCurrencyLabel})</p>
+                              <p className="text-lg font-bold text-slate-900">
+                                {withdrawCurrencyPrefix}{(selectedWithdrawWallet.totalEarned ?? 0).toFixed(2)}
+                              </p>
+                            </div>
+                            <div className="p-4 text-center border-r border-slate-100">
+                              <p className="text-xs text-slate-500 mb-1">Retirado ({withdrawCurrencyLabel})</p>
+                              <p className="text-lg font-bold text-orange-600">
+                                {withdrawCurrencyPrefix}{(selectedWithdrawWallet.totalWithdrawn ?? 0).toFixed(2)}
+                              </p>
+                            </div>
+                            <div className="p-4 text-center">
+                              <p className="text-xs text-slate-500 mb-1">Pendiente ({withdrawCurrencyLabel})</p>
+                              <p className="text-lg font-bold text-slate-600">
+                                {withdrawCurrencyPrefix}{(selectedWithdrawWallet.pendingRelease ?? 0).toFixed(2)}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
-                        {withdrawData.availableToWithdraw <= 0 ? (
+                        {selectedWithdrawWallet.availableToWithdraw <= 0 ? (
                           <div className="px-6 py-8 text-center">
                             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                               <Clock size={24} className="text-slate-400" />
@@ -751,29 +843,33 @@ export default function HostDashboardClient({
                           <div className="px-6 py-5 space-y-4">
                             {/* Monto */}
                             <div>
-                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Monto a retirar ($)</label>
+                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                                Monto a retirar ({withdrawCurrencyLabel})
+                              </label>
                               <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">$</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">
+                                  {withdrawCurrency === "USD" ? "$" : "Bs"}
+                                </span>
                                 <input
                                   type="number"
-                                  min="1"
+                                  min="0.01"
                                   step="0.01"
-                                  max={withdrawData.availableToWithdraw}
+                                  max={selectedWithdrawWallet.availableToWithdraw}
                                   value={withdrawForm.amount}
                                   onChange={(e) => setWithdrawForm((p) => ({ ...p, amount: e.target.value }))}
-                                  className="w-full rounded-xl border border-slate-200 pl-7 pr-4 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
+                                  className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
                                 />
                               </div>
                               <p className="text-xs text-slate-400 mt-1">
-                                Máximo disponible: <strong>${withdrawData.availableToWithdraw.toFixed(2)}</strong>
+                                Máximo disponible: <strong>{withdrawCurrencyPrefix}{(selectedWithdrawWallet.availableToWithdraw ?? 0).toFixed(2)}</strong>
                               </p>
                             </div>
 
                             {/* Método de pago */}
                             <div>
                               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Método de cobro</label>
-                              <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                                {(["PAGO_MOVIL", "ZELLE", "TRANSFERENCIA"] as const).map((m) => (
+                              <div className="grid grid-cols-2 gap-2 text-center text-sm">
+                                {allowedWithdrawMethods.map((m) => (
                                   <button
                                     key={m}
                                     type="button"
@@ -784,10 +880,19 @@ export default function HostDashboardClient({
                                         : "border-slate-200 text-slate-600 hover:bg-slate-50"
                                     }`}
                                   >
-                                    {m === "PAGO_MOVIL" ? "📱 Pago Móvil" : m === "ZELLE" ? "💵 Zelle" : "🏦 Transferencia"}
+                                    {m === "PAGO_MOVIL"
+                                      ? "Pago Móvil"
+                                      : m === "ZELLE"
+                                      ? "Zelle"
+                                      : "Transferencia"}
                                   </button>
                                 ))}
                               </div>
+                              <p className="text-xs text-slate-400 mt-1">
+                                {withdrawCurrency === "USD"
+                                  ? "Para USD puedes retirar por Zelle o Transferencia."
+                                  : "Para Bs puedes retirar por Pago Móvil o Transferencia."}
+                              </p>
                             </div>
 
                             {/* Detalles del pago */}
@@ -859,7 +964,12 @@ export default function HostDashboardClient({
                             >
                               {withdrawLoading
                                 ? <><Loader2 size={16} className="animate-spin mr-2" />Enviando…</>
-                                : <><ArrowDownToLine size={16} className="mr-2" />Solicitar retiro de ${withdrawForm.amount || "0"}</>}
+                                : (
+                                  <>
+                                    <ArrowDownToLine size={16} className="mr-2" />
+                                    {`Solicitar retiro de ${withdrawCurrencyPrefix}${withdrawForm.amount || "0"}`}
+                                  </>
+                                )}
                             </Button>
                           </div>
                         )}
@@ -877,12 +987,16 @@ export default function HostDashboardClient({
                                   REJECTED:   { label: "Rechazado",   icon: <XCircle size={14} />,        cls: "bg-red-50 text-red-700" },
                                 };
                                 const cfg = statusCfg[w.status] ?? statusCfg.PENDING;
+                                const withdrawalCurrency = w.currency === "VES" ? "VES" : "USD";
+                                const withdrawalPrefix = withdrawalCurrency === "USD" ? "$" : "Bs ";
                                 return (
                                   <div key={w.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
                                     <div>
-                                      <p className="text-sm font-semibold text-slate-800">${Number(w.amount).toFixed(2)}</p>
+                                      <p className="text-sm font-semibold text-slate-800">
+                                        {withdrawalPrefix}{Number(w.amount).toFixed(2)}
+                                      </p>
                                       <p className="text-xs text-slate-500">
-                                        {w.paymentMethod?.replace(/_/g, " ")} · {new Date(w.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                        {w.paymentMethod?.replace(/_/g, " ")} ({withdrawalCurrency}) · {new Date(w.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
                                       </p>
                                       {w.adminNotes && <p className="text-xs text-slate-500 mt-0.5 italic">{w.adminNotes}</p>}
                                     </div>
@@ -1020,7 +1134,7 @@ export default function HostDashboardClient({
                         <td className="px-6 py-4 text-slate-700">{reservation.dates}</td>
                         <td className="px-6 py-4">
                           <div className="text-slate-900 font-medium">{reservation.pax}</div>
-                          <div className="text-xs text-slate-500">${reservation.amount.toFixed(2)}</div>
+                          <div className="text-xs text-slate-500">{reservation.amountLabel}</div>
                         </td>
                         <td className="px-6 py-4">
                           <span

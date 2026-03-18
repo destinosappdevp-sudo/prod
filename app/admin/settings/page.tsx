@@ -2,8 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Bell, Shield, Database, Globe, Palette, Wrench, Landmark } from "lucide-react";
 import { useEffect, useState } from "react";
-
-const RATE_DECIMALS = 8;
+import { formatBcvRateInput } from "@/app/lib/bcv-rate-format";
 
 type RateHistoryItem = {
   fecha: string | null;
@@ -11,25 +10,7 @@ type RateHistoryItem = {
 };
 
 function formatRateForInput(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value.toFixed(RATE_DECIMALS).replace(".", ",");
-  }
-
-  if (value && typeof value === "object" && "toString" in value) {
-    const raw = (value as { toString: () => string }).toString();
-    const parsed = Number(raw);
-    if (Number.isFinite(parsed)) {
-      return parsed.toFixed(RATE_DECIMALS).replace(".", ",");
-    }
-
-    return raw.replace(".", ",");
-  }
-
-  return "";
+  return formatBcvRateInput(value);
 }
 
 function formatHistoryDate(value: string | null): string {

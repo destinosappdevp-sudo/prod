@@ -5,6 +5,10 @@ import prisma from "@/app/lib/db";
 import HostDashboardClient from "@/app/components/HostDashboardClient";
 import GuestDashboardClient from "@/app/components/DashboardClient_min";
 import { createAirbnbHome } from "@/app/action";
+import {
+  formatCurrencyAmount,
+  parsePaymentFinancials,
+} from "@/app/lib/payment-currency";
 
 type HostPublishStatus =
   | "DRAFT"
@@ -58,9 +62,9 @@ async function getHostDashboardData(userId: string) {
     totalProperties,
     activeReservations,
     pendingReservations,
-    confirmedRevenueAgg,
-    pendingRevenueAgg,
-    serviceFeeAgg,
+    confirmedPayments,
+    pendingPayments,
+    releasableConfirmedPayments,
     ratingAgg,
   ] = await Promise.all([
     prismaAny.home.findMany({
@@ -95,7 +99,15 @@ async function getHostDashboardData(userId: string) {
         totalAmount: true,
         User: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } },
         Home: { select: { guests: true } },
-        Payment: { select: { amount: true } },
+        Payment: {
+          select: {
+            amount: true,
+            subtotal: true,
+            serviceFee: true,
+            paymentMethod: true,
+            paymentDetails: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 6,
@@ -114,26 +126,47 @@ async function getHostDashboardData(userId: string) {
         status: "PENDING",
       },
     }),
-    prismaAny.payment.aggregate({
+    prismaAny.payment.findMany({
       where: {
         status: "CONFIRMED",
         Reservation: { Home: { userId } },
       },
-      _sum: { amount: true },
+      select: {
+        amount: true,
+        subtotal: true,
+        serviceFee: true,
+        paymentMethod: true,
+        paymentDetails: true,
+      },
     }),
-    prismaAny.payment.aggregate({
+    prismaAny.payment.findMany({
       where: {
         status: "PENDING",
         Reservation: { Home: { userId } },
       },
-      _sum: { amount: true },
+      select: {
+        amount: true,
+        subtotal: true,
+        serviceFee: true,
+        paymentMethod: true,
+        paymentDetails: true,
+      },
     }),
-    prismaAny.payment.aggregate({
+    prismaAny.payment.findMany({
       where: {
         status: "CONFIRMED",
-        Reservation: { Home: { userId } },
+        Reservation: {
+          Home: { userId },
+          endDate: { lt: new Date() },
+        },
       },
-      _sum: { serviceFee: true },
+      select: {
+        amount: true,
+        subtotal: true,
+        serviceFee: true,
+        paymentMethod: true,
+        paymentDetails: true,
+      },
     }),
     prismaAny.review.aggregate({
       where: {
@@ -147,6 +180,62 @@ async function getHostDashboardData(userId: string) {
   const occupancy = totalProperties > 0
     ? Math.round((activeReservations / totalProperties) * 100)
     : 0;
+
+  const walletStats = {
+    USD: {
+      totalRevenue: 0,
+      serviceFee: 0,
+      pendingAmount: 0,
+      availableAmount: 0,
+    },
+    VES: {
+      totalRevenue: 0,
+      serviceFee: 0,
+      pendingAmount: 0,
+      availableAmount: 0,
+    },
+  } as const;
+
+  const mutableWalletStats: Record<"USD" | "VES", {
+    totalRevenue: number;
+    serviceFee: number;
+    pendingAmount: number;
+    availableAmount: number;
+  }> = {
+    USD: { ...walletStats.USD },
+    VES: { ...walletStats.VES },
+  };
+
+  for (const payment of confirmedPayments as Array<any>) {
+    const parsed = parsePaymentFinancials(payment);
+    mutableWalletStats[parsed.currency].totalRevenue += parsed.amount;
+    mutableWalletStats[parsed.currency].serviceFee += parsed.serviceFee;
+  }
+
+  for (const payment of pendingPayments as Array<any>) {
+    const parsed = parsePaymentFinancials(payment);
+    mutableWalletStats[parsed.currency].pendingAmount += parsed.amount;
+  }
+
+  for (const payment of releasableConfirmedPayments as Array<any>) {
+    const parsed = parsePaymentFinancials(payment);
+    mutableWalletStats[parsed.currency].availableAmount += parsed.amount - parsed.serviceFee;
+  }
+
+  for (const currency of ["USD", "VES"] as const) {
+    mutableWalletStats[currency].totalRevenue = Number(
+      mutableWalletStats[currency].totalRevenue.toFixed(2)
+    );
+    mutableWalletStats[currency].serviceFee = Number(
+      mutableWalletStats[currency].serviceFee.toFixed(2)
+    );
+    mutableWalletStats[currency].pendingAmount = Number(
+      mutableWalletStats[currency].pendingAmount.toFixed(2)
+    );
+    mutableWalletStats[currency].availableAmount = Number(
+      Math.max(0, mutableWalletStats[currency].availableAmount).toFixed(2)
+    );
+  }
 
   const recentReservations = reservations.map((reservation: any) => {
     const guestName = reservation.User
@@ -162,6 +251,13 @@ async function getHostDashboardData(userId: string) {
     
     // Crear ID de reserva formateado
     const reservationId = `ZRK-${new Date(reservation.createdAt).getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, "0")}`;
+
+    const parsedPayment = reservation.Payment
+      ? parsePaymentFinancials(reservation.Payment)
+      : null;
+
+    const amountCurrency = parsedPayment?.currency ?? "USD";
+    const amountValue = parsedPayment?.amount ?? reservation.totalAmount ?? 0;
     
     return {
       id: reservation.id,
@@ -170,7 +266,9 @@ async function getHostDashboardData(userId: string) {
       guestPhone: reservation.User?.phoneNumber,
       dates,
       pax: `${reservation.Home?.guests || 1} huésped${parseInt(reservation.Home?.guests || "1") > 1 ? "es" : ""}`,
-      amount: reservation.Payment?.amount || reservation.totalAmount || 0,
+      amount: amountValue,
+      amountCurrency,
+      amountLabel: formatCurrencyAmount(amountValue, amountCurrency),
       status: reservation.status,
     };
   });
@@ -190,10 +288,8 @@ async function getHostDashboardData(userId: string) {
     })),
     reservations: recentReservations,
     stats: {
-      totalRevenue: confirmedRevenueAgg._sum.amount || 0,
-      serviceFee: serviceFeeAgg._sum.serviceFee || 0,
-      pendingAmount: pendingRevenueAgg._sum.amount || 0,
-      availableAmount: (confirmedRevenueAgg._sum.amount || 0) - (serviceFeeAgg._sum.serviceFee || 0), // El anfitrión recibe el total menos la comisión
+      walletUsd: mutableWalletStats.USD,
+      walletBs: mutableWalletStats.VES,
       activeReservations,
       occupancy,
       rating: ratingAgg._avg.rating || null,

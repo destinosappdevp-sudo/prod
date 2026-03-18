@@ -27,6 +27,8 @@ interface CheckoutFormProps {
   nights: number;
   subtotal: number;
   total: number;
+  bcvRate: number;
+  totalBs: number;
 }
 
 export default function CheckoutForm({
@@ -38,6 +40,8 @@ export default function CheckoutForm({
   nights,
   subtotal,
   total,
+  bcvRate,
+  totalBs,
 }: CheckoutFormProps) {
   const router = useRouter();
   const [selectedMethod] = useState<PaymentMethod>("PAGO_MOVIL");
@@ -49,12 +53,20 @@ export default function CheckoutForm({
     referenceNumber: "",
   });
 
+  const hasValidBcvRate = Number.isFinite(bcvRate) && bcvRate > 0;
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!hasValidBcvRate) {
+      alert("No hay tasa BCV válida configurada para procesar este pago.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch("/api/checkout", {
@@ -70,6 +82,8 @@ export default function CheckoutForm({
           subtotal,
           serviceFee: 0,
           totalAmount: subtotal,
+          totalAmountBs: totalBs,
+          bcvRateUsed: bcvRate,
           paymentMethod: selectedMethod,
           paymentDetails: formData,
         }),
@@ -115,6 +129,8 @@ export default function CheckoutForm({
                 <p><span className="font-medium">Banco:</span> 0102 - Banco de Venezuela</p>
                 <p><span className="font-medium">Telefono:</span> 0414-1234567</p>
                 <p><span className="font-medium">Cedula:</span> V-12345678</p>
+                <p><span className="font-medium">Monto a pagar:</span> {hasValidBcvRate ? `Bs ${totalBs.toFixed(2)}` : "No disponible"}</p>
+                <p><span className="font-medium">Tasa BCV:</span> {hasValidBcvRate ? `Bs ${bcvRate.toFixed(6)} por USD` : "No disponible"}</p>
               </div>
             </div>
 
@@ -164,9 +180,15 @@ export default function CheckoutForm({
           </div>
         </div>
 
-        <Button type="submit" className="w-full mt-6" disabled={loading}>
+        <Button type="submit" className="w-full mt-6" disabled={loading || !hasValidBcvRate}>
           {loading ? "Procesando..." : "Confirmar y pagar"}
         </Button>
+
+        {!hasValidBcvRate && (
+          <p className="text-xs text-red-500 mt-3">
+            No se puede procesar el pago porque falta la tasa BCV del día.
+          </p>
+        )}
       </Card>
     </form>
   );

@@ -1,6 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import { currencyForPaymentMethod } from "@/app/lib/payment-currency";
 
 export async function POST(request: Request) {
   try {
@@ -105,23 +106,50 @@ export async function POST(request: Request) {
       );
     }
 
-    // Obtener el porcentaje de comisión actual
+    // Obtener configuración actual de comisión y tasa BCV
     let commissionPercent = 10;
+    let bcvRate = 0;
+    let bcvRateDate: Date | null = null;
     try {
       const config = await (prisma as any).platformConfig.findFirst({
-        select: { commissionPercent: true },
+        select: {
+          commissionPercent: true,
+          bcvRate: true,
+          bcvRateDate: true,
+        },
       });
+
       commissionPercent =
         typeof config?.commissionPercent === "number"
           ? config.commissionPercent
           : 10;
+
+      bcvRate = config?.bcvRate ? Number(config.bcvRate) : 0;
+      bcvRateDate = config?.bcvRateDate ? new Date(config.bcvRateDate) : null;
     } catch (configError) {
       console.warn("No se pudo leer PlatformConfig en checkout:", configError);
     }
 
-    const subtotal = home.price * calculatedNights * guests;
-    const serviceFee = subtotal * (commissionPercent / 100);
-    const totalAmount = subtotal; // El huésped paga solo el subtotal
+    const paymentCurrency = currencyForPaymentMethod(paymentMethod);
+
+    if (paymentCurrency === "VES" && (!Number.isFinite(bcvRate) || bcvRate <= 0)) {
+      return NextResponse.json(
+        { error: "No hay tasa BCV del día configurada para procesar el pago" },
+        { status: 400 }
+      );
+    }
+
+    const subtotalUsd = home.price * calculatedNights * guests;
+    const serviceFeeUsd = subtotalUsd * (commissionPercent / 100);
+    const totalAmountUsd = subtotalUsd; // El huésped paga solo el subtotal
+
+    const subtotalBs = Number((subtotalUsd * bcvRate).toFixed(2));
+    const serviceFeeBs = Number((serviceFeeUsd * bcvRate).toFixed(2));
+    const totalAmountBs = Number((totalAmountUsd * bcvRate).toFixed(2));
+
+    const paymentSubtotal = paymentCurrency === "VES" ? subtotalBs : subtotalUsd;
+    const paymentServiceFee = paymentCurrency === "VES" ? serviceFeeBs : serviceFeeUsd;
+    const paymentAmount = paymentCurrency === "VES" ? totalAmountBs : totalAmountUsd;
 
     // Verificar disponibilidad (reservas activas + fechas bloqueadas por el host)
     const [conflictingReservationsCount, conflictingBlockedCount] = await Promise.all([
@@ -149,7 +177,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const paymentDetails = paymentDetailsRaw as Record<string, any>;
+    const paymentDetailsInput = paymentDetailsRaw as Record<string, any>;
+    const paymentDetails = {
+      ...paymentDetailsInput,
+      currency: paymentCurrency,
+      amountUsd: Number(totalAmountUsd.toFixed(2)),
+      amountBs: totalAmountBs,
+      subtotalUsd: Number(subtotalUsd.toFixed(2)),
+      subtotalBs,
+      serviceFeeUsd: Number(serviceFeeUsd.toFixed(2)),
+      serviceFeeBs,
+      bcvRateUsed: Number(bcvRate.toFixed(8)),
+      bcvRateDate: bcvRateDate ? bcvRateDate.toISOString() : null,
+      paymentDate: new Date().toISOString(),
+    };
 
     // Crear la reserva y el pago en una transacción
     const result = await prisma.$transaction(async (tx: any) => {
@@ -161,7 +202,7 @@ export async function POST(request: Request) {
           startDate: start,
           endDate: end,
           nights: calculatedNights,
-          totalAmount,
+          totalAmount: totalAmountUsd,
           status: "PENDING",
         },
       });
@@ -170,9 +211,9 @@ export async function POST(request: Request) {
       const payment = await tx.payment.create({
         data: {
           reservationId: reservation.id,
-          amount: totalAmount,
-          subtotal,
-          serviceFee,
+          amount: paymentAmount,
+          subtotal: paymentSubtotal,
+          serviceFee: paymentServiceFee,
           paymentMethod,
           status: "PENDING",
           bankName: paymentDetails.emisorBank || null,
@@ -191,6 +232,10 @@ export async function POST(request: Request) {
       success: true,
       reservationId: result.reservation.id,
       paymentId: result.payment.id,
+      totalAmountBs,
+      totalAmountUsd: Number(totalAmountUsd.toFixed(2)),
+      paymentCurrency,
+      bcvRateUsed: Number(bcvRate.toFixed(8)),
     });
   } catch (error) {
     console.error("Error en checkout:", error);

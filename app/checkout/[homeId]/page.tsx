@@ -7,6 +7,20 @@ import { SupabaseImage } from "@/app/components/SupabaseImage";
 import Link from "next/link";
 import { getPrimaryCategoryName } from "@/app/lib/property-categories";
 
+function formatBsAmount(value: number) {
+  return new Intl.NumberFormat("es-VE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatBcvRate(value: number) {
+  return new Intl.NumberFormat("es-VE", {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 8,
+  }).format(value);
+}
+
 async function getHomeData(homeId: string) {
   noStore();
   const home = await (prisma as any).home.findUnique({
@@ -19,7 +33,6 @@ async function getHomeData(homeId: string) {
       country: true,
       municipality: true,
       categoryName: true,
-      categoryNames: true,
       Review: {
         select: {
           rating: true,
@@ -84,18 +97,28 @@ export default async function CheckoutPage({
   const guestsCount = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 1;
   // El guest paga el precio base + comisión, el host recibe el monto completo
   const subtotal = home.price * nights * guestsCount;
-  const serviceFee = subtotal * 0.1; // 10% de tarifa de servicio
   const total = subtotal; // El guest solo paga el subtotal
+
+  const platformConfig = await (prisma as any).platformConfig.findFirst({
+    select: {
+      bcvRate: true,
+      bcvRateDate: true,
+    },
+  });
+
+  const bcvRate = platformConfig?.bcvRate ? Number(platformConfig.bcvRate) : 0;
+  const hasValidBcvRate = Number.isFinite(bcvRate) && bcvRate > 0;
+  const totalBs = hasValidBcvRate ? Number((total * bcvRate).toFixed(2)) : 0;
+  const bcvRateDateLabel = platformConfig?.bcvRateDate
+    ? new Date(platformConfig.bcvRateDate).toLocaleDateString("es-VE")
+    : null;
 
   // Calcular rating promedio
   const reviews = home.Review || [];
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
-  const primaryCategory = getPrimaryCategoryName(
-    (home as any).categoryNames as string[] | null | undefined,
-    home.categoryName
-  );
+  const primaryCategory = getPrimaryCategoryName(home.categoryName);
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-2xl">
@@ -195,6 +218,19 @@ export default async function CheckoutPage({
                     ${total.toFixed(2)}
                   </span>
                 </div>
+
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-lg font-bold">Total a pagar (Bs)</span>
+                  <span className="text-lg font-bold text-blue-600">
+                    {hasValidBcvRate ? `Bs ${formatBsAmount(totalBs)}` : "No disponible"}
+                  </span>
+                </div>
+
+                <p className="text-xs text-gray-500 mt-2">
+                  {hasValidBcvRate
+                    ? `Tasa BCV del día: Bs ${formatBcvRate(bcvRate)} por USD${bcvRateDateLabel ? ` (${bcvRateDateLabel})` : ""}`
+                    : "No hay tasa BCV configurada para calcular el total en bolívares."}
+                </p>
               </div>
             </div>
           </div>
@@ -210,6 +246,8 @@ export default async function CheckoutPage({
           nights={nights}
           subtotal={subtotal}
           total={total}
+          bcvRate={bcvRate}
+          totalBs={totalBs}
         />
       </div>
     </div>

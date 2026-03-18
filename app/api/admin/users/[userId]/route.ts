@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { createAdminClient } from "@/app/lib/supabase/admin";
+import {
+  revalidateHomeVisibilityPaths,
+  syncHomeVisibilityFlags,
+} from "@/app/lib/home-visibility";
 
 export const dynamic = "force-dynamic";
 
@@ -117,6 +121,16 @@ export async function PATCH(
     );
     
     if (hostApproved) {
+      const homesToApprove = await prisma.home.findMany({
+        where: {
+          userId: params.userId,
+          publishStatus: {
+            not: "APPROVED"
+          }
+        },
+        select: { id: true },
+      });
+
       await prisma.home.updateMany({
         where: {
           userId: params.userId,
@@ -130,6 +144,11 @@ export async function PATCH(
           approvedAt: new Date(),
         },
       });
+
+      for (const home of homesToApprove) {
+        await syncHomeVisibilityFlags(home.id);
+        revalidateHomeVisibilityPaths(home.id);
+      }
     }
 
     return NextResponse.json(updatedUser);

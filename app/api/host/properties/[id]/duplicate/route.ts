@@ -43,9 +43,7 @@ export async function POST(
         photo: true,
         price: true,
         categoryName: true,
-        categoryNames: true,
         propertyTypeId: true,
-        propertyTypeIds: true,
       },
     });
 
@@ -81,10 +79,9 @@ export async function POST(
           photo: sourceHome.photo,
           price: sourceHome.price,
           categoryName: sourceHome.categoryName,
-          categoryNames: sourceHome.categoryNames,
           propertyTypeId: sourceHome.propertyTypeId,
-          propertyTypeIds: sourceHome.propertyTypeIds,
-          addedCategory: !!sourceHome.categoryName,
+          addedCategory:
+            Array.isArray(sourceHome.categoryName) && sourceHome.categoryName.length > 0,
           addedDescription: !!(sourceHome.title && sourceHome.description),
           addedLocation: !!(sourceHome.country && sourceHome.municipality),
           addedAmenities: sourceAmenities.length > 0,

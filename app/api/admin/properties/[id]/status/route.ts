@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import {
+  revalidateHomeVisibilityPaths,
+  syncHomeVisibilityFlags,
+} from "@/app/lib/home-visibility";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +67,9 @@ export async function PATCH(
         approvedById: true,
       },
     });
+
+    await syncHomeVisibilityFlags(params.id);
+    revalidateHomeVisibilityPaths(params.id);
 
     return NextResponse.json(updated);
   } catch (error) {

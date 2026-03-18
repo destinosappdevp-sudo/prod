@@ -44,6 +44,36 @@ function resolveImageSrc(imagePath?: string | null) {
     : `/${trimmedPath.replace(/^\/+/, "")}`;
 }
 
+function parseNumberFromUnknown(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function parseDateFromUnknown(value: unknown): Date | null {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  return null;
+}
+
+function formatCurrencyValue(amount: number, currency: "USD" | "VES"): string {
+  return currency === "USD" ? `$${amount.toFixed(2)}` : `Bs ${amount.toFixed(2)}`;
+}
+
 export default async function ReservationDetailPage({
   params,
 }: {
@@ -123,6 +153,24 @@ export default async function ReservationDetailPage({
     const contactUser = isHost ? guestUser : hostUser;
     const userImageSrc = resolveImageSrc(contactUser?.profileImage);
     const showServiceFee = isHost;
+    const paymentDetails =
+      reservation.Payment?.paymentDetails &&
+      typeof reservation.Payment.paymentDetails === "object"
+        ? (reservation.Payment.paymentDetails as Record<string, unknown>)
+        : null;
+    const paymentCurrency =
+      paymentDetails?.paymentCurrency === "VES" ? "VES" : "USD";
+    const paymentSubtotalUsd = parseNumberFromUnknown(paymentDetails?.subtotalUsd);
+    const paymentSubtotalBs = parseNumberFromUnknown(paymentDetails?.subtotalBs);
+    const paymentServiceFeeUsd = parseNumberFromUnknown(paymentDetails?.serviceFeeUsd);
+    const paymentServiceFeeBs = parseNumberFromUnknown(paymentDetails?.serviceFeeBs);
+    const paymentAmountUsd = parseNumberFromUnknown(paymentDetails?.amountUsd);
+    const paymentAmountBs = parseNumberFromUnknown(paymentDetails?.amountBs);
+    const paymentBcvRate = parseNumberFromUnknown(paymentDetails?.bcvRateUsed);
+    const paymentDate =
+      parseDateFromUnknown(paymentDetails?.paymentDate) ??
+      parseDateFromUnknown(reservation.Payment?.confirmedAt) ??
+      parseDateFromUnknown(reservation.Payment?.createdAt);
 
     // Format dates
     const startDate = new Date(reservation.startDate);
@@ -246,24 +294,77 @@ export default async function ReservationDetailPage({
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Subtotal</p>
                       <p className="font-semibold">
-                        ${reservation.Payment.subtotal.toFixed(2)}
+                        {formatCurrencyValue(
+                          (paymentCurrency === "USD" ? paymentSubtotalUsd : paymentSubtotalBs) ??
+                            reservation.Payment.subtotal,
+                          paymentCurrency
+                        )}
                       </p>
                     </div>
                     {showServiceFee && (
                       <div>
                         <p className="text-sm text-slate-500 mb-1">Tarifa Servicio (descontada al anfitrión)</p>
                         <p className="font-semibold">
-                          -${reservation.Payment.serviceFee.toFixed(2)}
+                          -
+                          {formatCurrencyValue(
+                            (paymentCurrency === "USD" ? paymentServiceFeeUsd : paymentServiceFeeBs) ??
+                              reservation.Payment.serviceFee,
+                            paymentCurrency
+                          )}
                         </p>
                       </div>
                     )}
                     <div className="border-t-2 pt-4 md:border-t-0 md:border-l-2 md:pt-0 md:pl-4">
                       <p className="text-sm text-slate-500 mb-1">Total</p>
                       <p className="font-bold text-lg text-orange-600">
-                        ${reservation.Payment.amount.toFixed(2)}
+                        {formatCurrencyValue(
+                          (paymentCurrency === "USD" ? paymentAmountUsd : paymentAmountBs) ??
+                            reservation.Payment.amount,
+                          paymentCurrency
+                        )}
                       </p>
+                      {paymentCurrency === "USD" && paymentAmountBs !== null && (
+                        <p className="text-xs text-slate-500 mt-1">Equivalente en Bs: Bs {paymentAmountBs.toFixed(2)}</p>
+                      )}
+                      {paymentCurrency === "VES" && paymentAmountUsd !== null && (
+                        <p className="text-xs text-slate-500 mt-1">Equivalente en USD: ${paymentAmountUsd.toFixed(2)}</p>
+                      )}
                     </div>
                   </div>
+
+                  {paymentCurrency === "USD" && paymentAmountBs !== null && (
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Total pagado (Bs)</p>
+                      <p className="font-bold text-lg text-blue-600">
+                        Bs {paymentAmountBs.toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+
+                  {paymentBcvRate !== null && (
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Tasa BCV aplicada</p>
+                      <p className="font-semibold text-slate-800">Bs {paymentBcvRate.toFixed(6)} por USD</p>
+                    </div>
+                  )}
+
+                  {paymentDate && (
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Fecha de pago</p>
+                      <p className="font-semibold text-slate-800">
+                        {paymentDate.toLocaleDateString("es-ES", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })}{" "}
+                        {paymentDate.toLocaleTimeString("es-ES", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <p className="text-sm text-slate-500 mb-1">
                       Método de Pago

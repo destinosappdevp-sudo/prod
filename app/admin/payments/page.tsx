@@ -13,11 +13,11 @@ async function getPaymentsData() {
       id: true,
       homeId: true,
       userId: true,
-      checkInDate: true,
-      checkOutDate: true,
-      numberOfGuests: true,
+      startDate: true,
+      endDate: true,
+      nights: true,
       status: true,
-      totalPrice: true,
+      totalAmount: true,
       createdAt: true,
       User: {
         select: {
@@ -36,7 +36,10 @@ async function getPaymentsData() {
         select: {
           id: true,
           status: true,
+          paymentMethod: true,
+          referenceNumber: true,
           amount: true,
+          paymentDetails: true,
           confirmedAt: true,
         },
       },

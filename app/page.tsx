@@ -77,11 +77,7 @@ async function getData({
   };
 
   if (categoryNamesFilter.length > 0) {
-    where.OR = categoryNamesFilter.flatMap((categoryName) => [
-      { categoryName },
-      { categoryNames: { has: categoryName } },
-      { categoryName: { contains: categoryName } },
-    ]);
+    where.categoryName = { hasSome: categoryNamesFilter };
   }
 
   const data = await prismaAny.home.findMany({
@@ -95,7 +91,6 @@ async function getData({
       country: true,
       municipality: true,
       categoryName: true,
-      categoryNames: true,
       guests: true,
       bedrooms: true,
       exactAddress: true,
@@ -230,8 +225,8 @@ async function ShowPlace({
       isInFavoriteList={item.Favorite.length > 0}
       homeId={item.id}
       pathName="/"
-      categoryName={getPrimaryCategoryName(item.categoryNames, item.categoryName)}
-      categoryNames={item.categoryNames}
+      categoryName={getPrimaryCategoryName(item.categoryName)}
+      categoryNames={item.categoryName}
       guests={item.guests}
       bedrooms={item.bedrooms}
       reviews={item.Review}
@@ -253,8 +248,8 @@ async function ShowPlace({
         isInFavoriteList={item.Favorite.length > 0}
         homeId={item.id}
         pathName="/"
-        categoryName={getPrimaryCategoryName(item.categoryNames, item.categoryName)}
-        categoryNames={item.categoryNames}
+        categoryName={getPrimaryCategoryName(item.categoryName)}
+        categoryNames={item.categoryName}
         guests={item.guests}
         bedrooms={item.bedrooms}
         reviews={item.Review}

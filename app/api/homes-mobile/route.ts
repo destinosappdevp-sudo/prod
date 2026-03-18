@@ -123,7 +123,6 @@ export async function GET(request: NextRequest) {
         municipality: true,
         exactAddress: true,
         categoryName: true,
-        categoryNames: true,
         guests: true,
         bedrooms: true,
         bathrooms: true,
@@ -157,7 +156,6 @@ export async function GET(request: NextRequest) {
         }
 
         const normalizedHomeCategories = normalizeCategoryNames(
-          (home as any).categoryNames as string[] | null | undefined,
           home.categoryName
         ).map((item) => item.toLowerCase());
 
@@ -204,10 +202,7 @@ export async function GET(request: NextRequest) {
           home.country,
           home.municipality,
           home.exactAddress,
-          ...normalizeCategoryNames(
-            (home as any).categoryNames as string[] | null | undefined,
-            home.categoryName
-          ),
+          ...normalizeCategoryNames(home.categoryName),
         ]
           .filter(Boolean)
           .join(" ")
@@ -223,10 +218,7 @@ export async function GET(request: NextRequest) {
         country: home.country,
         municipality: home.municipality,
         exactAddress: home.exactAddress,
-        categoryName: getPrimaryCategoryName(
-          (home as any).categoryNames as string[] | null | undefined,
-          home.categoryName
-        ),
+        categoryName: getPrimaryCategoryName(home.categoryName),
         guests: home.guests,
         bedrooms: home.bedrooms,
         bathrooms: home.bathrooms,

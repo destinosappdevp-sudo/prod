@@ -126,6 +126,25 @@ export async function PATCH(
           const home = reservation.Home;
           const guest = reservation.User;
 
+          // Extraer datos de dual currency y tasa BCV de paymentDetails
+          let amountUsd: number | undefined;
+          let amountBs: number | undefined;
+          let bcvRate: number | undefined;
+
+          if (payment.paymentDetails) {
+            try {
+              const details = typeof payment.paymentDetails === 'string' 
+                ? JSON.parse(payment.paymentDetails) 
+                : payment.paymentDetails;
+              
+              amountUsd = details.amountUsd ? parseFloat(details.amountUsd) : undefined;
+              amountBs = details.amountBs ? parseFloat(details.amountBs) : undefined;
+              bcvRate = details.bcvRateUsed ? parseFloat(details.bcvRateUsed) : undefined;
+            } catch (_e) {
+              // Si hay error al parsear, dejar los valores como undefined
+            }
+          }
+
           const emailData = {
             guestName: `${guest.firstName} ${guest.lastName}`,
             guestEmail: guest.email,
@@ -153,6 +172,9 @@ export async function PATCH(
             guests: home?.guests || "N/A",
             totalAmount: reservation.totalAmount,
             reservationId: reservation.id,
+            amountUsd,
+            amountBs,
+            bcvRate,
           };
 
           if (!resend) {

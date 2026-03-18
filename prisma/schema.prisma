@@ -78,7 +78,7 @@ model Home {
   country                 String?
   photo                   String?
   price                   Int?
-  categoryName            String?
+  categoryName            String[]       @default([])
   addedCategory           Boolean        @default(false)
   addedDescription        Boolean        @default(false)
   addedLocation           Boolean        @default(false)
@@ -98,14 +98,11 @@ model Home {
   paymentDate             DateTime?
   paymentMethod           PaymentMethod?
   paymentReference        String?
-  propertyTypeId          Int?
-  propertyTypeIds         Int[]          @default([])
-  categoryNames           String[]       @default([])
+  propertyTypeId          Int[]          @default([])
   latitude                Float?
   longitude               Float?
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
-  propertyType            property_types? @relation(fields: [propertyTypeId], references: [id])
   User                    User?          @relation(fields: [userId], references: [id])
   HomeAmenity             HomeAmenity[]
   Reservation             Reservation[]
@@ -263,14 +260,14 @@ model usersessions {
 }
 
 model PlatformConfig {
-  id                String   @id @default(uuid())
-  commissionPercent Float    @default(10.0)
-  bcvRate           Decimal  @default(0.0) @db.Decimal(18, 8)
-  bcvRateDate       DateTime?
-  bcvProximaRate    Decimal? @db.Decimal(18, 8)
+  id                 String    @id @default(uuid())
+  commissionPercent  Float     @default(10.0)
+  bcvRate            Decimal   @default(0.0) @db.Decimal(18, 8)
+  bcvRateDate        DateTime?
+  bcvProximaRate     Decimal?  @db.Decimal(18, 8)
   bcvProximaRateDate DateTime?
-  updatedAt         DateTime @default(now())
-  maintenanceMode   Boolean  @default(false)
+  updatedAt          DateTime  @default(now())
+  maintenanceMode    Boolean   @default(false)
 }
 
 model BcvRateHistory {
@@ -308,7 +305,6 @@ model property_types {
   id   Int     @id @default(autoincrement())
   name String
   icon String? @default("home")
-  Home Home[]
 }
 
 enum BannerTipo {

@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createAdminClient } from "@/app/lib/supabase/admin";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
+import {
+  revalidateHomeVisibilityPaths,
+  syncHomeVisibilityFlags,
+} from "@/app/lib/home-visibility";
 
 export const dynamic = "force-dynamic";
 
@@ -143,8 +147,6 @@ export async function PATCH(
 
     const selectedCategoryNames = selectedCategories.map((category) => category.name);
     const selectedPropertyTypeIds = selectedCategories.map((category) => category.id);
-    const primaryCategoryName = selectedCategoryNames[0] || "";
-    const primaryPropertyTypeId = selectedPropertyTypeIds[0] ?? null;
 
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
@@ -213,15 +215,15 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         ...baseUpdateData,
-        categoryName: primaryCategoryName || null,
-        propertyTypeId: primaryPropertyTypeId,
-        categoryNames: selectedCategoryNames,
-        propertyTypeIds: selectedPropertyTypeIds,
+        categoryName: selectedCategoryNames,
+        propertyTypeId: selectedPropertyTypeIds,
         addedCategory: selectedCategoryNames.length > 0,
       },
     });
 
     await applyAmenityUpdates(params.id, amenitiesPayload);
+    await syncHomeVisibilityFlags(params.id);
+    revalidateHomeVisibilityPaths(params.id);
 
     return NextResponse.json(updated);
   } catch (error) {

@@ -1,20 +1,5 @@
-export function normalizeCategoryNames(
-  categoryNames: string[] | null | undefined,
-  categoryName: string | null | undefined
-): string[] {
-  const fromArray = Array.isArray(categoryNames)
-    ? categoryNames.map((value) => value.trim()).filter(Boolean)
-    : [];
-
-  if (fromArray.length > 0) {
-    return Array.from(new Set(fromArray));
-  }
-
-  if (!categoryName) {
-    return [];
-  }
-
-  const raw = categoryName.trim();
+function normalizeRawCategoryValue(rawValue: string): string[] {
+  const raw = rawValue.trim();
   if (!raw) {
     return [];
   }
@@ -23,13 +8,9 @@ export function normalizeCategoryNames(
     try {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return Array.from(
-          new Set(
-            parsed
-              .map((value) => (typeof value === "string" ? value.trim() : ""))
-              .filter(Boolean)
-          )
-        );
+        return parsed
+          .map((value) => (typeof value === "string" ? value.trim() : ""))
+          .filter(Boolean);
       }
     } catch {
       // keep legacy parsing below
@@ -37,24 +18,46 @@ export function normalizeCategoryNames(
   }
 
   if (raw.includes(",")) {
-    return Array.from(
-      new Set(
-        raw
-          .split(",")
-          .map((value) => value.trim())
-          .filter(Boolean)
-      )
-    );
+    return raw
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
   }
 
   return [raw];
 }
 
+export function normalizeCategoryNames(
+  categoryName: string[] | string | null | undefined,
+  legacyCategoryName?: string | null | undefined
+): string[] {
+  const sourceValues: string[] = [];
+
+  if (Array.isArray(categoryName)) {
+    sourceValues.push(...categoryName);
+  } else if (typeof categoryName === "string") {
+    sourceValues.push(categoryName);
+  }
+
+  if (typeof legacyCategoryName === "string") {
+    sourceValues.push(legacyCategoryName);
+  }
+
+  return Array.from(
+    new Set(
+      sourceValues
+        .flatMap((value) => normalizeRawCategoryValue(value))
+        .map((value) => value.trim())
+        .filter(Boolean)
+    )
+  );
+}
+
 export function getPrimaryCategoryName(
-  categoryNames: string[] | null | undefined,
-  categoryName: string | null | undefined
+  categoryName: string[] | string | null | undefined,
+  legacyCategoryName?: string | null | undefined
 ): string | null {
-  const normalized = normalizeCategoryNames(categoryNames, categoryName);
+  const normalized = normalizeCategoryNames(categoryName, legacyCategoryName);
   return normalized[0] ?? null;
 }
 

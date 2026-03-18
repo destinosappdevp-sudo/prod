@@ -101,35 +101,37 @@ export default async function HostPropertyDetailPage({
     contactNumber: string | null;
     latitude: number | null;
     longitude: number | null;
-    propertyTypeIds?: number[] | null;
-    categoryNames?: string[] | null;
     addedAmenities: boolean;
   };
   // Obtener property_types desde la base de datos
   const propertyTypes = await prismaAny.property_types.findMany({ orderBy: [{ name: "asc" }] });
   const selectedTypeIdsFromProperty =
-    Array.isArray(propertyDetails.propertyTypeIds) && propertyDetails.propertyTypeIds.length > 0
-      ? propertyDetails.propertyTypeIds
-      : propertyDetails.propertyTypeId != null
-      ? [propertyDetails.propertyTypeId]
+    Array.isArray(propertyDetails.propertyTypeId) && propertyDetails.propertyTypeId.length > 0
+      ? propertyDetails.propertyTypeId
       : [];
-  const fallbackTypeIdFromCategory =
-    selectedTypeIdsFromProperty.length === 0 && propertyDetails.categoryName
-      ? propertyTypes.find((pt: any) => pt.name === propertyDetails.categoryName)?.id
-      : null;
+  const categoryNamesFromProperty =
+    Array.isArray(propertyDetails.categoryName) && propertyDetails.categoryName.length > 0
+      ? propertyDetails.categoryName
+      : [];
+  const fallbackTypeIdsFromCategory =
+    selectedTypeIdsFromProperty.length === 0
+      ? propertyTypes
+          .filter((pt: any) => categoryNamesFromProperty.includes(pt.name))
+          .map((pt: any) => pt.id)
+      : [];
   const selectedPropertyTypeIds =
     selectedTypeIdsFromProperty.length > 0
       ? selectedTypeIdsFromProperty
-      : fallbackTypeIdFromCategory
-      ? [fallbackTypeIdFromCategory]
+      : fallbackTypeIdsFromCategory.length > 0
+      ? fallbackTypeIdsFromCategory
       : [];
   const selectedCategoryLabels =
     selectedPropertyTypeIds.length > 0
       ? propertyTypes
           .filter((pt: any) => selectedPropertyTypeIds.includes(pt.id))
           .map((pt: any) => pt.title_es || pt.name)
-      : propertyDetails.categoryName
-      ? [propertyDetails.categoryName]
+        : categoryNamesFromProperty.length > 0
+        ? categoryNamesFromProperty
       : [];
   const propertyForForm = {
     ...propertyDetails,

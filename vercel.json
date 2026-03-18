@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "crons": [
+    {
+      "path": "/api/cron/bcv-update",
+      "schedule": "5 0 * * *"
+    }
+  ]
+}

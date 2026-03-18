@@ -16,6 +16,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
+import { formatBcvRateDisplay } from "@/app/lib/bcv-rate-format";
 
 async function getAdminStats() {
   unstable_noStore();
@@ -66,9 +67,7 @@ async function getAdminStats() {
     hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true,
   });
 
-  const bcvRate = platformConfig?.bcvRate
-    ? Number(platformConfig.bcvRate).toFixed(2)
-    : "—";
+  const bcvRate = formatBcvRateDisplay(platformConfig?.bcvRate);
   const bcvDate = platformConfig?.bcvRateDate
     ? new Date(platformConfig.bcvRateDate).toLocaleDateString("es-VE", {
         day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC",

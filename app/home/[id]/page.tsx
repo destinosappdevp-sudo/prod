@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import Image from "next/image";
+import { getPrimaryCategoryName } from "@/app/lib/property-categories";
 
 const prismaAny = prisma as any;
 
@@ -27,7 +28,6 @@ async function getData(homeId: string) {
       bedrooms: true,
       bathrooms: true,
       categoryName: true,
-      categoryNames: true,
       price: true,
       country: true,
       municipality: true,
@@ -142,8 +142,8 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
 
           <Separator className="my-7" />
           <ShowCaseCategory
-            categoryName={data?.categoryName}
-            categoryNames={(data as any)?.categoryNames as string[] | null | undefined}
+            categoryName={getPrimaryCategoryName(data?.categoryName)}
+            categoryNames={data?.categoryName}
           />
           <Separator className="my-7" />
           <p className="text-muted-foreground">{data?.description}</p>

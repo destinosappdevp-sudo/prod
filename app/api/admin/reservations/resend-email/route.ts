@@ -98,6 +98,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Obtener información de payment y tasa BCV
+    let amountUsd: number | undefined;
+    let amountBs: number | undefined;
+    let bcvRate: number | undefined;
+
+    // Obtener payment relacionado a esta reserva
+    const payment = await prismaAny.payment.findFirst({
+      where: { reservationId: reservation.id },
+      select: { paymentDetails: true },
+    });
+
+    if (payment?.paymentDetails) {
+      try {
+        const details = typeof payment.paymentDetails === 'string' 
+          ? JSON.parse(payment.paymentDetails) 
+          : payment.paymentDetails;
+        
+        amountUsd = details.amountUsd ? parseFloat(details.amountUsd) : undefined;
+        amountBs = details.amountBs ? parseFloat(details.amountBs) : undefined;
+        bcvRate = details.bcvRateUsed ? parseFloat(details.bcvRateUsed) : undefined;
+      } catch (_e) {
+        // Si hay error al parsear, mantener los valores como undefined
+      }
+    }
+
+    // Si no tenemos bcvRate del payment, obtenerla de platform settings
+    if (!bcvRate) {
+      try {
+        const settings = await prismaAny.platformConfig.findFirst();
+        if (settings?.bcvRate) {
+          bcvRate = typeof settings.bcvRate === 'string' 
+            ? parseFloat(settings.bcvRate) 
+            : settings.bcvRate;
+        }
+      } catch (_e) {
+        // Si hay error, continuar sin la tasa
+      }
+    }
+
     const emailData = {
       guestName: `${guest.firstName} ${guest.lastName}`,
       guestEmail: guest.email,
@@ -125,6 +164,9 @@ export async function POST(request: NextRequest) {
       guests: home?.guests || "N/A",
       totalAmount: reservation.totalAmount,
       reservationId: reservation.id,
+      amountUsd,
+      amountBs,
+      bcvRate,
     };
 
     // Enviar email al guest

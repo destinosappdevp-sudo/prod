@@ -13,6 +13,65 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
   const [activeTab, setActiveTab] = useState<"recientes" | "activas">("recientes");
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
 
+  const toNumber = (value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    return null;
+  };
+
+  const formatUsd = (amount: number) => `$${amount.toFixed(2)}`;
+  const formatBs = (amount: number) => `Bs ${amount.toFixed(2)}`;
+
+  const getReservationTotals = (reservation: any) => {
+    const payment = reservation?.Payment;
+    const details =
+      payment?.paymentDetails && typeof payment.paymentDetails === "object"
+        ? (payment.paymentDetails as Record<string, unknown>)
+        : null;
+
+    let usdAmount = toNumber(details?.amountUsd);
+    let bsAmount = toNumber(details?.amountBs);
+    const bcvRate = toNumber(details?.bcvRateUsed);
+    const detailCurrency =
+      details?.currency === "VES" || details?.currency === "USD"
+        ? (details.currency as "USD" | "VES")
+        : null;
+
+    if (usdAmount === null) {
+      usdAmount = toNumber(reservation?.totalAmount) ?? null;
+    }
+
+    if (usdAmount === null && detailCurrency === "USD") {
+      usdAmount = toNumber(payment?.amount);
+    }
+
+    if (usdAmount === null) {
+      usdAmount = toNumber(payment?.amount);
+    }
+
+    if (bsAmount === null) {
+      if (detailCurrency === "VES") {
+        bsAmount = toNumber(payment?.amount);
+      }
+
+      if (bsAmount === null && usdAmount !== null && bcvRate !== null && bcvRate > 0) {
+        bsAmount = Number((usdAmount * bcvRate).toFixed(2));
+      }
+    }
+
+    return {
+      usdLabel: usdAmount !== null ? formatUsd(usdAmount) : "-",
+      bsLabel: bsAmount !== null ? formatBs(bsAmount) : null,
+    };
+  };
+
   const getPaymentMethodLabel = (method: string): string => {
     const methods: Record<string, string> = {
       PAGO_MOVIL: "Pago Móvil",
@@ -158,9 +217,17 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
                   <span className="text-sm font-medium">{reservation.nights || "-"}</span>
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-center">
-                  <span className="text-sm font-semibold">
-                    {reservation.totalAmount ? `$${reservation.totalAmount.toFixed(2)}` : "-"}
-                  </span>
+                  {(() => {
+                    const totals = getReservationTotals(reservation);
+                    return (
+                      <>
+                        <div className="text-sm font-semibold">{totals.usdLabel}</div>
+                        {totals.bsLabel && (
+                          <div className="text-xs text-gray-500 mt-0.5">{totals.bsLabel}</div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">

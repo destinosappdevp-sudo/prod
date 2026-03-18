@@ -128,19 +128,15 @@ export async function PATCH(
         typeof updateData.name === "string" &&
         updateData.name !== existingCategory.name
       ) {
-        await tx.home.updateMany({
-          where: {
-            OR: [
-              { categoryName: existingCategory.name },
-              { propertyTypeId: categoryId },
-            ],
-          },
-          data: { categoryName: updateData.name },
-        });
+        await tx.$executeRawUnsafe(
+          'UPDATE "Home" SET "categoryName" = array_replace("categoryName", $1, $2) WHERE $1 = ANY("categoryName")',
+          existingCategory.name,
+          updateData.name
+        );
 
         await tx.$executeRawUnsafe(
-          'UPDATE "Home" SET "categoryNames" = array_replace("categoryNames", $1, $2) WHERE $1 = ANY("categoryNames")',
-          existingCategory.name,
+          'UPDATE "Home" SET "categoryName" = array_append("categoryName", $2) WHERE $1 = ANY("propertyTypeId") AND NOT ($2 = ANY("categoryName"))',
+          categoryId,
           updateData.name
         );
       }
@@ -182,10 +178,8 @@ export async function DELETE(
     const homesUsingCategory = await prisma.home.count({
       where: {
         OR: [
-          { categoryName: existingCategory.name },
-          { propertyTypeId: categoryId },
-          { categoryNames: { has: existingCategory.name } },
-          { propertyTypeIds: { has: categoryId } },
+          { categoryName: { has: existingCategory.name } },
+          { propertyTypeId: { has: categoryId } },
         ],
       },
     });

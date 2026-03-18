@@ -13,6 +13,9 @@ interface ReservationEmailData {
   guests: string;
   totalAmount: number;
   reservationId: string;
+  amountUsd?: number;
+  amountBs?: number;
+  bcvRate?: number;
 }
 
 export function generateGuestConfirmationEmail(data: ReservationEmailData): string {
@@ -68,9 +71,21 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
                       <strong>Huéspedes:</strong> ${data.guests}
                     </p>
-                    <p style="margin: 0; color: #333333; font-size: 18px; font-weight: 600; margin-top: 15px;">
-                      <strong>Total:</strong> $${data.totalAmount.toFixed(2)}
-                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
+                      <tr>
+                        <td>
+                          <p style="margin: 0 0 8px 0; color: #333333; font-size: 16px; font-weight: 600;">
+                            <strong>Total USD:</strong> $${(data.amountUsd ?? data.totalAmount).toFixed(2)}
+                          </p>
+                          ${data.amountBs ? `<p style="margin: 0; color: #666666; font-size: 14px;">
+                            <strong>Total Bs:</strong> Bs ${data.amountBs.toFixed(2)}
+                          </p>` : ''}
+                          ${data.bcvRate ? `<p style="margin: 8px 0 0 0; color: #999999; font-size: 12px;">
+                            <strong>Tasa BCV del día:</strong> 1 USD = Bs ${data.bcvRate.toFixed(8)}
+                          </p>` : ''}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -196,9 +211,21 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
                       <strong>Huéspedes:</strong> ${data.guests}
                     </p>
-                    <p style="margin: 0; color: #28a745; font-size: 20px; font-weight: 600; margin-top: 15px;">
-                      <strong>Ingreso Total:</strong> $${data.totalAmount.toFixed(2)}
-                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
+                      <tr>
+                        <td>
+                          <p style="margin: 0 0 8px 0; color: #28a745; font-size: 16px; font-weight: 600;">
+                            <strong>Ingreso USD:</strong> $${(data.amountUsd ?? data.totalAmount).toFixed(2)}
+                          </p>
+                          ${data.amountBs ? `<p style="margin: 0; color: #666666; font-size: 14px;">
+                            <strong>Ingreso Bs:</strong> Bs ${data.amountBs.toFixed(2)}
+                          </p>` : ''}
+                          ${data.bcvRate ? `<p style="margin: 8px 0 0 0; color: #999999; font-size: 12px;">
+                            <strong>Tasa BCV del día:</strong> 1 USD = Bs ${data.bcvRate.toFixed(8)}
+                          </p>` : ''}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
