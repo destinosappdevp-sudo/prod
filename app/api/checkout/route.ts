@@ -178,6 +178,23 @@ export async function POST(request: Request) {
     }
 
     const paymentDetailsInput = paymentDetailsRaw as Record<string, any>;
+    const emisorBank =
+      typeof paymentDetailsInput.emisorBank === "string"
+        ? paymentDetailsInput.emisorBank
+        : null;
+    const phoneNumber =
+      typeof paymentDetailsInput.phoneNumber === "string"
+        ? paymentDetailsInput.phoneNumber
+        : null;
+    const cedula =
+      typeof paymentDetailsInput.cedula === "string"
+        ? paymentDetailsInput.cedula
+        : null;
+    const referenceNumber =
+      typeof paymentDetailsInput.referenceNumber === "string"
+        ? paymentDetailsInput.referenceNumber
+        : null;
+
     const paymentDetails = {
       ...paymentDetailsInput,
       currency: paymentCurrency,
@@ -216,11 +233,11 @@ export async function POST(request: Request) {
           serviceFee: paymentServiceFee,
           paymentMethod,
           status: "PENDING",
-          bankName: paymentDetails.emisorBank || null,
-          phoneNumber: paymentDetails.phoneNumber || null,
-          cedula: paymentDetails.cedula || null,
-          referenceNumber: paymentDetails.referenceNumber || null,
-          emisorBank: paymentDetails.emisorBank || null,
+          bankName: emisorBank,
+          phoneNumber,
+          cedula,
+          referenceNumber,
+          emisorBank,
           paymentDetails: paymentDetails,
         },
       });

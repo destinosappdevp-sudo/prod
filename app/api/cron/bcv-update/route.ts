@@ -18,6 +18,7 @@ import prisma from "@/app/lib/db";
  */
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 interface CronLog {
   id?: string;
@@ -33,8 +34,6 @@ interface CronLog {
 
 async function logCronAction(log: CronLog): Promise<void> {
   try {
-    const prismaAny = prisma as any;
-    
     // Crear tabla de log si no existe (para auditoría)
     // Por ahora, logueamos en consola para máxima confiabilidad
     console.log(`[BCV_CRON] ${new Date().toISOString()} - ${log.action}`, {

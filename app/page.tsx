@@ -178,7 +178,7 @@ async function ShowPlace({
   }
 
   // Build pins for search map
-  const pins = data.map((item, index) => {
+  const pins = data.map((item: (typeof data)[number], index: number) => {
     // Usar coordenadas específicas de la propiedad si están disponibles
     if (item.latitude && item.longitude) {
       return {
@@ -190,17 +190,17 @@ async function ShowPlace({
         image: item.photo as string,
       };
     }
-    
+
     // Fallback a coordenadas del municipio/estado
     const muni = item.country && item.municipality
       ? getMunicipalityByValue(item.country as string, item.municipality as string)
       : null;
     const state = item.country ? getStateByValue(item.country as string) : null;
     const latLng = muni?.latLng ?? state?.latLng ?? [10.5, -66.9];
-    
+
     // Si las propiedades tienen la misma ubicación, añadir un pequeño offset para separarlas
     const offset = index * 0.001;
-    
+
     return {
       id: item.id,
       title: item.title as string,
@@ -269,9 +269,13 @@ async function ShowPlace({
   }
 
   // Propiedades sin región asignada o con estado desconocido
+  type HomeItem = (typeof data)[number];
   const assignedStates = new Set(REGIONES.flatMap((r) => r.states));
   const sinRegion = data
-    .filter((item) => !item.country || !assignedStates.has(item.country as string))
+    .filter(
+      (item: HomeItem) =>
+        !item.country || !assignedStates.has(item.country as string)
+    )
     .slice(-9);
 
   return (
@@ -279,7 +283,7 @@ async function ShowPlace({
       <MobileMapStrip pins={pins} />
       {REGIONES.map((region, index) => {
         const items = data
-          .filter((item) => region.states.includes(item.country as string))
+          .filter((item: HomeItem) => region.states.includes(item.country as string))
           .slice(-9);
         if (items.length === 0) return null;
         return (
