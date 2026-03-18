@@ -24,12 +24,28 @@ interface CronLog {
   id?: string;
   timestamp: Date;
   action: string;
+  source?: string;
   previousRate?: string;
   newRate?: string;
   previousDate?: Date;
   newDate?: Date;
   error?: string;
   success: boolean;
+}
+
+function getInvocationSource(request: Request): "vercel-cron" | "manual" | "unknown" {
+  const userAgent = request.headers.get("user-agent")?.toLowerCase() ?? "";
+  const cronHeader = request.headers.get("x-vercel-cron");
+
+  if (cronHeader || userAgent.includes("vercel-cron")) {
+    return "vercel-cron";
+  }
+
+  if (request.headers.get("authorization")) {
+    return "manual";
+  }
+
+  return "unknown";
 }
 
 async function logCronAction(log: CronLog): Promise<void> {
@@ -49,17 +65,31 @@ async function logCronAction(log: CronLog): Promise<void> {
 
 export async function GET(request: Request) {
   try {
+    const source = getInvocationSource(request);
+
     // Verificar token secreto (Vercel lo incluye automáticamente)
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       console.warn("[BCV_CRON] Unauthorized access attempt");
+      await logCronAction({
+        timestamp: new Date(),
+        action: "unauthorized",
+        source,
+        success: false,
+        error: "Missing or invalid CRON_SECRET authorization",
+      });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const prismaAny = prisma as any;
     const now = new Date();
+
+    console.log("[BCV_CRON] Invocation", {
+      source,
+      timestamp: now.toISOString(),
+    });
 
     // Obtener configuración actual
     const config = await prismaAny.platformConfig.findFirst({
@@ -74,8 +104,16 @@ export async function GET(request: Request) {
 
     if (!config) {
       console.log("[BCV_CRON] No config found");
+      await logCronAction({
+        timestamp: now,
+        action: "no_config",
+        source,
+        success: true,
+      });
       return NextResponse.json({ 
         message: "No configuration found",
+        reason: "NO_CONFIG",
+        source,
         updated: false 
       });
     }
@@ -88,8 +126,16 @@ export async function GET(request: Request) {
     // Se activa cuando hemos alcanzado o superado la fecha programada
     if (!proximaDate || !config.bcvProximaRate) {
       console.log("[BCV_CRON] No próxima tasa scheduled");
+      await logCronAction({
+        timestamp: now,
+        action: "no_next_rate",
+        source,
+        success: true,
+      });
       return NextResponse.json({ 
         message: "No próxima tasa scheduled",
+        reason: "NO_NEXT_RATE",
+        source,
         updated: false,
         nextScheduled: null 
       });
@@ -105,8 +151,18 @@ export async function GET(request: Request) {
 
     if (todayDate < proximaDateOnly) {
       console.log(`[BCV_CRON] Próxima tasa scheduled for ${proximaDate.toISOString()}, not yet active`);
+      await logCronAction({
+        timestamp: now,
+        action: "not_due_yet",
+        source,
+        success: true,
+        newRate: String(config.bcvProximaRate),
+        newDate: proximaDate,
+      });
       return NextResponse.json({ 
         message: "Próxima tasa not yet scheduled",
+        reason: "NOT_DUE_YET",
+        source,
         updated: false,
         nextScheduled: proximaDate.toISOString(),
         daysRemaining: Math.ceil(
@@ -158,6 +214,7 @@ export async function GET(request: Request) {
     const logEntry: CronLog = {
       timestamp: now,
       action: "bcvRate_updated",
+      source,
       success: true,
       previousRate: String(result.oldRate),
       newRate: String(config.bcvProximaRate),
@@ -170,6 +227,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       updated: true,
+      reason: "UPDATED",
+      source,
       message: "BCV rate updated successfully",
       previousRate: result.oldRate,
       newRate: config.bcvProximaRate,
@@ -183,6 +242,7 @@ export async function GET(request: Request) {
     const logEntry: CronLog = {
       timestamp: new Date(),
       action: "bcvRate_update_failed",
+      source: getInvocationSource(request),
       success: false,
       error: String(error),
     };
