@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (linkError || !data?.properties?.action_link) {
+    if (linkError || !data?.properties) {
       console.error("Supabase link generation error:", linkError);
       return NextResponse.json(
         { error: "No se pudo generar el enlace de recuperación" },
@@ -89,7 +89,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const resetLink = data.properties.action_link;
+    const tokenHash = data.properties.hashed_token;
+    if (!tokenHash) {
+      console.error("Supabase link generation returned no token_hash");
+      return NextResponse.json(
+        { error: "No se pudo generar un enlace valido de recuperación" },
+        { status: 500 }
+      );
+    }
+
+    const customResetUrl = new URL("/auth/reset-password", getRequestOrigin(request));
+    customResetUrl.searchParams.set("token_hash", tokenHash);
+    customResetUrl.searchParams.set("type", "recovery");
+    const resetLink = customResetUrl.toString();
 
     // Send email with Resend using custom template
     const resend = getResendClient();

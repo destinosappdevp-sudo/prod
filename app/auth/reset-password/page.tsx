@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/app/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,9 @@ import { Eye, EyeOff, ArrowLeft, ShieldCheck } from "lucide-react";
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-slate-50">Cargando...</div>}>
+    <Suspense
+      fallback={<div className="flex items-center justify-center min-h-screen bg-slate-50">Cargando...</div>}
+    >
       <ResetPasswordContent />
     </Suspense>
   );
@@ -19,6 +22,9 @@ export default function ResetPasswordPage() {
 
 function ResetPasswordContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tokenHash = searchParams.get("token_hash");
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,27 +35,82 @@ function ResetPasswordContent() {
   const [sessionInvalid, setSessionInvalid] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const checkSession = async () => {
+      const invalidMessage =
+        "El enlace de recuperación ha expirado o no es válido. Por favor, solicita uno nuevo.";
+
       try {
         const supabase = createClient();
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const {
+          data: { session: existingSession },
+          error: existingSessionError,
+        } = await supabase.auth.getSession();
 
-        if (error || !session) {
-          setSessionInvalid(true);
-          setError(
-            "El enlace de recuperación ha expirado o no es válido. Por favor, solicita uno nuevo."
-          );
+        if (existingSessionError) {
+          throw existingSessionError;
         }
-      } catch (err) {
+
+        if (existingSession) {
+          if (!isMounted) return;
+          setSessionInvalid(false);
+          setError("");
+          return;
+        }
+
+        if (tokenHash) {
+          const otpType: EmailOtpType = "recovery";
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: otpType,
+          });
+
+          if (verifyError) {
+            if (!isMounted) return;
+            setSessionInvalid(true);
+            setError(invalidMessage);
+            return;
+          }
+
+          const {
+            data: { session: verifiedSession },
+            error: verifiedSessionError,
+          } = await supabase.auth.getSession();
+
+          if (verifiedSessionError || !verifiedSession) {
+            if (!isMounted) return;
+            setSessionInvalid(true);
+            setError(invalidMessage);
+            return;
+          }
+
+          if (!isMounted) return;
+          setSessionInvalid(false);
+          setError("");
+          return;
+        }
+
+        if (!isMounted) return;
         setSessionInvalid(true);
-        setError("Error al verificar la sesión");
+        setError(invalidMessage);
+      } catch (err: any) {
+        if (!isMounted) return;
+        setSessionInvalid(true);
+        setError(err?.message || "Error al verificar la sesión");
       } finally {
-        setSessionChecked(true);
+        if (isMounted) {
+          setSessionChecked(true);
+        }
       }
     };
 
     checkSession();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [tokenHash]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,12 +136,12 @@ function ResetPasswordContent() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
 
-      if (error) {
-        setError(error.message || "Error al cambiar la contraseña");
+      if (updateError) {
+        setError(updateError.message || "Error al cambiar la contraseña");
       } else {
         setSuccess("¡Contraseña cambiada exitosamente! Redirigiendo...");
         setTimeout(() => {
