@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
 import { useVenezuelaMunicipalities } from "../lib/venezuelaMunicipalities";
 import { SupabaseImage } from "./SupabaseImage";
@@ -10,10 +8,8 @@ import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
   Clock3,
-  Copy,
   Edit,
   FileText,
-  Loader2,
   XCircle,
 } from "lucide-react";
 
@@ -70,8 +66,6 @@ function HostListingCard({
   publishStatus,
   approvalRejectionReason,
 }: HostListingCardProps) {
-  const router = useRouter();
-  const [isDuplicating, setIsDuplicating] = useState(false);
   const { getStateByValue } = useVenezuelaStates();
   const { getMunicipalityByValue } = useVenezuelaMunicipalities();
   const state = getStateByValue(stateValue);
@@ -79,36 +73,6 @@ function HostListingCard({
     ? getMunicipalityByValue(stateValue, municipalityValue)
     : null;
   const locationLabel = municipality?.label || state?.label || "Ubicacion pendiente";
-
-  const duplicateProperty = async () => {
-    if (isDuplicating) return;
-
-    setIsDuplicating(true);
-    try {
-      const response = await fetch(`/api/host/properties/${homeId}/duplicate`, {
-        method: "POST",
-      });
-
-      const payload = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(payload?.error || "No se pudo duplicar la propiedad");
-      }
-
-      const redirectTo = payload?.redirectTo || `/my-listing/${payload?.id}`;
-      router.push(redirectTo);
-      router.refresh();
-    } catch (error) {
-      console.error("Error duplicando propiedad:", error);
-      alert(
-        error instanceof Error
-          ? error.message
-          : "No se pudo duplicar la propiedad"
-      );
-    } finally {
-      setIsDuplicating(false);
-    }
-  };
 
   return (
     <div className="flex flex-col">
@@ -136,33 +100,13 @@ function HostListingCard({
           </p>
         ) : null}
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="mt-3">
         <Link href={`/my-listing/${homeId}`}>
           <Button variant="outline" className="w-full" size="sm">
             <Edit className="w-4 h-4 mr-2" />
             Editar
           </Button>
         </Link>
-        <Button
-          type="button"
-          variant="secondary"
-          className="w-full"
-          size="sm"
-          onClick={duplicateProperty}
-          disabled={isDuplicating}
-        >
-          {isDuplicating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Duplicando
-            </>
-          ) : (
-            <>
-              <Copy className="w-4 h-4 mr-2" />
-              Duplicar
-            </>
-          )}
-        </Button>
       </div>
     </div>
   );
