@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Home, UserRound } from "lucide-react";
 import { signInWithEmail, signUpWithRole } from "@/app/action";
 import { createClient } from "@/app/lib/supabase/client";
 import { getAllStates } from "@/app/lib/venezuelaStates";
@@ -236,8 +236,75 @@ export function AuthPanel({
       ? "h-12 rounded-2xl border-gray-300 px-4 text-base shadow-sm focus:ring-1 focus:ring-orange-500 focus:ring-offset-0"
       : undefined;
 
+  const roleCardClassName =
+    "w-full rounded-2xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-1";
+
   const formBody = (
     <form onSubmit={handleSubmit} className={cn("space-y-4", variant === "dialog" && "space-y-4") }>
+      {!isLogin && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setRole("GUEST")}
+            aria-pressed={role === "GUEST"}
+            className={cn(
+              roleCardClassName,
+              role === "GUEST"
+                ? "border-orange-300 bg-orange-50"
+                : "border-gray-200 bg-white hover:bg-gray-50"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "flex h-11 w-11 items-center justify-center rounded-full",
+                  role === "GUEST" ? "bg-orange-100 text-orange-500" : "bg-orange-50 text-orange-400"
+                )}
+              >
+                <UserRound className="h-5 w-5" />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-semibold text-gray-900">Soy Huésped</span>
+                <span className="block text-sm text-gray-500">Busca y reserva alojamientos vacacionales</span>
+              </span>
+
+              <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRole("HOST")}
+            aria-pressed={role === "HOST"}
+            className={cn(
+              roleCardClassName,
+              role === "HOST"
+                ? "border-emerald-300 bg-emerald-50"
+                : "border-gray-200 bg-white hover:bg-gray-50"
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={cn(
+                  "flex h-11 w-11 items-center justify-center rounded-full",
+                  role === "HOST" ? "bg-emerald-100 text-emerald-500" : "bg-emerald-50 text-emerald-400"
+                )}
+              >
+                <Home className="h-5 w-5" />
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-semibold text-gray-900">Soy Anfitrión</span>
+                <span className="block text-sm text-gray-500">Publica y gestiona tus propiedades</span>
+              </span>
+
+              <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
+            </div>
+          </button>
+        </div>
+      )}
+
       {!isLogin && (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
