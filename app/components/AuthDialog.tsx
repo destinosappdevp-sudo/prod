@@ -33,6 +33,7 @@ export function AuthDialog({
           initialRole={initialRole}
           nextPath={nextPath}
           onSuccess={() => onOpenChange(false)}
+          onClose={() => onOpenChange(false)}
         />
       </DialogContent>
     </Dialog>

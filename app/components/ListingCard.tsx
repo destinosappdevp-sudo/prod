@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { normalizeCategoryNames } from "@/app/lib/property-categories";
+import { AuthDialog } from "./AuthDialog";
 
 interface iAppProps {
   imagePath: string;
@@ -61,6 +61,8 @@ function ListingCard({
 }: iAppProps) {
   const router = useRouter();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [authDialogMode, setAuthDialogMode] = useState<"login" | "register">("login");
   const { getStateByValue } = useVenezuelaStates();
   const { getMunicipalityByValue } = useVenezuelaMunicipalities();
   const state = getStateByValue(stateValue);
@@ -88,9 +90,13 @@ function ListingCard({
       ? `${primaryCategoryLabel} +${normalizedCategories.length - 1}`
       : primaryCategoryLabel
     : null;
-  const encodedNextPath = encodeURIComponent(`/home/${homeId}`);
-  const loginHref = `/login?next=${encodedNextPath}`;
-  const registerHref = `/login?mode=register&next=${encodedNextPath}`;
+  const homeDetailPath = `/home/${homeId}`;
+
+  const openAuthDialog = (mode: "login" | "register") => {
+    setIsAuthOpen(false);
+    setAuthDialogMode(mode);
+    setAuthDialogOpen(true);
+  };
 
   const handleCardClick = () => {
     if (userId) {
@@ -231,24 +237,31 @@ function ListingCard({
           </div>
 
           <div className="mt-4 space-y-3">
-            <Link
-              href={loginHref}
+            <button
+              type="button"
               className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#ff6f47] text-xl font-semibold text-white shadow-md transition hover:brightness-95"
-              onClick={() => setIsAuthOpen(false)}
+              onClick={() => openAuthDialog("login")}
             >
               Iniciar Sesión
-            </Link>
+            </button>
 
-            <Link
-              href={registerHref}
+            <button
+              type="button"
               className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#f3ddd4] text-xl font-semibold text-[#ea704d] transition hover:bg-[#efd3c8]"
-              onClick={() => setIsAuthOpen(false)}
+              onClick={() => openAuthDialog("register")}
             >
               Registrarse
-            </Link>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
+      <AuthDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
+        nextPath={homeDetailPath}
+        initialMode={authDialogMode}
+        initialRole="GUEST"
+      />
     </>
   );
 }

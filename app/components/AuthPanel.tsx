@@ -28,6 +28,7 @@ interface AuthPanelProps {
   initialRole?: AuthRole;
   nextPath?: string;
   onSuccess?: () => void;
+  onClose?: () => void;
   variant?: "page" | "dialog";
 }
 
@@ -36,6 +37,7 @@ export function AuthPanel({
   initialRole = "GUEST",
   nextPath = "/",
   onSuccess,
+  onClose,
   variant = "page",
 }: AuthPanelProps) {
   const router = useRouter();
@@ -357,12 +359,16 @@ export function AuthPanel({
       </Button>
 
       {isLogin && (
-        <Link
-          href="/auth/forgot-password"
+        <button
+          type="button"
+          onClick={() => {
+            onClose?.();
+            router.push("/auth/forgot-password");
+          }}
           className="block w-full text-center text-sm text-blue-600 hover:underline"
         >
           ¿Olvidaste la contraseña?
-        </Link>
+        </button>
       )}
 
       <button
