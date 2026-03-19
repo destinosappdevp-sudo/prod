@@ -449,7 +449,7 @@ export function AuthPanel({
       {variant === "dialog" && (
         <p className="pt-1 text-center text-xs leading-relaxed text-gray-400">
           Al continuar, aceptas nuestros{' '}
-          <Link href="/terminos" className="underline hover:text-gray-500">
+          <Link href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-500">
             Términos y Condiciones
           </Link>
           .
