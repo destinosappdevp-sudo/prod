@@ -47,6 +47,7 @@ export function AuthPanel({
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [stateCode, setStateCode] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [role, setRole] = useState<AuthRole>(initialRole);
   const [error, setError] = useState("");
@@ -195,6 +196,11 @@ export function AuthPanel({
           router.refresh();
         }
 
+        return;
+      }
+
+      if (!acceptedTerms) {
+        setError("Debes aceptar los Términos y Condiciones para continuar.");
         return;
       }
 
@@ -405,13 +411,36 @@ export function AuthPanel({
         </div>
       )}
 
+      {!isLogin && (
+        <label className="flex items-start gap-2.5 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(event) => setAcceptedTerms(event.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+          />
+          <span>
+            Acepto haber leído los{' '}
+            <Link
+              href="/terminos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-blue-600 hover:underline"
+            >
+              Términos y Condiciones
+            </Link>
+            .
+          </span>
+        </label>
+      )}
+
       {error && <div className="rounded-2xl bg-red-50 p-3 text-sm text-red-600">{error}</div>}
 
       {success && <div className="rounded-2xl bg-green-50 p-3 text-sm text-green-600">{success}</div>}
 
       <Button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || (!isLogin && !acceptedTerms)}
         className={cn(
           "w-full",
           variant === "dialog" &&
@@ -445,16 +474,6 @@ export function AuthPanel({
       >
         {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
       </button>
-
-      {variant === "dialog" && (
-        <p className="pt-1 text-center text-xs leading-relaxed text-gray-400">
-          Al continuar, aceptas nuestros{' '}
-          <Link href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-500">
-            Términos y Condiciones
-          </Link>
-          .
-        </p>
-      )}
     </form>
   );
 
