@@ -5,19 +5,51 @@ import { NextRequest, NextResponse } from "next/server";
 
 interface ForgotPasswordRequest {
   email: string;
-  redirectUrl: string;
+}
+
+function getRequestOrigin(request: NextRequest) {
+  const originHeader = request.headers.get("origin");
+  if (originHeader) {
+    try {
+      return new URL(originHeader).origin;
+    } catch {
+      // Ignore invalid origin and continue with fallbacks.
+    }
+  }
+
+  const forwardedHostHeader =
+    request.headers.get("x-forwarded-host") || request.headers.get("host");
+
+  if (forwardedHostHeader) {
+    const host = forwardedHostHeader.split(",")[0]?.trim();
+    const proto =
+      request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
+      request.nextUrl.protocol.replace(":", "") ||
+      "https";
+
+    if (host) {
+      return `${proto}://${host}`;
+    }
+  }
+
+  return request.nextUrl.origin;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, redirectUrl } = (await request.json()) as ForgotPasswordRequest;
+    const { email } = (await request.json()) as ForgotPasswordRequest;
 
-    if (!email || !redirectUrl) {
+    if (!email) {
       return NextResponse.json(
-        { error: "Email y redirectUrl son requeridos" },
+        { error: "Email es requerido" },
         { status: 400 }
       );
     }
+
+    const redirectTo = new URL(
+      "/auth/reset-password",
+      getRequestOrigin(request)
+    ).toString();
 
     // Get Supabase admin client for generating reset link
     const adminClient = createAdminClient();
@@ -45,7 +77,7 @@ export async function POST(request: NextRequest) {
       type: "recovery",
       email,
       options: {
-        redirectTo: redirectUrl,
+        redirectTo,
       },
     });
 

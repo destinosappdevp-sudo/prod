@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { buildPublicUrl } from "@/app/lib/public-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,22 +20,16 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const redirectUrl = buildPublicUrl("/auth/reset-password");
-
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, redirectUrl }),
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(
-          data.error === "Configura NEXT_PUBLIC_SITE_URL con tu dominio para enviar enlaces de recuperación al sitio correcto."
-            ? data.error
-            : data.error || "Error al enviar el email de recuperación"
-        );
+        setError(data.error || "Error al enviar el email de recuperación");
       } else {
         setSuccess("Te enviamos un enlace para cambiar tu contraseña.");
         setEmail("");
