@@ -29,6 +29,226 @@ function normalizePublishStatus(status?: string | null): HostPublishStatus {
   return "DRAFT";
 }
 
+type HostAnalyticsPeriod = {
+  labels: string[];
+  revenueUsd: number[];
+  bookings: number[];
+  grossRevenueUsd: number;
+  commissionUsd: number;
+  netRevenueUsd: number;
+  totalBookings: number;
+  averageTicketUsd: number;
+  maxRevenue: number;
+  maxBookings: number;
+  bestBookingIndex: number;
+  bestPeriodLabel: string;
+  rangeLabel: string;
+};
+
+type HostAnalyticsData = {
+  weekly: HostAnalyticsPeriod;
+  monthly: HostAnalyticsPeriod;
+};
+
+type AnalyticsReservationRow = {
+  createdAt: Date;
+  status: string;
+};
+
+type AnalyticsPaymentRow = {
+  amount: number;
+  subtotal: number;
+  serviceFee: number;
+  paymentMethod?: string | null;
+  paymentDetails?: unknown;
+  Reservation?: {
+    createdAt: Date | null;
+  } | null;
+};
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate()
+  ).padStart(2, "0")}`;
+}
+
+function toMonthKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function capitalizeWord(value: string) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatRangeDate(date: Date) {
+  const month = date
+    .toLocaleDateString("es-ES", { month: "short" })
+    .replace(".", "")
+    .toLowerCase();
+  return `${date.getDate()} ${capitalizeWord(month)}`;
+}
+
+function buildAnalyticsPeriod(
+  labels: string[],
+  keys: string[],
+  reservations: AnalyticsReservationRow[],
+  payments: AnalyticsPaymentRow[],
+  keyFromDate: (date: Date) => string,
+  rangeLabel: string
+): HostAnalyticsPeriod {
+  const bookingsByKey = new Map<string, number>();
+  const revenueByKey = new Map<string, number>();
+  const commissionByKey = new Map<string, number>();
+
+  for (const key of keys) {
+    bookingsByKey.set(key, 0);
+    revenueByKey.set(key, 0);
+    commissionByKey.set(key, 0);
+  }
+
+  for (const reservation of reservations) {
+    if (!reservation?.createdAt || reservation.status === "CANCELLED") {
+      continue;
+    }
+
+    const key = keyFromDate(new Date(reservation.createdAt));
+    if (!bookingsByKey.has(key)) {
+      continue;
+    }
+
+    bookingsByKey.set(key, (bookingsByKey.get(key) ?? 0) + 1);
+  }
+
+  for (const payment of payments) {
+    const paymentDate = payment?.Reservation?.createdAt;
+    if (!paymentDate) {
+      continue;
+    }
+
+    const key = keyFromDate(new Date(paymentDate));
+    if (!revenueByKey.has(key)) {
+      continue;
+    }
+
+    const parsed = parsePaymentFinancials(payment);
+    const amountUsd =
+      parsed.amountUsd > 0
+        ? parsed.amountUsd
+        : parsed.currency === "USD"
+        ? parsed.amount
+        : 0;
+    const serviceFeeUsd =
+      parsed.serviceFeeUsd > 0
+        ? parsed.serviceFeeUsd
+        : parsed.currency === "USD"
+        ? parsed.serviceFee
+        : 0;
+
+    revenueByKey.set(key, Number(((revenueByKey.get(key) ?? 0) + amountUsd).toFixed(2)));
+    commissionByKey.set(
+      key,
+      Number(((commissionByKey.get(key) ?? 0) + serviceFeeUsd).toFixed(2))
+    );
+  }
+
+  const bookings = keys.map((key) => bookingsByKey.get(key) ?? 0);
+  const revenueUsd = keys.map((key) => Number((revenueByKey.get(key) ?? 0).toFixed(2)));
+  const commissions = keys.map((key) => Number((commissionByKey.get(key) ?? 0).toFixed(2)));
+
+  const grossRevenueUsd = Number(
+    revenueUsd.reduce((total, value) => total + value, 0).toFixed(2)
+  );
+  const commissionUsd = Number(
+    commissions.reduce((total, value) => total + value, 0).toFixed(2)
+  );
+  const netRevenueUsd = Number((grossRevenueUsd - commissionUsd).toFixed(2));
+  const totalBookings = bookings.reduce((total, value) => total + value, 0);
+  const averageTicketUsd =
+    totalBookings > 0 ? Number((grossRevenueUsd / totalBookings).toFixed(2)) : 0;
+  const maxRevenue = Math.max(...revenueUsd, 1);
+  const maxBookings = Math.max(...bookings, 1);
+  const bestBookingIndex = bookings.indexOf(maxBookings);
+
+  return {
+    labels,
+    revenueUsd,
+    bookings,
+    grossRevenueUsd,
+    commissionUsd,
+    netRevenueUsd,
+    totalBookings,
+    averageTicketUsd,
+    maxRevenue,
+    maxBookings,
+    bestBookingIndex,
+    bestPeriodLabel: labels[bestBookingIndex] ?? "-",
+    rangeLabel,
+  };
+}
+
+function buildHostAnalyticsData(
+  reservations: AnalyticsReservationRow[],
+  payments: AnalyticsPaymentRow[]
+): HostAnalyticsData {
+  const now = new Date();
+
+  const currentDay = now.getDay();
+  const mondayOffset = (currentDay + 6) % 7;
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  const weeklyLabels = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+  const weeklyDates = weeklyLabels.map(
+    (_, index) => new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + index)
+  );
+  const weeklyKeys = weeklyDates.map((date) => toDateKey(date));
+  const weeklyRangeLabel = `${formatRangeDate(weekStart)} - ${formatRangeDate(weekEnd)} ${weekEnd.getFullYear()}`;
+
+  const monthlyStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const monthlyLabels: string[] = [];
+  const monthlyDates: Date[] = [];
+  const monthlyKeys: string[] = [];
+
+  for (let index = 0; index < 6; index += 1) {
+    const monthDate = new Date(monthlyStart.getFullYear(), monthlyStart.getMonth() + index, 1);
+    monthlyDates.push(monthDate);
+    monthlyKeys.push(toMonthKey(monthDate));
+    monthlyLabels.push(
+      capitalizeWord(
+        monthDate
+          .toLocaleDateString("es-ES", { month: "short" })
+          .replace(".", "")
+          .toLowerCase()
+      )
+    );
+  }
+
+  const monthlyEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const monthlyRangeLabel = `${formatRangeDate(monthlyDates[0])} - ${formatRangeDate(monthlyEnd)} ${monthlyEnd.getFullYear()}`;
+
+  const weekly = buildAnalyticsPeriod(
+    weeklyLabels,
+    weeklyKeys,
+    reservations,
+    payments,
+    toDateKey,
+    weeklyRangeLabel
+  );
+
+  const monthly = buildAnalyticsPeriod(
+    monthlyLabels,
+    monthlyKeys,
+    reservations,
+    payments,
+    toMonthKey,
+    monthlyRangeLabel
+  );
+
+  return { weekly, monthly };
+}
+
 async function getUserDocuments(userId: string) {
   noStore();
   return (prisma as any)
@@ -56,6 +276,11 @@ async function getHostDashboardData(userId: string) {
     createdAt?: Date;
   };
 
+  const analyticsStartDate = new Date();
+  analyticsStartDate.setMonth(analyticsStartDate.getMonth() - 5);
+  analyticsStartDate.setDate(1);
+  analyticsStartDate.setHours(0, 0, 0, 0);
+
   const [
     listings,
     reservations,
@@ -65,6 +290,8 @@ async function getHostDashboardData(userId: string) {
     confirmedPayments,
     pendingPayments,
     releasableConfirmedPayments,
+    analyticsReservationsRaw,
+    analyticsPaymentsRaw,
     ratingAgg,
   ] = await Promise.all([
     prismaAny.home.findMany({
@@ -166,6 +393,37 @@ async function getHostDashboardData(userId: string) {
         serviceFee: true,
         paymentMethod: true,
         paymentDetails: true,
+      },
+    }),
+    prismaAny.reservation.findMany({
+      where: {
+        Home: { userId },
+        createdAt: { gte: analyticsStartDate },
+      },
+      select: {
+        createdAt: true,
+        status: true,
+      },
+    }),
+    prismaAny.payment.findMany({
+      where: {
+        status: "CONFIRMED",
+        Reservation: {
+          Home: { userId },
+          createdAt: { gte: analyticsStartDate },
+        },
+      },
+      select: {
+        amount: true,
+        subtotal: true,
+        serviceFee: true,
+        paymentMethod: true,
+        paymentDetails: true,
+        Reservation: {
+          select: {
+            createdAt: true,
+          },
+        },
       },
     }),
     prismaAny.review.aggregate({
@@ -273,6 +531,11 @@ async function getHostDashboardData(userId: string) {
     };
   });
 
+  const analytics = buildHostAnalyticsData(
+    analyticsReservationsRaw as AnalyticsReservationRow[],
+    analyticsPaymentsRaw as AnalyticsPaymentRow[]
+  );
+
   return {
     listings: (listings as ListingRow[]).map((item) => ({
       id: item.id,
@@ -296,6 +559,7 @@ async function getHostDashboardData(userId: string) {
       ratingCount: ratingAgg._count.rating || 0,
       requests: pendingReservations,
     },
+    analytics,
   };
 }
 
@@ -453,6 +717,7 @@ export default async function DashboardPage({
         stats={data.stats}
         reservations={data.reservations}
         listings={data.listings}
+        analytics={data.analytics}
         initialTab={initialTab}
         createHomeAction={createHomeAction}
         userData={{ ...userRecord, email: userRecord?.email || user.email }}

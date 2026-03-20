@@ -23,7 +23,6 @@ import {
   Clock,
   XCircle,
   Loader2,
-  ChevronRight,
   ArrowDownToLine,
 } from "lucide-react";
 import { signOut } from "@/app/action";
@@ -77,6 +76,27 @@ interface HostListingItem {
   approvalRejectionReason?: string | null;
 }
 
+interface HostAnalyticsPeriod {
+  labels: string[];
+  revenueUsd: number[];
+  bookings: number[];
+  grossRevenueUsd: number;
+  commissionUsd: number;
+  netRevenueUsd: number;
+  totalBookings: number;
+  averageTicketUsd: number;
+  maxRevenue: number;
+  maxBookings: number;
+  bestBookingIndex: number;
+  bestPeriodLabel: string;
+  rangeLabel: string;
+}
+
+interface HostAnalyticsData {
+  weekly: HostAnalyticsPeriod;
+  monthly: HostAnalyticsPeriod;
+}
+
 interface HostDashboardClientProps {
   userName?: string;
   userEmail?: string | null;
@@ -88,6 +108,7 @@ interface HostDashboardClientProps {
   stats: HostStats;
   reservations: HostReservationItem[];
   listings: HostListingItem[];
+  analytics: HostAnalyticsData;
   initialTab?: string;
   createHomeAction?: (formData: FormData) => Promise<void>;
   userData?: any;
@@ -144,6 +165,7 @@ export default function HostDashboardClient({
   stats,
   reservations,
   listings,
+  analytics,
   initialTab,
   createHomeAction,
   userData,
@@ -393,86 +415,15 @@ export default function HostDashboardClient({
     },
   ];
 
-  const analyticsSeries = useMemo(() => {
-    const isWeekly = analyticsRange === "weekly";
-    const labels = isWeekly
-      ? ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"]
-      : ["Ene", "Feb", "Mar", "Abr", "May", "Jun"];
-
-    const revenueBase = isWeekly
-      ? Math.max(220, (stats.walletUsd.totalRevenue || 0) / 5)
-      : Math.max(350, (stats.walletUsd.totalRevenue || 0) / 3);
-
-    const revenuePattern = isWeekly
-      ? [0.72, 0.58, 0.88, 0.79, 1.05, 1.42, 1.14]
-      : [0.82, 0.94, 0.88, 1.08, 1.21, 1.16];
-
-    const bookingSeed = Math.max(8, stats.activeReservations + stats.requests + reservations.length);
-    const bookingPattern = isWeekly
-      ? [0.42, 0.31, 0.55, 0.51, 0.76, 1, 0.84]
-      : [0.55, 0.62, 0.58, 0.73, 0.88, 0.81];
-
-    const revenue = revenuePattern.map((factor, index) =>
-      Math.round(revenueBase * factor + index * 8)
-    );
-
-    const bookings = bookingPattern.map((factor, index) =>
-      Math.max(1, Math.round(bookingSeed * factor + (index % 2)))
-    );
-
-    const maxRevenue = Math.max(...revenue, 1);
-    const maxBookings = Math.max(...bookings, 1);
-    const bestBookingIndex = bookings.indexOf(maxBookings);
-
-    return {
-      labels,
-      revenue,
-      bookings,
-      maxRevenue,
-      maxBookings,
-      bestBookingIndex,
-    };
-  }, [
-    analyticsRange,
-    stats.walletUsd.totalRevenue,
-    stats.activeReservations,
-    stats.requests,
-    reservations.length,
-  ]);
-
-  const analyticsDateRangeLabel = useMemo(() => {
-    const now = new Date();
-    const formatDayMonth = (date: Date) =>
-      `${date.getDate()} ${date.toLocaleDateString("es-ES", { month: "short" })}`;
-
-    if (analyticsRange === "weekly") {
-      const currentDay = now.getDay();
-      const mondayOffset = (currentDay + 6) % 7;
-      const startDate = new Date(now);
-      startDate.setDate(now.getDate() - mondayOffset);
-
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-
-      return `${formatDayMonth(startDate)} - ${formatDayMonth(endDate)} ${endDate.getFullYear()}`;
-    }
-
-    const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    return `${formatDayMonth(startDate)} - ${formatDayMonth(endDate)} ${endDate.getFullYear()}`;
-  }, [analyticsRange]);
-
-  const analyticsGrossRevenue = Number(stats.walletUsd.totalRevenue.toFixed(2));
-  const analyticsCommission = Number(stats.walletUsd.serviceFee.toFixed(2));
-  const analyticsNetRevenue = Number((analyticsGrossRevenue - analyticsCommission).toFixed(2));
-  const analyticsTotalBookings = analyticsSeries.bookings.reduce((total, value) => total + value, 0);
-  const analyticsAverageTicket =
-    analyticsTotalBookings > 0
-      ? Number((analyticsGrossRevenue / analyticsTotalBookings).toFixed(2))
-      : 0;
-  const analyticsBestPeriodLabel =
-    analyticsSeries.labels[analyticsSeries.bestBookingIndex] || "-";
+  const selectedAnalytics =
+    analyticsRange === "weekly" ? analytics.weekly : analytics.monthly;
+  const analyticsDateRangeLabel = selectedAnalytics.rangeLabel;
+  const analyticsGrossRevenue = selectedAnalytics.grossRevenueUsd;
+  const analyticsCommission = selectedAnalytics.commissionUsd;
+  const analyticsNetRevenue = selectedAnalytics.netRevenueUsd;
+  const analyticsTotalBookings = selectedAnalytics.totalBookings;
+  const analyticsAverageTicket = selectedAnalytics.averageTicketUsd;
+  const analyticsBestPeriodLabel = selectedAnalytics.bestPeriodLabel || "-";
 
   const lineChartGeometry = useMemo(() => {
     const width = 640;
@@ -485,14 +436,14 @@ export default function HostDashboardClient({
     const usableWidth = width - leftPadding - rightPadding;
     const usableHeight = height - topPadding - bottomPadding;
     const stepX =
-      analyticsSeries.labels.length > 1
-        ? usableWidth / (analyticsSeries.labels.length - 1)
+      selectedAnalytics.labels.length > 1
+        ? usableWidth / (selectedAnalytics.labels.length - 1)
         : 0;
 
-    const points = analyticsSeries.revenue.map((value, index) => {
+    const points = selectedAnalytics.revenueUsd.map((value, index) => {
       const x = leftPadding + stepX * index;
       const y =
-        topPadding + (1 - value / analyticsSeries.maxRevenue) * usableHeight;
+        topPadding + (1 - value / Math.max(selectedAnalytics.maxRevenue, 1)) * usableHeight;
       return { x, y, value };
     });
 
@@ -504,7 +455,7 @@ export default function HostDashboardClient({
 
     const yTicks = [1, 0.75, 0.5, 0.25, 0].map((ratio) => ({
       y: topPadding + (1 - ratio) * usableHeight,
-      value: Math.round(analyticsSeries.maxRevenue * ratio),
+      value: Math.round(Math.max(selectedAnalytics.maxRevenue, 1) * ratio),
     }));
 
     return {
@@ -519,7 +470,7 @@ export default function HostDashboardClient({
       areaPath,
       yTicks,
     };
-  }, [analyticsSeries]);
+  }, [selectedAnalytics]);
 
   const selectedWithdrawWallet =
     withdrawData?.wallets?.[withdrawCurrency] ?? {
@@ -1497,13 +1448,13 @@ export default function HostDashboardClient({
                 <div
                   className="mt-2 grid gap-3"
                   style={{
-                    gridTemplateColumns: `repeat(${analyticsSeries.labels.length}, minmax(0, 1fr))`,
+                    gridTemplateColumns: `repeat(${selectedAnalytics.labels.length}, minmax(0, 1fr))`,
                   }}
                 >
-                  {analyticsSeries.labels.map((label, index) => (
+                  {selectedAnalytics.labels.map((label, index) => (
                     <div key={`line-label-${label}-${index}`} className="text-center">
                       <p className="text-xs font-medium text-slate-500">{label}</p>
-                      <p className="text-xs text-slate-400">${analyticsSeries.revenue[index]}</p>
+                      <p className="text-xs text-slate-400">${selectedAnalytics.revenueUsd[index]}</p>
                     </div>
                   ))}
                 </div>
@@ -1523,18 +1474,18 @@ export default function HostDashboardClient({
                   <div
                     className="grid h-full items-end gap-3"
                     style={{
-                      gridTemplateColumns: `repeat(${analyticsSeries.labels.length}, minmax(0, 1fr))`,
+                      gridTemplateColumns: `repeat(${selectedAnalytics.labels.length}, minmax(0, 1fr))`,
                     }}
                   >
-                    {analyticsSeries.bookings.map((value, index) => {
+                    {selectedAnalytics.bookings.map((value, index) => {
                       const barHeight = Math.max(
                         10,
-                        (value / analyticsSeries.maxBookings) * 100
+                        (value / Math.max(selectedAnalytics.maxBookings, 1)) * 100
                       );
-                      const isPeak = index === analyticsSeries.bestBookingIndex;
+                      const isPeak = index === selectedAnalytics.bestBookingIndex;
 
                       return (
-                        <div key={`bar-${analyticsSeries.labels[index]}-${index}`} className="flex h-full flex-col justify-end">
+                        <div key={`bar-${selectedAnalytics.labels[index]}-${index}`} className="flex h-full flex-col justify-end">
                           <div className="group relative flex flex-1 items-end justify-center">
                             <div
                               className={`w-full rounded-t-xl transition ${
@@ -1547,7 +1498,7 @@ export default function HostDashboardClient({
                             </span>
                           </div>
                           <p className="mt-2 text-center text-xs font-medium text-slate-500">
-                            {analyticsSeries.labels[index]}
+                            {selectedAnalytics.labels[index]}
                           </p>
                         </div>
                       );
