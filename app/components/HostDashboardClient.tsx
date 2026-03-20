@@ -489,7 +489,7 @@ export default function HostDashboardClient({
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col">
+      <aside className="w-64 bg-gradient-to-b from-[#152a6b] via-[#182b73] to-[#11245d] text-white flex flex-col">
         <div className="px-6 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">
