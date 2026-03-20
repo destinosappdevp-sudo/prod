@@ -55,6 +55,14 @@ export default function CheckoutForm({
 
   const hasValidBcvRate = Number.isFinite(bcvRate) && bcvRate > 0;
 
+  const normalizePhone = (value: string) => {
+    const hasLeadingPlus = value.startsWith("+");
+    const digitsOnly = value.replace(/\D/g, "");
+    return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
+  };
+
+  const phoneValid = /^\+?\d{7,14}$/.test(formData.phoneNumber);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -64,6 +72,11 @@ export default function CheckoutForm({
 
     if (!hasValidBcvRate) {
       alert("No hay tasa BCV válida configurada para procesar este pago.");
+      return;
+    }
+
+    if (!phoneValid) {
+      alert("Ingresa un número de teléfono válido (solo dígitos, puede iniciar con +, entre 7 y 14 caracteres).");
       return;
     }
 
@@ -155,19 +168,31 @@ export default function CheckoutForm({
             </div>
 
             <div>
-              <Label htmlFor="phoneNumber">Tu Telefono</Label>
+              <Label
+                htmlFor="phoneNumber"
+                className={formData.phoneNumber && !phoneValid ? "text-red-600" : undefined}
+              >
+                Tu Teléfono
+              </Label>
               <Input
                 id="phoneNumber"
                 type="tel"
-                placeholder="0414-0000000"
+                inputMode="tel"
+                maxLength={14}
+                pattern="^\+?\d{7,14}$"
+                title="Solo números y + al inicio, entre 7 y 14 caracteres"
+                placeholder={formData.phoneNumber && !phoneValid ? "Ej: +584141234567 (solo números)" : "+584141234567"}
                 value={formData.phoneNumber}
-                onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("phoneNumber", normalizePhone(e.target.value))
+                }
                 required
+                className={formData.phoneNumber && !phoneValid ? "border-red-300 placeholder:text-red-500 focus-visible:ring-red-400" : undefined}
               />
             </div>
 
             <div>
-              <Label htmlFor="referenceNumber">Numero de referencia</Label>
+              <Label htmlFor="referenceNumber">Número de referencia</Label>
               <Input
                 id="referenceNumber"
                 type="text"
