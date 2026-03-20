@@ -21,7 +21,7 @@ const footerColumns = [
     links: [
       { label: "Únete a tu flota", href: "/unete-flota" },
       { label: "Anuncie su propiedad", href: "/publicar" },
-      { label: "Comviertete en Inversor", href: "/socio-premium" },
+      { label: "Conviértete en Inversor", href: "/socio-premium" },
     ],
   },
 ];
