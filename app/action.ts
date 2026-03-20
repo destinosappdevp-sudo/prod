@@ -462,7 +462,10 @@ export async function createLocation(formData: FormData) {
   const municipalityValue = formData.get("municipalityValue") as string;
   const exactAddress = formData.get("exactAddress") as string;
   const checkInTime = formData.get("checkInTime") as string;
-  const contactNumber = formData.get("contactNumber") as string;
+  const contactNumber = (formData.get("contactNumber") as string) || "";
+  const hasLeadingPlus = contactNumber.trim().startsWith("+");
+  const digitsOnly = contactNumber.replace(/\D/g, "");
+  const normalizedContactNumber = `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
   const latRaw = formData.get("latitude") as string;
   const lngRaw = formData.get("longitude") as string;
   const latitude = latRaw ? parseFloat(latRaw) : null;
@@ -501,7 +504,7 @@ export async function createLocation(formData: FormData) {
       latitude: latitude,
       longitude: longitude,
       checkInTime: checkInTime || null,
-      contactNumber: contactNumber || null,
+      contactNumber: normalizedContactNumber || null,
       publishStatus: publishStatus as any,
       approvedAt,
       approvedById,

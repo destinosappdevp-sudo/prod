@@ -120,6 +120,22 @@ export default function PropertyEditForm({
 
   const [amenityMap, setAmenityMap] = useState(initialAmenityMap);
 
+  const requiredMissingClass =
+    "border-red-300 placeholder:text-red-500 focus-visible:ring-red-400 focus-visible:border-red-400";
+  const missingTitle = formData.title.trim().length === 0;
+  const missingDescription = formData.description.trim().length === 0;
+  const missingCategory = formData.propertyTypeIds.length === 0;
+  const missingCountry = formData.country.trim().length === 0;
+  const missingMunicipality = formData.municipality.trim().length === 0;
+  const parsedPrice = Number(formData.price);
+  const missingPrice =
+    formData.price.trim().length === 0 ||
+    Number.isNaN(parsedPrice) ||
+    parsedPrice <= 0;
+  const missingAmenities = Object.values(amenityMap).every(
+    (status) => status === "UNSPECIFIED"
+  );
+
   const municipalities = useMemo(() => {
     return getMunicipalitiesByState(formData.country);
   }, [formData.country, getMunicipalitiesByState]);
@@ -270,17 +286,29 @@ export default function PropertyEditForm({
             <h3 className="text-lg font-semibold mb-4">Información Básica</h3>
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <Label htmlFor="title">Título</Label>
+                <Label
+                  htmlFor="title"
+                  className={missingTitle ? "text-red-600" : undefined}
+                >
+                  Título
+                </Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => handleChange("title", e.target.value)}
-                  placeholder="Título de la propiedad"
+                  placeholder={
+                    missingTitle
+                      ? "Falta completar el título"
+                      : "Título de la propiedad"
+                  }
+                  className={missingTitle ? requiredMissingClass : undefined}
                 />
               </div>
 
               <div>
-                <Label>Categorías</Label>
+                <Label className={missingCategory ? "text-red-600" : undefined}>
+                  Categorías
+                </Label>
                 <p className="text-xs text-muted-foreground mb-2">
                   Selecciona una o varias categorías para esta propiedad.
                 </p>
@@ -296,6 +324,8 @@ export default function PropertyEditForm({
                         className={`rounded-md border px-3 py-2 text-sm text-left transition-colors ${
                           selected
                             ? "border-primary bg-primary/10 text-primary"
+                            : missingCategory
+                            ? "border-red-300 text-red-700 hover:border-red-400"
                             : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
@@ -304,7 +334,11 @@ export default function PropertyEditForm({
                     );
                   })}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p
+                  className={`text-xs mt-2 ${
+                    missingCategory ? "text-red-600" : "text-muted-foreground"
+                  }`}
+                >
                   {formData.propertyTypeIds.length > 0
                     ? `${formData.propertyTypeIds.length} categoría(s) seleccionada(s)`
                     : "Sin categorías seleccionadas"}
@@ -314,12 +348,22 @@ export default function PropertyEditForm({
           </div>
 
           <div>
-            <Label htmlFor="description">Descripción</Label>
+            <Label
+              htmlFor="description"
+              className={missingDescription ? "text-red-600" : undefined}
+            >
+              Descripción
+            </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
-              placeholder="Descripción de la propiedad"
+              placeholder={
+                missingDescription
+                  ? "Falta completar la descripción"
+                  : "Descripción de la propiedad"
+              }
+              className={missingDescription ? requiredMissingClass : undefined}
               rows={4}
             />
           </div>
@@ -364,7 +408,12 @@ export default function PropertyEditForm({
             <h3 className="text-lg font-semibold mb-4">Ubicación y Precio</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="country">Estado</Label>
+                <Label
+                  htmlFor="country"
+                  className={missingCountry ? "text-red-600" : undefined}
+                >
+                  Estado
+                </Label>
                 <Select
                   value={formData.country}
                   onValueChange={(value) => {
@@ -374,8 +423,16 @@ export default function PropertyEditForm({
                     handleChange("municipality", defaultMunicipality);
                   }}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un estado" />
+                  <SelectTrigger
+                    className={missingCountry ? "border-red-300 text-red-600 focus-visible:ring-red-400" : undefined}
+                  >
+                    <SelectValue
+                      placeholder={
+                        missingCountry
+                          ? "Selecciona un estado (obligatorio)"
+                          : "Selecciona un estado"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {states.map((state) => (
@@ -387,13 +444,26 @@ export default function PropertyEditForm({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="municipality">Municipio</Label>
+                <Label
+                  htmlFor="municipality"
+                  className={missingMunicipality ? "text-red-600" : undefined}
+                >
+                  Municipio
+                </Label>
                 <Select
                   value={formData.municipality}
                   onValueChange={(value) => handleChange("municipality", value)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un municipio" />
+                  <SelectTrigger
+                    className={missingMunicipality ? "border-red-300 text-red-600 focus-visible:ring-red-400" : undefined}
+                  >
+                    <SelectValue
+                      placeholder={
+                        missingMunicipality
+                          ? "Selecciona un municipio (obligatorio)"
+                          : "Selecciona un municipio"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {municipalities.map((municipality) => (
@@ -408,13 +478,24 @@ export default function PropertyEditForm({
                 </Select>
               </div>
               <div>
-                <Label htmlFor="price">Precio por noche (USD)</Label>
+                <Label
+                  htmlFor="price"
+                  className={missingPrice ? "text-red-600" : undefined}
+                >
+                  Precio por noche (USD)
+                </Label>
                 <Input
                   id="price"
                   type="number"
                   value={formData.price}
                   onChange={(e) => handleChange("price", e.target.value)}
-                  placeholder="Precio por noche"
+                  min={1}
+                  placeholder={
+                    missingPrice
+                      ? "Falta completar un precio válido"
+                      : "Precio por noche"
+                  }
+                  className={missingPrice ? requiredMissingClass : undefined}
                 />
               </div>
             </div>
@@ -482,9 +563,17 @@ export default function PropertyEditForm({
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">Servicios</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Marca con un check si lo tienes, con una X si no, o déjalo en blanco.
+            <h3 className={`text-lg font-semibold mb-4 ${missingAmenities ? "text-red-600" : ""}`}>
+              Servicios
+            </h3>
+            <p
+              className={`text-sm mb-4 ${
+                missingAmenities ? "text-red-600" : "text-muted-foreground"
+              }`}
+            >
+              {missingAmenities
+                ? "Selecciona al menos un servicio para completar el anuncio."
+                : "Marca con un check si lo tienes, con una X si no, o déjalo en blanco."}
             </p>
             <AmenitySelector
               categories={amenityCategories}
@@ -494,7 +583,7 @@ export default function PropertyEditForm({
           </div>
 
           <div>
-            <Label htmlFor="image">Imagen (opcional)</Label>
+            <Label htmlFor="image">Imagen</Label>
             <Input
               id="image"
               type="file"

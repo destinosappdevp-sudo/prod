@@ -329,7 +329,7 @@ export default async function HostPropertyDetailPage({
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold mb-4">Editar Anuncio</h2>
+        <h2 className="text-2xl font-bold mb-4 pl-6">Editar Anuncio</h2>
         <PropertyEditForm
           property={propertyForForm}
           categories={categoriesForForm}

@@ -30,6 +30,13 @@ function AddressRoute({ params }: { params: { id: string } }) {
   const [longitude, setLongitude] = useState("");
   const [coordsInput, setCoordsInput] = useState("");
   const [coordsParsed, setCoordsParsed] = useState(false);
+  const [contactNumber, setContactNumber] = useState("");
+
+  const normalizeContactNumber = (value: string) => {
+    const hasLeadingPlus = value.startsWith("+");
+    const digitsOnly = value.replace(/\D/g, "");
+    return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
+  };
 
   const parseCoords = (value: string) => {
     setCoordsInput(value);
@@ -157,13 +164,20 @@ function AddressRoute({ params }: { params: { id: string } }) {
                 />
               </div>
               <div>
-                <Label htmlFor="contactNumber">Numero de contacto</Label>
+                <Label htmlFor="contactNumber">Número de contacto</Label>
                 <Input
                   id="contactNumber"
                   name="contactNumber"
                   type="tel"
                   required
-                  placeholder="Ej: +58 412 123 4567"
+                  value={contactNumber}
+                  onChange={(e) =>
+                    setContactNumber(normalizeContactNumber(e.target.value))
+                  }
+                  maxLength={14}
+                  pattern="^\\+?\\d+$"
+                  title="Usa solo números y el símbolo +"
+                  placeholder="Ej: +584121234567"
                   className="text-sm"
                 />
               </div>
