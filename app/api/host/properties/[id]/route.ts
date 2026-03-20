@@ -77,7 +77,10 @@ export async function PATCH(
     const municipality = (formData.get("municipality") as string) || "";
     const exactAddress = (formData.get("exactAddress") as string) || "";
     const checkInTime = (formData.get("checkInTime") as string) || "";
-    const contactNumber = (formData.get("contactNumber") as string) || "";
+    const contactNumberInput = ((formData.get("contactNumber") as string) || "").trim();
+    const hasLeadingPlus = contactNumberInput.startsWith("+");
+    const contactDigitsOnly = contactNumberInput.replace(/\D/g, "");
+    const normalizedContactNumber = `${hasLeadingPlus ? "+" : ""}${contactDigitsOnly}`.slice(0, 14);
     const latRaw = formData.get("latitude") as string | null;
     const lngRaw = formData.get("longitude") as string | null;
     const latitude = latRaw ? parseFloat(latRaw) : null;
@@ -144,6 +147,16 @@ export async function PATCH(
     const selectedCategoryNames = selectedCategories.map((category) => category.name);
     const selectedPropertyTypeIds = selectedCategories.map((category) => category.id);
 
+    if (!/^\+?\d{7,14}$/.test(normalizedContactNumber)) {
+      return NextResponse.json(
+        {
+          error:
+            "El número de contacto es obligatorio y debe contener solo números (puede iniciar con +) con 7 a 14 caracteres",
+        },
+        { status: 400 }
+      );
+    }
+
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
 
@@ -190,7 +203,7 @@ export async function PATCH(
       latitude: latitude,
       longitude: longitude,
       checkInTime: checkInTime || null,
-      contactNumber: contactNumber || null,
+      contactNumber: normalizedContactNumber,
       price: price ? parseInt(price) : null,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),

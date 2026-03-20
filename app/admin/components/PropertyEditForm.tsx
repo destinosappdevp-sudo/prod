@@ -120,6 +120,13 @@ export default function PropertyEditForm({
 
   const [amenityMap, setAmenityMap] = useState(initialAmenityMap);
 
+  const normalizeContactNumber = (value: string) => {
+    const trimmed = value.trim();
+    const hasLeadingPlus = trimmed.startsWith("+");
+    const digitsOnly = trimmed.replace(/\D/g, "");
+    return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
+  };
+
   const requiredMissingClass =
     "border-red-300 placeholder:text-red-500 focus-visible:ring-red-400 focus-visible:border-red-400";
   const missingTitle = formData.title.trim().length === 0;
@@ -132,6 +139,9 @@ export default function PropertyEditForm({
     formData.price.trim().length === 0 ||
     Number.isNaN(parsedPrice) ||
     parsedPrice <= 0;
+  const missingContactNumber = !/^\+?\d{7,14}$/.test(
+    normalizeContactNumber(formData.contactNumber)
+  );
   const missingAmenities = Object.values(amenityMap).every(
     (status) => status === "UNSPECIFIED"
   );
@@ -164,6 +174,12 @@ export default function PropertyEditForm({
     try {
       if (formData.propertyTypeIds.length === 0) {
         throw new Error("Debes seleccionar al menos una categoría");
+      }
+
+      if (missingContactNumber) {
+        throw new Error(
+          "Ingresa un número de contacto válido (solo números y + al inicio, de 7 a 14 caracteres)"
+        );
       }
 
       const payload = new FormData();
@@ -515,14 +531,32 @@ export default function PropertyEditForm({
                 />
               </div>
               <div>
-                <Label htmlFor="contactNumber">Numero de contacto</Label>
+                <Label
+                  htmlFor="contactNumber"
+                  className={missingContactNumber ? "text-red-600" : undefined}
+                >
+                  Número de contacto
+                </Label>
                 <Input
                   id="contactNumber"
                   type="tel"
+                  required
+                  inputMode="tel"
+                  maxLength={14}
+                  pattern={"^\\+?\\d{7,14}$"}
+                  title="Ingresa un número válido: solo números y + al inicio (7 a 14 caracteres)"
                   value={formData.contactNumber}
-                  onChange={(e) => handleChange("contactNumber", e.target.value)}
-                  placeholder="Ej: +58 412 123 4567"
-                  className="text-sm"
+                  onChange={(e) =>
+                    handleChange("contactNumber", normalizeContactNumber(e.target.value))
+                  }
+                  placeholder={
+                    missingContactNumber
+                      ? "Ingresa un número válido (7-14 dígitos)"
+                      : "Ej: +584121234567"
+                  }
+                  className={`text-sm ${
+                    missingContactNumber ? requiredMissingClass : ""
+                  }`}
                 />
               </div>
             </div>

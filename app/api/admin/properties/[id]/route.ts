@@ -81,7 +81,10 @@ export async function PATCH(
     const municipality = (formData.get("municipality") as string) || "";
     const exactAddress = (formData.get("exactAddress") as string) || "";
     const checkInTime = (formData.get("checkInTime") as string) || "";
-    const contactNumber = (formData.get("contactNumber") as string) || "";
+    const contactNumberInput = ((formData.get("contactNumber") as string) || "").trim();
+    const hasLeadingPlus = contactNumberInput.startsWith("+");
+    const contactDigitsOnly = contactNumberInput.replace(/\D/g, "");
+    const normalizedContactNumber = `${hasLeadingPlus ? "+" : ""}${contactDigitsOnly}`.slice(0, 14);
     const latRaw = formData.get("latitude") as string | null;
     const lngRaw = formData.get("longitude") as string | null;
     const latitude = latRaw ? parseFloat(latRaw) : null;
@@ -158,6 +161,15 @@ export async function PATCH(
     if (isNaN(Number(price)) || Number(price) <= 0) {
       return NextResponse.json({ error: "El precio debe ser un número mayor a 0" }, { status: 400 });
     }
+    if (!/^\+?\d{7,14}$/.test(normalizedContactNumber)) {
+      return NextResponse.json(
+        {
+          error:
+            "El número de contacto es obligatorio y debe contener solo números (puede iniciar con +) con 7 a 14 caracteres",
+        },
+        { status: 400 }
+      );
+    }
 
     let photoPath: string | undefined;
     if (imageFile && imageFile.size > 0) {
@@ -202,7 +214,7 @@ export async function PATCH(
       municipality: municipality || null,
       exactAddress: exactAddress || null,
       checkInTime: checkInTime || null,
-      contactNumber: contactNumber || null,
+      contactNumber: normalizedContactNumber,
       latitude: latitude,
       longitude: longitude,
       price: price ? parseInt(price) : null,
