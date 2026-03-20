@@ -1347,14 +1347,6 @@ export default function HostDashboardClient({
                     <p className="text-sm text-white/75">{analyticsDateRangeLabel}</p>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition"
-                >
-                  <ArrowDownToLine size={16} />
-                  Descargar PDF
-                </button>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
