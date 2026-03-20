@@ -337,7 +337,7 @@ async function getHostDashboardData(userId: string) {
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 6,
+      take: 250,
     }),
     prismaAny.home.count({ where: { userId } }),
     prismaAny.reservation.count({
@@ -507,8 +507,12 @@ async function getHostDashboardData(userId: string) {
       month: "short",
     })}`;
     
-    // Crear ID de reserva formateado
-    const reservationId = `ZRK-${new Date(reservation.createdAt).getFullYear()}-${String(Math.floor(Math.random() * 1000000)).padStart(6, "0")}`;
+    const reservationSuffix = String(reservation.id || "")
+      .replace(/-/g, "")
+      .slice(-6)
+      .toUpperCase()
+      .padStart(6, "0");
+    const reservationId = `ZRK-${new Date(reservation.createdAt).getFullYear()}-${reservationSuffix}`;
 
     const parsedPayment = reservation.Payment
       ? parsePaymentFinancials(reservation.Payment)

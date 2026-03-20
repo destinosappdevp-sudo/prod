@@ -472,6 +472,43 @@ export default function HostDashboardClient({
     };
   }, [selectedAnalytics]);
 
+  const recentReservations = useMemo(() => reservations.slice(0, 6), [reservations]);
+
+  const reservationStatusCounts = useMemo(() => {
+    const counts = {
+      all: reservations.length,
+      PENDING: 0,
+      CONFIRMED: 0,
+      COMPLETED: 0,
+      CANCELLED: 0,
+    };
+
+    for (const reservation of reservations) {
+      if (reservation.status === "PENDING") counts.PENDING += 1;
+      if (reservation.status === "CONFIRMED") counts.CONFIRMED += 1;
+      if (reservation.status === "COMPLETED") counts.COMPLETED += 1;
+      if (reservation.status === "CANCELLED") counts.CANCELLED += 1;
+    }
+
+    return counts;
+  }, [reservations]);
+
+  const filteredReservations = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return reservations.filter((reservation) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        reservation.guestName.toLowerCase().includes(normalizedSearch) ||
+        reservation.reservationId.toLowerCase().includes(normalizedSearch);
+
+      const matchesFilter =
+        reservationFilter === "all" || reservation.status === reservationFilter;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [reservations, reservationFilter, searchTerm]);
+
   const selectedWithdrawWallet =
     withdrawData?.wallets?.[withdrawCurrency] ?? {
       totalEarned: 0,
@@ -651,7 +688,7 @@ export default function HostDashboardClient({
                     </tr>
                   </thead>
                   <tbody>
-                    {reservations.map((reservation) => (
+                    {recentReservations.map((reservation) => (
                       <tr key={reservation.id} className="border-t border-slate-100">
                         <td className="py-3 text-slate-700 font-medium">
                           {reservation.guestName}
@@ -1130,7 +1167,7 @@ export default function HostDashboardClient({
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  Todas
+                  Todas ({reservationStatusCounts.all})
                 </button>
                 <button
                   type="button"
@@ -1141,7 +1178,7 @@ export default function HostDashboardClient({
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  Pendientes
+                  Pendientes ({reservationStatusCounts.PENDING})
                 </button>
                 <button
                   type="button"
@@ -1152,7 +1189,7 @@ export default function HostDashboardClient({
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  Confirmadas
+                  Confirmadas ({reservationStatusCounts.CONFIRMED})
                 </button>
                 <button
                   type="button"
@@ -1163,7 +1200,7 @@ export default function HostDashboardClient({
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  Completadas
+                  Completadas ({reservationStatusCounts.COMPLETED})
                 </button>
                 <button
                   type="button"
@@ -1174,7 +1211,7 @@ export default function HostDashboardClient({
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  Canceladas
+                  Canceladas ({reservationStatusCounts.CANCELLED})
                 </button>
               </div>
             </div>
@@ -1192,15 +1229,7 @@ export default function HostDashboardClient({
                   </tr>
                 </thead>
                 <tbody>
-                  {reservations
-                    .filter((r) => {
-                      const matchesSearch =
-                        r.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        r.reservationId.toLowerCase().includes(searchTerm.toLowerCase());
-                      const matchesFilter = reservationFilter === "all" || r.status === reservationFilter;
-                      return matchesSearch && matchesFilter;
-                    })
-                    .map((reservation) => (
+                  {filteredReservations.map((reservation) => (
                       <tr key={reservation.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
                         <td className="px-6 py-4 font-semibold text-slate-900">
                           {reservation.reservationId}
@@ -1236,13 +1265,7 @@ export default function HostDashboardClient({
               </table>
             </div>
 
-            {reservations.filter((r) => {
-              const matchesSearch =
-                r.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                r.reservationId.toLowerCase().includes(searchTerm.toLowerCase());
-              const matchesFilter = reservationFilter === "all" || r.status === reservationFilter;
-              return matchesSearch && matchesFilter;
-            }).length === 0 && (
+            {filteredReservations.length === 0 && (
               <div className="p-12 text-center">
                 <p className="text-slate-500 text-sm">No hay reservaciones que coincidan con tu búsqueda</p>
               </div>
