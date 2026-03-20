@@ -12,6 +12,7 @@ interface HomeReservationFormProps {
   userId: string | undefined;
   reservation: any;
   price: number;
+  maxGuests?: number;
 }
 
 export function HomeReservationForm({
@@ -19,8 +20,10 @@ export function HomeReservationForm({
   userId,
   reservation,
   price,
+  maxGuests,
 }: HomeReservationFormProps) {
   const router = useRouter();
+  const guestLimit = maxGuests && maxGuests > 0 ? maxGuests : Infinity;
   const [guests, setGuests] = useState(1);
   const initialStartDate = new Date();
   const initialEndDate = new Date(initialStartDate);
@@ -38,6 +41,11 @@ export function HomeReservationForm({
 
     if (dates.endDate.getTime() <= dates.startDate.getTime()) {
       alert("Selecciona una fecha de salida posterior a la de entrada.");
+      return;
+    }
+
+    if (guestLimit !== Infinity && guests > guestLimit) {
+      alert(`Esta propiedad admite máximo ${guestLimit} huésped${guestLimit !== 1 ? "es" : ""}.`);
       return;
     }
 
@@ -68,7 +76,12 @@ export function HomeReservationForm({
         <Separator className="my-4" />
 
         <div className="mb-4">
-          <p className="text-sm font-medium mb-2">Huéspedes</p>
+          <p className="text-sm font-medium mb-2">
+            Huéspedes
+            {guestLimit !== Infinity && (
+              <span className="text-xs text-gray-500 font-normal ml-1">(máx. {guestLimit})</span>
+            )}
+          </p>
           <div className="flex items-center justify-between border rounded-lg px-4 py-2">
             <button
               type="button"
@@ -80,8 +93,13 @@ export function HomeReservationForm({
             <span className="font-medium">{guests}</span>
             <button
               type="button"
-              onClick={() => setGuests(guests + 1)}
-              className="text-xl font-semibold text-gray-600 hover:text-gray-900 w-8 h-8"
+              onClick={() => setGuests(Math.min(guestLimit === Infinity ? 99 : guestLimit, guests + 1))}
+              disabled={guestLimit !== Infinity && guests >= guestLimit}
+              className={`text-xl font-semibold w-8 h-8 ${
+                guestLimit !== Infinity && guests >= guestLimit
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
             >
               +
             </button>

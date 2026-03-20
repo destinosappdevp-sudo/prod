@@ -89,13 +89,23 @@ export async function POST(request: Request) {
     // Verificar que la propiedad existe
     const home = await prisma.home.findUnique({
       where: { id: homeId },
-      select: { id: true, price: true },
+      select: { id: true, price: true, guests: true },
     });
 
     if (!home) {
       return NextResponse.json(
         { error: "Propiedad no encontrada" },
         { status: 404 }
+      );
+    }
+
+    const maxGuests = home.guests ? parseInt(home.guests as string, 10) : null;
+    if (maxGuests && maxGuests > 0 && guests > maxGuests) {
+      return NextResponse.json(
+        {
+          error: `Esta propiedad admite máximo ${maxGuests} huésped${maxGuests !== 1 ? "es" : ""}.`,
+        },
+        { status: 400 }
       );
     }
 

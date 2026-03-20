@@ -228,6 +228,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           userId={user?.id}
           reservation={data?.Reservation}
           price={data?.price as number}
+          maxGuests={data?.guests ? parseInt(data.guests as string) : undefined}
         />
       </div>
     </div>
