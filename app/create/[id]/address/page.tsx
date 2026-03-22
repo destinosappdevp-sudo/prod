@@ -33,9 +33,7 @@ function AddressRoute({ params }: { params: { id: string } }) {
   const [contactNumber, setContactNumber] = useState("");
 
   const normalizeContactNumber = (value: string) => {
-    const hasLeadingPlus = value.startsWith("+");
-    const digitsOnly = value.replace(/\D/g, "");
-    return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
+    return value.replace(/\D/g, "").slice(0, 10);
   };
 
   const parseCoords = (value: string) => {
@@ -165,21 +163,30 @@ function AddressRoute({ params }: { params: { id: string } }) {
               </div>
               <div>
                 <Label htmlFor="contactNumber">Número de contacto</Label>
-                <Input
-                  id="contactNumber"
+                <input
+                  type="hidden"
                   name="contactNumber"
-                  type="tel"
-                  required
-                  value={contactNumber}
-                  onChange={(e) =>
-                    setContactNumber(normalizeContactNumber(e.target.value))
-                  }
-                  maxLength={14}
-                  pattern="^\\+?\\d+$"
-                  title="Usa solo números y el símbolo +"
-                  placeholder="Ej: +584121234567"
-                  className="text-sm"
+                  value={contactNumber ? `+58${contactNumber}` : ""}
                 />
+                <div className="flex items-center border rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                  <span className="px-3 py-2 bg-muted text-sm font-medium border-r select-none">
+                    +58
+                  </span>
+                  <Input
+                    id="contactNumber"
+                    type="tel"
+                    required
+                    value={contactNumber}
+                    onChange={(e) =>
+                      setContactNumber(normalizeContactNumber(e.target.value))
+                    }
+                    maxLength={10}
+                    pattern="^\\d+$"
+                    title="Usa solo números"
+                    placeholder="Ej: 4121234567"
+                    className="text-sm border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
               </div>
             </div>
           </div>
