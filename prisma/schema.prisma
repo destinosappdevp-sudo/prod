@@ -214,6 +214,7 @@ model User {
   document2Image                    String?
   verificationStatus                VerificationStatus       @default(NOT_SUBMITTED)
   stateCode                         String?
+  municipalityCode                  String?
   AuditLog                          AuditLog[]
   Banner                            Banner[]
   Favorite                          Favorite[]

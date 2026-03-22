@@ -7,6 +7,7 @@ import { ChevronRight, Eye, EyeOff, Home, UserRound } from "lucide-react";
 import { signInWithEmail, signUpWithRole } from "@/app/action";
 import { createClient } from "@/app/lib/supabase/client";
 import { getAllStates } from "@/app/lib/venezuelaStates";
+import { getMunicipalitiesByState } from "@/app/lib/venezuelaMunicipalities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +48,7 @@ export function AuthPanel({
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [stateCode, setStateCode] = useState("");
+  const [municipalityCode, setMunicipalityCode] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [role, setRole] = useState<AuthRole>(initialRole);
@@ -209,6 +211,7 @@ export function AuthPanel({
         lastName,
         phoneNumber,
         stateCode,
+        municipalityCode,
       });
       if (result && "error" in result && result.error) {
         setError(result.error);
@@ -395,7 +398,13 @@ export function AuthPanel({
 
           <div className="space-y-2">
             <Label htmlFor={`auth-state-${variant}`}>Estado</Label>
-            <Select value={stateCode} onValueChange={setStateCode}>
+            <Select
+              value={stateCode}
+              onValueChange={(value) => {
+                setStateCode(value);
+                setMunicipalityCode(""); // Reset municipio al cambiar estado
+              }}
+            >
               <SelectTrigger id={`auth-state-${variant}`} className={selectClassName}>
                 <SelectValue placeholder="Selecciona..." />
               </SelectTrigger>
@@ -408,6 +417,24 @@ export function AuthPanel({
               </SelectContent>
             </Select>
           </div>
+
+          {stateCode && (
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor={`auth-municipality-${variant}`}>Municipio {role === "HOST" ? "(Anfitrión)" : ""}</Label>
+              <Select value={municipalityCode} onValueChange={setMunicipalityCode}>
+                <SelectTrigger id={`auth-municipality-${variant}`} className={selectClassName}>
+                  <SelectValue placeholder="Selecciona municipio..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {getMunicipalitiesByState(stateCode).map((municipality) => (
+                    <SelectItem key={municipality.value} value={municipality.value}>
+                      {municipality.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,4 +1,5 @@
 export const venezuelaStates = [
+  { value: "CC", label: "Distrito Capital", latLng: [10.5, -66.9] },
   { value: "AM", label: "Amazonas", latLng: [2.7, -67.0] },
   { value: "AN", label: "Anzoátegui", latLng: [10.2, -64.5] },
   { value: "AP", label: "Apure", latLng: [7.0, -67.5] },
@@ -22,7 +23,6 @@ export const venezuelaStates = [
   { value: "VA", label: "Vargas", latLng: [10.6, -66.2] },
   { value: "YA", label: "Yaracuy", latLng: [10.7, -68.7] },
   { value: "ZU", label: "Zulia", latLng: [10.2, -71.6] },
-  { value: "CC", label: "Caracas", latLng: [10.5, -66.9] },
 ];
 
 // Utility functions for server-side use

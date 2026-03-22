@@ -23,6 +23,7 @@ type RegistrationProfile = {
   lastName: string;
   phoneNumber: string;
   stateCode: string;
+  municipalityCode?: string;
 };
 
 function normalizeRegistrationProfile(profile: RegistrationProfile) {
@@ -31,6 +32,7 @@ function normalizeRegistrationProfile(profile: RegistrationProfile) {
     lastName: profile.lastName.trim(),
     phoneNumber: profile.phoneNumber.trim(),
     stateCode: profile.stateCode.trim().toUpperCase(),
+    municipalityCode: profile.municipalityCode?.trim().toUpperCase(),
   };
 }
 
@@ -97,6 +99,26 @@ export async function getUserAuth() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user;
+}
+
+export async function getUserProfile() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return null;
+  }
+
+  const userData = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      phoneNumber: true,
+      stateCode: true,
+      municipalityCode: true,
+    },
+  });
+
+  return userData;
 }
 
 export async function signIn() {
@@ -210,6 +232,7 @@ export async function signUpWithRole(
           role: role,
           phoneNumber: normalizedProfile.phoneNumber,
           stateCode: normalizedProfile.stateCode,
+          municipalityCode: normalizedProfile.municipalityCode || null,
         },
       });
     } catch (e) {
@@ -510,6 +533,17 @@ export async function createLocation(formData: FormData) {
       approvedById,
     },
   });
+
+  // Actualizar también el municipio del usuario si es necesario
+  if (stateValue && municipalityValue) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        stateCode: stateValue,
+        municipalityCode: municipalityValue,
+      },
+    });
+  }
 
   // Log para auditoría
   await logAuditAction(user.id, "HOME_PUBLISHED", {

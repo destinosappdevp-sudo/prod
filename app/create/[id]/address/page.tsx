@@ -1,5 +1,5 @@
 "use client";
-import { createLocation } from "@/app/action";
+import { createLocation, getUserProfile } from "@/app/action";
 import CreateButtonBar from "@/app/components/CreateButtonBar";
 import { useVenezuelaStates } from "@/app/lib/venezuelaStates";
 import { useVenezuelaMunicipalities } from "@/app/lib/venezuelaMunicipalities";
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function AddressRoute({ params }: { params: { id: string } }) {
   const { getAllStates } = useVenezuelaStates();
@@ -33,6 +33,40 @@ function AddressRoute({ params }: { params: { id: string } }) {
   const [contactNumber, setContactNumber] = useState("");
   const parsedLatitude = latitude ? Number(latitude) : null;
   const parsedLongitude = longitude ? Number(longitude) : null;
+
+  // Cargar datos del usuario (estado, número de contacto, municipio)
+  useEffect(() => {
+    (async () => {
+      try {
+        const userProfile = await getUserProfile();
+        if (userProfile) {
+          if (userProfile.stateCode) {
+            setStateValue(userProfile.stateCode);
+            // Cargar municipio del usuario si existe
+            if (userProfile.municipalityCode) {
+              setMunicipalityValue(userProfile.municipalityCode);
+            } else {
+              setMunicipalityValue(
+                getDefaultMunicipalityByState(userProfile.stateCode)?.value || ""
+              );
+            }
+          }
+          // Cargar teléfono del usuario (sin el +58)
+          if (userProfile.phoneNumber) {
+            // Si el teléfono viene como +58... extrae solo los dígitos
+            const phoneDigits = userProfile.phoneNumber.replace(/\D/g, "");
+            // Si comienza con 58, quita esos primeros 2 dígitos
+            const phoneWithoutCountry = phoneDigits.startsWith("58")
+              ? phoneDigits.slice(2)
+              : phoneDigits;
+            setContactNumber(phoneWithoutCountry.slice(0, 10));
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando perfil del usuario:", error);
+      }
+    })();
+  }, [getDefaultMunicipalityByState]);
 
   const normalizeContactNumber = (value: string) => {
     return value.replace(/\D/g, "").slice(0, 10);
@@ -61,7 +95,7 @@ function AddressRoute({ params }: { params: { id: string } }) {
     <>
       <div className="w-3/5 mx-auto">
         <h2 className="text-3xl font-semibold tracking-tighter transition-colors mb-10">
-          ¿Dónde está ubicado tu hogar?
+          ¿Dónde está ubicado tu inmueble?
         </h2>
       </div>
 
