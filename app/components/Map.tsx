@@ -41,10 +41,12 @@ function Map({
     : null;
   const stateLatLng = stateObj?.latLng;
   const fallbackLatLng = (municipality?.latLng ?? stateLatLng ?? [6.5, -66.6]) as [number, number];
+  const hasGpsCoords = Number.isFinite(latitude) && Number.isFinite(longitude);
 
   // Si hay coordenadas GPS exactas, úsalas directamente
   const gpsLatLng: [number, number] | null =
-    latitude != null && longitude != null ? [latitude, longitude] : null;
+    hasGpsCoords ? [latitude as number, longitude as number] : null;
+  const hasMunicipality = Boolean(municipality);
 
   // Zoom inicial: 16 si GPS, 11 si municipio, 8 si sólo estado
   const initialZoom = gpsLatLng ? 16 : municipality ? 11 : 8;
@@ -52,6 +54,25 @@ function Map({
     gpsLatLng ?? fallbackLatLng
   );
   const [zoom, setZoom] = useState(initialZoom);
+
+  useEffect(() => {
+    if (gpsLatLng) {
+      setPinLatLng(gpsLatLng);
+      setZoom(16);
+      return;
+    }
+
+    setPinLatLng(fallbackLatLng);
+    setZoom(hasMunicipality ? 11 : 8);
+  }, [
+    stateValue,
+    municipalityValue,
+    hasMunicipality,
+    gpsLatLng?.[0],
+    gpsLatLng?.[1],
+    fallbackLatLng[0],
+    fallbackLatLng[1],
+  ]);
 
   // Venezuela bounding box
   const inVenezuela = (lat: number, lon: number) =>

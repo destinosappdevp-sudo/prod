@@ -31,6 +31,8 @@ function AddressRoute({ params }: { params: { id: string } }) {
   const [coordsInput, setCoordsInput] = useState("");
   const [coordsParsed, setCoordsParsed] = useState(false);
   const [contactNumber, setContactNumber] = useState("");
+  const parsedLatitude = latitude ? Number(latitude) : null;
+  const parsedLongitude = longitude ? Number(longitude) : null;
 
   const normalizeContactNumber = (value: string) => {
     return value.replace(/\D/g, "").slice(0, 10);
@@ -194,6 +196,8 @@ function AddressRoute({ params }: { params: { id: string } }) {
           <LazyMap
             stateValue={stateValue}
             municipalityValue={municipalityValue}
+            latitude={parsedLatitude}
+            longitude={parsedLongitude}
           />
         </div>
 

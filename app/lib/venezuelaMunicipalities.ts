@@ -21,25 +21,25 @@ const rawMunicipalitiesByState: Record<string, string[]> = {
   AN: [
     "Anaco",
     "Aragua",
-    "Bolívar",
-    "Bruzual",
-    "Cajigal",
-    "Carvajal",
-    "Diego Bautista Urbaneja",
-    "Freites",
+    "Simón Bolívar",
+    "Manuel Ezequiel Bruzual",
+    "Juan Manuel Cajigal",
+    "Francisco del Carmen Carvajal",
+    "Urbaneja",
+    "Pedro María Freites",
     "Guanta",
-    "Guanipa",
+    "San José de Guanipa",
     "Independencia",
     "Libertad",
-    "McGregor",
+    "Sir Arthur McGregor",
     "Miranda",
-    "Monagas",
-    "Peñalver",
+    "José Gregorio Monagas",
+    "Fernando de Peñalver",
     "Píritu",
     "San Juan de Capistrano",
     "Santa Ana",
     "Simón Rodríguez",
-    "Sotillo",
+    "Juan Antonio Sotillo",
   ],
   AP: [
     "Achaguas",
@@ -392,6 +392,23 @@ const toValue = (name: string) => {
     .replace(/[^a-zA-Z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
     .toUpperCase();
+};
+
+// Conserva compatibilidad con valores guardados previamente en BD.
+const municipalityValueOverrides: Record<string, Record<string, string>> = {
+  AN: {
+    URBANEJA: "DIEGO_BAUTISTA_URBANEJA",
+    SIMON_BOLIVAR: "BOLIVAR",
+    MANUEL_EZEQUIEL_BRUZUAL: "BRUZUAL",
+    JUAN_MANUEL_CAJIGAL: "CAJIGAL",
+    FRANCISCO_DEL_CARMEN_CARVAJAL: "CARVAJAL",
+    PEDRO_MARIA_FREITES: "FREITES",
+    SAN_JOSE_DE_GUANIPA: "GUANIPA",
+    SIR_ARTHUR_MCGREGOR: "MCGREGOR",
+    JOSE_GREGORIO_MONAGAS: "MONAGAS",
+    FERNANDO_DE_PENALVER: "PENALVER",
+    JUAN_ANTONIO_SOTILLO: "SOTILLO",
+  },
 };
 
 // Coordenadas específicas por municipio: { ESTADO: { VALOR_MUNICIPIO: [lat, lng] } }
@@ -784,7 +801,8 @@ const municipalitiesByState: Record<
   Object.entries(rawMunicipalitiesByState).map(([state, names]) => [
     state,
     names.map((name) => {
-      const val = toValue(name);
+      const normalizedName = toValue(name);
+      const val = municipalityValueOverrides[state]?.[normalizedName] ?? normalizedName;
       const specificLatLng = municipalityCoords[state]?.[val];
       return {
         value: val,
