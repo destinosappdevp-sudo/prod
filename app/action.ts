@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "./lib/db";
@@ -77,7 +77,7 @@ async function sendWelcomeEmail(email: string) {
     const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: "Bienvenido a Zerkka",
+      subject: "Bienvenido a Destinos Venezuela",
       html: generateWelcomeEmail({
         email,
         displayName,

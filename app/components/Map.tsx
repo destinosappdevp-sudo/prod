@@ -8,7 +8,7 @@ import { useVenezuelaStates } from "../lib/venezuelaStates";
 import { useVenezuelaMunicipalities } from "../lib/venezuelaMunicipalities";
 
 const ICON = icon({
-  iconUrl: "/z.webp",
+  iconUrl: "/logo.png",
   iconSize: [20, 20],
 });
 

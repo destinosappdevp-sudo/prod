@@ -4,9 +4,9 @@ export default function Loading() {
       <div className="relative flex items-center justify-center w-24 h-24">
         {/* Anillo giratorio */}
         <div className="absolute inset-0 rounded-full border-4 border-orange-100 border-t-orange-500 animate-spin-fast" />
-        {/* Logo Z */}
+        {/* Logo D */}
         <span className="text-orange-500 font-black text-5xl leading-none select-none">
-          Z
+          D
         </span>
       </div>
     </div>

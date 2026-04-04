@@ -1,9 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import FooterAccountLinks from "./FooterAccountLinks";
 
 const footerColumns = [
   {
-    title: "Somos ZerKKa",
+    title: "Somos Destinos Venezuela",
     links: [
       { label: "Preguntas frecuentes", href: "/ayuda" },
     ],
@@ -35,7 +35,7 @@ export default function Footer() {
       <div className="container mx-auto px-5 lg:px-10 py-12">
         {/* Top row: brand + app badges */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-          <span className="text-2xl font-bold text-white tracking-wide">ZerKKa</span>
+          <span className="text-2xl font-bold text-white tracking-wide">Destinos Venezuela</span>
           <div className="flex items-center gap-3">
             {/* Google Play badge */}
             <a
@@ -105,7 +105,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-[#2c4ea9]">
         <div className="container mx-auto px-5 lg:px-10 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-blue-200/75">
-          <p>© {currentYear} ZerKKa · Venezuela · Todos los derechos reservados</p>
+          <p>© {currentYear} Destinos Venezuela · Venezuela · Todos los derechos reservados</p>
           <div className="flex gap-4">
             <Link href="/terminos" className="hover:text-white transition-colors">Términos</Link>
             <Link href="/privacidad" className="hover:text-white transition-colors">Privacidad</Link>

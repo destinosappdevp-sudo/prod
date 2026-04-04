@@ -35,24 +35,9 @@ export default function BannerCarousel() {
     fetchBanners();
   }, []);
 
-  // Detectar tamaño de pantalla para responsividad
+  // Siempre mostrar 1 banner a la vez
   useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 768) {
-        setItemsPerPage(1); // Mobile
-      } else if (width < 1024) {
-        setItemsPerPage(2); // Tablet
-      } else if (width < 1280) {
-        setItemsPerPage(3); // Laptop pequeña
-      } else {
-        setItemsPerPage(4); // PC grande
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    setItemsPerPage(1);
   }, []);
 
   const goToPrevious = () => {
@@ -82,8 +67,8 @@ export default function BannerCarousel() {
 
   return (
     <div className="relative w-full mb-8">
-      {/* Grid responsive de banners */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* Banner a ancho completo */}
+      <div className="grid grid-cols-1">
         {visibleBanners.map((banner) => {
           const bannerUrl = normalizeExternalUrl(banner.url);
 
@@ -93,7 +78,7 @@ export default function BannerCarousel() {
                 src={banner.imageUrl}
                 alt={banner.title}
                 fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                sizes="100vw"
                 className="object-cover group-hover:opacity-90 transition-opacity duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -106,14 +91,14 @@ export default function BannerCarousel() {
               href={bannerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative block aspect-[2/1] rounded-lg overflow-hidden shadow-lg group"
+              className="relative block aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
             >
               {bannerContent}
             </a>
           ) : (
             <div
               key={banner.id}
-              className="relative block aspect-[2/1] rounded-lg overflow-hidden shadow-lg group"
+              className="relative block aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
             >
               {bannerContent}
             </div>

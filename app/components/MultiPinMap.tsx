@@ -17,7 +17,7 @@ export interface MapPin {
 }
 
 const ICON = icon({
-  iconUrl: "/z.webp",
+  iconUrl: "/logo.png",
   iconSize: [24, 24],
 });
 

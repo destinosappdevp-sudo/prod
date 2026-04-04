@@ -1,4 +1,4 @@
-interface ReservationEmailData {
+﻿interface ReservationEmailData {
   guestName: string;
   guestEmail: string;
   guestPhone?: string;
@@ -25,7 +25,7 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reserva Confirmada - Zerkka</title>
+  <title>Reserva Confirmada - Destinos Venezuela</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
@@ -48,7 +48,7 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
                 Hola <strong>${data.guestName}</strong>,
               </p>
               <p style="margin: 0 0 30px 0; color: #666666; font-size: 15px; line-height: 1.6;">
-                ¡Excelentes noticias! Tu reserva ha sido confirmada. Estamos emocionados de que elijas Zerkka para tu próxima estadía.
+                ¡Excelentes noticias! Tu reserva ha sido confirmada. Estamos emocionados de que elijas Destinos Venezuela para tu próxima estadía.
               </p>
 
               <!-- Property Info -->
@@ -145,10 +145,10 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
           <tr>
             <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
               <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                ¿Necesitas ayuda? Contáctanos en <a href="mailto:support@zerkka.com" style="color: #667eea; text-decoration: none;">support@zerkka.com</a>
+                ¿Necesitas ayuda? Contáctanos en <a href="mailto:support@Destinos Venezuela.com" style="color: #667eea; text-decoration: none;">support@Destinos Venezuela.com</a>
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                © ${new Date().getFullYear()} Zerkka. Todos los derechos reservados.
+                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -168,7 +168,7 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nueva Reserva - Zerkka</title>
+  <title>Nueva Reserva - Destinos Venezuela</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
@@ -283,10 +283,10 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
           <tr>
             <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
               <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                ¿Preguntas? Contáctanos en <a href="mailto:host-support@zerkka.com" style="color: #f5576c; text-decoration: none;">host-support@zerkka.com</a>
+                ¿Preguntas? Contáctanos en <a href="mailto:host-support@Destinos Venezuela.com" style="color: #f5576c; text-decoration: none;">host-support@Destinos Venezuela.com</a>
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                © ${new Date().getFullYear()} Zerkka. Todos los derechos reservados.
+                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -313,7 +313,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenido a Zerkka</title>
+  <title>Bienvenido a Destinos Venezuela</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6f8;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 0;">
@@ -322,7 +322,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
         <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
           <tr>
             <td style="background:linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%);padding:36px 28px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;">Bienvenido a Zerkka</h1>
+              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;">Bienvenido a Destinos Venezuela</h1>
               <p style="margin:10px 0 0 0;color:#eaf6ff;font-size:15px;">Tu cuenta ya esta lista para empezar a reservar</p>
             </td>
           </tr>
@@ -332,7 +332,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
                 Hola <strong>${safeName}</strong>,
               </p>
               <p style="margin:0 0 16px 0;color:#4b5563;font-size:15px;line-height:1.7;">
-                Gracias por registrarte en Zerkka. Ya puedes explorar alojamientos, guardar favoritos y gestionar tus reservas desde tu panel.
+                Gracias por registrarte en Destinos Venezuela. Ya puedes explorar alojamientos, guardar favoritos y gestionar tus reservas desde tu panel.
               </p>
               <p style="margin:0 0 22px 0;color:#4b5563;font-size:15px;line-height:1.7;">
                 Tu cuenta fue creada con el correo: <strong>${data.email}</strong>
@@ -352,7 +352,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
           <tr>
             <td style="padding:22px 30px;background:#f8fafc;border-top:1px solid #e5e7eb;">
               <p style="margin:0;color:#6b7280;font-size:12px;text-align:center;">
-                © ${new Date().getFullYear()} Zerkka. Todos los derechos reservados.
+                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -377,7 +377,7 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recuperar Contraseña - Zerkka</title>
+  <title>Recuperar Contraseña - Destinos Venezuela</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
@@ -448,10 +448,10 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
           <tr>
             <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
               <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                ¿Necesitas ayuda? Contáctanos en <a href="mailto:support@zerkka.com" style="color: #667eea; text-decoration: none;">support@zerkka.com</a>
+                ¿Necesitas ayuda? Contáctanos en <a href="mailto:support@Destinos Venezuela.com" style="color: #667eea; text-decoration: none;">support@Destinos Venezuela.com</a>
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                © ${new Date().getFullYear()} Zerkka. Todos los derechos reservados.
+                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>

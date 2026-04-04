@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/card";
+﻿import { Card } from "@/components/ui/card";
 import { unstable_noStore } from 'next/cache';
 import prisma from "@/app/lib/db";
 import { redirect } from "next/navigation";
@@ -145,7 +145,7 @@ export default async function AdminDashboard() {
       format: "money",
     },
     {
-      title: "Ingresos ZerKKa",
+      title: "Ingresos Destinos Venezuela",
       value: stats.zerkkaRevenueThisMonth,
       icon: TrendingDown,
       color: "pink",
@@ -167,7 +167,7 @@ export default async function AdminDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Bienvenido al panel de administración de ZerKKa</p>
+        <p className="text-gray-600 mt-1">Bienvenido al panel de administración de Destinos Venezuela</p>
       </div>
 
       {/* Alert for pending payments */}

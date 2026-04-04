@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/app/lib/supabase/admin";
+﻿import { createAdminClient } from "@/app/lib/supabase/admin";
 import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
 import { generatePasswordResetEmail } from "@/app/lib/email-templates";
 import { NextRequest, NextResponse } from "next/server";
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: "Recuperar tu contraseña - Zerkka",
+      subject: "Recuperar tu contraseña - Destinos Venezuela",
       html: generatePasswordResetEmail({
         email,
         resetLink,

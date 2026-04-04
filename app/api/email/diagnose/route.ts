@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
 
 /**
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
       const result = await resend.emails.send({
         from: FROM_EMAIL,
         to: testEmail,
-        subject: "Test de configuración Zerkka",
+        subject: "Test de configuración Destinos Venezuela",
         html: "<p>Este es un email de prueba para verificar que Resend está configurado correctamente.</p>",
       });
       const ok = !result.error;

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import prisma from "@/app/lib/db";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
@@ -61,7 +61,7 @@ async function sendWelcomeEmail(email: string) {
     const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: "Bienvenido a Zerkka",
+      subject: "Bienvenido a Destinos Venezuela",
       html: generateWelcomeEmail({
         email,
         displayName,

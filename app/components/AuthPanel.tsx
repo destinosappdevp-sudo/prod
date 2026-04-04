@@ -57,7 +57,7 @@ export function AuthPanel({
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const stateOptions = getAllStates();
-  const registerTitle = role === "HOST" ? "Crear cuenta anfitrión" : "Crear cuenta huésped";
+  const registerTitle = "Crear Cuenta";
 
   useEffect(() => {
     setIsLogin(initialMode === "login");
@@ -251,70 +251,6 @@ export function AuthPanel({
   const formBody = (
     <form onSubmit={handleSubmit} className={cn("space-y-4", variant === "dialog" && "space-y-4") }>
       {!isLogin && (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setRole("GUEST")}
-            aria-pressed={role === "GUEST"}
-            className={cn(
-              roleCardClassName,
-              role === "GUEST"
-                ? "border-orange-300 bg-orange-50"
-                : "border-gray-200 bg-white hover:bg-gray-50"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className={cn(
-                  "flex h-11 w-11 items-center justify-center rounded-full",
-                  role === "GUEST" ? "bg-orange-100 text-orange-500" : "bg-orange-50 text-orange-400"
-                )}
-              >
-                <UserRound className="h-5 w-5" />
-              </span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-semibold text-gray-900">Soy Huésped</span>
-                <span className="block text-sm text-gray-500">Busca y reserva alojamientos vacacionales</span>
-              </span>
-
-              <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setRole("HOST")}
-            aria-pressed={role === "HOST"}
-            className={cn(
-              roleCardClassName,
-              role === "HOST"
-                ? "border-emerald-300 bg-emerald-50"
-                : "border-gray-200 bg-white hover:bg-gray-50"
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className={cn(
-                  "flex h-11 w-11 items-center justify-center rounded-full",
-                  role === "HOST" ? "bg-emerald-100 text-emerald-500" : "bg-emerald-50 text-emerald-400"
-                )}
-              >
-                <Home className="h-5 w-5" />
-              </span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-semibold text-gray-900">Soy Anfitrión</span>
-                <span className="block text-sm text-gray-500">Publica y gestiona tus propiedades</span>
-              </span>
-
-              <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
-            </div>
-          </button>
-        </div>
-      )}
-
-      {!isLogin && (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor={`auth-first-name-${variant}`}>Nombre</Label>
@@ -471,7 +407,7 @@ export function AuthPanel({
         className={cn(
           "w-full",
           variant === "dialog" &&
-            "h-11 rounded-2xl bg-[#ff6b35] text-base font-semibold text-white hover:bg-[#f45b24]"
+            "h-11 rounded-2xl bg-[#E1B042] text-base font-semibold text-white hover:bg-[#C99A38]"
         )}
       >
         {isSubmitting
@@ -511,13 +447,6 @@ export function AuthPanel({
           <h2 className="text-2xl font-semibold text-gray-900 md:text-3xl">
             {isLogin ? "Iniciar sesión" : registerTitle}
           </h2>
-          <p className="mt-1.5 text-sm text-gray-500">
-            {isLogin
-              ? "Accede a tu cuenta para reservar, guardar favoritos y gestionar tus viajes."
-              : role === "HOST"
-              ? "Crea tu cuenta de anfitrión para publicar propiedades y recibir reservas."
-              : "Crea tu cuenta para comenzar a reservar o guardar favoritos."}
-          </p>
         </div>
         {formBody}
       </div>

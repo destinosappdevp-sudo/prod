@@ -1,8 +1,8 @@
-export const translations = {
+﻿export const translations = {
   es: {
     // Navigation
     navbar: {
-      airbnbHome: "Publicar en Zerkka",
+      airbnbHome: "Publicar en Destinos Venezuela",
       myListing: "Mis Anuncios",
       myFavorites: "Mis Favoritos",
       myReservation: "Mis Reservas",

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -111,9 +111,9 @@ export default function DashboardClient(props: DashboardClientProps) {
       <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col">
         <div className="px-6 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">Z</div>
+            <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">D</div>
             <div>
-              <p className="text-sm font-semibold">ZERKKA</p>
+              <p className="text-sm font-semibold">Destinos Venezuela</p>
               <p className="text-xs text-white/60">Panel de Huésped</p>
             </div>
           </div>

@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import SearchBox from "./SearchBox";
 import UserNav from "./UserNav";
-import LanguageSwitcher from "./LanguageSwitcher";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 
@@ -33,35 +31,21 @@ async function Navbar() {
         <div className="flex flex-wrap items-center justify-between gap-3 lg:flex-nowrap lg:gap-6">
           <Link href={"/"} className="shrink-0 flex items-center gap-2">
             <Image
-              src="/screenshot/logodesktop.svg"
+              src="/logo.png"
               alt="logo"
-              width={128}
-              height={32}
-              className="w-32 h-auto hidden lg:block"
+              width={40}
+              height={40}
+              className="w-10 h-10 object-contain"
               priority
             />
-            <div className="flex items-center gap-2 lg:hidden">
-              <Image
-                src="/z.webp"
-                alt="Mobile Logo"
-                width={40}
-                height={40}
-                className="w-10 h-10"
-                priority
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-gray-900">Hola, {userName}</span>
-              </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-base font-bold text-gray-900">Destino&apos;s</span>
+              <span className="text-xs text-gray-500">Tu aventura comienza aquí</span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-x-3 sm:gap-x-4 shrink-0 lg:order-3">
-            <LanguageSwitcher />
+          <div className="flex items-center gap-x-3 sm:gap-x-4 shrink-0">
             <UserNav />
-          </div>
-
-          <div className="w-full order-3 lg:order-2 lg:flex-1 lg:max-w-3xl">
-            <SearchBox />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
@@ -533,7 +533,7 @@ export default function HostDashboardClient({
               Z
             </div>
             <div>
-              <p className="text-sm font-semibold">ZERKKA</p>
+              <p className="text-sm font-semibold">Destinos Venezuela</p>
               <p className="text-xs text-white/60">Host Panel</p>
             </div>
           </div>
@@ -1384,7 +1384,7 @@ export default function HostDashboardClient({
 
                 <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
                   <div className="flex items-center justify-between text-xs text-white/80">
-                    <span>Comision ZERKKA</span>
+                    <span>Comision Destinos Venezuela</span>
                     <PieChart size={14} />
                   </div>
                   <p className="mt-2 text-3xl font-bold">-${analyticsCommission.toFixed(2)}</p>

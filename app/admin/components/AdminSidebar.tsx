@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -50,7 +50,7 @@ export function AdminSidebar({ userName, role }: AdminSidebarProps) {
       {/* Logo/Header */}
       <div className="p-6 border-b border-gray-800">
         <Link href="/admin">
-          <h1 className="text-2xl font-bold text-white">Zerkka Admin</h1>
+          <h1 className="text-2xl font-bold text-white">Destinos Venezuela Admin</h1>
         </Link>
         <p className="text-sm text-gray-400 mt-1">{userName || "Administrator"}</p>
       </div>

@@ -331,10 +331,10 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            {/* Comisión ZerKKa */}
+            {/* Comisión Destinos Venezuela */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium">Comisión ZerKKa</p>
+                <p className="font-medium">Comisión Destinos Venezuela</p>
                 <p className="text-sm text-gray-600">Porcentaje aplicado a cada pago</p>
               </div>
               <form className="flex items-center gap-2" onSubmit={handleSubmit}>

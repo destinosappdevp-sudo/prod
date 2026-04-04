@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -9,9 +9,9 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Reservas en Venezuela",
-  description: "Zerkka",
+  description: "Destinos Venezuela",
   icons: {
-    icon: "/z.webp",
+    icon: "/favicon.webp",
   },
 };
 

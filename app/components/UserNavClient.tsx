@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+﻿/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Menu, CircleUserRound, HelpCircle } from "lucide-react";
+import { Menu, CircleUserRound, HelpCircle, ArrowRight } from "lucide-react";
 import { signOut } from "../action";
 import { AuthDialog } from "./AuthDialog";
 
@@ -64,7 +64,17 @@ export function UserNavClient({
 
   return (
     <>
-      <DropdownMenu>
+      <div className="flex items-center gap-3">
+        {!user && (
+          <button
+            onClick={openLoginDialog}
+            className="flex items-center gap-2 rounded-full bg-[#E1B042] hover:bg-[#C99A38] px-4 py-2 text-sm font-semibold text-white transition-colors"
+          >
+            <ArrowRight size={16} />
+            Iniciar Sesión
+          </button>
+        )}
+        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             aria-label="Abrir menú"
@@ -106,7 +116,7 @@ export function UserNavClient({
                 <DropdownMenuItem asChild className={menuItemClassName}>
                   <form action={createHomeAction} className="w-full">
                     <button type="submit" className={menuItemContentClassName}>
-                      Publicar en Zerkka
+                      Publicar en Destinos Venezuela
                     </button>
                   </form>
                 </DropdownMenuItem>
@@ -151,19 +161,11 @@ export function UserNavClient({
               >
                 Registrarse
               </DropdownMenuItem>
-
-              <DropdownMenuSeparator className="my-1" />
-
-              <DropdownMenuItem
-                onSelect={() => openRegisterDialog("HOST")}
-                className={menuItemClassName}
-              >
-                Conviértete en anfitrión
-              </DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
 
       <AuthDialog
         open={authDialogOpen}

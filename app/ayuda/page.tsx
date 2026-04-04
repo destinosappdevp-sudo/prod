@@ -1,4 +1,4 @@
-const faqs = [
+﻿const faqs = [
   {
     category: "Reservas",
     items: [
@@ -29,7 +29,7 @@ const faqs = [
       },
       {
         q: "¿Hay algún cargo de servicio?",
-        a: "Sí, Zerkka aplica una pequeña tarifa de servicio para cubrir los costos de la plataforma. El monto exacto se muestra en el resumen del pago antes de confirmar.",
+        a: "Sí, Destinos Venezuela aplica una pequeña tarifa de servicio para cubrir los costos de la plataforma. El monto exacto se muestra en el resumen del pago antes de confirmar.",
       },
     ],
   },
@@ -72,7 +72,7 @@ export default function AyudaPage() {
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-3">Centro de ayuda</h1>
         <p className="text-gray-500 text-lg">
-          Encuentra respuestas a las preguntas más frecuentes sobre Zerkka.
+          Encuentra respuestas a las preguntas más frecuentes sobre Destinos Venezuela.
         </p>
       </div>
 
