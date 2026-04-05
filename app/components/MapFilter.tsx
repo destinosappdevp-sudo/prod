@@ -155,25 +155,39 @@ function MapFilter() {
               "flex flex-col gap-y-3 items-center"
             )}
           >
-            <div className="relative w-6 h-6">
+            <div className="relative w-6 h-6 flex items-center justify-center">
               {(() => {
-                const imageUrl = item.icon
-                  ? iconMap[item.icon as keyof typeof iconMap]
-                  : undefined;
-
-                if (!imageUrl) {
+                if (!item.icon) {
                   return <Home className="w-6 h-6" />;
                 }
 
-                return (
-                  <Image
-                    src={imageUrl}
-                    alt={normalizeCategoryLabel(item.name)}
-                    className="w-6 h-6 object-cover rounded-sm"
-                    width={24}
-                    height={24}
-                  />
-                );
+                if (item.icon.startsWith("http")) {
+                  return (
+                    <Image
+                      src={item.icon}
+                      alt={normalizeCategoryLabel(item.name)}
+                      className="w-6 h-6 object-cover rounded-sm"
+                      width={24}
+                      height={24}
+                    />
+                  );
+                }
+
+                const imageUrl = iconMap[item.icon as keyof typeof iconMap];
+                if (imageUrl) {
+                  return (
+                    <Image
+                      src={imageUrl}
+                      alt={normalizeCategoryLabel(item.name)}
+                      className="w-6 h-6 object-cover rounded-sm"
+                      width={24}
+                      height={24}
+                    />
+                  );
+                }
+
+                // Emoji u otro carácter
+                return <span className="text-xl leading-none">{item.icon}</span>;
               })()}
             </div>
             <p className="text-xs font-medium text-center leading-tight max-w-[88px]">
