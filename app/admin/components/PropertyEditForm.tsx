@@ -521,10 +521,10 @@ export default function PropertyEditForm({
             <h3 className="text-lg font-semibold mb-4">Datos del Paquete</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="checkInTime">Hora de Salida</Label>
+                <Label htmlFor="checkInTime">Fecha y Hora de Salida</Label>
                 <Input
                   id="checkInTime"
-                  type="time"
+                  type="datetime-local"
                   value={formData.checkInTime}
                   onChange={(e) => handleChange("checkInTime", e.target.value)}
                   className="text-sm"

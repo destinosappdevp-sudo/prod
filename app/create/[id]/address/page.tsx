@@ -139,11 +139,11 @@ function AddressRoute({ params }: { params: { id: string } }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="checkInTime">Hora de Partida</Label>
+                <Label htmlFor="checkInTime">Fecha y Hora de Salida</Label>
                 <Input
                   id="checkInTime"
                   name="checkInTime"
-                  type="time"
+                  type="datetime-local"
                   required
                   className="text-sm"
                 />
