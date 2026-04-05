@@ -345,7 +345,7 @@ export default function DashboardClient(props: DashboardClientProps) {
               <div className="p-12 text-center">
                 <CalendarCheck className="mx-auto mb-3 text-slate-300" size={48} />
                 <p className="text-slate-500">No tienes reservas aún.</p>
-                <Link href="/" className="mt-4 inline-block text-sm text-orange-600 hover:underline">Explorar alojamientos</Link>
+                <Link href="/" className="mt-4 inline-block text-sm text-orange-600 hover:underline">Explorar paquetes</Link>
               </div>
             )}
           </div>
