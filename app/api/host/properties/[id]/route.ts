@@ -6,6 +6,7 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
+import { generateHomeSlug } from "@/app/lib/slug";
 
 const prismaAny = prisma as any;
 
@@ -147,16 +148,6 @@ export async function PATCH(
     const selectedCategoryNames = selectedCategories.map((category) => category.name);
     const selectedPropertyTypeIds = selectedCategories.map((category) => category.id);
 
-    if (!/^\+?\d{7,14}$/.test(normalizedContactNumber)) {
-      return NextResponse.json(
-        {
-          error:
-            "El número de contacto es obligatorio y debe contener solo números (puede iniciar con +) con 7 a 14 caracteres",
-        },
-        { status: 400 }
-      );
-    }
-
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
 
@@ -208,6 +199,7 @@ export async function PATCH(
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
+      slug: title ? generateHomeSlug(title, params.id) : undefined,
     };
 
     const updated = await prisma.home.update({

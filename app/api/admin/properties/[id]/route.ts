@@ -7,6 +7,7 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
+import { generateHomeSlug } from "@/app/lib/slug";
 
 export const dynamic = "force-dynamic";
 
@@ -161,15 +162,6 @@ export async function PATCH(
     if (isNaN(Number(price)) || Number(price) <= 0) {
       return NextResponse.json({ error: "El precio debe ser un número mayor a 0" }, { status: 400 });
     }
-    if (!/^\+?\d{7,14}$/.test(normalizedContactNumber)) {
-      return NextResponse.json(
-        {
-          error:
-            "El número de contacto es obligatorio y debe contener solo números (puede iniciar con +) con 7 a 14 caracteres",
-        },
-        { status: 400 }
-      );
-    }
 
     let photoPath: string | undefined;
     if (imageFile && imageFile.size > 0) {
@@ -221,6 +213,7 @@ export async function PATCH(
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
+      slug: title ? generateHomeSlug(title, params.id) : undefined,
     };
 
     const updated = await prisma.home.update({
