@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     if (!Number.isInteger(guests) || guests <= 0) {
       return NextResponse.json(
-        { error: "Cantidad de huéspedes inválida" },
+        { error: "Cantidad de cupos inválida" },
         { status: 400 }
       );
     }
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     if (maxGuests && maxGuests > 0 && guests > maxGuests) {
       return NextResponse.json(
         {
-          error: `Esta propiedad admite máximo ${maxGuests} huésped${maxGuests !== 1 ? "es" : ""}.`,
+          error: `Esta propiedad admite máximo ${maxGuests} cupo${maxGuests !== 1 ? "s" : ""}.`,
         },
         { status: 400 }
       );

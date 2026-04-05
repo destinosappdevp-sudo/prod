@@ -681,7 +681,7 @@ export default function HostDashboardClient({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-400">
-                      <th className="py-2">Huesped</th>
+                      <th className="py-2">Cliente</th>
                       <th className="py-2">Fechas</th>
                       <th className="py-2">PAX</th>
                       <th className="py-2">Estado</th>
@@ -1221,7 +1221,7 @@ export default function HostDashboardClient({
                 <thead>
                   <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                     <th className="px-6 py-3">ID RESERVA</th>
-                    <th className="px-6 py-3">HUESPED</th>
+                    <th className="px-6 py-3">CLIENTE</th>
                     <th className="px-6 py-3">FECHAS</th>
                     <th className="px-6 py-3">DETALLES</th>
                     <th className="px-6 py-3">ESTADO</th>

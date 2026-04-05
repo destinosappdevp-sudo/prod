@@ -45,7 +45,7 @@ export function HomeReservationForm({
     }
 
     if (guestLimit !== Infinity && guests > guestLimit) {
-      alert(`Esta propiedad admite máximo ${guestLimit} huésped${guestLimit !== 1 ? "es" : ""}.`);
+      alert(`Esta propiedad admite máximo ${guestLimit} cupo${guestLimit !== 1 ? "s" : ""}.`);
       return;
     }
 
@@ -77,7 +77,7 @@ export function HomeReservationForm({
 
         <div className="mb-4">
           <p className="text-sm font-medium mb-2">
-            Huéspedes
+            Cupos
             {guestLimit !== Infinity && (
               <span className="text-xs text-gray-500 font-normal ml-1">(máx. {guestLimit})</span>
             )}

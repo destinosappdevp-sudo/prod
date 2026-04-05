@@ -207,7 +207,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">D</div>
             <div>
               <p className="text-sm font-semibold">Destinos Venezuela</p>
-              <p className="text-xs text-white/60">Panel de Huésped</p>
+              <p className="text-xs text-white/60">Panel de Cliente</p>
             </div>
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function DashboardClient(props: DashboardClientProps) {
               )}
             </div>
             <div>
-              <p className="text-sm font-semibold">{props.userName || "Huésped"}</p>
+              <p className="text-sm font-semibold">{props.userName || "Cliente"}</p>
               <p className="text-xs text-white/60 truncate">{props.userEmail || ""}</p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       <main className="flex-1 px-8 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900">
-            {activeTab === "reservations" && "Dashboard Huésped"}
+            {activeTab === "reservations" && "Dashboard"}
             {activeTab === "favorites" && "Mis Favoritos"}
             {activeTab === "mi-alcancia" && "Mi Alcancía"}
             {activeTab === "ahorrar" && "Ahorrar"}

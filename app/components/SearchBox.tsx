@@ -179,7 +179,7 @@ function SearchBox() {
           >
             <p className="text-xs font-semibold text-gray-800">Quién</p>
             <p className="text-sm text-gray-500">
-              {guests > 0 ? `${guests} huésped${guests > 1 ? 'es' : ''}` : "¿Cuántos?"}
+              {guests > 0 ? `${guests} cupo${guests > 1 ? 's' : ''}` : "¿Cuántos?"}
             </p>
           </div>
         </div>
@@ -258,9 +258,9 @@ function SearchBox() {
                 <CardHeader className="flex flex-col gap-y-5">
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                      <h3 className="underline font-medium">Huéspedes</h3>
+                      <h3 className="underline font-medium">Cupos</h3>
                       <p className="text-muted-foreground text-sm">
-                        ¿Cuántos huéspedes deseas?
+                        ¿Cuántos cupos deseas?
                       </p>
                     </div>
                     <Counter 

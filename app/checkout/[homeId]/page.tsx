@@ -186,8 +186,8 @@ export default async function CheckoutPage({
               </div>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm font-medium mb-1">Huéspedes</p>
-                  <p className="text-sm text-gray-600">{guests || 1} huésped{(guests && parseInt(guests) > 1) ? 's' : ''}</p>
+                  <p className="text-sm font-medium mb-1">Cupos</p>
+                  <p className="text-sm text-gray-600">{guests || 1} cupo{(guests && parseInt(guests) > 1) ? 's' : ''}</p>
                 </div>
                 <Link 
                   href={`/home/${params.homeId}`}
@@ -205,7 +205,7 @@ export default async function CheckoutPage({
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  ${home.price} × {nights} noche{nights > 1 ? "s" : ""} × {guestsCount} huésped{guestsCount > 1 ? "es" : ""}
+                  ${home.price} × {nights} noche{nights > 1 ? "s" : ""} × {guestsCount} cupo{guestsCount > 1 ? "s" : ""}
                 </span>
                 <span className="font-medium">${subtotal.toFixed(2)}</span>
               </div>

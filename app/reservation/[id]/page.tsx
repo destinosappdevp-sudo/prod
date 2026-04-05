@@ -400,7 +400,7 @@ export default async function ReservationDetailPage({
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4">
                   {isHost
-                    ? "Información del Huésped"
+                    ? "Información del Cliente"
                     : "Información del Anfitrión"}
                 </h2>
                 <div className="flex items-center gap-4">

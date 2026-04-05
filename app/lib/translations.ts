@@ -15,7 +15,7 @@
     searchBox: {
       anywhere: "Cualquier lugar",
       anyWeek: "Cualquier semana",
-      addGuest: "Agregar huéspedes",
+      addGuest: "Agregar cupos",
       search: "Buscar",
     },
 

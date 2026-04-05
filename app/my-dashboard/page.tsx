@@ -527,7 +527,7 @@ async function getHostDashboardData(userId: string) {
       guestName,
       guestPhone: reservation.User?.phoneNumber,
       dates,
-      pax: `${reservation.Home?.guests || 1} huésped${parseInt(reservation.Home?.guests || "1") > 1 ? "es" : ""}`,
+      pax: `${reservation.Home?.guests || 1} cupo${parseInt(reservation.Home?.guests || "1") > 1 ? "s" : ""}`,  
       amount: amountValue,
       amountCurrency,
       amountLabel: formatCurrencyAmount(amountValue, amountCurrency),
