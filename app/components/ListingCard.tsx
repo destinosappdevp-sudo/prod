@@ -209,16 +209,6 @@ function ListingCard({
 
         <div className="px-4 pb-4 pt-3">
           <h3 className="text-base font-semibold line-clamp-1">{title}</h3>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            <span>{municipality ? municipality.label : state?.label}</span>
-          </p>
-          {(guests || bedrooms) && (
-            <p className="mt-1 text-xs text-gray-500">
-              {guests ? `${guests} huésped${parseInt(guests, 10) === 1 ? "" : "es"}` : ""}
-              {guests && bedrooms ? " · " : ""}
-              {bedrooms ? `${bedrooms} hab.` : ""}
-            </p>
-          )}
           {formattedDeparture && (
             <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
               <Calendar className="w-4 h-4 shrink-0" />
