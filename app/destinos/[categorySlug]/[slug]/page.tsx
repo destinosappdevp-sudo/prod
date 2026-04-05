@@ -118,19 +118,21 @@ async function DestinoPage({
   );
 
   return (
-    <div className="mx-auto mt-6 mb-12 w-full max-w-4xl px-4 sm:px-6 lg:mt-10 lg:px-8">
+    <div className="mx-auto mt-6 mb-12 w-full max-w-5xl px-4 sm:px-6 lg:mt-10 lg:px-0">
       {/* Título */}
-      <h1 className="font-bold text-3xl mb-5">{data.title}</h1>
+      <h1 className="font-bold text-3xl mb-5 px-4 sm:px-6 lg:px-8">{data.title}</h1>
 
-      {/* Foto principal */}
-      <div className="relative h-[260px] sm:h-[360px] lg:h-[480px] mb-8">
+      {/* Foto principal — ancho completo */}
+      <div className="relative aspect-[16/7] w-full mb-8">
         <SupabaseImage
           imagePath={data.photo as string}
           alt={data.title as string}
           fill
-          className="rounded-2xl h-full object-cover w-full"
+          className="rounded-2xl object-cover w-full h-full"
         />
       </div>
+
+      <div className="px-4 sm:px-6 lg:px-8">
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 divide-x divide-gray-200 border border-gray-200 rounded-2xl mb-6 overflow-hidden">
@@ -233,6 +235,7 @@ async function DestinoPage({
           </div>
 
         </div>
+      </div>
       </div>
     </div>
   );

@@ -81,7 +81,12 @@ export default function BannerCarousel() {
                 sizes="100vw"
                 className="object-cover group-hover:opacity-90 transition-opacity duration-300"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              {banner.title && (
+                <div className="absolute bottom-4 left-5">
+                  <p className="text-white text-lg font-bold drop-shadow-md leading-tight">{banner.title}</p>
+                </div>
+              )}
             </>
           );
 
