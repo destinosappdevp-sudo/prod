@@ -79,7 +79,7 @@ export default function PrivacidadPage() {
           <ul className="list-disc list-inside space-y-2 ml-2">
             <li><span className="font-medium">Acceso:</span> solicitar una copia de los datos personales que tenemos sobre ti.</li>
             <li><span className="font-medium">Rectificación:</span> corregir datos inexactos o desactualizados desde tu perfil o contactándonos.</li>
-            <li><span className="font-medium">Eliminación:</span> solicitar la eliminación de tu cuenta y datos asociados a través de la opción "Eliminar mi cuenta" en la plataforma.</li>
+            <li><span className="font-medium">Eliminación:</span> solicitar la eliminación de tu cuenta y datos asociados a través de la opción &ldquo;Eliminar mi cuenta&rdquo; en la plataforma.</li>
             <li><span className="font-medium">Portabilidad:</span> solicitar tus datos en un formato estructurado.</li>
           </ul>
           <p className="mt-3">
