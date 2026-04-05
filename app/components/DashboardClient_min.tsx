@@ -504,7 +504,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     {/* Preview Bs */}
                     {previewBs && (
                       <div className="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
-                        <p className="text-xs text-slate-500 mb-0.5">Monto a depositar en Bs.</p>
+                        <p className="text-xs text-slate-500 mb-0.5">Monto a abonar en Bs.</p>
                         <p className="text-2xl font-bold text-orange-600">
                           Bs. {previewBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
