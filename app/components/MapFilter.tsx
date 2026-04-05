@@ -107,24 +107,22 @@ function MapFilter() {
   }, []);
 
   return (
-    <div className="flex gap-x-10 mt-5 w-full overflow-x-scroll hide-scrollbar">
+    <div className="flex gap-x-2 mt-5 w-full overflow-x-auto hide-scrollbar py-1">
       <Link
         href={buildFilterHref([])}
         className={cn(
           selectedTokens.length === 0
-            ? "border-b-2 border-black pb-2 flex-shrink-0"
-            : "opacity-70 flex-shrink-0",
-          "flex flex-col gap-y-3 items-center"
+            ? "bg-black text-white border-black"
+            : "bg-white text-gray-700 border-gray-200 hover:border-gray-400",
+          "flex-shrink-0 flex items-center gap-x-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-colors"
         )}
       >
-        <div className="relative w-6 h-6 flex items-center justify-center">
-          <span className="text-xl leading-none">🌍</span>
-        </div>
-        <p className="text-xs font-medium text-center">Todos</p>
+        <span className="text-base leading-none">🌍</span>
+        <span>Todos</span>
       </Link>
 
       {loading ? (
-        <span>Cargando...</span>
+        <span className="text-sm text-gray-400 self-center">Cargando...</span>
       ) : categories.map((item) => {
         const categoryId = item.id.toString();
         const isActive = selectedSet.has(categoryId) || selectedSet.has(item.name);
@@ -141,49 +139,41 @@ function MapFilter() {
             href={buildFilterHref(nextTokens)}
             className={cn(
               isActive
-                ? "border-b-2 border-black pb-2 flex-shrink-0"
-                : "opacity-70 flex-shrink-0",
-              "flex flex-col gap-y-3 items-center"
+                ? "bg-black text-white border-black"
+                : "bg-white text-gray-700 border-gray-200 hover:border-gray-400",
+              "flex-shrink-0 flex items-center gap-x-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-colors"
             )}
           >
-            <div className="relative w-6 h-6 flex items-center justify-center">
-              {(() => {
-                if (!item.icon) {
-                  return <Home className="w-6 h-6" />;
-                }
-
-                if (item.icon.startsWith("http")) {
-                  return (
-                    <Image
-                      src={item.icon}
-                      alt={normalizeCategoryLabel(item.name)}
-                      className="w-6 h-6 object-cover rounded-sm"
-                      width={24}
-                      height={24}
-                    />
-                  );
-                }
-
-                const imageUrl = iconMap[item.icon as keyof typeof iconMap];
-                if (imageUrl) {
-                  return (
-                    <Image
-                      src={imageUrl}
-                      alt={normalizeCategoryLabel(item.name)}
-                      className="w-6 h-6 object-cover rounded-sm"
-                      width={24}
-                      height={24}
-                    />
-                  );
-                }
-
-                // Emoji u otro carácter
-                return <span className="text-xl leading-none">{item.icon}</span>;
-              })()}
-            </div>
-            <p className="text-xs font-medium text-center leading-tight max-w-[88px]">
-              {normalizeCategoryLabel(item.name)}
-            </p>
+            {(() => {
+              if (!item.icon) {
+                return <Home className="w-4 h-4 flex-shrink-0" />;
+              }
+              if (item.icon.startsWith("http")) {
+                return (
+                  <Image
+                    src={item.icon}
+                    alt={normalizeCategoryLabel(item.name)}
+                    className="w-4 h-4 object-cover rounded-sm flex-shrink-0"
+                    width={16}
+                    height={16}
+                  />
+                );
+              }
+              const imageUrl = iconMap[item.icon as keyof typeof iconMap];
+              if (imageUrl) {
+                return (
+                  <Image
+                    src={imageUrl}
+                    alt={normalizeCategoryLabel(item.name)}
+                    className="w-4 h-4 object-cover rounded-sm flex-shrink-0"
+                    width={16}
+                    height={16}
+                  />
+                );
+              }
+              return <span className="text-base leading-none flex-shrink-0">{item.icon}</span>;
+            })()}
+            <span>{normalizeCategoryLabel(item.name)}</span>
           </Link>
         );
       })}

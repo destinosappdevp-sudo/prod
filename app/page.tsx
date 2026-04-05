@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { Suspense } from "react";
 import ListingCard from "./components/ListingCard";
 import MapFilter from "./components/MapFilter";
+import { HomeSearchBar } from "./components/HomeSearchBar";
 import BannerCarousel from "./components/BannerCarousel";
 import BannerMedio from "./components/BannerMedio";
 import BannerPopup from "./components/BannerPopup";
@@ -30,6 +31,7 @@ async function getData({
     guest?: string;
     rooms?: string;
     bathrooms?: string;
+    q?: string;
   };
 }) {
   noStore();
@@ -77,6 +79,10 @@ async function getData({
 
   if (categoryNamesFilter.length > 0) {
     where.categoryName = { hasSome: categoryNamesFilter };
+  }
+
+  if (searchParams?.q?.trim()) {
+    where.title = { contains: searchParams.q.trim(), mode: "insensitive" };
   }
 
   const data = await prismaAny.home.findMany({
@@ -128,6 +134,7 @@ export default function Home({
     guest?: string;
     rooms?: string;
     bathrooms?: string;
+    q?: string;
   };
 }) {
   return (
@@ -135,8 +142,9 @@ export default function Home({
       <BannerPopup />
       <BannerCarousel />
       <MapFilter />
+      <HomeSearchBar />
 
-      <Suspense key={searchParams?.filter} fallback={<SkeletonLoader />}>
+      <Suspense key={`${searchParams?.filter}-${searchParams?.q}`} fallback={<SkeletonLoader />}>
         <ShowPlace searchParams={searchParams} />
       </Suspense>
     </div>
@@ -153,6 +161,7 @@ async function ShowPlace({
     guest?: string;
     rooms?: string;
     bathrooms?: string;
+    q?: string;
   };
 }) {
   const supabase = await createClient();
@@ -210,8 +219,9 @@ async function ShowPlace({
   return (
     <div className="mt-8 space-y-12">
       <section>
-        <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-200">
+        <div className="flex items-center justify-between gap-2 mb-6 pb-2 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">Full Days Disponibles 🏖️</h2>
+          <span className="text-sm text-gray-500 font-medium whitespace-nowrap">{data.length} destinos</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map(renderCard)}
