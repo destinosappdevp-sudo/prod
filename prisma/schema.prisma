@@ -305,14 +305,15 @@ model WithdrawalRequest {
 }
 
 model Saving {
-  id        String   @id @default(uuid())
-  userId    String
-  date      DateTime @default(now())
-  bcvRate   Float
-  amountBs  Float
-  amountUsd Float
-  createdAt DateTime @default(now())
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id @default(uuid())
+  userId         String
+  date           DateTime @default(now())
+  bcvRate        Float
+  amountBs       Float
+  amountUsd      Float
+  paymentDetails Json?
+  createdAt      DateTime @default(now())
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model property_types {

@@ -12,10 +12,12 @@ import {
   Heart,
   PiggyBank,
   PlusCircle,
+  Smartphone,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
+import { BANKS } from "@/app/lib/paymentBanks";
 
 interface GuestReservationItem {
   id: string;
@@ -80,23 +82,50 @@ interface DashboardClientProps {
 export default function DashboardClient(props: DashboardClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
-  const [amountBs, setAmountBs] = useState("");
+  const [amountUsd, setAmountUsd] = useState("");
+  const [emisorBank, setEmisorBank] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [referenceNumber, setReferenceNumber] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const previewUsd =
-    amountBs && props.bcvRate && props.bcvRate > 0
-      ? (Math.round((Number(amountBs) / props.bcvRate) * 100) / 100).toFixed(2)
+  const previewBs =
+    amountUsd && props.bcvRate && props.bcvRate > 0
+      ? Math.round(Number(amountUsd) * props.bcvRate * 100) / 100
       : null;
+
+  const phoneValid = /^\+?\d{7,14}$/.test(phoneNumber);
+
+  const normalizePhone = (value: string) => {
+    const hasLeadingPlus = value.startsWith("+");
+    const digitsOnly = value.replace(/\D/g, "");
+    return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
+  };
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaveError("");
     setSaveSuccess(false);
-    const bs = Number(amountBs);
-    if (!bs || bs <= 0) {
-      setSaveError("Ingresa un monto válido en Bs.");
+    const usd = Number(amountUsd);
+    if (!usd || usd <= 0) {
+      setSaveError("Ingresa un monto válido en USD.");
+      return;
+    }
+    if (!previewBs) {
+      setSaveError("Tasa BCV no disponible.");
+      return;
+    }
+    if (!emisorBank) {
+      setSaveError("Selecciona tu banco emisor.");
+      return;
+    }
+    if (!phoneValid) {
+      setSaveError("Ingresa un número de teléfono válido.");
+      return;
+    }
+    if (!referenceNumber.trim()) {
+      setSaveError("Ingresa el número de referencia.");
       return;
     }
     setSaving(true);
@@ -104,14 +133,20 @@ export default function DashboardClient(props: DashboardClientProps) {
       const res = await fetch("/api/user/savings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amountBs: bs }),
+        body: JSON.stringify({
+          amountBs: previewBs,
+          paymentDetails: { emisorBank, phoneNumber, referenceNumber: referenceNumber.trim() },
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setSaveError((data as any).error || "Error al guardar");
       } else {
         setSaveSuccess(true);
-        setAmountBs("");
+        setAmountUsd("");
+        setEmisorBank("");
+        setPhoneNumber("");
+        setReferenceNumber("");
         router.refresh();
       }
     } catch {
@@ -424,76 +459,153 @@ export default function DashboardClient(props: DashboardClientProps) {
 
         {/* AHORRAR */}
         {activeTab === "ahorrar" && (
-          <div className="max-w-md">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center">
-                  <PiggyBank className="text-orange-500" size={24} />
-                </div>
-                <div>
-                  <h2 className="font-bold text-slate-900">Depositar a Mi Alcancía</h2>
-                  <p className="text-xs text-slate-500">
+          <div className="flex justify-center">
+            <div className="w-full max-w-md">
+              {/* Card estilo mobile */}
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-lg overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white">
+                  <div className="flex items-center gap-3 mb-2">
+                    <PiggyBank size={28} />
+                    <h2 className="text-xl font-bold">Depositar a Mi Alcancía</h2>
+                  </div>
+                  <p className="text-sm text-white/80">
                     {props.bcvRate && props.bcvRate > 0
                       ? `Tasa BCV del día: ${Number(props.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs/USD`
                       : "Tasa BCV no disponible"}
                   </p>
                 </div>
-              </div>
 
-              <form onSubmit={handleSave} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Monto en Bolívares (Bs.)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    value={amountBs}
-                    onChange={(e) => {
-                      setAmountBs(e.target.value);
-                      setSaveError("");
-                      setSaveSuccess(false);
-                    }}
-                    placeholder="Ej: 500"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
+                <div className="px-6 py-6">
+                  <form onSubmit={handleSave} className="space-y-5">
+                    {/* Monto USD */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Monto en Dólares (USD)
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
+                        <input
+                          type="number"
+                          min="0.01"
+                          step="0.01"
+                          value={amountUsd}
+                          onChange={(e) => {
+                            setAmountUsd(e.target.value);
+                            setSaveError("");
+                            setSaveSuccess(false);
+                          }}
+                          placeholder="0.00"
+                          className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-3 text-lg font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                    </div>
 
-                {previewUsd && (
-                  <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 flex items-center justify-between">
-                    <span className="text-sm text-green-700">Equivale a:</span>
-                    <span className="text-lg font-bold text-green-700">${previewUsd} USD</span>
-                  </div>
-                )}
+                    {/* Preview Bs */}
+                    {previewBs && (
+                      <div className="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
+                        <p className="text-xs text-slate-500 mb-0.5">Monto a depositar en Bs.</p>
+                        <p className="text-2xl font-bold text-orange-600">
+                          Bs. {previewBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    )}
 
-                {saveError && (
-                  <p className="text-sm text-red-600">{saveError}</p>
-                )}
+                    {/* Receptor info */}
+                    <div className="bg-blue-50 rounded-xl px-4 py-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Smartphone size={14} className="text-blue-600" />
+                        <p className="text-xs font-semibold text-blue-700">Información del receptor (Pago Móvil)</p>
+                      </div>
+                      <div className="space-y-1 text-xs text-slate-600">
+                        <p><span className="font-medium">Banco:</span> 0102 — Banco de Venezuela</p>
+                        <p><span className="font-medium">Teléfono:</span> 0414-1234567</p>
+                        <p><span className="font-medium">Cédula:</span> V-12345678</p>
+                        {previewBs && (
+                          <p className="font-semibold text-blue-800 mt-1">
+                            Monto: Bs. {previewBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                {saveSuccess && (
-                  <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3">
-                    <p className="text-sm text-green-700 font-medium">
-                      ¡Ahorro registrado correctamente!
-                    </p>
+                    {/* Banco emisor */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Tu Banco Emisor</label>
+                      <select
+                        value={emisorBank}
+                        onChange={(e) => { setEmisorBank(e.target.value); setSaveError(""); }}
+                        required
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                      >
+                        <option value="">Seleccionar...</option>
+                        {BANKS.map((bank) => (
+                          <option key={bank.value} value={bank.value}>
+                            {bank.code} — {bank.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Teléfono */}
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${phoneNumber && !phoneValid ? "text-red-600" : "text-slate-700"}`}>
+                        Tu Teléfono
+                      </label>
+                      <input
+                        type="tel"
+                        inputMode="tel"
+                        maxLength={14}
+                        placeholder="+584141234567"
+                        value={phoneNumber}
+                        onChange={(e) => { setPhoneNumber(normalizePhone(e.target.value)); setSaveError(""); }}
+                        required
+                        className={`w-full rounded-xl border px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                          phoneNumber && !phoneValid ? "border-red-300" : "border-slate-200"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Referencia */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Número de referencia</label>
+                      <input
+                        type="text"
+                        placeholder="123456"
+                        value={referenceNumber}
+                        onChange={(e) => { setReferenceNumber(e.target.value); setSaveError(""); }}
+                        required
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+
+                    {saveError && (
+                      <p className="text-sm text-red-600">{saveError}</p>
+                    )}
+
+                    {saveSuccess && (
+                      <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+                        <p className="text-sm text-green-700 font-medium">¡Depósito registrado correctamente!</p>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("mi-alcancia")}
+                          className="text-xs text-green-600 hover:underline mt-1"
+                        >
+                          Ver Mi Alcancía →
+                        </button>
+                      </div>
+                    )}
+
                     <button
-                      type="button"
-                      onClick={() => setActiveTab("mi-alcancia")}
-                      className="text-xs text-green-600 hover:underline mt-1"
+                      type="submit"
+                      disabled={saving || !amountUsd || !previewBs}
+                      className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Ver Mi Alcancía →
+                      {saving ? "Procesando..." : "Registrar Depósito"}
                     </button>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={saving || !amountBs}
-                  className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {saving ? "Guardando..." : "Ahorrar"}
-                </button>
-              </form>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
         )}

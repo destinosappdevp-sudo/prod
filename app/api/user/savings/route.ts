@@ -55,12 +55,15 @@ export async function POST(req: NextRequest) {
 
   const amountUsd = Math.round((amountBs / bcvRate) * 100) / 100;
 
+  const paymentDetails = (body as any)?.paymentDetails ?? null;
+
   const saving = await prismaAny.saving.create({
     data: {
       userId: user.id,
       bcvRate,
       amountBs,
       amountUsd,
+      paymentDetails,
     },
   });
 
