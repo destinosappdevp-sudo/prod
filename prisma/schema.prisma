@@ -229,6 +229,7 @@ model User {
   UserDocument                      UserDocument[]
   usersessions                      usersessions[]
   WithdrawalRequest                 WithdrawalRequest[]
+  Saving                            Saving[]
 }
 
 model UserDocument {
@@ -301,6 +302,17 @@ model WithdrawalRequest {
   createdAt      DateTime         @default(now())
   processedAt    DateTime?
   User           User             @relation(fields: [hostId], references: [id])
+}
+
+model Saving {
+  id        String   @id @default(uuid())
+  userId    String
+  date      DateTime @default(now())
+  bcvRate   Float
+  amountBs  Float
+  amountUsd Float
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model property_types {

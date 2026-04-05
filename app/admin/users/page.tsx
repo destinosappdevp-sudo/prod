@@ -3,16 +3,20 @@ import prisma from "@/app/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 import { UserManagementClient } from "../components/UserManagementClient";
 
+const prismaAny = prisma as any;
+
 async function getUsers() {
   noStore();
-  const users = await prisma.user.findMany({
+  const users = await prismaAny.user.findMany({
     include: {
       _count: {
         select: {
-          Home: true,
           Favorite: true,
           Reservation: true,
         },
+      },
+      Saving: {
+        select: { amountUsd: true },
       },
     },
     orderBy: {
@@ -20,7 +24,13 @@ async function getUsers() {
     },
   });
 
-  return users;
+  return users.map((u: any) => ({
+    ...u,
+    savingsTotal: (u.Saving as { amountUsd: number }[]).reduce(
+      (sum, s) => sum + s.amountUsd,
+      0
+    ),
+  }));
 }
 
 export default async function UsersPage() {

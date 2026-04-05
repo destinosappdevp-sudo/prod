@@ -26,8 +26,8 @@ interface User {
   verificationReason?: string | null;
   document1Image?: string | null;
   document2Image?: string | null;
+  savingsTotal?: number;
   _count?: {
-    Home: number;
     Favorite: number;
     Reservation: number;
   };
@@ -196,19 +196,14 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rol
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Paquetes
-                </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Favoritos
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Reservas
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </th>                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ahorros
+                </th>                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Verificación
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -247,34 +242,24 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{user.email}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Select
-                      value={user.role}
-                      onValueChange={(value) => handleRoleChange(user.id, value)}
-                      disabled={updating[user.id] || user.role === "SUPERADMIN"}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GUEST">Guest</SelectItem>
-                        <SelectItem value="HOST">Host</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                        <SelectItem value="BANER">Baner</SelectItem>
-                        {user.role === "SUPERADMIN" && (
-                          <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm font-semibold">{user._count?.Home || 0}</span>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="text-sm font-semibold">{user._count?.Favorite || 0}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="text-sm font-semibold">{user._count?.Reservation || 0}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-sm font-semibold text-green-700">
+                        ${(user.savingsTotal ?? 0).toFixed(2)}
+                      </span>
+                      <Link
+                        href={`/admin/users/${user.id}/savings`}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Ver detalles
+                      </Link>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     {user.role === "HOST" ? (
