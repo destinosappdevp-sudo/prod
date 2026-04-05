@@ -144,24 +144,6 @@ export default function Home({
   );
 }
 
-const REGIONES: { title: string; states: string[] }[] = [
-  {
-    title: "Región Centro",
-    states: ["CC", "MI", "AR", "CA", "VA", "CO", "GU"],
-  },
-  {
-    title: "Región Oriente",
-    states: ["AN", "SU", "MO", "BO", "DA", "AM"],
-  },
-  {
-    title: "Región Occidente",
-    states: ["ZU", "TA", "ME", "TR", "LA", "YA", "PO", "BA", "AP", "FA"],
-  },
-  {
-    title: "Región Insular",
-    states: ["DF", "NE"],
-  },
-];
 
 async function ShowPlace({
   searchParams,
@@ -258,46 +240,17 @@ async function ShowPlace({
     );
   }
 
-  type HomeItem = (typeof data)[number];
-  const assignedStates = new Set(REGIONES.flatMap((r) => r.states));
-  const sinRegion = data
-    .filter(
-      (item: HomeItem) =>
-        !item.country || !assignedStates.has(item.country as string)
-    )
-    .slice(-9);
-
   return (
     <div className="mt-8 space-y-12">
       <MobileMapStrip pins={pins} />
-      {REGIONES.map((region, index) => {
-        const items = data
-          .filter((item: HomeItem) => region.states.includes(item.country as string))
-          .slice(-9);
-        if (items.length === 0) return null;
-        return (
-          <section key={region.title}>
-            <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">{region.title}</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {items.map(renderCard)}
-            </div>
-            {index === 0 && <div className="mt-8"><BannerMedio tipo="MEDIO1" /></div>}
-            {index === 1 && <div className="mt-8"><BannerMedio tipo="MEDIO2" /></div>}
-          </section>
-        );
-      })}
-      {sinRegion.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">Otras Regiones</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sinRegion.map(renderCard)}
-          </div>
-        </section>
-      )}
+      <section>
+        <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">Full Days Disponibles 🏖️</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {data.map(renderCard)}
+        </div>
+      </section>
     </div>
   );
 }
