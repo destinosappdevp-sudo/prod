@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Menu, CircleUserRound, HelpCircle, ArrowRight } from "lucide-react";
+import { Menu, CircleUserRound, PiggyBank, ArrowRight } from "lucide-react";
 import { signOut } from "../action";
 import { AuthDialog } from "./AuthDialog";
 
@@ -74,6 +74,11 @@ export function UserNavClient({
             Iniciar Sesión
           </button>
         )}
+        {user && (
+          <span className="hidden sm:block text-sm font-medium text-gray-700">
+            Hola, {(userName || "usuario").split(" ")[0]}
+          </span>
+        )}
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -98,9 +103,9 @@ export function UserNavClient({
           {user ? (
             <>
               <DropdownMenuItem asChild className={menuItemClassName}>
-                <Link href="/ayuda" className={menuItemContentClassName}>
-                  <HelpCircle size={15} className="text-gray-500" />
-                  ayuda
+                <Link href="/favorites" className={menuItemContentClassName}>
+                  <PiggyBank size={15} className="text-gray-500" />
+                  Mis Ahorros
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1" />
@@ -140,9 +145,9 @@ export function UserNavClient({
           ) : (
             <>
               <DropdownMenuItem asChild className={menuItemClassName}>
-                <Link href="/ayuda" className={menuItemContentClassName}>
-                  <HelpCircle size={15} className="text-gray-500" />
-                  ayuda
+                <Link href="/favorites" className={menuItemContentClassName}>
+                  <PiggyBank size={15} className="text-gray-500" />
+                  Mis Ahorros
                 </Link>
               </DropdownMenuItem>
 
