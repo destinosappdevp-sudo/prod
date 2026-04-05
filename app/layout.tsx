@@ -8,7 +8,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Reservas en Venezuela",
+  title: "Destinos Venezuela",
   description: "Destinos Venezuela",
   icons: {
     icon: "/favicon.webp",
