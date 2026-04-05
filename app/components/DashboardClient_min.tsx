@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { buildHomeUrl } from "@/app/lib/slug";
@@ -9,6 +10,8 @@ import {
   User,
   LogOut,
   Heart,
+  PiggyBank,
+  PlusCircle,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import ProfileEditClient from "@/app/components/ProfileEditClient";
@@ -42,6 +45,14 @@ interface FavoriteItem {
   favoriteId?: string;
 }
 
+interface SavingItem {
+  id: string;
+  date: string | Date;
+  bcvRate: number;
+  amountBs: number;
+  amountUsd: number;
+}
+
 interface DashboardClientProps {
   role?: string;
   userName?: string;
@@ -59,12 +70,56 @@ interface DashboardClientProps {
   listings?: any[];
   favorites?: FavoriteItem[];
   guestReservations?: GuestReservationItem[];
+  savings?: SavingItem[];
+  savingsTotal?: number;
+  bcvRate?: number;
   userData?: any;
   initialDocs?: any[];
 }
 
 export default function DashboardClient(props: DashboardClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
+  const [amountBs, setAmountBs] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const previewUsd =
+    amountBs && props.bcvRate && props.bcvRate > 0
+      ? (Math.round((Number(amountBs) / props.bcvRate) * 100) / 100).toFixed(2)
+      : null;
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaveError("");
+    setSaveSuccess(false);
+    const bs = Number(amountBs);
+    if (!bs || bs <= 0) {
+      setSaveError("Ingresa un monto válido en Bs.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/user/savings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amountBs: bs }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveError((data as any).error || "Error al guardar");
+      } else {
+        setSaveSuccess(true);
+        setAmountBs("");
+        router.refresh();
+      }
+    } catch {
+      setSaveError("Error de conexión. Intenta nuevamente.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const profileUserData = props.userData || {
     firstName: props.firstName || "",
@@ -103,6 +158,8 @@ export default function DashboardClient(props: DashboardClientProps) {
   const menuItems = [
     { key: "reservations", label: "Mis Reservas",  icon: CalendarCheck },
     { key: "favorites",    label: "Favoritos",      icon: Heart },
+    { key: "mi-alcancia",  label: "Mi Alcancía",    icon: PiggyBank },
+    { key: "ahorrar",      label: "Ahorrar",        icon: PlusCircle },
     { key: "profile",      label: "Perfil",         icon: User },
   ];
 
@@ -179,11 +236,15 @@ export default function DashboardClient(props: DashboardClientProps) {
           <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard Huésped"}
             {activeTab === "favorites" && "Mis Favoritos"}
+            {activeTab === "mi-alcancia" && "Mi Alcancía"}
+            {activeTab === "ahorrar" && "Ahorrar"}
             {activeTab === "profile" && "Editar Perfil"}
           </h1>
           <p className="text-sm text-slate-500">
             {activeTab === "reservations" && "Explora, reserva y gestiona tus alojamientos"}
             {activeTab === "favorites" && "Alojamientos que guardaste"}
+            {activeTab === "mi-alcancia" && "Historial de tus ahorros"}
+            {activeTab === "ahorrar" && "Deposita a tu alcancía de viajes"}
             {activeTab === "profile" && "Actualiza tus datos personales"}
           </p>
         </div>
@@ -285,6 +346,155 @@ export default function DashboardClient(props: DashboardClientProps) {
                 <Link href="/" className="mt-4 inline-block text-sm text-orange-600 hover:underline">Explorar alojamientos</Link>
               </div>
             )}
+          </div>
+        )}
+
+        {/* MI ALCANCÍA */}
+        {activeTab === "mi-alcancia" && (
+          <div className="space-y-6">
+            {/* Summary cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <p className="text-xs text-slate-500 mb-1">Total ahorrado (USD)</p>
+                <p className="text-3xl font-bold text-green-600">
+                  ${(props.savingsTotal ?? 0).toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <p className="text-xs text-slate-500 mb-1">Movimientos</p>
+                <p className="text-3xl font-bold text-slate-800">
+                  {props.savings?.length ?? 0}
+                </p>
+              </div>
+            </div>
+
+            {/* Savings table */}
+            <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+              {props.savings && props.savings.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
+                        <th className="px-6 py-3">#</th>
+                        <th className="px-6 py-3">Fecha</th>
+                        <th className="px-6 py-3">Tasa BCV</th>
+                        <th className="px-6 py-3">Monto Bs.</th>
+                        <th className="px-6 py-3">Monto USD</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {props.savings.map((s, index) => (
+                        <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
+                          <td className="px-6 py-4 text-slate-400 text-xs font-mono">
+                            {props.savings!.length - index}
+                          </td>
+                          <td className="px-6 py-4 text-slate-700 whitespace-nowrap">
+                            {formatDate(s.date)}
+                          </td>
+                          <td className="px-6 py-4 text-slate-700 font-mono">
+                            {Number(s.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-6 py-4 text-slate-900 font-semibold font-mono">
+                            Bs. {Number(s.amountBs).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-6 py-4 text-green-700 font-semibold font-mono">
+                            ${Number(s.amountUsd).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-12 text-center">
+                  <PiggyBank className="mx-auto mb-3 text-slate-300" size={48} />
+                  <p className="text-slate-500">Aún no tienes ahorros registrados.</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("ahorrar")}
+                    className="mt-4 inline-block text-sm text-orange-600 hover:underline"
+                  >
+                    Comenzar a ahorrar
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* AHORRAR */}
+        {activeTab === "ahorrar" && (
+          <div className="max-w-md">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                  <PiggyBank className="text-orange-500" size={24} />
+                </div>
+                <div>
+                  <h2 className="font-bold text-slate-900">Depositar a Mi Alcancía</h2>
+                  <p className="text-xs text-slate-500">
+                    {props.bcvRate && props.bcvRate > 0
+                      ? `Tasa BCV del día: ${Number(props.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs/USD`
+                      : "Tasa BCV no disponible"}
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSave} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Monto en Bolívares (Bs.)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={amountBs}
+                    onChange={(e) => {
+                      setAmountBs(e.target.value);
+                      setSaveError("");
+                      setSaveSuccess(false);
+                    }}
+                    placeholder="Ej: 500"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                {previewUsd && (
+                  <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm text-green-700">Equivale a:</span>
+                    <span className="text-lg font-bold text-green-700">${previewUsd} USD</span>
+                  </div>
+                )}
+
+                {saveError && (
+                  <p className="text-sm text-red-600">{saveError}</p>
+                )}
+
+                {saveSuccess && (
+                  <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+                    <p className="text-sm text-green-700 font-medium">
+                      ¡Ahorro registrado correctamente!
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("mi-alcancia")}
+                      className="text-xs text-green-600 hover:underline mt-1"
+                    >
+                      Ver Mi Alcancía →
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={saving || !amountBs}
+                  className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? "Guardando..." : "Ahorrar"}
+                </button>
+              </form>
+            </div>
           </div>
         )}
 

@@ -571,7 +571,7 @@ async function getGuestDashboardData(userId: string) {
   noStore();
   const prismaAny = prisma as any;
 
-  const [favorites, reservations, favoriteIds] = await Promise.all([
+  const [favorites, reservations, favoriteIds, savings, config] = await Promise.all([
     prismaAny.favorite.findMany({
       where: { userId },
       select: {
@@ -622,6 +622,12 @@ async function getGuestDashboardData(userId: string) {
       where: { userId },
       select: { homeId: true },
     }),
+    prismaAny.saving.findMany({
+      where: { userId },
+      orderBy: { date: "desc" },
+      select: { id: true, date: true, bcvRate: true, amountBs: true, amountUsd: true },
+    }),
+    prismaAny.platformConfig.findFirst({ select: { bcvRate: true } }),
   ]);
 
   // Create set of favorited homeIds for fast lookup
@@ -629,6 +635,11 @@ async function getGuestDashboardData(userId: string) {
   const favoriteByHomeId = new Map(
     favorites.map((fav: any) => [fav.Home.id, fav.id])
   );
+
+  const savingsTotal = Math.round(
+    (savings as any[]).reduce((sum: number, s: any) => sum + (s.amountUsd ?? 0), 0) * 100
+  ) / 100;
+  const bcvRate = Number((config as any)?.bcvRate ?? 0);
 
   return {
     favorites: favorites.map((fav: any) => ({
@@ -659,6 +670,15 @@ async function getGuestDashboardData(userId: string) {
       favoriteId: favoriteByHomeId.get(res.Home.id),
       isInFavoriteList: favoriteHomeIds.has(res.Home.id),
     })),
+    savings: (savings as any[]).map((s: any) => ({
+      id: s.id as string,
+      date: s.date as Date,
+      bcvRate: s.bcvRate as number,
+      amountBs: s.amountBs as number,
+      amountUsd: s.amountUsd as number,
+    })),
+    savingsTotal,
+    bcvRate,
   };
 }
 
@@ -751,6 +771,9 @@ export default async function DashboardPage({
         initialTab={initialTab}
         favorites={data.favorites}
         guestReservations={data.guestReservations}
+        savings={data.savings}
+        savingsTotal={data.savingsTotal}
+        bcvRate={data.bcvRate}
         userData={{ ...userRecord, email: userRecord?.email || user.email }}
         initialDocs={initialDocs || []}
       />
