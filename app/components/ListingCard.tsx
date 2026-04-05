@@ -10,13 +10,6 @@ import { useVenezuelaStates } from "../lib/venezuelaStates";
 import { useVenezuelaMunicipalities } from "../lib/venezuelaMunicipalities";
 import { AddToFavoriteButton, DeleteFromFavorite } from "./SubmitButtons";
 import { SupabaseImage } from "./SupabaseImage";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { normalizeCategoryNames } from "@/app/lib/property-categories";
 import { AuthDialog } from "./AuthDialog";
@@ -67,7 +60,6 @@ function ListingCard({
   slug,
 }: iAppProps) {
   const router = useRouter();
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState<"login" | "register">("login");
   const { getStateByValue } = useVenezuelaStates();
@@ -124,18 +116,13 @@ function ListingCard({
         })
       : null;
 
-  const openAuthDialog = (mode: "login" | "register") => {
-    setIsAuthOpen(false);
-    setAuthDialogMode(mode);
-    setAuthDialogOpen(true);
-  };
-
   const handleCardClick = () => {
     if (userId) {
       router.push(homeDetailPath);
       return;
     }
-    setIsAuthOpen(true);
+    setAuthDialogMode("login");
+    setAuthDialogOpen(true);
   };
 
   return (
@@ -199,7 +186,7 @@ function ListingCard({
                 variant="outline"
                 size="icon"
                 className="bg-primary-foreground"
-                onClick={() => setIsAuthOpen(true)}
+                onClick={() => { setAuthDialogMode("login"); setAuthDialogOpen(true); }}
               >
                 <Heart className="w-4 h-4" />
               </Button>
@@ -234,63 +221,6 @@ function ListingCard({
         </div>
       </div>
 
-      <Dialog open={isAuthOpen} onOpenChange={setIsAuthOpen}>
-        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[470px] rounded-3xl border border-slate-200 p-5 sm:p-6">
-          <DialogHeader className="space-y-1 text-left">
-            <DialogTitle className="text-3xl font-semibold text-slate-900">
-              Inicia sesion para continuar
-            </DialogTitle>
-            <DialogDescription>
-              Necesitas una cuenta para ver los detalles o reservar.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="relative mt-4 overflow-hidden rounded-3xl border border-slate-200">
-            <div className="relative h-[300px] w-full">
-              <Image
-                src="/screenshot/avila.jpg"
-                alt="Ávila"
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 90vw, 420px"
-                priority={false}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
-
-              <div className="absolute inset-x-5 bottom-5 text-white">
-                <h3 className="text-5xl font-extrabold leading-[0.95] tracking-tight drop-shadow-md">
-                  Descubre Tu
-                  <br />
-                  Próximo Destino
-                </h3>
-                <p className="mt-3 text-[17px] leading-tight text-white/95 drop-shadow-md">
-                  Las mejores casas, apartamentos y cabañas
-                  <br />
-                  de Venezuela en un solo lugar
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <button
-              type="button"
-              className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#ff6f47] text-xl font-semibold text-white shadow-md transition hover:brightness-95"
-              onClick={() => openAuthDialog("login")}
-            >
-              Iniciar Sesión
-            </button>
-
-            <button
-              type="button"
-              className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#f3ddd4] text-xl font-semibold text-[#ea704d] transition hover:bg-[#efd3c8]"
-              onClick={() => openAuthDialog("register")}
-            >
-              Registrarse
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
       <AuthDialog
         open={authDialogOpen}
         onOpenChange={setAuthDialogOpen}
