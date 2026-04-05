@@ -56,9 +56,6 @@ const iconMap = {
     "https://a0.muscache.com/pictures/33dd714a-7b4a-4654-aaf0-f58ea887a688.jpg",
 } as const;
 
-const allCategoryIcon =
-  "https://a0.muscache.com/pictures/3726d94b-534a-42b8-bca0-a0304d912260.jpg";
-
 function MapFilter() {
   const searchParams = useSearchParams();
   const search = searchParams.get("filter");
@@ -120,14 +117,8 @@ function MapFilter() {
           "flex flex-col gap-y-3 items-center"
         )}
       >
-        <div className="relative w-6 h-6">
-          <Image
-            src={allCategoryIcon}
-            alt="Todos"
-            className="w-6 h-6 object-cover rounded-sm"
-            width={24}
-            height={24}
-          />
+        <div className="relative w-6 h-6 flex items-center justify-center">
+          <span className="text-xl leading-none">🌍</span>
         </div>
         <p className="text-xs font-medium text-center">Todos</p>
       </Link>
