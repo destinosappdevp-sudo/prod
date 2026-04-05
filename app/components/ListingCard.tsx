@@ -33,6 +33,7 @@ interface iAppProps {
   reviews?: { rating: number }[];
   reviewCount?: number;
   contactNumber?: string | null;
+  checkInTime?: string | null;
   bcvRate?: number | null;
   slug?: string | null;
 }
@@ -56,6 +57,7 @@ function ListingCard({
   reviews,
   reviewCount,
   contactNumber,
+  checkInTime,
   bcvRate,
   slug,
 }: iAppProps) {
@@ -91,10 +93,14 @@ function ListingCard({
     : null;
   const homeDetailPath = buildHomeUrl(slug, homeId, categoryNames ?? categoryName);
 
-  const departureDate =
-    contactNumber && /^\d{4}-\d{2}-\d{2}$/.test(contactNumber)
-      ? new Date(contactNumber + "T12:00:00")
-      : null;
+  // Fecha de salida - viene de checkInTime (formato YYYY-MM-DDTHH:MM)
+  const departureDate = (() => {
+    const raw = checkInTime;
+    if (!raw) return null;
+    // datetime-local: "2026-04-09T10:00" o solo fecha "2026-04-09"
+    const d = new Date(raw.includes("T") ? raw : raw + "T12:00:00");
+    return isNaN(d.getTime()) ? null : d;
+  })();
 
   const formattedDeparture = departureDate
     ? departureDate

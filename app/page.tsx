@@ -100,6 +100,7 @@ async function getData({
       bedrooms: true,
       exactAddress: true,
       contactNumber: true,
+      checkInTime: true,
       slug: true,
       latitude: true,
       longitude: true,
@@ -201,6 +202,7 @@ async function ShowPlace({
       reviews={item.Review}
       reviewCount={item._count?.Review}
       contactNumber={item.contactNumber}
+      checkInTime={(item as any).checkInTime}
       bcvRate={bcvRate}
       slug={item.slug}
     />
