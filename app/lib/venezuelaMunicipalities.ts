@@ -125,6 +125,18 @@ const rawMunicipalitiesByState: Record<string, string[]> = {
     "Tinaquillo",
   ],
   DA: ["Antonio Díaz", "Casacoima", "Pedernales", "Tucupita"],
+  DF: [
+    "Los Roques",
+    "La Orchila",
+    "La Tortuga",
+    "La Blanquilla",
+    "Los Hermanos",
+    "Las Testigos",
+    "Los Frailes",
+    "Las Aves",
+    "Los Monjes",
+    "Isla de Patos",
+  ],
   FA: [
     "Acosta",
     "Bolívar",
@@ -791,6 +803,18 @@ const municipalityCoords: Record<string, Record<string, [number, number]>> = {
     CASACOIMA: [8.2167, -61.9833],
     PEDERNALES: [10.0333, -62.2333],
     TUCUPITA: [9.0597, -62.0523],
+  },
+  DF: {
+    LOS_ROQUES: [11.8667, -66.8167],
+    LA_ORCHILA: [11.8167, -66.1667],
+    LA_TORTUGA: [10.9833, -65.2833],
+    LA_BLANQUILLA: [11.8500, -64.6167],
+    LOS_HERMANOS: [11.7500, -63.5833],
+    LAS_TESTIGOS: [11.3833, -63.1167],
+    LOS_FRAILES: [11.1667, -63.7333],
+    LAS_AVES: [11.9833, -67.6333],
+    LOS_MONJES: [12.4333, -70.8833],
+    ISLA_DE_PATOS: [10.6333, -61.8833],
   },
 };
 

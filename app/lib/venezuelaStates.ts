@@ -9,6 +9,7 @@ export const venezuelaStates = [
   { value: "CA", label: "Carabobo", latLng: [10.3, -68.0] },
   { value: "CO", label: "Cojedes", latLng: [9.6, -66.8] },
   { value: "DA", label: "Delta Amacuro", latLng: [9.0, -62.0] },
+  { value: "DF", label: "Dependencias Federales", latLng: [11.95, -66.85] },
   { value: "FA", label: "Falcón", latLng: [11.2, -69.5] },
   { value: "GU", label: "Guárico", latLng: [9.5, -65.5] },
   { value: "LA", label: "Lara", latLng: [10.0, -69.3] },

@@ -25,6 +25,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
   const [clientPhone, setClientPhone] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [cost, setCost] = useState("");
+  const [showOptional, setShowOptional] = useState(false);
   const [uploadMode, setUploadMode] = useState<"upload" | "select">("upload");
   const [existingImages, setExistingImages] = useState<StorageImage[]>([]);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
@@ -50,6 +51,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
       setClientPhone("");
       setClientEmail("");
       setCost("");
+      setShowOptional(false);
       setImage(null);
       setSelectedImageUrl("");
       setUploadMode("upload");
@@ -196,41 +198,60 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
         />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block font-medium mb-1 text-sm">Teléfono cliente</label>
-          <input 
-            name="clientPhone" 
-            value={clientPhone}
-            onChange={(e) => setClientPhone(e.target.value)}
-            placeholder="+58 424 1234567"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1 text-sm">Email cliente</label>
-          <input 
-            name="clientEmail" 
-            type="email" 
-            value={clientEmail}
-            onChange={(e) => setClientEmail(e.target.value)}
-            placeholder="cliente@ejemplo.com"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
-          />
-        </div>
-      </div>
-      
       <div>
-        <label className="block font-medium mb-1 text-sm">Costo (USD)</label>
-        <input 
-          name="cost" 
-          type="number" 
-          step="0.01" 
-          value={cost}
-          onChange={(e) => setCost(e.target.value)}
-          placeholder="0.00"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
-        />
+        <button
+          type="button"
+          onClick={() => setShowOptional((v) => !v)}
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        >
+          <svg
+            className={`w-4 h-4 transition-transform ${showOptional ? "rotate-90" : ""}`}
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          {showOptional ? "Ocultar campos opcionales" : "Mostrar campos opcionales (teléfono, email, costo)"}
+        </button>
+
+        {showOptional && (
+          <div className="mt-3 space-y-4 border-l-2 border-gray-100 pl-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-medium mb-1 text-sm">Teléfono cliente</label>
+                <input
+                  name="clientPhone"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="+58 424 1234567"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+              <div>
+                <label className="block font-medium mb-1 text-sm">Email cliente</label>
+                <input
+                  name="clientEmail"
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  placeholder="cliente@ejemplo.com"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block font-medium mb-1 text-sm">Costo (USD)</label>
+              <input
+                name="cost"
+                type="number"
+                step="0.01"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+              />
+            </div>
+          </div>
+        )}
       </div>
       
       <div>

@@ -149,11 +149,15 @@ const REGIONES: { title: string; states: string[] }[] = [
   },
   {
     title: "Región Oriente",
-    states: ["AN", "SU", "MO", "NE", "BO", "DA", "AM"],
+    states: ["AN", "SU", "MO", "BO", "DA", "AM"],
   },
   {
     title: "Región Occidente",
     states: ["ZU", "TA", "ME", "TR", "LA", "YA", "PO", "BA", "AP", "FA"],
+  },
+  {
+    title: "Región Insular",
+    states: ["DF", "NE"],
   },
 ];
 
