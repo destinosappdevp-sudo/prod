@@ -5,6 +5,7 @@ import ListingCard from "./components/ListingCard";
 import MapFilter from "./components/MapFilter";
 import BannerCarousel from "./components/BannerCarousel";
 import BannerMedio from "./components/BannerMedio";
+import BannerPopup from "./components/BannerPopup";
 import { Nothing } from "./components/Nothing";
 import SkeletonCard from "./components/SkeletonCard";
 import SearchResultsSplit from "./components/SearchResultsSplit";
@@ -132,6 +133,7 @@ export default function Home({
 }) {
   return (
     <div className="container mx-auto px-5 lg:px-10">
+      <BannerPopup />
       <BannerCarousel />
       <MapFilter />
 
