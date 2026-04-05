@@ -2,18 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Card, CardHeader } from "@/components/ui/card";
-import {
-  Home,
-  Bed,
-  Star,
-  Tent,
-  Building,
-  Building2,
-  Mountain,
-  Gem,
-  Waves,
-  Eye,
-} from "lucide-react";
+import { Home } from "lucide-react";
 
 type PropertyType = {
   id: number;
@@ -40,22 +29,14 @@ function normalizeCategoryLabel(name: string) {
   return name;
 }
 
-const iconMap = {
-  home: Home,
-  bed: Bed,
-  star: Star,
-  tent: Tent,
-  building: Building,
-  apartment: Building2,
-  cabin: Mountain,
-  glamping: Tent,
-  "full-house": Home,
-  "country-house": Mountain,
-  "tiny-house": Home,
-  luxury: Gem,
-  beach: Waves,
-  view: Eye,
-} as const;
+const categoryGradients = [
+  "from-blue-400 to-cyan-300",
+  "from-teal-500 to-emerald-300",
+  "from-green-600 to-lime-400",
+  "from-orange-500 to-red-400",
+  "from-purple-500 to-pink-400",
+  "from-indigo-500 to-blue-400",
+];
 
 function CategorySelector({ hasError = false }: CategorySelectorProps) {
   const [selectedCategoryNames, setSelectedCategoryNames] = useState<string[]>([]);
@@ -115,54 +96,58 @@ function CategorySelector({ hasError = false }: CategorySelectorProps) {
         <p>Cargando categorías...</p>
       ) : loadError ? (
         <p className="col-span-4 text-sm text-red-600">{loadError}</p>
-      ) : categories.map((item) => (
-        <div key={item.id} className="cursor-pointer">
-          <Card
-            className={
-              selectedPropertyTypeIds.includes(item.id)
-                ? "border-primary"
-                : hasError && selectedPropertyTypeIds.length === 0
-                ? "border-red-300"
-                : ""
-            }
-            onClick={() => {
-              setSelectedPropertyTypeIds((prev) => {
-                if (prev.includes(item.id)) {
-                  return prev.filter((id) => id !== item.id);
-                }
-                return [...prev, item.id];
-              });
+      ) : categories.map((item, index) => {
+        const gradient = categoryGradients[index % categoryGradients.length];
+        const isSelected = selectedPropertyTypeIds.includes(item.id);
+        return (
+          <div key={item.id} className="cursor-pointer">
+            <Card
+              className={`overflow-hidden border-2 transition-all ${
+                isSelected
+                  ? "border-primary ring-2 ring-primary shadow-md"
+                  : hasError && selectedPropertyTypeIds.length === 0
+                  ? "border-red-300"
+                  : "border-transparent hover:border-gray-200 hover:shadow-sm"
+              }`}
+              onClick={() => {
+                setSelectedPropertyTypeIds((prev) => {
+                  if (prev.includes(item.id)) {
+                    return prev.filter((id) => id !== item.id);
+                  }
+                  return [...prev, item.id];
+                });
 
-              setSelectedCategoryNames((prev) => {
-                if (prev.includes(item.name)) {
-                  return prev.filter((name) => name !== item.name);
-                }
-                return [...prev, item.name];
-              });
-            }}
-          >
-            <CardHeader>
-              {(() => {
-                if (item.icon?.startsWith("http")) {
-                  return (
-                    <Image
-                      src={item.icon}
-                      alt={item.name}
-                      width={36}
-                      height={36}
-                      className="w-9 h-9"
-                      unoptimized
-                    />
-                  );
-                }
-                const IconComponent = iconMap[item.icon as keyof typeof iconMap] || Home;
-                return <IconComponent className="w-8 h-8" />;
-              })()}
-              <h3 className="font-medium">{normalizeCategoryLabel(item.name)}</h3>
-            </CardHeader>
-          </Card>
-        </div>
-      ))}
+                setSelectedCategoryNames((prev) => {
+                  if (prev.includes(item.name)) {
+                    return prev.filter((name) => name !== item.name);
+                  }
+                  return [...prev, item.name];
+                });
+              }}
+            >
+              <div className={`bg-gradient-to-br ${gradient} flex items-center justify-center h-24`}>
+                {item.icon?.startsWith("http") ? (
+                  <Image
+                    src={item.icon}
+                    alt={item.name}
+                    width={48}
+                    height={48}
+                    className="w-12 h-12"
+                    unoptimized
+                  />
+                ) : item.icon ? (
+                  <span className="text-5xl leading-none">{item.icon}</span>
+                ) : (
+                  <Home className="w-10 h-10 text-white" />
+                )}
+              </div>
+              <CardHeader className="pt-3 pb-3">
+                <h3 className="font-semibold text-center text-sm">{normalizeCategoryLabel(item.name)}</h3>
+              </CardHeader>
+            </Card>
+          </div>
+        );
+      })}
 
       {!loading && !loadError && (
         <p className="col-span-4 text-sm text-gray-600">

@@ -13,7 +13,7 @@ function RouteIStruktures({ params }: { params: { id: string } }) {
     <>
       <div className="w-3/5 mx-auto">
         <h2 className="text-3xl font-semibold tracking-tight transition-colors">
-          ¿Cuál de estas describe mejor tu hogar?
+          ¿Cuál de estas describe mejor tu Paquete Turístico?
         </h2>
         {hasCategoryError && (
           <p className="mt-3 text-sm text-red-600">

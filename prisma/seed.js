@@ -4,277 +4,97 @@ const { randomUUID } = require("crypto");
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Inicializando amenidades...\n");
+  console.log("Borrando amenidades anteriores...");
+  await prisma.homeAmenity.deleteMany({});
+  await prisma.amenity.deleteMany({});
+  await prisma.amenityCategory.deleteMany({});
+  console.log("Limpieza completa\n");
 
   const categoriesData = [
     {
-      name: "Vistas panorámicas",
+      name: "Alimentacion",
       order: 1,
       amenities: [
-        { name: "Vista al horizonte de la ciudad", iconKey: "city", iconUrl: null },
-        { name: "Vista a la playa", iconKey: "waves", iconUrl: null },
+        { name: "Desayuno incluido",         iconKey: "coffee" },
+        { name: "Almuerzo incluido",          iconKey: "utensils" },
+        { name: "Cena incluida",              iconKey: "moon" },
+        { name: "Todo incluido",              iconKey: "star" },
+        { name: "Merienda / Snacks",          iconKey: "package" },
       ],
     },
     {
-      name: "Baño",
+      name: "Alojamiento",
       order: 2,
       amenities: [
-        { name: "Tina", iconKey: "bath", iconUrl: null },
-        { name: "Agua caliente", iconKey: "droplets", iconUrl: null },
+        { name: "Hotel incluido",             iconKey: "building-2" },
+        { name: "Posada incluida",            iconKey: "home" },
+        { name: "Cabana incluida",            iconKey: "trees" },
+        { name: "Resort incluido",            iconKey: "building" },
       ],
     },
     {
-      name: "Dormitorio y lavadero",
+      name: "Transporte",
       order: 3,
       amenities: [
-        { name: "Lavadora", iconKey: "washer", iconUrl: null },
-        { name: "Secadora", iconKey: "dryer", iconUrl: null },
+        { name: "Traslado aeropuerto",        iconKey: "plane" },
+        { name: "Transporte terrestre",       iconKey: "bus" },
+        { name: "Transporte privado",         iconKey: "car" },
+        { name: "Paseo en lancha",            iconKey: "ship" },
+        { name: "Paseo en bote o velero",     iconKey: "anchor" },
       ],
     },
     {
-      name: "Servicios básicos",
+      name: "Actividades y Excursiones",
       order: 4,
       amenities: [
-        {
-          name: "Toallas, sábanas, jabón y papel higiénico",
-          iconKey: "package",
-          iconUrl: null,
-        },
-        { name: "Ganchos para la ropa", iconKey: "coat-rack", iconUrl: null },
+        { name: "Snorkel incluido",           iconKey: "waves" },
+        { name: "Buceo incluido",             iconKey: "droplets" },
+        { name: "Senderismo guiado",          iconKey: "map-pin" },
+        { name: "Tour de ciudad",             iconKey: "map" },
+        { name: "Visita a parques naturales", iconKey: "trees" },
+        { name: "Paseo en kayak",             iconKey: "rows" },
+        { name: "Avistamiento de fauna",      iconKey: "binoculars" },
       ],
     },
     {
-      name: "Entretenimiento",
+      name: "Guia y Servicio",
       order: 5,
       amenities: [
-        { name: "Televisor con cable estándar", iconKey: "tv", iconUrl: null },
+        { name: "Guia turistico incluido",    iconKey: "user-check" },
+        { name: "Guia bilingue",              iconKey: "languages" },
+        { name: "Coordinador de grupo",       iconKey: "users" },
       ],
     },
     {
-      name: "Calefacción y refrigeración",
+      name: "Equipamiento",
       order: 6,
       amenities: [
-        { name: "Aire acondicionado", iconKey: "air-vent", iconUrl: null },
-      ],
-    },
-    {
-      name: "Seguridad en el hogar",
-      order: 7,
-      amenities: [
-        {
-          name: "Cámaras de seguridad en la parte exterior de la propiedad",
-          iconKey: "camera-security",
-          iconUrl: null,
-        },
-        {
-          name: "Monitorea zona de vehículos y zona de ascensores",
-          iconKey: "cctv",
-          iconUrl: null,
-        },
-        {
-          name: "Detector de humo",
-          iconKey: "smoke-detector",
-          iconUrl: null,
-        },
-        {
-          name: "Detector de monóxido de carbono",
-          iconKey: "alert-circle",
-          iconUrl: null,
-        },
-      ],
-    },
-    {
-      name: "Internet y Oficina",
-      order: 8,
-      amenities: [
-        { name: "Wifi", iconKey: "wifi", iconUrl: null },
-      ],
-    },
-    {
-      name: "Utensilios y vajilla",
-      order: 9,
-      amenities: [
-        { name: "Cocina", iconKey: "chef-hat", iconUrl: null },
-        {
-          name: "Los huéspedes pueden cocinar en este espacio",
-          iconKey: "info",
-          iconUrl: null,
-        },
-        { name: "Refrigerador", iconKey: "refrigerator", iconUrl: null },
-        {
-          name: "Utensilios básicos para cocinar",
-          iconKey: "utensils",
-          iconUrl: null,
-        },
-        {
-          name: "Ollas y sartenes, aceite, sal y pimienta",
-          iconKey: "pot",
-          iconUrl: null,
-        },
-        { name: "Platos y cubiertos", iconKey: "spoon-fork", iconUrl: null },
-        {
-          name: "Bols, palitos chinos, platos, tazas, etc.",
-          iconKey: "bowl",
-          iconUrl: null,
-        },
-        { name: "Horno", iconKey: "oven", iconUrl: null },
-        { name: "Cafetera", iconKey: "coffee", iconUrl: null },
-      ],
-    },
-    {
-      name: "Características de la Ubicación",
-      order: 10,
-      amenities: [
-        { name: "Litoral", iconKey: "map-pin", iconUrl: null },
-        {
-          name: "Acceso a la playa - Frente a la playa",
-          iconKey: "umbrella",
-          iconUrl: null,
-        },
-        {
-          name: "Los huéspedes pueden disfrutar de una playa cercana",
-          iconKey: "waves",
-          iconUrl: null,
-        },
-        {
-          name: "Acceso al complejo turístico",
-          iconKey: "building-2",
-          iconUrl: null,
-        },
-        {
-          name: "Los huéspedes pueden usar las instalaciones de resort cercanas",
-          iconKey: "building",
-          iconUrl: null,
-        },
-      ],
-    },
-    {
-      name: "Exterior",
-      order: 11,
-      amenities: [
-        { name: "Patio o balcón privado", iconKey: "tree-palms", iconUrl: null },
-        { name: "Patio trasero", iconKey: "trees", iconUrl: null },
-        {
-          name: "Un espacio abierto en la propiedad generalmente cubierto de pasto",
-          iconKey: "leaf",
-          iconUrl: null,
-        },
-        { name: "Zona de comida al aire libre", iconKey: "utensils", iconUrl: null },
-        { name: "Parrilla", iconKey: "grill", iconUrl: null },
-      ],
-    },
-    {
-      name: "Estacionamiento e Instalaciones",
-      order: 12,
-      amenities: [
-        {
-          name: "Estacionamiento gratuito en las instalaciones",
-          iconKey: "car",
-          iconUrl: null,
-        },
-        { name: "Piscina compartida", iconKey: "waves", iconUrl: null },
-        { name: "Jacuzzi compartido", iconKey: "bath", iconUrl: null },
-        { name: "Ascensor", iconKey: "elevator", iconUrl: null },
-      ],
-    },
-    {
-      name: "Servicios",
-      order: 13,
-      amenities: [
-        { name: "Apto para fumadores", iconKey: "cigarette", iconUrl: null },
-      ],
-    },
-    {
-      name: "No incluidos",
-      order: 14,
-      amenities: [
-        { name: "Calefacción", iconKey: "fire", iconUrl: null },
+        { name: "Equipo de snorkel",          iconKey: "glasses" },
+        { name: "Equipo de buceo",            iconKey: "shield" },
+        { name: "Salvavidas / Chaleco",       iconKey: "life-buoy" },
+        { name: "Mochila de senderismo",      iconKey: "backpack" },
       ],
     },
   ];
 
-  for (const categoryData of categoriesData) {
-    console.log(`📦 Sincronizando categoría: "${categoryData.name}"`);
-
-    let category = await prisma.amenityCategory.findFirst({
-      where: { name: categoryData.name },
-      orderBy: { createdAt: "asc" },
+  for (const cat of categoriesData) {
+    console.log("Categoria: " + cat.name);
+    const category = await prisma.amenityCategory.create({
+      data: { id: randomUUID(), name: cat.name, order: cat.order, isActive: true },
     });
-
-    if (!category) {
-      category = await prisma.amenityCategory.create({
-        data: {
-          id: randomUUID(),
-          name: categoryData.name,
-          order: categoryData.order,
-          isActive: true,
-        },
+    for (const am of cat.amenities) {
+      await prisma.amenity.create({
+        data: { id: randomUUID(), name: am.name, iconKey: am.iconKey, iconUrl: null, isActive: true, categoryId: category.id },
       });
-      console.log("  + categoría creada");
-    } else {
-      await prisma.amenityCategory.update({
-        where: { id: category.id },
-        data: {
-          order: categoryData.order,
-          isActive: true,
-        },
-      });
-      console.log("  = categoría existente actualizada");
+      console.log("  + " + am.name);
     }
-
-    for (const amenityData of categoryData.amenities) {
-      const existingAmenity = await prisma.amenity.findFirst({
-        where: {
-          name: amenityData.name,
-          categoryId: category.id,
-        },
-        orderBy: { createdAt: "asc" },
-      });
-
-      if (!existingAmenity) {
-        await prisma.amenity.create({
-          data: {
-            id: randomUUID(),
-            name: amenityData.name,
-            iconKey: amenityData.iconKey,
-            iconUrl: amenityData.iconUrl,
-            isActive: true,
-            categoryId: category.id,
-          },
-        });
-        console.log(`  + ${amenityData.name}`);
-      } else {
-        await prisma.amenity.update({
-          where: { id: existingAmenity.id },
-          data: {
-            iconKey: amenityData.iconKey,
-            iconUrl: amenityData.iconUrl,
-            isActive: true,
-            categoryId: category.id,
-          },
-        });
-        console.log(`  = ${amenityData.name}`);
-      }
-    }
-
     console.log("");
   }
 
-  console.log("✨ ¡Amenidades inicializadas exitosamente!");
-  console.log(
-    `Total de categorías: ${categoriesData.length}`
-  );
-  console.log(
-    `Total de amenidades: ${categoriesData.reduce((sum, cat) => sum + cat.amenities.length, 0)}`
-  );
+  const total = categoriesData.reduce(function(s, c) { return s + c.amenities.length; }, 0);
+  console.log("Listo: " + categoriesData.length + " categorias, " + total + " amenidades");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error("❌ Error al inicializar amenidades:", e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+  .then(function() { return prisma.$disconnect(); })
+  .catch(function(e) { console.error(e.message); process.exit(1); });
