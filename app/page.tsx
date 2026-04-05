@@ -94,6 +94,7 @@ async function getData({
       bedrooms: true,
       exactAddress: true,
       contactNumber: true,
+      slug: true,
       latitude: true,
       longitude: true,
       Review: {
@@ -193,6 +194,8 @@ async function ShowPlace({
         lat: item.latitude,
         lng: item.longitude,
         image: item.photo as string,
+        slug: item.slug,
+        categoryName: item.categoryName,
       };
     }
     const muni = item.country && item.municipality
@@ -208,6 +211,8 @@ async function ShowPlace({
       lat: (latLng as [number, number])[0] + offset,
       lng: (latLng as [number, number])[1] + offset,
       image: item.photo as string,
+      slug: item.slug,
+      categoryName: item.categoryName,
     };
   });
 
@@ -233,6 +238,7 @@ async function ShowPlace({
       reviewCount={item._count?.Review}
       contactNumber={item.contactNumber}
       bcvRate={bcvRate}
+      slug={item.slug}
     />
   );
 

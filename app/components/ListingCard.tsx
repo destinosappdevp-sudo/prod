@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Heart, Calendar } from "lucide-react";
+import { buildHomeUrl } from "@/app/lib/slug";
 import { AddToFavorite, RemoveFromFavorite } from "../action";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
 import { useVenezuelaMunicipalities } from "../lib/venezuelaMunicipalities";
@@ -40,6 +41,7 @@ interface iAppProps {
   reviewCount?: number;
   contactNumber?: string | null;
   bcvRate?: number | null;
+  slug?: string | null;
 }
 
 function ListingCard({
@@ -62,6 +64,7 @@ function ListingCard({
   reviewCount,
   contactNumber,
   bcvRate,
+  slug,
 }: iAppProps) {
   const router = useRouter();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -94,7 +97,7 @@ function ListingCard({
       ? `${primaryCategoryLabel} +${normalizedCategories.length - 1}`
       : primaryCategoryLabel
     : null;
-  const homeDetailPath = `/home/${homeId}`;
+  const homeDetailPath = buildHomeUrl(slug, homeId, categoryNames ?? categoryName);
 
   const departureDate =
     contactNumber && /^\d{4}-\d{2}-\d{2}$/.test(contactNumber)
@@ -129,7 +132,7 @@ function ListingCard({
 
   const handleCardClick = () => {
     if (userId) {
-      router.push(`/home/${homeId}`);
+      router.push(homeDetailPath);
       return;
     }
     setIsAuthOpen(true);

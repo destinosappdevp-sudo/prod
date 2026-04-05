@@ -585,6 +585,8 @@ async function getGuestDashboardData(userId: string) {
             municipality: true,
             price: true,
             description: true,
+            slug: true,
+            categoryName: true,
           },
         },
       },
@@ -638,6 +640,8 @@ async function getGuestDashboardData(userId: string) {
       photo: fav.Home.photo || "",
       favoriteId: fav.id,
       description: fav.Home.description || "",
+      slug: fav.Home.slug,
+      categoryName: fav.Home.categoryName,
     })),
     guestReservations: reservations.map((res: any) => ({
       id: res.id,

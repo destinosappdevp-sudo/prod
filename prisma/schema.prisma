@@ -101,6 +101,7 @@ model Home {
   propertyTypeId          Int[]          @default([])
   latitude                Float?
   longitude               Float?
+  slug                    String?        @unique
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
   User                    User?          @relation(fields: [userId], references: [id])

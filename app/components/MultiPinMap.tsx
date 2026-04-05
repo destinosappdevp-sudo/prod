@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, TileLayer, Popup, useMap } from "react-leaflet";
 import Link from "next/link";
 import { SupabaseImage } from "./SupabaseImage";
+import { buildHomeUrl } from "@/app/lib/slug";
 
 export interface MapPin {
   id: string;
@@ -14,6 +15,8 @@ export interface MapPin {
   lat: number;
   lng: number;
   image: string;
+  slug?: string | null;
+  categoryName?: string | string[] | null;
 }
 
 const ICON = icon({
@@ -77,7 +80,7 @@ export default function MultiPinMap({ pins }: { pins: MapPin[] }) {
       {pins.map((pin) => (
         <Marker key={pin.id} position={[pin.lat, pin.lng]} icon={ICON}>
           <Popup className="custom-popup" maxWidth={250}>
-            <Link href={`/home/${pin.id}`} className="block hover:opacity-90 transition-opacity">
+            <Link href={buildHomeUrl(pin.slug, pin.id, pin.categoryName)} className="block hover:opacity-90 transition-opacity">
               <div className="relative w-full h-32 mb-2 rounded-lg overflow-hidden">
                 <SupabaseImage
                   imagePath={pin.image}

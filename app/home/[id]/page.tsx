@@ -11,6 +11,8 @@ import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import Image from "next/image";
 import { getPrimaryCategoryName } from "@/app/lib/property-categories";
+import { toCategorySlug } from "@/app/lib/slug";
+import { redirect } from "next/navigation";
 
 const prismaAny = prisma as any;
 
@@ -37,6 +39,7 @@ async function getData(homeId: string) {
       checkInTime: true,
       contactNumber: true,
       createdAt: true,
+      slug: true,
       Reservation: {
         where: {
           homeId: homeId,
@@ -99,6 +102,13 @@ async function getAmenities(homeId: string) {
 
 async function SingleHomePage({ params }: { params: { id: string } }) {
   const data = await getData(params.id);
+
+  // Redirigir 301 al nuevo URL SEO si el paquete tiene slug
+  if (data?.slug && data?.categoryName) {
+    const categorySlug = toCategorySlug(data.categoryName);
+    redirect(`/destinos/${categorySlug}/${data.slug}`);
+  }
+
   const amenityCategories = await getAmenities(params.id);
   const state = getStateByValue(data?.country as string);
   const municipality =

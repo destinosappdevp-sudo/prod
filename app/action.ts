@@ -17,6 +17,7 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
+import { generateHomeSlug } from "@/app/lib/slug";
 
 type RegistrationProfile = {
   firstName: string;
@@ -461,6 +462,9 @@ export async function createDescription(formData: FormData) {
     throw new Error("Failed to get public URL for image");
   }
 
+  // Generar slug SEO desde el título
+  const slug = generateHomeSlug(title, homeId);
+
   // Guardar en la base de datos con la URL pública completa
   const data = await prisma.home.update({
     where: { id: homeId },
@@ -471,8 +475,9 @@ export async function createDescription(formData: FormData) {
       bedrooms: roomsNumber,
       bathrooms: bathroomsNumber,
       guests: guestsNumber,
-      photo: filePath, // Guardar la ruta relativa para compatibilidad
+      photo: filePath,
       addedDescription: true,
+      slug,
     },
   });
 
@@ -485,10 +490,16 @@ export async function createLocation(formData: FormData) {
   const municipalityValue = formData.get("municipalityValue") as string;
   const exactAddress = formData.get("exactAddress") as string;
   const checkInTime = formData.get("checkInTime") as string;
-  const contactNumber = (formData.get("contactNumber") as string) || "";
-  const hasLeadingPlus = contactNumber.trim().startsWith("+");
-  const digitsOnly = contactNumber.replace(/\D/g, "");
-  const normalizedContactNumber = `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
+  const contactNumberRaw = (formData.get("contactNumber") as string) || "";
+  // Si parece una fecha ISO (YYYY-MM-DD) la guardamos tal cual; si no, normalizamos como teléfono
+  const isDateLike = /^\d{4}-\d{2}-\d{2}$/.test(contactNumberRaw.trim());
+  const normalizedContactNumber = isDateLike
+    ? contactNumberRaw.trim()
+    : (() => {
+        const hasPlus = contactNumberRaw.trim().startsWith("+");
+        const digits = contactNumberRaw.replace(/\D/g, "");
+        return `${hasPlus ? "+" : ""}${digits}`.slice(0, 14);
+      })();
   const latRaw = formData.get("latitude") as string;
   const lngRaw = formData.get("longitude") as string;
   const latitude = latRaw ? parseFloat(latRaw) : null;

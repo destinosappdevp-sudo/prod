@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Eye, Clock, X, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { buildHomeUrl } from "@/app/lib/slug";
 
 interface HomeStatus {
   id: string;
@@ -16,6 +17,8 @@ interface HomeStatus {
   publishStatus: string;
   approvalRejectionReason?: string;
   createdAt: string;
+  slug?: string | null;
+  categoryName?: string[] | null;
 }
 
 interface HostListingsClientProps {
@@ -142,7 +145,7 @@ export default function HostListingsClient({
 
             {/* Acción */}
             <div className="flex items-center">
-              <Link href={`/home/${home.id}`}>
+              <Link href={buildHomeUrl(home.slug, home.id, home.categoryName)}>
                 <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition text-sm">
                   Ver detalles
                 </button>

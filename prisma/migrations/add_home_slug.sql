@@ -1,0 +1,2 @@
+﻿ALTER TABLE "Home" ADD COLUMN IF NOT EXISTS "slug" TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS "Home_slug_key" ON "Home"("slug");
