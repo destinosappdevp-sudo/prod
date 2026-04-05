@@ -229,7 +229,7 @@ export default function PropertyEditForm({
       });
 
       if (!response.ok) {
-        let errorMessage = "Error al actualizar la propiedad";
+        let errorMessage = "Error al actualizar la Paquete";
         try {
           const errorData = await response.json();
           errorMessage = errorData?.error || errorMessage;
@@ -239,14 +239,14 @@ export default function PropertyEditForm({
         throw new Error(errorMessage);
       }
 
-      alert("Propiedad actualizada exitosamente");
+      alert("Paquete actualizada exitosamente");
       router.refresh();
     } catch (error) {
       console.error(error);
       alert(
         error instanceof Error
           ? error.message
-          : "Error al actualizar la propiedad"
+          : "Error al actualizar la Paquete"
       );
     } finally {
       setIsLoading(false);
@@ -255,7 +255,7 @@ export default function PropertyEditForm({
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
-      "¿Seguro que deseas eliminar esta propiedad? Esta acción no se puede deshacer."
+      "¿Seguro que deseas eliminar esta Paquete? Esta acción no se puede deshacer."
     );
 
     if (!confirmed) return;
@@ -269,7 +269,7 @@ export default function PropertyEditForm({
       });
 
       if (!response.ok) {
-        let errorMessage = "Error al eliminar la propiedad";
+        let errorMessage = "Error al eliminar la Paquete";
         try {
           const errorData = await response.json();
           errorMessage = errorData?.error || errorMessage;
@@ -279,7 +279,7 @@ export default function PropertyEditForm({
         throw new Error(errorMessage);
       }
 
-      alert("Propiedad eliminada exitosamente");
+      alert("Paquete eliminada exitosamente");
       router.push("/admin/properties");
       router.refresh();
     } catch (error) {
@@ -287,7 +287,7 @@ export default function PropertyEditForm({
       alert(
         error instanceof Error
           ? error.message
-          : "Error al eliminar la propiedad"
+          : "Error al eliminar la Paquete"
       );
     } finally {
       setIsLoading(false);
@@ -315,7 +315,7 @@ export default function PropertyEditForm({
                   placeholder={
                     missingTitle
                       ? "Falta completar el título"
-                      : "Título de la propiedad"
+                      : "Título de la Paquete"
                   }
                   className={missingTitle ? requiredMissingClass : undefined}
                 />
@@ -326,7 +326,7 @@ export default function PropertyEditForm({
                   Categorías
                 </Label>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Selecciona una o varias categorías para esta propiedad.
+                  Selecciona una o varias categorías para esta Paquete.
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {categories.map((cat) => {
@@ -377,7 +377,7 @@ export default function PropertyEditForm({
               placeholder={
                 missingDescription
                   ? "Falta completar la descripción"
-                  : "Descripción de la propiedad"
+                  : "Descripción de la Paquete"
               }
               className={missingDescription ? requiredMissingClass : undefined}
               rows={4}
@@ -388,33 +388,33 @@ export default function PropertyEditForm({
             <h3 className="text-lg font-semibold mb-4">Características</h3>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="guests">Huéspedes</Label>
+                <Label htmlFor="guests">Cupos</Label>
                 <Input
                   id="guests"
                   type="number"
                   value={formData.guests}
                   onChange={(e) => handleChange("guests", e.target.value)}
-                  placeholder="Número de huéspedes"
+                  placeholder="Número de cupos"
                 />
               </div>
               <div>
-                <Label htmlFor="bedrooms">Habitaciones</Label>
+                <Label htmlFor="bedrooms">Zona VIP</Label>
                 <Input
                   id="bedrooms"
                   type="number"
                   value={formData.bedrooms}
                   onChange={(e) => handleChange("bedrooms", e.target.value)}
-                  placeholder="Número de habitaciones"
+                  placeholder="Número de zonas VIP"
                 />
               </div>
               <div>
-                <Label htmlFor="bathrooms">Baños</Label>
+                <Label htmlFor="bathrooms">Zona Estándar</Label>
                 <Input
                   id="bathrooms"
                   type="number"
                   value={formData.bathrooms}
                   onChange={(e) => handleChange("bathrooms", e.target.value)}
-                  placeholder="Número de baños"
+                  placeholder="Número de zonas estándar"
                 />
               </div>
             </div>
@@ -498,7 +498,7 @@ export default function PropertyEditForm({
                   htmlFor="price"
                   className={missingPrice ? "text-red-600" : undefined}
                 >
-                  Precio por noche (USD)
+                  Precio del Paquete
                 </Label>
                 <Input
                   id="price"
@@ -509,7 +509,7 @@ export default function PropertyEditForm({
                   placeholder={
                     missingPrice
                       ? "Falta completar un precio válido"
-                      : "Precio por noche"
+                      : "Precio del Paquete"
                   }
                   className={missingPrice ? requiredMissingClass : undefined}
                 />
@@ -518,10 +518,10 @@ export default function PropertyEditForm({
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">Datos de Contacto</h3>
+            <h3 className="text-lg font-semibold mb-4">Datos del Paquete</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="checkInTime">Hora de ingreso</Label>
+                <Label htmlFor="checkInTime">Hora de Salida</Label>
                 <Input
                   id="checkInTime"
                   type="time"
@@ -561,7 +561,7 @@ export default function PropertyEditForm({
               </div>
             </div>
             <div className="mt-4">
-              <Label htmlFor="exactAddress">Direccion exacta</Label>
+              <Label htmlFor="exactAddress">Punto de Partida (Salida)</Label>
               <Input
                 id="exactAddress"
                 type="text"
@@ -570,29 +570,6 @@ export default function PropertyEditForm({
                 placeholder="Ej: Av. Principal, calle 10, casa 2"
                 className="text-sm"
               />
-            </div>
-            <div className="mt-4">
-              <Label className="text-sm font-medium">
-                Coordenadas GPS <span className="text-muted-foreground font-normal">(opcional)</span>
-              </Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                En <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">openstreetmap.org</a>: clic derecho sobre el lugar → copia las coordenadas → pégalas aquí
-              </p>
-              <Input
-                type="text"
-                value={coordsInput}
-                onChange={(e) => parseCoords(e.target.value)}
-                placeholder="Pega aquí: 7.80878, -72.23072"
-                className={`text-sm ${
-                  coordsInput && !coordsParsed ? "border-red-400 focus-visible:ring-red-400" : ""
-                }`}
-              />
-              {coordsParsed && (
-                <p className="text-xs text-green-600 mt-1">✓ Lat: {formData.latitude} · Lng: {formData.longitude}</p>
-              )}
-              {coordsInput && !coordsParsed && (
-                <p className="text-xs text-red-500 mt-1">Formato no reconocido. Ejemplo: 7.80878, -72.23072</p>
-              )}
             </div>
           </div>
 
@@ -634,7 +611,7 @@ export default function PropertyEditForm({
                 onClick={handleDelete}
                 disabled={isLoading}
               >
-                Eliminar Propiedad
+                Eliminar Paquete
               </Button>
             )}
             <Button

@@ -24,7 +24,7 @@ export default async function AmenitiesPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Servicios</h1>
         <p className="text-gray-600 mt-1">
-          Administra grupos de servicios (amenities). Las categorías de propiedad se gestionan aparte.
+          Administra grupos de servicios (amenities). Las categorías de Paquete se gestionan aparte.
         </p>
       </div>
       <AmenityManagerClient initialCategories={categories} />

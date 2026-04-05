@@ -95,7 +95,7 @@ export default function CategoriesClient({
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-2">Categorías</h1>
       <p className="text-gray-600 mb-6">
-        Administra las categorías de propiedad. Aquí podrás ver, crear y editar categorías.
+        Administra las categorías de Paquete. Aquí podrás ver, crear y editar categorías.
       </p>
 
       <div className="bg-white rounded shadow p-4 mb-6">

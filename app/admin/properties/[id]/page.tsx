@@ -181,7 +181,7 @@ export default async function PropertyDetailPage({
             {property.title || "Sin título"}
           </h1>
           <p className="text-gray-600 mt-1">
-            Detalles y edición de la propiedad
+            Detalles y edición de la Paquete
           </p>
         </div>
         <PropertyStatusControl
@@ -233,12 +233,12 @@ export default async function PropertyDetailPage({
       <div className="grid grid-cols-3 gap-6">
         {/* Image and Basic Info */}
         <Card className="p-6 col-span-1">
-          <h3 className="text-lg font-semibold mb-4">Imagen de la Propiedad</h3>
+          <h3 className="text-lg font-semibold mb-4">Imagen de la Paquete</h3>
           {property.photo ? (
             <div className="relative w-full h-64 rounded-lg overflow-hidden mb-4">
               <Image
                 src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${property.photo}`}
-                alt={property.title || "Propiedad"}
+                alt={property.title || "Paquete"}
                 fill
                 className="object-cover"
               />
@@ -374,7 +374,7 @@ export default async function PropertyDetailPage({
 
       {/* Edit Form */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">Editar Propiedad</h2>
+        <h2 className="text-2xl font-bold mb-4">Editar Paquete</h2>
         <PropertyEditForm
           property={{
             ...property,

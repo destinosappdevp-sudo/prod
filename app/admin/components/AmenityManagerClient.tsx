@@ -87,10 +87,11 @@ export default function AmenityManagerClient({
 
   const handleCreateAmenity = async () => {
     if (!amenityName.trim() || !amenityIconKey.trim() || !amenityCategoryId) {
+      alert("Completa nombre, clave de icono y selecciona un grupo.");
       return;
     }
 
-    await fetch("/api/admin/amenities", {
+    const res = await fetch("/api/admin/amenities", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -100,6 +101,12 @@ export default function AmenityManagerClient({
         categoryId: amenityCategoryId,
       }),
     });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert("Error al crear el servicio: " + (err?.error || res.status));
+      return;
+    }
 
     setAmenityName("");
     setAmenityIconKey("");

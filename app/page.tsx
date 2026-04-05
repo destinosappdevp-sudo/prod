@@ -7,7 +7,6 @@ import BannerCarousel from "./components/BannerCarousel";
 import BannerMedio from "./components/BannerMedio";
 import { Nothing } from "./components/Nothing";
 import SkeletonCard from "./components/SkeletonCard";
-import { HorizontalCarousel } from "./components/HorizontalCarousel";
 import SearchResultsSplit from "./components/SearchResultsSplit";
 import prisma from "./lib/db";
 import { getStateByValue } from "./lib/venezuelaStates";
@@ -94,6 +93,7 @@ async function getData({
       guests: true,
       bedrooms: true,
       exactAddress: true,
+      contactNumber: true,
       latitude: true,
       longitude: true,
       Review: {
@@ -109,7 +109,13 @@ async function getData({
       Favorite: { where: { userId: userId ?? undefined } },
     },
   });
-  return data;
+
+  const appConfig = await prismaAny.platformConfig.findFirst({
+    select: { bcvRate: true },
+  });
+  const bcvRate: number | null = appConfig?.bcvRate ? Number(appConfig.bcvRate) : null;
+
+  return { data, bcvRate };
 }
 
 export default function Home({
@@ -163,7 +169,7 @@ async function ShowPlace({
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const data = await getData({ searchParams: searchParams, userId: user?.id });
+  const { data, bcvRate } = await getData({ searchParams: searchParams, userId: user?.id });
 
   // Is this a search? (any filter active)
   const isSearch = !!(searchParams?.country || searchParams?.rooms || searchParams?.bathrooms || searchParams?.guest);
@@ -179,7 +185,6 @@ async function ShowPlace({
 
   // Build pins for search map
   const pins = data.map((item: (typeof data)[number], index: number) => {
-    // Usar coordenadas específicas de la propiedad si están disponibles
     if (item.latitude && item.longitude) {
       return {
         id: item.id,
@@ -190,17 +195,12 @@ async function ShowPlace({
         image: item.photo as string,
       };
     }
-
-    // Fallback a coordenadas del municipio/estado
     const muni = item.country && item.municipality
       ? getMunicipalityByValue(item.country as string, item.municipality as string)
       : null;
     const state = item.country ? getStateByValue(item.country as string) : null;
     const latLng = muni?.latLng ?? state?.latLng ?? [10.5, -66.9];
-
-    // Si las propiedades tienen la misma ubicación, añadir un pequeño offset para separarlas
     const offset = index * 0.001;
-
     return {
       id: item.id,
       title: item.title as string,
@@ -231,44 +231,21 @@ async function ShowPlace({
       bedrooms={item.bedrooms}
       reviews={item.Review}
       reviewCount={item._count?.Review}
+      contactNumber={item.contactNumber}
+      bcvRate={bcvRate}
     />
-  );
-
-  const renderCarouselCard = (item: typeof data[0]) => (
-    <div key={item.id} className="min-w-[260px] w-[260px] flex-shrink-0">
-      <ListingCard
-        title={item.title as string}
-        description={item.description as string}
-        imagePath={item.photo as string}
-        price={item.price as number}
-        stateValue={item.country as string}
-        municipalityValue={item.municipality}
-        userId={user?.id}
-        favoriteId={item.Favorite[0]?.id}
-        isInFavoriteList={item.Favorite.length > 0}
-        homeId={item.id}
-        pathName="/"
-        categoryName={getPrimaryCategoryName(item.categoryName)}
-        categoryNames={item.categoryName}
-        guests={item.guests}
-        bedrooms={item.bedrooms}
-        reviews={item.Review}
-        reviewCount={item._count?.Review}
-      />
-    </div>
   );
 
   if (isSearch) {
     return (
       <SearchResultsSplit pins={pins}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map(renderCard)}
         </div>
       </SearchResultsSplit>
     );
   }
 
-  // Propiedades sin región asignada o con estado desconocido
   type HomeItem = (typeof data)[number];
   const assignedStates = new Set(REGIONES.flatMap((r) => r.states));
   const sinRegion = data
@@ -287,21 +264,27 @@ async function ShowPlace({
           .slice(-9);
         if (items.length === 0) return null;
         return (
-          <>
-            <HorizontalCarousel key={region.title} title={region.title}>
-              {items.map(renderCarouselCard)}
-            </HorizontalCarousel>
-            {/* Banner MEDIO1 después de Región Centro (index 0) */}
-            {index === 0 && <BannerMedio tipo="MEDIO1" />}
-            {/* Banner MEDIO2 después de Región Oriente (index 1) */}
-            {index === 1 && <BannerMedio tipo="MEDIO2" />}
-          </>
+          <section key={region.title}>
+            <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">{region.title}</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {items.map(renderCard)}
+            </div>
+            {index === 0 && <div className="mt-8"><BannerMedio tipo="MEDIO1" /></div>}
+            {index === 1 && <div className="mt-8"><BannerMedio tipo="MEDIO2" /></div>}
+          </section>
         );
       })}
       {sinRegion.length > 0 && (
-        <HorizontalCarousel title="Otras Regiones">
-          {sinRegion.map(renderCarouselCard)}
-        </HorizontalCarousel>
+        <section>
+          <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900">Otras Regiones</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sinRegion.map(renderCard)}
+          </div>
+        </section>
       )}
     </div>
   );

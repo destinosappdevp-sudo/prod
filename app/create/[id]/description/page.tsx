@@ -39,12 +39,12 @@ function DescriptionPage({ params }: { params: { id: string } }) {
           </div>
 
           <div className="flex flex-col gap-y-2">
-            <Label>Precio</Label>
+            <Label>Precio del Paquete</Label>
             <Input
               name="price"
               type="number"
               required
-              placeholder="Precio por noche en USD"
+              placeholder="Precio del Paquete"
               min={10}
             />
           </div>
@@ -58,9 +58,9 @@ function DescriptionPage({ params }: { params: { id: string } }) {
             <CardHeader className="flex flex-col gap-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <h3 className="underline font-medium">Huéspedes</h3>
+                  <h3 className="underline font-medium">Cupos</h3>
                   <p className="text-muted-foreground text-sm">
-                    ¿Cuántos huéspedes deseas?
+                    ¿Cuántos cupos disponibles?
                   </p>
                 </div>
                 <Counter name="guests" />
@@ -68,9 +68,9 @@ function DescriptionPage({ params }: { params: { id: string } }) {
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <h3 className="underline font-medium">Dormitorios</h3>
+                  <h3 className="underline font-medium">Zona VIP</h3>
                   <p className="text-muted-foreground text-sm">
-                    ¿Cuántos dormitorios tienes?
+                    ¿Cuántas zonas VIP tiene el paquete?
                   </p>
                 </div>
                 <Counter name="rooms" />
@@ -78,9 +78,9 @@ function DescriptionPage({ params }: { params: { id: string } }) {
 
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <h3 className="underline font-medium">Baños</h3>
+                  <h3 className="underline font-medium">Zona Estándar</h3>
                   <p className="text-muted-foreground text-sm">
-                    ¿Cuántos baños tienes?
+                    ¿Cuántas zonas estándar tiene el paquete?
                   </p>
                 </div>
                 <Counter name="bathrooms" />

@@ -1,4 +1,4 @@
-﻿import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { unstable_noStore } from 'next/cache';
 import prisma from "@/app/lib/db";
 import { redirect } from "next/navigation";
@@ -117,7 +117,7 @@ export default async function AdminDashboard() {
       format: "number",
     },
     {
-      title: "Propiedades",
+      title: "Paquetes",
       value: stats.totalProperties,
       icon: Home,
       color: "green",

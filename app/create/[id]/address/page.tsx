@@ -14,8 +14,12 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import dynamic from "next/dynamic";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { useEffect, useState } from "react";
 
 function AddressRoute({ params }: { params: { id: string } }) {
@@ -26,15 +30,9 @@ function AddressRoute({ params }: { params: { id: string } }) {
   const [municipalityValue, setMunicipalityValue] = useState(
     getDefaultMunicipalityByState("CC")?.value || ""
   );
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
-  const [coordsInput, setCoordsInput] = useState("");
-  const [coordsParsed, setCoordsParsed] = useState(false);
-  const [contactNumber, setContactNumber] = useState("");
-  const parsedLatitude = latitude ? Number(latitude) : null;
-  const parsedLongitude = longitude ? Number(longitude) : null;
+  const [departureDate, setDepartureDate] = useState<Date | undefined>(undefined);
 
-  // Cargar datos del usuario (estado, número de contacto, municipio)
+  // Cargar datos del usuario (estado, municipio)
   useEffect(() => {
     (async () => {
       try {
@@ -42,7 +40,6 @@ function AddressRoute({ params }: { params: { id: string } }) {
         if (userProfile) {
           if (userProfile.stateCode) {
             setStateValue(userProfile.stateCode);
-            // Cargar municipio del usuario si existe
             if (userProfile.municipalityCode) {
               setMunicipalityValue(userProfile.municipalityCode);
             } else {
@@ -51,16 +48,6 @@ function AddressRoute({ params }: { params: { id: string } }) {
               );
             }
           }
-          // Cargar teléfono del usuario (sin el +58)
-          if (userProfile.phoneNumber) {
-            // Si el teléfono viene como +58... extrae solo los dígitos
-            const phoneDigits = userProfile.phoneNumber.replace(/\D/g, "");
-            // Si comienza con 58, quita esos primeros 2 dígitos
-            const phoneWithoutCountry = phoneDigits.startsWith("58")
-              ? phoneDigits.slice(2)
-              : phoneDigits;
-            setContactNumber(phoneWithoutCountry.slice(0, 10));
-          }
         }
       } catch (error) {
         console.error("Error cargando perfil del usuario:", error);
@@ -68,34 +55,11 @@ function AddressRoute({ params }: { params: { id: string } }) {
     })();
   }, [getDefaultMunicipalityByState]);
 
-  const normalizeContactNumber = (value: string) => {
-    return value.replace(/\D/g, "").slice(0, 10);
-  };
-
-  const parseCoords = (value: string) => {
-    setCoordsInput(value);
-    // Acepta formato: "7.80878, -72.23072" o "7.80878 -72.23072"
-    const match = value.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
-    if (match) {
-      setLatitude(match[1]);
-      setLongitude(match[2]);
-      setCoordsParsed(true);
-    } else {
-      setLatitude("");
-      setLongitude("");
-      setCoordsParsed(false);
-    }
-  };
-  const LazyMap = dynamic(() => import("@/app/components/Map"), {
-    ssr: false,
-    loading: () => <Skeleton className="h-[50vh] w-full" />,
-  });
-
   return (
     <>
       <div className="w-3/5 mx-auto">
         <h2 className="text-3xl font-semibold tracking-tighter transition-colors mb-10">
-          ¿Dónde está ubicado tu inmueble?
+          Destino
         </h2>
       </div>
 
@@ -103,8 +67,13 @@ function AddressRoute({ params }: { params: { id: string } }) {
         <input type="hidden" name="homeId" value={params.id} />
         <input type="hidden" name="stateValue" value={stateValue} />
         <input type="hidden" name="municipalityValue" value={municipalityValue} />
-        <input type="hidden" name="latitude" value={latitude} />
-        <input type="hidden" name="longitude" value={longitude} />
+        <input type="hidden" name="latitude" value="" />
+        <input type="hidden" name="longitude" value="" />
+        <input
+          type="hidden"
+          name="contactNumber"
+          value={departureDate ? format(departureDate, "yyyy-MM-dd") : ""}
+        />
         <div className="w-3/5 mx-auto mb-36">
           <div className="mb-5">
             <Select
@@ -157,7 +126,7 @@ function AddressRoute({ params }: { params: { id: string } }) {
 
           <div className="mb-5 grid grid-cols-1 gap-4">
             <div>
-              <Label htmlFor="exactAddress">Direccion exacta</Label>
+              <Label htmlFor="exactAddress">Punto de Partida</Label>
               <Input
                 id="exactAddress"
                 name="exactAddress"
@@ -166,29 +135,11 @@ function AddressRoute({ params }: { params: { id: string } }) {
                 placeholder="Ej: Av. Principal, calle 10, casa 2"
                 className="text-sm"
               />
-            </div>            <div>
-              <Label className="text-sm font-medium">Coordenadas GPS <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                En <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">openstreetmap.org</a>: clic derecho sobre el lugar → copia las coordenadas → pégalas aquí
-              </p>
-              <Input
-                type="text"
-                value={coordsInput}
-                onChange={(e) => parseCoords(e.target.value)}
-                placeholder="Pega aquí: 7.80878, -72.23072"
-                className={`text-sm ${
-                  coordsInput && !coordsParsed ? "border-red-400 focus-visible:ring-red-400" : ""
-                }`}
-              />
-              {coordsParsed && (
-                <p className="text-xs text-green-600 mt-1">✓ Lat: {latitude} · Lng: {longitude}</p>
-              )}
-              {coordsInput && !coordsParsed && (
-                <p className="text-xs text-red-500 mt-1">Formato no reconocido. Ejemplo: 7.80878, -72.23072</p>
-              )}
-            </div>            <div className="grid grid-cols-2 gap-4">
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="checkInTime">Hora de ingreso</Label>
+                <Label htmlFor="checkInTime">Hora de Partida</Label>
                 <Input
                   id="checkInTime"
                   name="checkInTime"
@@ -198,41 +149,32 @@ function AddressRoute({ params }: { params: { id: string } }) {
                 />
               </div>
               <div>
-                <Label htmlFor="contactNumber">Número de contacto</Label>
-                <input
-                  type="hidden"
-                  name="contactNumber"
-                  value={contactNumber ? `+58${contactNumber}` : ""}
-                />
-                <div className="flex items-center border rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                  <span className="px-3 py-2 bg-muted text-sm font-medium border-r select-none">
-                    +58
-                  </span>
-                  <Input
-                    id="contactNumber"
-                    type="tel"
-                    required
-                    value={contactNumber}
-                    onChange={(e) =>
-                      setContactNumber(normalizeContactNumber(e.target.value))
-                    }
-                    maxLength={10}
-                    pattern="^\\d+$"
-                    title="Usa solo números"
-                    placeholder="Ej: 4121234567"
-                    className="text-sm border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
+                <Label>Fecha de Salida</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal text-sm"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                      {departureDate
+                        ? format(departureDate, "d 'de' MMMM, yyyy", { locale: es })
+                        : <span className="text-muted-foreground">Selecciona una fecha</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={departureDate}
+                      onSelect={setDepartureDate}
+                      initialFocus
+                      disabled={(date) => date < new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
-
-          <LazyMap
-            stateValue={stateValue}
-            municipalityValue={municipalityValue}
-            latitude={parsedLatitude}
-            longitude={parsedLongitude}
-          />
         </div>
 
         <CreateButtonBar />
@@ -242,3 +184,4 @@ function AddressRoute({ params }: { params: { id: string } }) {
 }
 
 export default AddressRoute;
+

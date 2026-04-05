@@ -183,7 +183,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Propiedad
+                  Paquete
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Anfitrión
@@ -288,7 +288,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
 
       {filtered.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No se encontraron propiedades</p>
+          <p className="text-gray-500">No se encontraron Paquetes</p>
         </div>
       )}
 
@@ -296,7 +296,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <p className="text-sm text-gray-600">
-            Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length} propiedades
+            Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length} Paquetes
           </p>
           <div className="flex items-center gap-1">
             <button

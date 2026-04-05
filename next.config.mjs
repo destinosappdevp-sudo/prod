@@ -30,6 +30,10 @@ const remotePatterns = [
     protocol: "https",
     hostname: "gravatar.com",
   },
+  {
+    protocol: "https",
+    hostname: "cdn.jsdelivr.net",
+  },
 ];
 
 if (supabaseHostname) {

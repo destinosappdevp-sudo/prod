@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { Card, CardHeader } from "@/components/ui/card";
 import {
   Home,
@@ -142,6 +143,18 @@ function CategorySelector({ hasError = false }: CategorySelectorProps) {
           >
             <CardHeader>
               {(() => {
+                if (item.icon?.startsWith("http")) {
+                  return (
+                    <Image
+                      src={item.icon}
+                      alt={item.name}
+                      width={36}
+                      height={36}
+                      className="w-9 h-9"
+                      unoptimized
+                    />
+                  );
+                }
                 const IconComponent = iconMap[item.icon as keyof typeof iconMap] || Home;
                 return <IconComponent className="w-8 h-8" />;
               })()}

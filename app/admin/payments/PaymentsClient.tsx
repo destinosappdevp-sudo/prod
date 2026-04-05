@@ -168,7 +168,7 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
                 Usuario
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Propiedad
+                Paquete
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Fechas

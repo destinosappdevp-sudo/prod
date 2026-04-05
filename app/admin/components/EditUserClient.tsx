@@ -226,7 +226,7 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
           {/* Estadísticas */}
           <div className="grid grid-cols-3 gap-4 pt-4 border-t">
             <div className="text-center">
-              <p className="text-sm text-gray-600">Propiedades</p>
+              <p className="text-sm text-gray-600">Paquetes</p>
               <p className="text-2xl font-bold">{user._count?.Home || 0}</p>
             </div>
             <div className="text-center">
@@ -270,7 +270,7 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
                   Usuario Verificado
                 </Label>
                 <p className="text-sm text-gray-600">
-                  Los usuarios verificados publican propiedades sin revisión
+                  Los usuarios verificados publican Paquetes sin revisión
                 </p>
               </div>
               <button

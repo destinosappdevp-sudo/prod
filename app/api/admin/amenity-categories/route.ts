@@ -1,6 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
 
     const category = await prismaAny.amenityCategory.create({
       data: {
+        id: randomUUID(),
         name,
         order: typeof order === "number" ? order : null,
       },

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Heart } from "lucide-react";
+import { Heart, Calendar } from "lucide-react";
 import { AddToFavorite, RemoveFromFavorite } from "../action";
 import { useVenezuelaStates } from "../lib/venezuelaStates";
 import { useVenezuelaMunicipalities } from "../lib/venezuelaMunicipalities";
@@ -38,6 +38,8 @@ interface iAppProps {
   bedrooms?: string | null;
   reviews?: { rating: number }[];
   reviewCount?: number;
+  contactNumber?: string | null;
+  bcvRate?: number | null;
 }
 
 function ListingCard({
@@ -58,6 +60,8 @@ function ListingCard({
   bedrooms,
   reviews,
   reviewCount,
+  contactNumber,
+  bcvRate,
 }: iAppProps) {
   const router = useRouter();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -91,6 +95,31 @@ function ListingCard({
       : primaryCategoryLabel
     : null;
   const homeDetailPath = `/home/${homeId}`;
+
+  const departureDate =
+    contactNumber && /^\d{4}-\d{2}-\d{2}$/.test(contactNumber)
+      ? new Date(contactNumber + "T12:00:00")
+      : null;
+
+  const formattedDeparture = departureDate
+    ? departureDate
+        .toLocaleDateString("es-VE", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .replace(/\.$/, "")
+    : null;
+
+  const bsPrice =
+    bcvRate && bcvRate > 0
+      ? (price * bcvRate).toLocaleString("es-VE", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : null;
 
   const openAuthDialog = (mode: "login" | "register") => {
     setIsAuthOpen(false);
@@ -187,14 +216,28 @@ function ListingCard({
               {bedrooms ? `${bedrooms} hab.` : ""}
             </p>
           )}
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              <span className="text-lg font-bold text-orange-600">$ {price}</span> / noche por persona
-            </p>
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
-              Ver detalles
-            </span>
+          {formattedDeparture && (
+            <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
+              <Calendar className="w-4 h-4 shrink-0" />
+              <span>{formattedDeparture}</span>
+            </div>
+          )}
+
+          <div className="mt-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Desde</p>
+            <p className="text-2xl font-bold text-gray-900">${price}</p>
+            {bsPrice && (
+              <p className="text-xs text-gray-400">Bs. {bsPrice}</p>
+            )}
           </div>
+
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
+            className="mt-3 w-full rounded-full bg-[#E1B042] py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+          >
+            Reservar Cupo
+          </button>
         </div>
       </div>
 
