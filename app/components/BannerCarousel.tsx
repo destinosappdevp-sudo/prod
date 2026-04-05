@@ -96,17 +96,11 @@ export default function BannerCarousel() {
               href={bannerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative block aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
-            >
-              {bannerContent}
-            </a>
+              className="relative block aspect-[5/2] sm:aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
           ) : (
             <div
               key={banner.id}
-              className="relative block aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
-            >
-              {bannerContent}
-            </div>
+              className="relative block aspect-[5/2] sm:aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
           );
         })}
       </div>
