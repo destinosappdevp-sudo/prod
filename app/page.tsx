@@ -12,7 +12,6 @@ import SearchResultsSplit from "./components/SearchResultsSplit";
 import prisma from "./lib/db";
 import { getStateByValue } from "./lib/venezuelaStates";
 import { getMunicipalityByValue } from "./lib/venezuelaMunicipalities";
-import MobileMapStrip from "./components/MobileMapStrip";
 import {
   getPrimaryCategoryName,
   parseMultiCategoryFilter,
@@ -172,38 +171,6 @@ async function ShowPlace({
     );
   }
 
-  // Build pins for search map
-  const pins = data.map((item: (typeof data)[number], index: number) => {
-    if (item.latitude && item.longitude) {
-      return {
-        id: item.id,
-        title: item.title as string,
-        price: item.price as number,
-        lat: item.latitude,
-        lng: item.longitude,
-        image: item.photo as string,
-        slug: item.slug,
-        categoryName: item.categoryName,
-      };
-    }
-    const muni = item.country && item.municipality
-      ? getMunicipalityByValue(item.country as string, item.municipality as string)
-      : null;
-    const state = item.country ? getStateByValue(item.country as string) : null;
-    const latLng = muni?.latLng ?? state?.latLng ?? [10.5, -66.9];
-    const offset = index * 0.001;
-    return {
-      id: item.id,
-      title: item.title as string,
-      price: item.price as number,
-      lat: (latLng as [number, number])[0] + offset,
-      lng: (latLng as [number, number])[1] + offset,
-      image: item.photo as string,
-      slug: item.slug,
-      categoryName: item.categoryName,
-    };
-  });
-
   const renderCard = (item: typeof data[0]) => (
     <ListingCard
       key={item.id}
@@ -242,7 +209,6 @@ async function ShowPlace({
 
   return (
     <div className="mt-8 space-y-12">
-      <MobileMapStrip pins={pins} />
       <section>
         <div className="flex items-center gap-2 mb-6 pb-2 border-b border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900">Full Days Disponibles 🏖️</h2>
