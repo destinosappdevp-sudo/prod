@@ -113,6 +113,39 @@ async function DestinoPage({
       ? getMunicipalityByValue(data.country, data.municipality)
       : null;
 
+  // Formatear checkInTime: "2026-04-30T19:00" → "30-04-2026 Hora 7:00 PM"
+  const formatSalidaDate = (raw: string | null): string => {
+    if (!raw) return "—";
+    const d = new Date(raw.includes("T") ? raw : raw + "T00:00");
+    if (isNaN(d.getTime())) return raw;
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const h = d.getHours();
+    const min = d.getMinutes();
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    const minStr = min === 0 ? "" : `:${String(min).padStart(2, "0")}`;
+    return `${dd}-${mm}-${yyyy} Hora ${h12}${minStr} ${ampm}`;
+  };
+
+  // 1 hora antes para "Hora de Encuentro"
+  const formatMeetupTime = (raw: string | null): string => {
+    if (!raw) return "—";
+    const d = new Date(raw.includes("T") ? raw : raw + "T00:00");
+    if (isNaN(d.getTime())) return raw;
+    d.setHours(d.getHours() - 1);
+    const h = d.getHours();
+    const min = d.getMinutes();
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    const minStr = min === 0 ? "" : `:${String(min).padStart(2, "0")}`;
+    return `${h12}${minStr} ${ampm}`;
+  };
+
+  const salidaLabel = formatSalidaDate(data.checkInTime as string | null);
+  const meetupLabel = formatMeetupTime(data.checkInTime as string | null);
+
   const includedAmenities = amenityCategories.flatMap((cat: any) =>
     cat.amenities.filter((a: any) => a.status === "YES")
   );
@@ -139,7 +172,7 @@ async function DestinoPage({
         <div className="flex flex-col items-center gap-1 py-5">
           <Clock className="w-6 h-6 text-gray-500" />
           <p className="text-xs text-gray-400 uppercase tracking-wide mt-1">Salida</p>
-          <p className="font-semibold text-base">{data.checkInTime || "—"}</p>
+          <p className="font-semibold text-base">{salidaLabel}</p>
         </div>
         <div className="flex flex-col items-center gap-1 py-5">
           <Users className="w-6 h-6 text-emerald-500" />
@@ -181,7 +214,7 @@ async function DestinoPage({
                 <Clock className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Hora de Encuentro</p>
-                  <p className="text-sm font-medium">{data.checkInTime}</p>
+                  <p className="text-sm font-medium">{meetupLabel}</p>
                 </div>
               </div>
             )}
