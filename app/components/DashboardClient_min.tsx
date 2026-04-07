@@ -200,8 +200,8 @@ export default function DashboardClient(props: DashboardClientProps) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex flex-col">
+      {/* Sidebar — solo visible en desktop (lg+) */}
+      <aside className="hidden lg:flex w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex-col">
         <div className="px-6 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">D</div>
@@ -266,7 +266,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 px-8 py-8">
+      <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8 pb-24 lg:pb-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard"}
@@ -621,6 +621,39 @@ export default function DashboardClient(props: DashboardClientProps) {
           </div>
         )}
       </main>
+
+      {/* Bottom navigation — solo visible en mobile y tablet (oculto en lg+) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-around h-16">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setActiveTab(item.key)}
+                className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition"
+              >
+                <Icon
+                  size={22}
+                  className={isActive ? "text-orange-500" : "text-slate-400"}
+                />
+                <span
+                  className={`text-[10px] font-medium leading-tight ${
+                    isActive ? "text-orange-500" : "text-slate-400"
+                  }`}
+                >
+                  {item.label}
+                </span>
+                {isActive && (
+                  <span className="absolute bottom-0 h-0.5 w-8 rounded-full bg-orange-500 translate-y-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
