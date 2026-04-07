@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/client";
 
 const accountLinks = [
-  { label: "Mis reservas", href: "/reservation" },
+  { label: "Mis ahorros", href: "/my-dashboard?tab=mi-alcancia" },
   { label: "Mi perfil", href: "/my-dashboard?tab=profile" },
   { label: "Eliminar mi cuenta", href: "/eliminar-cuenta" },
 ];
