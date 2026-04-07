@@ -24,7 +24,7 @@ export default function Footer() {
   return (
     <footer className="mt-16 bg-gradient-to-b from-[#152a6b] via-[#182b73] to-[#11245d] text-blue-100">
       {/* Main content */}
-      <div className="container mx-auto px-5 lg:px-10 py-12">
+      <div className="hidden lg:block container mx-auto px-5 lg:px-10 py-12">
         {/* Top row: brand */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <span className="text-2xl font-bold text-white tracking-wide">Destinos Venezuela</span>
