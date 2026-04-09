@@ -184,14 +184,14 @@ export async function signUp(email: string, password: string) {
 export async function signUpWithRole(
   email: string,
   password: string,
-  role: 'GUEST' | 'HOST' | 'ADMIN' | 'SUPERADMIN' = 'GUEST',
+  role: 'GUEST' | 'ADMIN' | 'SUPERADMIN' = 'GUEST',
   profile?: RegistrationProfile
 ) {
   const supabase = await createClient();
   let normalizedProfile: RegistrationProfile;
 
   if (!profile) {
-    if (role === "GUEST" || role === "HOST") {
+    if (role === "GUEST") {
       return { error: "Faltan datos del perfil para crear la cuenta" };
     }
 
@@ -299,7 +299,7 @@ export async function signInWithEmail(email: string, password: string) {
     };
   }
 
-  return { success: true, userId: data.user?.id };
+  return { success: true, userId: undefined };
 }
 
 export async function signOut() {
@@ -797,7 +797,7 @@ export async function updateProfile(formData: FormData) {
       document2Image: document2ImageUrl,
     };
 
-    if (currentUser?.role === "HOST") {
+    if (currentUser?.role === "SUPERADMIN" || currentUser?.role === "ADMIN") {
       updateData.verificationStatus = hasVerificationDocs
         ? "PENDING"
         : currentUser?.isVerified
@@ -1092,8 +1092,8 @@ export async function publishHome(homeId: string, userId: string) {
       select: { role: true, isVerified: true },
     });
 
-    if (!userRecord || userRecord.role !== "HOST") {
-      return { success: false, error: "Solo los hosts pueden publicar alojamientos" };
+    if (!userRecord || (userRecord.role !== "SUPERADMIN" && userRecord.role !== "ADMIN")) {
+      return { success: false, error: "Solo los administradores pueden publicar alojamientos" };
     }
 
     // Si el host está verificado, publicar directamente

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AuthPanel } from "./AuthPanel";
 
 type AuthMode = "login" | "register";
-type AuthRole = "GUEST" | "HOST";
+type AuthRole = "GUEST";
 
 interface AuthDialogProps {
   open: boolean;

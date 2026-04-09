@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type AuthMode = "login" | "register";
-type AuthRole = "GUEST" | "HOST";
+type AuthRole = "GUEST";
 
 interface AuthPanelProps {
   initialMode?: AuthMode;
@@ -361,7 +361,7 @@ export function AuthPanel({
 
           {stateCode && (
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor={`auth-municipality-${variant}`}>Municipio {role === "HOST" ? "(Anfitrión)" : ""}</Label>
+              <Label htmlFor={`auth-municipality-${variant}`}>Municipio</Label>
               <Select value={municipalityCode} onValueChange={setMunicipalityCode}>
                 <SelectTrigger id={`auth-municipality-${variant}`} className={selectClassName}>
                   <SelectValue placeholder="Selecciona municipio..." />

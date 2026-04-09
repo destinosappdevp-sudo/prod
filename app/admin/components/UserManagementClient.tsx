@@ -20,7 +20,7 @@ interface User {
   firstName: string;
   lastName: string;
   profileImage?: string | null;
-  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN";
+  role: "GUEST" | "ADMIN" | "SUPERADMIN";
   isVerified?: boolean;
   verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
   verificationReason?: string | null;
@@ -111,8 +111,6 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
         return "bg-red-100 text-red-700";
       case "ADMIN":
         return "bg-purple-100 text-purple-700";
-      case "HOST":
-        return "bg-blue-100 text-blue-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
@@ -256,35 +254,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {user.role === "HOST" ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          user.verificationStatus === "APPROVED"
-                            ? "bg-green-100 text-green-700"
-                            : user.verificationStatus === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : user.verificationStatus === "REJECTED"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-700"
-                        }`}>
-                          {getVerificationLabel(user.verificationStatus)}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {user.document1Image && (
-                            <a href={user.document1Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">
-                              Documento 1
-                            </a>
-                          )}
-                          {user.document2Image && (
-                            <a href={user.document2Image} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">
-                              Documento 2
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-400">N/A</span>
-                    )}
+                    <span className="text-xs text-gray-400">N/A</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <Link 

@@ -117,7 +117,7 @@ export async function PATCH(
     // Si se aprueba un host, aprobar automáticamente todas sus propiedades
     const hostApproved = (
       (isVerified === true || verificationStatus === "APPROVED") && 
-      (updatedUser.role === "HOST" || role === "HOST")
+      (updatedUser.role === "SUPERADMIN" || role === "SUPERADMIN" || updatedUser.role === "ADMIN" || role === "ADMIN")
     );
     
     if (hostApproved) {

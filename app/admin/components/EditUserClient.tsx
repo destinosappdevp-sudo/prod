@@ -22,7 +22,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN";
+  role: "GUEST" | "ADMIN" | "SUPERADMIN";
   isVerified?: boolean;
   verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
   verificationReason?: string | null;

@@ -15,7 +15,7 @@ type RegisterMobileBody = {
   phone?: string;
   stateCode?: string;
   state?: string;
-  role?: "GUEST" | "HOST";
+  role?: "GUEST";
 };
 
 const CORS_HEADERS = {
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     const lastName = (body.lastName ?? "").trim();
     const phoneNumber = (body.phoneNumber ?? body.phone ?? "").trim();
     const stateCode = (body.stateCode ?? body.state ?? "").trim().toUpperCase();
-    const role = body.role === "HOST" ? "HOST" : "GUEST";
+    const role = "GUEST";
 
     if (!email || !password) {
       return jsonResponse({ error: "Email y contraseña son requeridos" }, 400);

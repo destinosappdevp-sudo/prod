@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const { userId, newRole } = await request.json();
 
     // Validar que el rol sea válido
-    const validRoles = ["GUEST", "HOST", "ADMIN", "SUPERADMIN"];
+    const validRoles = ["GUEST", "ADMIN", "SUPERADMIN"];
     if (!validRoles.includes(newRole)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }

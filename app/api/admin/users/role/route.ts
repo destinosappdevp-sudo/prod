@@ -4,7 +4,7 @@ import { createClient } from "@/app/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const VALID_ROLES = new Set(["GUEST", "HOST", "ADMIN", "SUPERADMIN"]);
+const VALID_ROLES = new Set(["GUEST", "ADMIN", "SUPERADMIN"]);
 
 export async function POST(request: Request) {
   try {

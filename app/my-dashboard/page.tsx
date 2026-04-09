@@ -722,57 +722,30 @@ export default async function DashboardPage({
   if (userRecord.role === "ADMIN" || userRecord.role === "SUPERADMIN") {
     redirect("/admin");
   }
-  const role = userRecord.role as "HOST" | "GUEST";
   const initialTab = searchParams.tab;
 
-  if (role === "HOST") {
-    const data = await getHostDashboardData(user.id);
-    const createHomeAction = createAirbnbHome.bind(null, { userId: user.id });
-    const initialDocs = await getUserDocuments(user.id);
-    return (
-      <HostDashboardClient
-        userName={userName}
-        userEmail={user.email}
-        firstName={userRecord?.firstName}
-        lastName={userRecord?.lastName}
-        profileImage={userRecord?.profileImage}
-        country="Venezuela"
-        city="Caracas"
-        stats={data.stats}
-        reservations={data.reservations}
-        listings={data.listings}
-        analytics={data.analytics}
-        initialTab={initialTab}
-        createHomeAction={createHomeAction}
-        userData={{ ...userRecord, email: userRecord?.email || user.email }}
-        userId={user.id}
-        initialDocs={initialDocs || []}
-      />
-    );
-  } else {
-    const data = await getGuestDashboardData(user.id);
-    const initialDocs = await getUserDocuments(user.id);
-    return (
-      <GuestDashboardClient
-        role="GUEST"
-        userName={userName}
-        userEmail={user.email}
-        userId={user.id}
-        firstName={userRecord?.firstName}
-        lastName={userRecord?.lastName}
-        phoneNumber={userRecord?.phoneNumber}
-        profileImage={userRecord?.profileImage}
-        country="Venezuela"
-        city="Caracas"
-        initialTab={initialTab}
-        favorites={data.favorites}
-        guestReservations={data.guestReservations}
-        savings={data.savings}
-        savingsTotal={data.savingsTotal}
-        bcvRate={data.bcvRate}
-        userData={{ ...userRecord, email: userRecord?.email || user.email }}
-        initialDocs={initialDocs || []}
-      />
-    );
-  }
+  const data = await getGuestDashboardData(user.id);
+  const initialDocs = await getUserDocuments(user.id);
+  return (
+    <GuestDashboardClient
+      role="GUEST"
+      userName={userName}
+      userEmail={user.email}
+      userId={user.id}
+      firstName={userRecord?.firstName}
+      lastName={userRecord?.lastName}
+      phoneNumber={userRecord?.phoneNumber}
+      profileImage={userRecord?.profileImage}
+      country="Venezuela"
+      city="Caracas"
+      initialTab={initialTab}
+      favorites={data.favorites}
+      guestReservations={data.guestReservations}
+      savings={data.savings}
+      savingsTotal={data.savingsTotal}
+      bcvRate={data.bcvRate}
+      userData={{ ...userRecord, email: userRecord?.email || user.email }}
+      initialDocs={initialDocs || []}
+    />
+  );
 }

@@ -24,7 +24,7 @@ export default async function ReviewsPage() {
 
     let reviews: any[] = [];
 
-    if (userRecord?.role === "HOST") {
+    if (userRecord?.role === "SUPERADMIN" || userRecord?.role === "ADMIN") {
       // HOST: Get reviews received (on their properties)
       reviews = await (prisma as any).review.findMany({
         where: {
@@ -126,12 +126,12 @@ export default async function ReviewsPage() {
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-8 text-center">
               <Star className="mx-auto text-slate-300 mb-4" size={48} />
               <p className="text-slate-500 mb-2">
-                {userRecord?.role === "HOST"
+                {userRecord?.role === "SUPERADMIN" || userRecord?.role === "ADMIN"
                   ? "Aún no tienes reseñas"
                   : "Aún no has dejado reseñas"}
               </p>
               <p className="text-sm text-slate-400">
-                {userRecord?.role === "HOST"
+                {userRecord?.role === "SUPERADMIN" || userRecord?.role === "ADMIN"
                   ? "Tus huéspedes podrán calificarte después de completar sus reservas"
                   : "Podrás dejar reseñas después de completar tus reservas"}
               </p>

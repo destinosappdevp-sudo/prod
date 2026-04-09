@@ -35,7 +35,7 @@ export function UserNavClient({
   const [imgSrc, setImgSrc] = useState<string | null>(userPicture || null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authDialogMode, setAuthDialogMode] = useState<"login" | "register">("login");
-  const [authDialogRole, setAuthDialogRole] = useState<"GUEST" | "HOST">("GUEST");
+  const [authDialogRole, setAuthDialogRole] = useState<"GUEST">("GUEST");
 
   const currentPath = searchParams.toString()
     ? `${pathname}?${searchParams.toString()}`
@@ -56,7 +56,7 @@ export function UserNavClient({
     setAuthDialogOpen(true);
   };
 
-  const openRegisterDialog = (role: "GUEST" | "HOST") => {
+  const openRegisterDialog = (role: "GUEST") => {
     setAuthDialogMode("register");
     setAuthDialogRole(role);
     setAuthDialogOpen(true);
@@ -117,17 +117,7 @@ export function UserNavClient({
                 {userName || "Mi Cuenta"}
               </DropdownMenuItem>
 
-              {userRole === "HOST" && (
-                <DropdownMenuItem asChild className={menuItemClassName}>
-                  <form action={createHomeAction} className="w-full">
-                    <button type="submit" className={menuItemContentClassName}>
-                      Publicar en Destinos Venezuela
-                    </button>
-                  </form>
-                </DropdownMenuItem>
-              )}
-
-              <DropdownMenuItem asChild className={menuItemClassName}>
+<DropdownMenuItem asChild className={menuItemClassName}>
                 <Link href="/my-dashboard" className={menuItemContentClassName}>
                   Escritorio
                 </Link>

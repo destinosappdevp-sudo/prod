@@ -175,7 +175,7 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
               </div>
             </div>
 
-            {currentUserData?.role === "HOST" && (
+            {false && (
               <div className="rounded-lg border p-4 bg-gray-50">
                 <p className="text-sm font-semibold">Estado de verificación</p>
                 <p className="text-sm text-gray-700 mt-1">

@@ -16,7 +16,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/";
   const initialMode = searchParams.get("mode") === "register" ? "register" : "login";
-  const initialRole = searchParams.get("role") === "HOST" ? "HOST" : "GUEST";
+  const initialRole = "GUEST";
 
   return (
     <AuthPanel

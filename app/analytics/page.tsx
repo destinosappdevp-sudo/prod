@@ -28,7 +28,7 @@ export default async function AnalyticsPage() {
       },
     });
 
-    if (userRecord?.role !== "HOST") {
+    if (userRecord?.role !== "SUPERADMIN" && userRecord?.role !== "ADMIN") {
       redirect("/my-dashboard");
     }
 
