@@ -27,10 +27,7 @@ export async function PATCH(
       select: { role: true },
     });
 
-    if (
-      !userRecord ||
-      (userRecord.role !== "BANER" && userRecord.role !== "SUPERADMIN")
-    ) {
+    if (!userRecord || userRecord.role !== "SUPERADMIN") {
       return NextResponse.json(
         { error: "No tienes permisos" },
         { status: 403 }
@@ -154,10 +151,7 @@ export async function DELETE(
       select: { role: true },
     });
 
-    if (
-      !userRecord ||
-      (userRecord.role !== "BANER" && userRecord.role !== "SUPERADMIN")
-    ) {
+    if (!userRecord || userRecord.role !== "SUPERADMIN") {
       return NextResponse.json(
         { error: "No tienes permisos" },
         { status: 403 }

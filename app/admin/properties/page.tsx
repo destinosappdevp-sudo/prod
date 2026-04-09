@@ -3,6 +3,57 @@ import prisma from "@/app/lib/db";
 import { PropertiesClient } from "../components/PropertiesClient";
 import { createAdminPackage } from "../actions/properties";
 
+const prismaAny = prisma as any;
+
+async function getActiveReservations() {
+  unstable_noStore();
+  const now = new Date();
+  return prismaAny.reservation.findMany({
+    where: {
+      status: "CONFIRMED",
+      startDate: { gt: now },
+    },
+    select: {
+      id: true,
+      homeId: true,
+      userId: true,
+      startDate: true,
+      endDate: true,
+      nights: true,
+      status: true,
+      totalAmount: true,
+      createdAt: true,
+      User: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+      Home: {
+        select: {
+          title: true,
+          price: true,
+        },
+      },
+      Payment: {
+        select: {
+          id: true,
+          status: true,
+          paymentMethod: true,
+          referenceNumber: true,
+          amount: true,
+          paymentDetails: true,
+          confirmedAt: true,
+        },
+      },
+    },
+    orderBy: {
+      startDate: "asc",
+    },
+  });
+}
+
 async function getProperties() {
   unstable_noStore();
   
@@ -45,7 +96,10 @@ async function getProperties() {
 }
 
 export default async function PropertiesPage() {
-  const properties = await getProperties();
+  const [properties, activeReservations] = await Promise.all([
+    getProperties(),
+    getActiveReservations(),
+  ]);
   const propertiesWithAmenities = properties as Array<
     typeof properties[number] & { addedAmenities?: boolean; municipality?: string | null }
   >;
@@ -67,7 +121,10 @@ export default async function PropertiesPage() {
         </form>
       </div>
 
-      <PropertiesClient properties={propertiesWithAmenities} />
+      <PropertiesClient
+        properties={propertiesWithAmenities}
+        activeReservations={activeReservations}
+      />
     </div>
   );
 }

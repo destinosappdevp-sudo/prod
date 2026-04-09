@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Home, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Search, Home, CheckCircle, Clock, XCircle, CalendarCheck } from "lucide-react";
 import Link from "next/link";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
 import { normalizeCategoryNames } from "@/app/lib/property-categories";
+import { ActiveReservationsTable } from "./ActiveReservationsTable";
 
 type PublishStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
 
@@ -57,7 +58,16 @@ interface Property {
 
 const PAGE_SIZE = 10;
 
-export function PropertiesClient({ properties }: { properties: Property[] }) {
+type MainTab = "paquetes" | "reservas_activas";
+
+export function PropertiesClient({
+  properties,
+  activeReservations = [],
+}: {
+  properties: Property[];
+  activeReservations?: any[];
+}) {
+  const [mainTab, setMainTab] = useState<MainTab>("paquetes");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statuses, setStatuses] = useState<Record<string, PublishStatus>>({});
@@ -115,6 +125,41 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
 
   return (
     <div className="space-y-4">
+      <Card className="overflow-hidden p-0">
+        <div className="flex border-b bg-white">
+          <button
+            type="button"
+            onClick={() => setMainTab("paquetes")}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors sm:flex-none sm:px-6 sm:py-4 ${
+              mainTab === "paquetes"
+                ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            Paquetes
+          </button>
+          <button
+            type="button"
+            onClick={() => setMainTab("reservas_activas")}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors sm:flex-none sm:px-6 sm:py-4 inline-flex items-center justify-center gap-2 ${
+              mainTab === "reservas_activas"
+                ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            <CalendarCheck size={18} className="hidden sm:inline shrink-0" />
+            Reservas Activas
+            <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">
+              {activeReservations.length}
+            </span>
+          </button>
+        </div>
+      </Card>
+
+      {mainTab === "reservas_activas" ? (
+        <ActiveReservationsTable reservations={activeReservations} />
+      ) : (
+        <>
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-6">
@@ -168,7 +213,7 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <Input
-            placeholder="Buscar por título, anfitrión o categoría..."
+            placeholder="Buscar por título, email o categoría..."
             value={search}
             onChange={handleSearch}
             className="pl-10"
@@ -184,9 +229,6 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Paquete
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Anfitrión
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Categoría
@@ -232,12 +274,6 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
                           ? ` - ${getMunicipalityByValue(property.country, property.municipality)?.label}`
                           : ""}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {property.User?.firstName} {property.User?.lastName}
-                      </div>
-                      <div className="text-sm text-gray-500">{property.User?.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 text-xs font-medium bg-gray-100 rounded-full">
@@ -353,6 +389,8 @@ export function PropertiesClient({ properties }: { properties: Property[] }) {
             </button>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

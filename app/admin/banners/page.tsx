@@ -14,14 +14,13 @@ export default async function BannersPage() {
     redirect("/login");
   }
 
-  // Verificar que sea BANNER o SUPERADMIN
   const userData = await prisma.user.findUnique({
     where: { id: user.id },
     select: { role: true },
   });
 
-  if (!userData || (userData.role !== "BANER" && userData.role !== "SUPERADMIN")) {
-    redirect("/");
+  if (!userData || userData.role !== "SUPERADMIN") {
+    redirect("/admin");
   }
 
   return (

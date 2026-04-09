@@ -2,7 +2,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { unstable_noStore } from 'next/cache';
 import prisma from "@/app/lib/db";
-import { AdminSidebar } from "./components/AdminSidebar";
+import { AdminShell } from "./components/AdminShell";
 import UserNav from "@/app/components/UserNav";
 
 export default async function AdminLayout({
@@ -24,7 +24,7 @@ export default async function AdminLayout({
     select: { role: true },
   });
 
-  const allowedRoles = ["ADMIN", "SUPERADMIN", "BANER"];
+  const allowedRoles = ["ADMIN", "SUPERADMIN"];
   if (!userRecord || !allowedRoles.includes(userRecord.role)) {
     redirect("/");
   }
@@ -34,14 +34,8 @@ export default async function AdminLayout({
     : user.email?.split("@")[0];
 
   return (
-    <div className="fixed inset-0 flex bg-gray-50 z-50">
-      <AdminSidebar userName={userName} role={userRecord.role} />
-      <main className="flex-1 ml-64 overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-white border-b px-8 py-4 flex justify-end">
-          <UserNav />
-        </div>
-        <div className="p-8">{children}</div>
-      </main>
-    </div>
+    <AdminShell userName={userName} role={userRecord.role} headerRight={<UserNav />}>
+      {children}
+    </AdminShell>
   );
 }

@@ -370,7 +370,6 @@ enum UserRole {
   HOST
   ADMIN
   SUPERADMIN
-  BANER
 }
 
 enum VerificationStatus {

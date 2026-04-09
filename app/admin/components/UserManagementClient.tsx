@@ -20,7 +20,7 @@ interface User {
   firstName: string;
   lastName: string;
   profileImage?: string | null;
-  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN" | "BANER";
+  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN";
   isVerified?: boolean;
   verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
   verificationReason?: string | null;
@@ -152,34 +152,28 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los roles</SelectItem>
-              <SelectItem value="GUEST">Guest</SelectItem>
-              <SelectItem value="HOST">Host</SelectItem>
+              <SelectItem value="GUEST">Usuarios</SelectItem>
               <SelectItem value="ADMIN">Admin</SelectItem>
               <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
-              <SelectItem value="BANER">Baner</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </Card>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="p-4">
           <p className="text-sm text-gray-600">Total</p>
           <p className="text-2xl font-bold">{users.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-600">Guests</p>
-          <p className="text-2xl font-bold">{users.filter(u => u.role === "GUEST").length}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-gray-600">Hosts</p>
-          <p className="text-2xl font-bold">{users.filter(u => u.role === "HOST").length}</p>
+          <p className="text-sm text-gray-600">Usuarios</p>
+          <p className="text-2xl font-bold">{users.filter((u) => u.role === "GUEST").length}</p>
         </Card>
         <Card className="p-4">
           <p className="text-sm text-gray-600">Admins</p>
           <p className="text-2xl font-bold">
-            {users.filter(u => u.role === "ADMIN" || u.role === "SUPERADMIN").length}
+            {users.filter((u) => u.role === "ADMIN" || u.role === "SUPERADMIN").length}
           </p>
         </Card>
       </div>

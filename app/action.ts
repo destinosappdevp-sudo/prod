@@ -286,6 +286,17 @@ export async function signInWithEmail(email: string, password: string) {
     }
 
     await ensureAtLeastOneSuperadmin(data.user.id);
+
+    const userRecord = await prisma.user.findUnique({
+      where: { id: data.user.id },
+      select: { role: true },
+    });
+
+    return {
+      success: true,
+      userId: data.user.id,
+      role: userRecord?.role,
+    };
   }
 
   return { success: true, userId: data.user?.id };

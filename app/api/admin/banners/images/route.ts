@@ -1,4 +1,5 @@
 import { createClient } from "@/app/lib/supabase/server";
+import prisma from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,15 @@ export async function GET() {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+
+  if (!userRecord || userRecord.role !== "SUPERADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {

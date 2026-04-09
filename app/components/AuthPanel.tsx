@@ -192,9 +192,14 @@ export function AuthPanel({
         if (result?.success) {
           await trackActiveSession(result.userId);
           onSuccess?.();
-          if (nextPath) {
-            router.push(nextPath);
-          }
+          const adminRoles = ["ADMIN", "SUPERADMIN"];
+          const dest =
+            "role" in result &&
+            typeof result.role === "string" &&
+            adminRoles.includes(result.role)
+              ? "/admin"
+              : nextPath || "/";
+          router.push(dest);
           router.refresh();
         }
 

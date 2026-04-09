@@ -8,6 +8,25 @@ import { optimizeImageForUpload } from "@/app/lib/image-upload";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+
+  if (!userRecord || userRecord.role !== "SUPERADMIN") {
+    return NextResponse.json({ error: "No tienes permisos" }, { status: 403 });
+  }
+
   const banners = await prisma.banner.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -30,16 +49,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verificar rol (BANNER o SUPERADMIN)
     const userRecord = await prisma.user.findUnique({
       where: { id: user.id },
       select: { role: true },
     });
 
-    if (
-      !userRecord ||
-      (userRecord.role !== "BANER" && userRecord.role !== "SUPERADMIN")
-    ) {
+    if (!userRecord || userRecord.role !== "SUPERADMIN") {
       return NextResponse.json(
         { error: "No tienes permisos para crear banners" },
         { status: 403 }

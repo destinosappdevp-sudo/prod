@@ -38,7 +38,17 @@ export async function GET(request: Request) {
 
       await ensureAtLeastOneSuperadmin(data.user.id);
 
-      return NextResponse.redirect(`${origin}${next}`);
+      const userRecord = await prisma.user.findUnique({
+        where: { id: data.user.id },
+        select: { role: true },
+      });
+
+      const isDefaultNext = next === "/" || next === "";
+      const isAdminRole =
+        userRecord?.role === "ADMIN" || userRecord?.role === "SUPERADMIN";
+      const destination = isAdminRole && isDefaultNext ? "/admin" : next;
+
+      return NextResponse.redirect(`${origin}${destination}`);
     }
   }
 

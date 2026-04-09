@@ -722,10 +722,6 @@ export default async function DashboardPage({
   if (userRecord.role === "ADMIN" || userRecord.role === "SUPERADMIN") {
     redirect("/admin");
   }
-  if (userRecord.role === "BANER") {
-    redirect("/admin/banners");
-  }
-
   const role = userRecord.role as "HOST" | "GUEST";
   const initialTab = searchParams.tab;
 

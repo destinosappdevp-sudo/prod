@@ -2,27 +2,23 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import PaymentActions from "./PaymentActions";
 import { Mail } from "lucide-react";
 
-interface PaymentsClientProps {
+interface ActiveReservationsTableProps {
   reservations: any[];
 }
 
-export default function PaymentsClient({ reservations }: PaymentsClientProps) {
-  const [activeTab, setActiveTab] = useState<"recientes" | "activas">("recientes");
+export function ActiveReservationsTable({ reservations }: ActiveReservationsTableProps) {
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
 
   const toNumber = (value: unknown): number | null => {
     if (typeof value === "number" && Number.isFinite(value)) {
       return value;
     }
-
     if (typeof value === "string" && value.trim()) {
       const parsed = Number(value);
       return Number.isFinite(parsed) ? parsed : null;
     }
-
     return null;
   };
 
@@ -102,11 +98,6 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
     );
   };
 
-  // Filtrar reservas activas (confirmadas y con fecha futura)
-  const activeReservations = reservations.filter(
-    (r) => r.status === "CONFIRMED" && new Date(r.startDate) > new Date()
-  );
-
   const handleResendEmail = async (reservationId: string, userEmail: string) => {
     setSendingEmail(reservationId);
     try {
@@ -117,7 +108,7 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         alert(`Email reenviado exitosamente a ${userEmail}`);
       } else {
@@ -131,35 +122,8 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
     }
   };
 
-  const currentReservations = activeTab === "recientes" ? reservations : activeReservations;
-
   return (
     <Card className="overflow-hidden">
-      <div className="border-b">
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab("recientes")}
-            className={`px-6 py-4 text-sm font-medium transition-colors ${
-              activeTab === "recientes"
-                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            Reservas y Pagos Recientes
-          </button>
-          <button
-            onClick={() => setActiveTab("activas")}
-            className={`px-6 py-4 text-sm font-medium transition-colors ${
-              activeTab === "activas"
-                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            Reservas Activas ({activeReservations.length})
-          </button>
-        </div>
-      </div>
-      
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50 border-b">
@@ -189,12 +153,12 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
                 Estado Reserva
               </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {activeTab === "recientes" ? "Acciones" : "Reenviar Email"}
+                Reenviar Email
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {currentReservations.map((reservation: any) => (
+            {reservations.map((reservation: any) => (
               <tr key={reservation.id} className="hover:bg-gray-50">
                 <td className="px-4 py-4">
                   <div className="text-sm font-medium text-gray-900">
@@ -207,10 +171,17 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {new Date(reservation.startDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+                    {new Date(reservation.startDate).toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "short",
+                    })}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {new Date(reservation.endDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                    {new Date(reservation.endDate).toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
                   </div>
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap text-center">
@@ -248,26 +219,16 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
                   {getStatusBadge(reservation.status)}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-center">
-                  {activeTab === "recientes" ? (
-                    <>
-                      {reservation.Payment && reservation.Payment.status === "PENDING" && (
-                        <PaymentActions 
-                          paymentId={reservation.Payment.id}
-                          reservationId={reservation.id}
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => handleResendEmail(reservation.id, reservation.User?.email)}
-                      disabled={sendingEmail === reservation.id}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Reenviar email de confirmación al huésped"
-                    >
-                      <Mail size={14} />
-                      {sendingEmail === reservation.id ? "Enviando..." : "Reenviar"}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleResendEmail(reservation.id, reservation.User?.email)}
+                    disabled={sendingEmail === reservation.id}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Reenviar email de confirmación"
+                  >
+                    <Mail size={14} />
+                    {sendingEmail === reservation.id ? "Enviando..." : "Reenviar"}
+                  </button>
                 </td>
               </tr>
             ))}
@@ -275,13 +236,9 @@ export default function PaymentsClient({ reservations }: PaymentsClientProps) {
         </table>
       </div>
 
-      {currentReservations.length === 0 && (
+      {reservations.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">
-            {activeTab === "recientes" 
-              ? "No hay reservas registradas" 
-              : "No hay reservas activas"}
-          </p>
+          <p className="text-gray-500">No hay reservas activas</p>
         </div>
       )}
     </Card>

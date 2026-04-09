@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -13,10 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, ExternalLink, KeyRound, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Save, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import DocumentsSection, { UserDocumentItem } from "@/app/components/DocumentsSection";
 
 interface User {
@@ -24,7 +22,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN" | "BANER";
+  role: "GUEST" | "HOST" | "ADMIN" | "SUPERADMIN";
   isVerified?: boolean;
   verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
   verificationReason?: string | null;
@@ -41,6 +39,12 @@ interface User {
 interface EditUserClientProps {
   user: User;
   documents?: UserDocumentItem[];
+}
+
+/** Rol mostrado en el selector: solo Usuario / Admin (GUEST / ADMIN). */
+function roleToSelectValue(role: User["role"]): "GUEST" | "ADMIN" {
+  if (role === "ADMIN" || role === "SUPERADMIN") return "ADMIN";
+  return "GUEST";
 }
 
 export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
@@ -121,27 +125,6 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
     }
   };
 
-  const getVerificationStatusBadge = () => {
-    const colors = {
-      APPROVED: "bg-green-100 text-green-700",
-      PENDING: "bg-yellow-100 text-yellow-700",
-      REJECTED: "bg-red-100 text-red-700",
-      NOT_SUBMITTED: "bg-gray-100 text-gray-700",
-    };
-    const labels = {
-      APPROVED: "Aprobado",
-      PENDING: "Pendiente",
-      REJECTED: "Rechazado",
-      NOT_SUBMITTED: "No enviado",
-    };
-
-    return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${colors[formData.verificationStatus]}`}>
-        {labels[formData.verificationStatus]}
-      </span>
-    );
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header con botón volver */}
@@ -203,22 +186,26 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Rol y Permisos</h2>
         <div className="space-y-4">
+          {user.role !== "GUEST" && user.role !== "ADMIN" && (
+            <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              Rol actual en el sistema: <strong>{user.role}</strong>. Al elegir Usuario o Admin y
+              guardar, se actualizará a ese rol.
+            </p>
+          )}
           <div>
             <Label htmlFor="role">Rol</Label>
             <Select
-              value={formData.role}
-              onValueChange={(value) =>
-                setFormData({ ...formData, role: value as User["role"] })
+              value={roleToSelectValue(formData.role)}
+              onValueChange={(value: "GUEST" | "ADMIN") =>
+                setFormData({ ...formData, role: value })
               }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="GUEST">Guest</SelectItem>
-                <SelectItem value="HOST">Host</SelectItem>
+                <SelectItem value="GUEST">Usuario</SelectItem>
                 <SelectItem value="ADMIN">Admin</SelectItem>
-                <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -240,155 +227,6 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
           </div>
         </div>
       </Card>
-
-      {/* Verificación (solo para HOSTs) */}
-      {(user.role === "HOST" || formData.role === "HOST") && (
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Verificación de Host</h2>
-          
-          <div className="space-y-6">
-            {/* Estado actual */}
-            <div className="flex items-center justify-between pb-4 border-b">
-              <div>
-                <p className="text-sm text-gray-600">Estado actual</p>
-                <div className="mt-2">{getVerificationStatusBadge()}</div>
-              </div>
-              {user.verifiedAt && (
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Verificado el</p>
-                  <p className="text-sm font-medium">
-                    {new Date(user.verifiedAt).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Toggle de verificación */}
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="isVerified" className="text-base font-medium">
-                  Usuario Verificado
-                </Label>
-                <p className="text-sm text-gray-600">
-                  Los usuarios verificados publican Paquetes sin revisión
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData({
-                    ...formData,
-                    isVerified: !formData.isVerified,
-                    verificationStatus: !formData.isVerified
-                      ? "APPROVED"
-                      : "NOT_SUBMITTED",
-                  })
-                }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  formData.isVerified ? "bg-green-600" : "bg-gray-200"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.isVerified ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Estado de verificación */}
-            <div>
-              <Label htmlFor="verificationStatus">Estado de Verificación</Label>
-              <Select
-                value={formData.verificationStatus}
-                onValueChange={(value: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED") =>
-                  setFormData({
-                    ...formData,
-                    verificationStatus: value,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="NOT_SUBMITTED">No enviado</SelectItem>
-                  <SelectItem value="PENDING">Pendiente</SelectItem>
-                  <SelectItem value="APPROVED">Aprobado</SelectItem>
-                  <SelectItem value="REJECTED">Rechazado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Razón de verificación */}
-            <div>
-              <Label htmlFor="verificationReason">Razón / Comentarios</Label>
-              <Textarea
-                id="verificationReason"
-                value={formData.verificationReason}
-                onChange={(e) =>
-                  setFormData({ ...formData, verificationReason: e.target.value })
-                }
-                placeholder="Ej: Verificado manualmente por el administrador, Documento aprobado, etc."
-                rows={3}
-              />
-            </div>
-
-            {/* Documentos cargados */}
-            {(user.document1Image || user.document2Image) && (
-              <div className="pt-4 border-t">
-                <h3 className="font-medium mb-3">Documentos Cargados</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {user.document1Image && (
-                    <div className="border rounded-lg p-4">
-                      <p className="text-sm font-medium mb-2">Documento 1</p>
-                      <a
-                        href={user.document1Image}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <ExternalLink size={16} />
-                        Ver documento
-                      </a>
-                      <div className="mt-2 relative h-40 w-full">
-                        <Image
-                          src={user.document1Image}
-                          alt="Documento 1"
-                          fill
-                          className="object-cover rounded"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {user.document2Image && (
-                    <div className="border rounded-lg p-4">
-                      <p className="text-sm font-medium mb-2">Documento 2</p>
-                      <a
-                        href={user.document2Image}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <ExternalLink size={16} />
-                        Ver documento
-                      </a>
-                      <div className="mt-2 relative h-40 w-full">
-                        <Image
-                          src={user.document2Image}
-                          alt="Documento 2"
-                          fill
-                          className="object-cover rounded"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
 
       {/* Cambiar Contraseña */}
       <Card className="p-6">
