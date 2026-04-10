@@ -271,15 +271,15 @@ async function DestinoPage({
             <div className="absolute top-0 right-0 bg-[#E1B042] text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl tracking-wide">
               PREMIUM VIP
             </div>
-            <h3 className="font-bold text-lg mt-2 mb-1">Plan Premium</h3>
+            <div className="flex items-start justify-between mt-2 mb-1">
+              <h3 className="font-bold text-lg">Plan Premium</h3>
+              {data.priceVip ? (
+                <span className="font-bold text-xl text-[#C49A28]">${data.priceVip}</span>
+              ) : null}
+            </div>
             {vipAmenities.length > 0 ? (
               <>
-                <div className="flex items-start justify-between mb-1">
-                  <p className="text-sm text-gray-500">Experiencia exclusiva VIP</p>
-                  {data.priceVip ? (
-                    <span className="font-bold text-xl text-[#C49A28]">${data.priceVip}</span>
-                  ) : null}
-                </div>
+                <p className="text-sm text-gray-500 mb-4">Experiencia exclusiva VIP</p>
                 <ul className="space-y-2 mb-6">
                   {vipAmenities.slice(0, 6).map((a: any) => (
                     <li key={a.id} className="flex items-center gap-2 text-sm text-gray-700">
