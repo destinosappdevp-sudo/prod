@@ -78,6 +78,7 @@ model Home {
   country                 String?
   photo                   String?
   price                   Int?
+  priceVip                Int?
   categoryName            String[]       @default([])
   addedCategory           Boolean        @default(false)
   addedDescription        Boolean        @default(false)

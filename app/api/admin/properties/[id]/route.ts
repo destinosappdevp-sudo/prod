@@ -91,6 +91,7 @@ export async function PATCH(
     const latitude = latRaw ? parseFloat(latRaw) : null;
     const longitude = lngRaw ? parseFloat(lngRaw) : null;
     const price = (formData.get("price") as string) || "";
+    const priceVipRaw = (formData.get("priceVip") as string) || "";
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = (formData.get("propertyTypeId") as string) || "";
     const propertyTypeIdsRaw = formData
@@ -210,6 +211,7 @@ export async function PATCH(
       latitude: latitude,
       longitude: longitude,
       price: price ? parseInt(price) : null,
+      priceVip: priceVipRaw ? parseInt(priceVipRaw) : null,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),

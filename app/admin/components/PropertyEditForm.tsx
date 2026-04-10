@@ -38,6 +38,7 @@ interface PropertyEditFormProps {
     longitude?: number | null;
     photo: string | null;
     price: number | null;
+    priceVip?: number | null;
     propertyTypeId: number | null;
     propertyTypeIds?: number[] | null;
     addedCategory: boolean;
@@ -83,6 +84,7 @@ export default function PropertyEditForm({
     latitude: property.latitude?.toString() || "",
     longitude: property.longitude?.toString() || "",
     price: property.price?.toString() || "",
+    priceVip: property.priceVip?.toString() || "",
     propertyTypeIds:
       property.propertyTypeIds && property.propertyTypeIds.length > 0
         ? property.propertyTypeIds
@@ -198,6 +200,7 @@ export default function PropertyEditForm({
       if (formData.latitude) payload.append("latitude", formData.latitude);
       if (formData.longitude) payload.append("longitude", formData.longitude);
       payload.append("price", formData.price);
+      if (formData.priceVip) payload.append("priceVip", formData.priceVip);
 
       const selectedCategories = categories.filter((category) =>
         formData.propertyTypeIds.includes(category.id)
@@ -510,7 +513,7 @@ export default function PropertyEditForm({
                   htmlFor="price"
                   className={missingPrice ? "text-red-600" : undefined}
                 >
-                  Precio del Paquete
+                  Precio del Paquete Estándar
                 </Label>
                 <Input
                   id="price"
@@ -521,9 +524,20 @@ export default function PropertyEditForm({
                   placeholder={
                     missingPrice
                       ? "Falta completar un precio válido"
-                      : "Precio del Paquete"
+                      : "Precio del Paquete Estándar"
                   }
                   className={missingPrice ? requiredMissingClass : undefined}
+                />
+              </div>
+              <div>
+                <Label htmlFor="priceVip">Precio del Paquete VIP</Label>
+                <Input
+                  id="priceVip"
+                  type="number"
+                  value={formData.priceVip}
+                  onChange={(e) => handleChange("priceVip", e.target.value)}
+                  min={1}
+                  placeholder="Precio del Paquete VIP (opcional)"
                 />
               </div>
             </div>

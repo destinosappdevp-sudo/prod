@@ -23,6 +23,7 @@ async function getDataBySlug(slug: string) {
       description: true,
       categoryName: true,
       price: true,
+      priceVip: true,
       country: true,
       municipality: true,
       exactAddress: true,
@@ -240,7 +241,7 @@ async function DestinoPage({
           {/* Plan Básico */}
           <div className="border border-gray-200 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-1">
-              <h3 className="font-bold text-lg">Plan Básico</h3>
+              <h3 className="font-bold text-lg">Plan Estándar</h3>
               <span className="font-bold text-xl">${data.price}</span>
             </div>
             <p className="text-sm text-gray-500 mb-4">Transporte y disfrute</p>
@@ -257,7 +258,7 @@ async function DestinoPage({
               ))}
             </ul>
             <button className="w-full border border-gray-900 rounded-full py-2.5 text-sm font-semibold hover:bg-gray-900 hover:text-white transition">
-              Seleccionar Básico
+              Seleccionar Estándar
             </button>
           </div>
 
@@ -269,6 +270,11 @@ async function DestinoPage({
             <h3 className="font-bold text-lg mt-2 mb-1">Plan Premium</h3>
             {vipAmenities.length > 0 ? (
               <>
+                <div className="flex items-center justify-between mb-1">
+                  {data.priceVip ? (
+                    <span className="font-bold text-xl text-[#C49A28]">${data.priceVip}</span>
+                  ) : null}
+                </div>
                 <p className="text-sm text-gray-500 mb-4">Experiencia exclusiva VIP</p>
                 <ul className="space-y-2 mb-6">
                   {vipAmenities.slice(0, 6).map((a: any) => (
