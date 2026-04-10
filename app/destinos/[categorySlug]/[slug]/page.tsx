@@ -146,8 +146,11 @@ async function DestinoPage({
   const salidaLabel = formatSalidaDate(data.checkInTime as string | null);
   const meetupLabel = formatMeetupTime(data.checkInTime as string | null);
 
-  const includedAmenities = amenityCategories.flatMap((cat: any) =>
+  const standardAmenities = amenityCategories.flatMap((cat: any) =>
     cat.amenities.filter((a: any) => a.status === "YES")
+  );
+  const vipAmenities = amenityCategories.flatMap((cat: any) =>
+    cat.amenities.filter((a: any) => a.status === "NO")
   );
 
   return (
@@ -242,7 +245,7 @@ async function DestinoPage({
             </div>
             <p className="text-sm text-gray-500 mb-4">Transporte y disfrute</p>
             <ul className="space-y-2 mb-6">
-              {includedAmenities.slice(0, 6).map((a: any) => (
+              {standardAmenities.slice(0, 6).map((a: any) => (
                 <li key={a.id} className="flex items-center gap-2 text-sm text-gray-700">
                   {a.iconUrl ? (
                     <Image src={a.iconUrl} alt={a.name} width={16} height={16} className="w-4 h-4" />
@@ -258,13 +261,34 @@ async function DestinoPage({
             </button>
           </div>
 
-          {/* Plan Premium — próximamente */}
+          {/* Plan Premium */}
           <div className="border-2 border-[#E1B042] rounded-2xl p-6 relative">
             <div className="absolute top-0 right-0 bg-[#E1B042] text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl tracking-wide">
               PREMIUM VIP
             </div>
-            <h3 className="font-bold text-lg mb-1 mt-2">Plan Premium</h3>
-            <p className="text-sm text-gray-400">Próximamente</p>
+            <h3 className="font-bold text-lg mt-2 mb-1">Plan Premium</h3>
+            {vipAmenities.length > 0 ? (
+              <>
+                <p className="text-sm text-gray-500 mb-4">Experiencia exclusiva VIP</p>
+                <ul className="space-y-2 mb-6">
+                  {vipAmenities.slice(0, 6).map((a: any) => (
+                    <li key={a.id} className="flex items-center gap-2 text-sm text-gray-700">
+                      {a.iconUrl ? (
+                        <Image src={a.iconUrl} alt={a.name} width={16} height={16} className="w-4 h-4" />
+                      ) : (
+                        <span className="text-[#E1B042]">★</span>
+                      )}
+                      {a.name}
+                    </li>
+                  ))}
+                </ul>
+                <button className="w-full border-2 border-[#E1B042] rounded-full py-2.5 text-sm font-semibold text-[#C49A28] hover:bg-[#E1B042] hover:text-white transition">
+                  Seleccionar Premium
+                </button>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400 mt-2">Próximamente</p>
+            )}
           </div>
 
         </div>

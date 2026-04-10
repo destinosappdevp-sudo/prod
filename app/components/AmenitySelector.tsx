@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Check, X, Minus } from "lucide-react";
+import { X } from "lucide-react";
 
 export type AmenityStatus = "YES" | "NO" | "UNSPECIFIED";
 
@@ -25,12 +25,6 @@ interface AmenitySelectorProps {
   onChange: (amenityId: string, status: AmenityStatus) => void;
   readOnly?: boolean;
 }
-
-const statusStyles: Record<AmenityStatus, string> = {
-  YES: "bg-green-100 text-green-700 border-green-200",
-  NO: "bg-red-100 text-red-700 border-red-200",
-  UNSPECIFIED: "bg-gray-100 text-gray-500 border-gray-200",
-};
 
 export default function AmenitySelector({
   categories,
@@ -69,52 +63,55 @@ export default function AmenitySelector({
                   </div>
 
                   {readOnly ? (
-                    <span
-                      className={`text-xs font-semibold px-2 py-1 rounded border ${statusStyles[currentStatus]}`}
-                    >
-                      {currentStatus === "YES"
-                        ? "Si"
-                        : currentStatus === "NO"
-                        ? "No"
-                        : ""}
-                    </span>
+                    currentStatus === "YES" ? (
+                      <span className="text-xs font-semibold px-2 py-1 rounded border bg-green-100 text-green-700 border-green-200">
+                        Estándar
+                      </span>
+                    ) : currentStatus === "NO" ? (
+                      <span className="text-xs font-semibold px-2 py-1 rounded border bg-amber-100 text-amber-700 border-amber-200">
+                        VIP
+                      </span>
+                    ) : null
                   ) : (
                     <div className="flex items-center gap-2">
+                      {/* Estándar */}
                       <button
                         type="button"
-                        className={`h-8 w-8 rounded border flex items-center justify-center ${
+                        className={`h-8 px-3 rounded border text-xs font-semibold transition-colors ${
                           currentStatus === "YES"
-                            ? statusStyles.YES
-                            : "bg-white text-gray-400"
+                            ? "bg-green-100 text-green-700 border-green-300"
+                            : "bg-white text-gray-400 border-gray-200 hover:border-green-300 hover:text-green-600"
                         }`}
                         onClick={() => onChange(amenity.id, "YES")}
-                        aria-label="Si"
+                        aria-label="Estándar"
                       >
-                        <Check className="h-4 w-4" />
+                        Estándar
                       </button>
+                      {/* VIP */}
                       <button
                         type="button"
-                        className={`h-8 w-8 rounded border flex items-center justify-center ${
+                        className={`h-8 px-3 rounded border text-xs font-semibold transition-colors ${
                           currentStatus === "NO"
-                            ? statusStyles.NO
-                            : "bg-white text-gray-400"
+                            ? "bg-amber-100 text-amber-700 border-amber-300"
+                            : "bg-white text-gray-400 border-gray-200 hover:border-amber-300 hover:text-amber-600"
                         }`}
                         onClick={() => onChange(amenity.id, "NO")}
-                        aria-label="No"
+                        aria-label="VIP"
                       >
-                        <X className="h-4 w-4" />
+                        VIP
                       </button>
+                      {/* Quitar selección */}
                       <button
                         type="button"
-                        className={`h-8 w-8 rounded border flex items-center justify-center ${
+                        className={`h-8 w-8 rounded border flex items-center justify-center transition-colors ${
                           currentStatus === "UNSPECIFIED"
-                            ? statusStyles.UNSPECIFIED
-                            : "bg-white text-gray-400"
+                            ? "bg-gray-100 text-gray-500 border-gray-300"
+                            : "bg-white text-gray-400 border-gray-200 hover:border-red-300 hover:text-red-500"
                         }`}
                         onClick={() => onChange(amenity.id, "UNSPECIFIED")}
-                        aria-label="Sin especificar"
+                        aria-label="Quitar selección"
                       >
-                        <Minus className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   )}
