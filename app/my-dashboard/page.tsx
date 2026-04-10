@@ -4,7 +4,6 @@ import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import HostDashboardClient from "@/app/components/HostDashboardClient";
 import GuestDashboardClient from "@/app/components/DashboardClient_min";
-import { createAirbnbHome } from "@/app/action";
 import {
   formatCurrencyAmount,
   parsePaymentFinancials,

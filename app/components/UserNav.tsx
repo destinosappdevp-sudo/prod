@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-import { createAirbnbHome } from "../action";
 import { UserNavClient } from "./UserNavClient";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
@@ -20,10 +19,6 @@ async function UserNav() {
     userProfileImage = userRecord?.profileImage || null;
   }
   
-  const createHomeWithId = createAirbnbHome.bind(null, {
-    userId: user?.id as string,
-  });
-
   const isRealPhoto = (url?: string | null) => !!url && !url.includes('avatar.vercel.sh');
 
   const userPicture = isRealPhoto(userProfileImage)
@@ -39,7 +34,6 @@ async function UserNav() {
   return (
     <UserNavClient
       user={user}
-      createHomeAction={createHomeWithId}
       userPicture={userPicture}
       userName={userName}
       userRole={userRole}

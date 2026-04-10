@@ -17,7 +17,6 @@ import { AuthDialog } from "./AuthDialog";
 
 interface UserNavClientProps {
   user: any;
-  createHomeAction: (formData: FormData) => Promise<void>;
   userPicture: string | null;
   userName?: string;
   userRole?: string | null;
@@ -25,7 +24,6 @@ interface UserNavClientProps {
 
 export function UserNavClient({
   user,
-  createHomeAction,
   userPicture,
   userName,
   userRole,

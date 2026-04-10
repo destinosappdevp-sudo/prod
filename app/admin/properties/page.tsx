@@ -1,7 +1,6 @@
 import { unstable_noStore } from 'next/cache';
 import prisma from "@/app/lib/db";
 import { PropertiesClient } from "../components/PropertiesClient";
-import { createAdminPackage } from "../actions/properties";
 
 const prismaAny = prisma as any;
 
@@ -111,14 +110,6 @@ export default async function PropertiesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Paquetes</h1>
           <p className="text-gray-600 mt-1">Administra y modera todas las Paquetes</p>
         </div>
-        <form action={createAdminPackage}>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-[#E1B042] text-white font-semibold rounded-lg hover:bg-[#C99A38] transition-colors"
-          >
-            + Agregar Paquete
-          </button>
-        </form>
       </div>
 
       <PropertiesClient
