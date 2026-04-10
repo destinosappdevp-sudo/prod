@@ -310,6 +310,25 @@ export async function signOut() {
 
 export async function AddToFavorite(formData: FormData) {
   const homeId = (formData.get("homeId") as string | null)?.trim() || "";
+  const userId = (formData.get("userId") as string | null)?.trim() || "";
+  const pathName = (formData.get("pathName") as string | null)?.trim() || "/";
+
+  if (!homeId || !userId) return;
+
+  // Generar ID único sin dependencia de uuid tipado
+  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+
+  await prisma.favorite.upsert({
+    where: { userId_homeId: { userId, homeId } },
+    create: { id, userId, homeId },
+    update: {},
+  });
+
+  revalidatePath(pathName);
+}
+
+export async function addCategory(formData: FormData) {
+  const homeId = (formData.get("homeId") as string | null)?.trim() || "";
   const categoryNameRaw =
     (formData.get("categoryName") as string | null)?.trim() || "";
   const propertyTypeIdRaw =
