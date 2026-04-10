@@ -17,6 +17,15 @@ export default function BannerPopup() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // Mostrar el popup solo una vez al día
+    const COOKIE_KEY = "banner_popup_seen";
+    const today = new Date().toISOString().slice(0, 10); // "2026-04-10"
+    const seen = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith(COOKIE_KEY + "="))
+      ?.split("=")[1];
+    if (seen === today) return; // ya se mostró hoy
+
     async function fetchPopup() {
       try {
         const res = await fetch("/api/banners/popup");
@@ -24,6 +33,11 @@ export default function BannerPopup() {
         if (data?.id) {
           setBanner(data);
           setVisible(true);
+          // Guardar cookie que expira a medianoche
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          tomorrow.setHours(0, 0, 0, 0);
+          document.cookie = `${COOKIE_KEY}=${today}; expires=${tomorrow.toUTCString()}; path=/; SameSite=Lax`;
         }
       } catch {
         // silently ignore
