@@ -162,7 +162,7 @@ export default function AlojamientosClient({
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-lg font-bold text-orange-600">
-                        ${home.price} / noche
+                        Desde ${home.price}
                       </p>
                       <p className="text-xs text-gray-500">
                         Publicado:{" "}

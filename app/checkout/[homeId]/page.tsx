@@ -29,6 +29,7 @@ async function getHomeData(homeId: string) {
       id: true,
       title: true,
       price: true,
+      priceVip: true,
       photo: true,
       country: true,
       municipality: true,
@@ -53,7 +54,7 @@ export default async function CheckoutPage({
   searchParams,
 }: {
   params: { homeId: string };
-  searchParams: { startDate?: string; endDate?: string; guests?: string };
+  searchParams: { startDate?: string; endDate?: string; guests?: string; plan?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -64,11 +65,13 @@ export default async function CheckoutPage({
     return redirect("/api/auth/login");
   }
 
-  const { startDate, endDate, guests } = searchParams;
+  const { startDate, endDate, guests, plan } = searchParams;
 
-  if (!startDate || !endDate) {
-    return redirect(`/home/${params.homeId}`);
-  }
+  const planLabel = plan === "vip" ? "Plan Premium VIP" : "Plan Estándar";
+
+  // Si no hay fechas, usar una noche simbólica para paquetes
+  const resolvedStartDate = startDate || new Date().toISOString().split("T")[0];
+  const resolvedEndDate = endDate || new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
   const home = await getHomeData(params.homeId);
 
@@ -76,9 +79,14 @@ export default async function CheckoutPage({
     return redirect("/");
   }
 
+  // Seleccionar precio según plan
+  const selectedPrice = plan === "vip" && (home as any).priceVip
+    ? (home as any).priceVip as number
+    : home.price;
+
   // Calcular cantidad de noches
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = new Date(resolvedStartDate);
+  const end = new Date(resolvedEndDate);
   const startTime = start.getTime();
   const endTime = end.getTime();
 
@@ -86,18 +94,17 @@ export default async function CheckoutPage({
     return redirect(`/home/${params.homeId}`);
   }
 
-  const nights = Math.ceil((endTime - startTime) / (1000 * 60 * 60 * 24));
+  const nights = Math.max(1, Math.ceil((endTime - startTime) / (1000 * 60 * 60 * 24)));
 
-  if (nights <= 0) {
-    return redirect(`/home/${params.homeId}`);
-  }
+  // Para paquetes (plan estandar/vip), el precio es por cupo, no por noche
+  const isPackage = !startDate || !endDate;
+  const effectiveNights = isPackage ? 1 : nights;
 
   // Calcular totales (tarifa por persona)
   const parsedGuests = guests ? parseInt(guests, 10) : 1;
   const guestsCount = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 1;
-  // El guest paga el precio base + comisión, el host recibe el monto completo
-  const subtotal = home.price * nights * guestsCount;
-  const total = subtotal; // El guest solo paga el subtotal
+  const subtotal = selectedPrice * effectiveNights * guestsCount;
+  const total = subtotal;
 
   const platformConfig = await (prisma as any).platformConfig.findFirst({
     select: {
@@ -166,12 +173,12 @@ export default async function CheckoutPage({
                 <div>
                   <p className="text-sm font-medium mb-1">Fechas</p>
                   <p className="text-sm text-gray-600">
-                    {new Date(startDate).toLocaleDateString("es-ES", {
+                    {new Date(resolvedStartDate).toLocaleDateString("es-ES", {
                       day: "numeric",
                       month: "short",
                     })}{" "}
                     -{" "}
-                    {new Date(endDate).toLocaleDateString("es-ES", {
+                    {new Date(resolvedEndDate).toLocaleDateString("es-ES", {
                       day: "numeric",
                       month: "short",
                     })}
@@ -205,7 +212,7 @@ export default async function CheckoutPage({
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  ${home.price} × {nights} noche{nights > 1 ? "s" : ""} × {guestsCount} cupo{guestsCount > 1 ? "s" : ""}
+                  {planLabel} — ${selectedPrice} × {guestsCount} cupo{guestsCount > 1 ? "s" : ""}
                 </span>
                 <span className="font-medium">${subtotal.toFixed(2)}</span>
               </div>
@@ -240,8 +247,8 @@ export default async function CheckoutPage({
         <CheckoutForm
           homeId={params.homeId}
           userId={user.id}
-          startDate={startDate}
-          endDate={endDate}
+          startDate={resolvedStartDate}
+          endDate={resolvedEndDate}
           guests={guestsCount}
           nights={nights}
           subtotal={subtotal}

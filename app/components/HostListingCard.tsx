@@ -91,7 +91,7 @@ function HostListingCard({
         </div>
         <p className="text-muted-foreground text-sm line-clamp-1">{title}</p>
         <p className="pt-2 text-muted-foreground">
-          <span className="font-medium text-black">$ {price}</span> / noche por persona
+          <span className="text-xs text-gray-500">Precio Desde</span> <span className="font-medium text-black">$ {price}</span>
         </p>
 
         {publishStatus === "REJECTED" && approvalRejectionReason ? (

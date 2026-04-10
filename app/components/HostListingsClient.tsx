@@ -108,7 +108,7 @@ export default function HostListingsClient({
                 </div>
 
                 <p className="text-sm font-bold text-orange-600 mt-2">
-                  ${home.price} / noche
+                  Desde ${home.price}
                 </p>
 
                 {/* Mostrar razón de rechazo si está rechazado */}

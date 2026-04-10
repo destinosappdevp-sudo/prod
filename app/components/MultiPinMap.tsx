@@ -94,7 +94,7 @@ export default function MultiPinMap({ pins }: { pins: MapPin[] }) {
                 {pin.title}
               </h3>
               <p className="text-sm text-gray-900 font-medium">
-                ${pin.price} <span className="text-gray-500 font-normal">/ noche</span>
+                Desde <span className="font-medium">${pin.price}</span>
               </p>
             </Link>
           </Popup>

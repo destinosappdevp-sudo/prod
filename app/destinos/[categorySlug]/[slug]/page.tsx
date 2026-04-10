@@ -3,6 +3,7 @@ import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { toCategorySlug } from "@/app/lib/slug";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
@@ -238,7 +239,7 @@ async function DestinoPage({
         <h2 className="font-bold text-2xl mb-6">Elige tu Experiencia</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-          {/* Plan Básico */}
+          {/* Plan Estándar */}
           <div className="border border-gray-200 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-1">
               <h3 className="font-bold text-lg">Plan Estándar</h3>
@@ -257,9 +258,12 @@ async function DestinoPage({
                 </li>
               ))}
             </ul>
-            <button className="w-full border border-gray-900 rounded-full py-2.5 text-sm font-semibold hover:bg-gray-900 hover:text-white transition">
+            <Link
+              href={`/checkout/${data.id}?plan=estandar&guests=1`}
+              className="block w-full text-center border border-gray-900 rounded-full py-2.5 text-sm font-semibold hover:bg-gray-900 hover:text-white transition"
+            >
               Seleccionar Estándar
-            </button>
+            </Link>
           </div>
 
           {/* Plan Premium */}
@@ -270,12 +274,12 @@ async function DestinoPage({
             <h3 className="font-bold text-lg mt-2 mb-1">Plan Premium</h3>
             {vipAmenities.length > 0 ? (
               <>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-start justify-between mb-1">
+                  <p className="text-sm text-gray-500">Experiencia exclusiva VIP</p>
                   {data.priceVip ? (
                     <span className="font-bold text-xl text-[#C49A28]">${data.priceVip}</span>
                   ) : null}
                 </div>
-                <p className="text-sm text-gray-500 mb-4">Experiencia exclusiva VIP</p>
                 <ul className="space-y-2 mb-6">
                   {vipAmenities.slice(0, 6).map((a: any) => (
                     <li key={a.id} className="flex items-center gap-2 text-sm text-gray-700">
@@ -288,9 +292,12 @@ async function DestinoPage({
                     </li>
                   ))}
                 </ul>
-                <button className="w-full border-2 border-[#E1B042] rounded-full py-2.5 text-sm font-semibold text-[#C49A28] hover:bg-[#E1B042] hover:text-white transition">
+                <Link
+                  href={`/checkout/${data.id}?plan=vip&guests=1`}
+                  className="block w-full text-center border-2 border-[#E1B042] rounded-full py-2.5 text-sm font-semibold text-[#C49A28] hover:bg-[#E1B042] hover:text-white transition"
+                >
                   Seleccionar Premium
-                </button>
+                </Link>
               </>
             ) : (
               <p className="text-sm text-gray-400 mt-2">Próximamente</p>

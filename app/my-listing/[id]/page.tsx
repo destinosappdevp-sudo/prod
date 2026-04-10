@@ -237,7 +237,7 @@ export default async function HostPropertyDetailPage({
               <span className="text-green-600 text-xl font-bold">$</span>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Precio/Noche</p>
+              <p className="text-sm text-gray-600">Precio Desde</p>
               <p className="text-xl font-bold">
                 ${propertyDetails.price || 0}
               </p>
