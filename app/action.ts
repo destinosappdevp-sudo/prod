@@ -308,18 +308,7 @@ export async function signOut() {
   return redirect("/");
 }
 
-export async function createAirbnbHome({ userId }: { userId: string }) {
-  const data = await prisma.home.create({
-    data: {
-      id: randomUUID(),
-      userId,
-    },
-  });
-
-  return redirect(`/create/${data.id}/structure`);
-}
-
-export async function createCategoryPage(formData: FormData) {
+export async function AddToFavorite(formData: FormData) {
   const homeId = (formData.get("homeId") as string | null)?.trim() || "";
   const categoryNameRaw =
     (formData.get("categoryName") as string | null)?.trim() || "";
@@ -573,59 +562,6 @@ export async function createLocation(formData: FormData) {
     status: publishStatus,
     isVerified: isUserVerified,
   });
-
-  return redirect(`/`);
-}
-
-export async function AddToFavorite(formData: FormData) {
-  try {
-    const homeId = formData.get("homeId") as string;
-    const userId = formData.get("userId") as string;
-    const pathName = formData.get("pathName") as string;
-
-    // Validar datos requeridos
-    if (!homeId || !userId) {
-      throw new Error("Faltan datos requeridos para guardar el favorito");
-    }
-
-    // Verificar que la propiedad existe
-    const homeExists = await prisma.home.findUnique({
-      where: { id: homeId },
-      select: { id: true },
-    });
-
-    if (!homeExists) {
-      throw new Error("La propiedad no existe");
-    }
-
-    // Verificar que no exista ya en favoritos
-    const existingFavorite = await prisma.favorite.findFirst({
-      where: {
-        homeId: homeId,
-        userId: userId,
-      },
-    });
-
-    if (existingFavorite) {
-      console.log("Este favorito ya existe");
-      revalidatePath(pathName);
-      return;
-    }
-
-    const data = await prisma.favorite.create({
-      data: {
-        id: randomUUID(),
-        homeId: homeId,
-        userId: userId,
-      },
-    });
-
-    revalidatePath(pathName);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Error desconocido al guardar favorito";
-    console.error("Error en AddToFavorite:", errorMessage);
-    throw error;
-  }
 }
 
 export async function RemoveFromFavorite(formData: FormData) {
