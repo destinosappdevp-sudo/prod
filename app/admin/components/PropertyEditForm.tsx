@@ -50,6 +50,7 @@ interface PropertyEditFormProps {
   updateEndpoint?: string;
   allowDelete?: boolean;
   deleteEndpoint?: string;
+  createMode?: boolean;
 }
 
 export default function PropertyEditForm({
@@ -60,6 +61,7 @@ export default function PropertyEditForm({
   updateEndpoint,
   allowDelete = false,
   deleteEndpoint,
+  createMode = false,
 }: PropertyEditFormProps) {
   const router = useRouter();
   const { getMunicipalitiesByState, getDefaultMunicipalityByState } =
@@ -222,14 +224,17 @@ export default function PropertyEditForm({
         payload.append("image", imageFile);
       }
 
-      const endpoint = updateEndpoint ?? `/api/admin/properties/${property.id}`;
+      const endpoint = createMode
+        ? (updateEndpoint ?? "/api/admin/properties")
+        : (updateEndpoint ?? `/api/admin/properties/${property.id}`);
+      const method = createMode ? "POST" : "PATCH";
       const response = await fetch(endpoint, {
-        method: "PATCH",
+        method,
         body: payload,
       });
 
       if (!response.ok) {
-        let errorMessage = "Error al actualizar la Paquete";
+        let errorMessage = createMode ? "Error al crear el Paquete" : "Error al actualizar la Paquete";
         try {
           const errorData = await response.json();
           errorMessage = errorData?.error || errorMessage;
@@ -239,8 +244,15 @@ export default function PropertyEditForm({
         throw new Error(errorMessage);
       }
 
-      alert("Paquete actualizada exitosamente");
-      router.refresh();
+      if (createMode) {
+        const data = await response.json();
+        alert("Paquete creado exitosamente");
+        router.push(`/admin/properties/${data.id}`);
+        router.refresh();
+      } else {
+        alert("Paquete actualizada exitosamente");
+        router.refresh();
+      }
     } catch (error) {
       console.error(error);
       alert(
@@ -626,10 +638,10 @@ export default function PropertyEditForm({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Guardando...
+                  {createMode ? "Creando..." : "Guardando..."}
                 </>
               ) : (
-                "Guardar Cambios"
+                createMode ? "Crear Paquete" : "Guardar Cambios"
               )}
             </Button>
           </div>

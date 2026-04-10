@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Home, CheckCircle, Clock, XCircle, CalendarCheck } from "lucide-react";
+import { Search, Home, CheckCircle, Clock, XCircle, CalendarCheck, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
@@ -160,6 +160,16 @@ export function PropertiesClient({
         <ActiveReservationsTable reservations={activeReservations} />
       ) : (
         <>
+      {/* Botón nuevo paquete */}
+      <div className="flex justify-end">
+        <Link
+          href="/admin/properties/new"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+        >
+          <PlusCircle size={18} />
+          Nuevo Paquete
+        </Link>
+      </div>
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-6">
