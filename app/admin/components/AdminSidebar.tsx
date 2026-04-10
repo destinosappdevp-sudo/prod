@@ -31,10 +31,10 @@ const getMenuItems = (role?: string) => {
     { href: "/admin/categories", icon: BarChart3, label: "Categorías" },
     { href: "/admin/amenities", icon: Home, label: "Servicios" },
     { href: "/admin/payments", icon: CreditCard, label: "Finanzas" },
-    { href: "/admin/reports", icon: BarChart3, label: "Informes" },
   ];
   if (role === "SUPERADMIN") {
     items.splice(1, 0, { href: "/admin/banners", icon: BarChart3, label: "Publicidad" });
+    items.push({ href: "/admin/reports", icon: BarChart3, label: "Informes" });
     items.push({ href: "/admin/settings", icon: Settings, label: "Configuración" });
   }
   return items;
