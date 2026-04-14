@@ -112,15 +112,47 @@ export default function ContactoPage() {
             <div className="mt-5 space-y-3 text-sm">
               <p>
                 <span className="font-semibold text-[#E0AE33]">Facebook:</span>{" "}
-                Manuel D
+                <a
+                  href="https://www.facebook.com/manueld3/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-[#E0AE33]/70 underline-offset-2 hover:text-[#E0AE33]"
+                >
+                  Manuel D
+                </a>
               </p>
               <p>
                 <span className="font-semibold text-[#E0AE33]">Instagram:</span>{" "}
-                @destinosvzla_
+                <a
+                  href="https://www.instagram.com/destinosvzla_/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-[#E0AE33]/70 underline-offset-2 hover:text-[#E0AE33]"
+                >
+                  @destinosvzla_
+                </a>
               </p>
               <p>
                 <span className="font-semibold text-[#E0AE33]">Threads:</span>{" "}
-                @destinosvzla_
+                <a
+                  href="https://www.threads.com/@destinosvzla_"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-[#E0AE33]/70 underline-offset-2 hover:text-[#E0AE33]"
+                >
+                  @destinosvzla_
+                </a>
+              </p>
+              <p>
+                <span className="font-semibold text-[#E0AE33]">WhatsApp:</span>{" "}
+                <a
+                  href="https://api.whatsapp.com/send/?phone=584245047025&text&type=phone_number&app_absent=0&utm_source=webdestinos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-[#E0AE33]/70 underline-offset-2 hover:text-[#E0AE33]"
+                >
+                  0424-5047025
+                </a>
               </p>
             </div>
           </aside>
