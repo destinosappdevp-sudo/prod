@@ -13,7 +13,7 @@ const prismaAny = prisma as any;
 
 const categoryChips = [
   { name: "Todos", icon: "/media/todos.webp" },
-  { name: "Aventura", icon: "/media/todos.webp" },
+  { name: "Aventura", icon: "/media/aventuras.webp" },
   { name: "Islas", icon: "/media/islas.webp" },
   { name: "Montañas", icon: "/media/montañas.webp" },
   { name: "Playas", icon: "/media/playas.webp" },
@@ -233,7 +233,7 @@ export default async function DestinosHomePage({
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#E5DCC6] to-transparent" />
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 pt-8 sm:px-10 lg:px-14">
+      <section className="mx-auto max-w-7xl px-6 pt-0 sm:px-10 lg:px-14">
         <div className="flex flex-wrap items-start justify-center gap-6 sm:gap-8">
           {chipsWithToken.map((cat) => (
             <Link

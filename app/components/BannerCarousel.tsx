@@ -110,7 +110,7 @@ export default function BannerCarousel({
                 alt={banner.title}
                 fill
                 sizes="100vw"
-                className="object-cover group-hover:opacity-90 transition-opacity duration-300"
+                className="object-cover object-left-top group-hover:opacity-90 transition-opacity duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               {showTitle && banner.title && (
@@ -132,7 +132,7 @@ export default function BannerCarousel({
                   ? doubleHeight
                     ? "h-[520px] sm:h-[620px] md:h-[720px] lg:h-[840px]"
                     : compactHeight
-                    ? "h-[380px] sm:h-[440px] md:h-[520px] lg:h-[600px]"
+                    ? "h-[264px] sm:h-[312px] md:h-[360px] lg:h-[408px]"
                     : "h-[460px] sm:h-[520px] md:h-[600px] lg:h-[700px]"
                   : "aspect-[5/2] sm:aspect-[5/1] rounded-lg"
               }`}
@@ -147,7 +147,7 @@ export default function BannerCarousel({
                   ? doubleHeight
                     ? "h-[520px] sm:h-[620px] md:h-[720px] lg:h-[840px]"
                     : compactHeight
-                    ? "h-[380px] sm:h-[440px] md:h-[520px] lg:h-[600px]"
+                    ? "h-[264px] sm:h-[312px] md:h-[360px] lg:h-[408px]"
                     : "h-[460px] sm:h-[520px] md:h-[600px] lg:h-[700px]"
                   : "aspect-[5/2] sm:aspect-[5/1] rounded-lg"
               }`}
