@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,6 +123,7 @@ export default function PropertyEditForm({
   }, [amenityCategories]);
 
   const [amenityMap, setAmenityMap] = useState(initialAmenityMap);
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
 
   const normalizeContactNumber = (value: string) => {
     const trimmed = value.trim();
@@ -156,6 +157,32 @@ export default function PropertyEditForm({
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const wrapDescriptionSelection = (before: string, after: string, fallback = "texto") => {
+    const textarea = descriptionRef.current;
+    const current = formData.description;
+
+    if (!textarea) {
+      handleChange("description", `${current}${before}${fallback}${after}`);
+      return;
+    }
+
+    const start = textarea.selectionStart ?? current.length;
+    const end = textarea.selectionEnd ?? current.length;
+    const selectedText = current.slice(start, end);
+    const content = selectedText || fallback;
+    const wrapped = `${before}${content}${after}`;
+    const nextValue = `${current.slice(0, start)}${wrapped}${current.slice(end)}`;
+
+    handleChange("description", nextValue);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const selectionStart = start + before.length;
+      const selectionEnd = selectionStart + content.length;
+      textarea.setSelectionRange(selectionStart, selectionEnd);
+    });
   };
 
   const togglePropertyType = (typeId: number) => {
@@ -385,18 +412,42 @@ export default function PropertyEditForm({
             >
               Descripción
             </Label>
+            <div className="flex flex-wrap items-center gap-2 my-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => wrapDescriptionSelection("**", "**", "texto en negrita")}
+              >
+                Negrita
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  wrapDescriptionSelection("[center]", "[/center]", "texto centrado")
+                }
+              >
+                Centrar
+              </Button>
+            </div>
             <Textarea
+              ref={descriptionRef}
               id="description"
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder={
                 missingDescription
                   ? "Falta completar la descripción"
-                  : "Descripción de la Paquete"
+                  : "Descripción de la Paquete. Usa **texto** para negrita y [center]texto[/center] para centrar"
               }
               className={missingDescription ? requiredMissingClass : undefined}
               rows={4}
             />
+            <p className="text-xs text-muted-foreground mt-2">
+              Formato básico: **texto** para negrita y [center]texto[/center] para centrar una línea.
+            </p>
           </div>
 
           <div>

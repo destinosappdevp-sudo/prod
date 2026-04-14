@@ -2,6 +2,7 @@ import HomeMap from "@/app/components/HomeMap";
 import { HomeHostInfo } from "@/app/components/HomeHostInfo";
 import { HomeReservationForm } from "@/app/components/HomeReservationForm";
 import ShowCaseCategory from "@/app/components/ShowCaseCategory";
+import FormattedDescription from "@/app/components/FormattedDescription";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
 import prisma from "@/app/lib/db";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
@@ -156,7 +157,10 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
             categoryNames={data?.categoryName}
           />
           <Separator className="my-7" />
-          <p className="text-muted-foreground whitespace-pre-line">{data?.description}</p>
+          <FormattedDescription
+            text={data?.description}
+            className="text-muted-foreground"
+          />
           <Separator className="my-7" />
           {data?.exactAddress && (
             <>

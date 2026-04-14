@@ -8,6 +8,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
+import FormattedDescription from "@/app/components/FormattedDescription";
 import { Clock, Users, MapPin } from "lucide-react";
 import Image from "next/image";
 
@@ -230,7 +231,10 @@ async function DestinoPage({
       {/* Descripción */}
       {data.description && (
         <div className="mb-6">
-          <p className="text-gray-600 leading-relaxed whitespace-pre-line">{data.description}</p>
+          <FormattedDescription
+            text={data.description}
+            className="text-gray-600 leading-relaxed"
+          />
         </div>
       )}
 
