@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import Image from "next/image";
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram, MessageCircle, AtSign } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -35,14 +35,17 @@ export default function Footer() {
           </div>
 
           <div className="flex justify-center gap-4 text-[#f0c85c] lg:justify-end">
-            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="transition-opacity hover:opacity-80">
+            <a href="https://www.facebook.com/manueld3/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="transition-opacity hover:opacity-80">
               <Facebook size={28} />
             </a>
             <a href="https://www.instagram.com/destinosvzla_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="transition-opacity hover:opacity-80">
               <Instagram size={28} />
             </a>
-            <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="transition-opacity hover:opacity-80">
-              <Twitter size={28} />
+            <a href="https://www.threads.com/@destinosvzla_" target="_blank" rel="noopener noreferrer" aria-label="Threads" className="transition-opacity hover:opacity-80">
+              <AtSign size={28} />
+            </a>
+            <a href="https://api.whatsapp.com/send/?phone=584245047025&text&type=phone_number&app_absent=0&utm_source=webdestinos" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="transition-opacity hover:opacity-80">
+              <MessageCircle size={28} />
             </a>
           </div>
         </div>

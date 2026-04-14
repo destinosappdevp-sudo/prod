@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram, MessageCircle, AtSign } from "lucide-react";
 
 const navLinks = [
   { href: "/", label: "Inicio" },
@@ -40,14 +40,17 @@ function Navbar() {
 
         <div className="hidden items-center gap-4 lg:flex">
           <div className="flex items-center gap-3 text-[#f0c85c]">
-            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="transition-opacity hover:opacity-80">
+            <a href="https://www.facebook.com/manueld3/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="transition-opacity hover:opacity-80">
               <Facebook size={20} />
             </a>
             <a href="https://www.instagram.com/destinosvzla_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="transition-opacity hover:opacity-80">
               <Instagram size={20} />
             </a>
-            <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="transition-opacity hover:opacity-80">
-              <Twitter size={20} />
+            <a href="https://www.threads.com/@destinosvzla_" target="_blank" rel="noopener noreferrer" aria-label="Threads" className="transition-opacity hover:opacity-80">
+              <AtSign size={20} />
+            </a>
+            <a href="https://api.whatsapp.com/send/?phone=584245047025&text&type=phone_number&app_absent=0&utm_source=webdestinos" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="transition-opacity hover:opacity-80">
+              <MessageCircle size={20} />
             </a>
           </div>
           <Link
