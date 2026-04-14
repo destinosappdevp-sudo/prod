@@ -12,7 +12,25 @@ interface Banner {
   url: string;
 }
 
-export default function BannerCarousel() {
+interface BannerCarouselProps {
+  fullWidth?: boolean;
+  compactHeight?: boolean;
+  showTitle?: boolean;
+  doubleHeight?: boolean;
+  showArrows?: boolean;
+  autoRotate?: boolean;
+  autoRotateMs?: number;
+}
+
+export default function BannerCarousel({
+  fullWidth = false,
+  compactHeight = false,
+  showTitle = true,
+  doubleHeight = false,
+  showArrows = true,
+  autoRotate = false,
+  autoRotateMs = 5000,
+}: BannerCarouselProps) {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -53,6 +71,19 @@ export default function BannerCarousel() {
     );
   };
 
+  useEffect(() => {
+    if (!autoRotate || banners.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => {
+        const maxIndex = Math.max(0, banners.length - itemsPerPage);
+        return prevIndex >= maxIndex ? 0 : prevIndex + 1;
+      });
+    }, autoRotateMs);
+
+    return () => clearInterval(interval);
+  }, [autoRotate, autoRotateMs, banners.length, itemsPerPage]);
+
   if (loading || banners.length === 0) {
     return null;
   }
@@ -82,7 +113,7 @@ export default function BannerCarousel() {
                 className="object-cover group-hover:opacity-90 transition-opacity duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              {banner.title && (
+              {showTitle && banner.title && (
                 <div className="absolute bottom-4 left-5">
                   <p className="text-white text-2xl font-bold drop-shadow-md leading-tight">{banner.title}</p>
                 </div>
@@ -96,14 +127,30 @@ export default function BannerCarousel() {
               href={bannerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative block aspect-[5/2] sm:aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
+              className={`relative block overflow-hidden shadow-lg group ${
+                fullWidth
+                  ? doubleHeight
+                    ? "h-[520px] sm:h-[620px] md:h-[720px] lg:h-[840px]"
+                    : compactHeight
+                    ? "h-[380px] sm:h-[440px] md:h-[520px] lg:h-[600px]"
+                    : "h-[460px] sm:h-[520px] md:h-[600px] lg:h-[700px]"
+                  : "aspect-[5/2] sm:aspect-[5/1] rounded-lg"
+              }`}
             >
               {bannerContent}
             </a>
           ) : (
             <div
               key={banner.id}
-              className="relative block aspect-[5/2] sm:aspect-[5/1] rounded-lg overflow-hidden shadow-lg group"
+              className={`relative block overflow-hidden shadow-lg group ${
+                fullWidth
+                  ? doubleHeight
+                    ? "h-[520px] sm:h-[620px] md:h-[720px] lg:h-[840px]"
+                    : compactHeight
+                    ? "h-[380px] sm:h-[440px] md:h-[520px] lg:h-[600px]"
+                    : "h-[460px] sm:h-[520px] md:h-[600px] lg:h-[700px]"
+                  : "aspect-[5/2] sm:aspect-[5/1] rounded-lg"
+              }`}
             >
               {bannerContent}
             </div>
@@ -112,7 +159,7 @@ export default function BannerCarousel() {
       </div>
 
       {/* Botones de navegación - solo si hay más banners */}
-      {banners.length > itemsPerPage && (
+      {showArrows && banners.length > itemsPerPage && (
         <>
           <button
             onClick={goToPrevious}
@@ -132,20 +179,23 @@ export default function BannerCarousel() {
             <ChevronRight size={24} className="text-gray-800" />
           </button>
 
-          {/* Indicadores de página */}
-          <div className="flex justify-center gap-2 mt-4">
-            {Array.from({ length: totalPages }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? "bg-orange-500" : "bg-gray-300"
-                }`}
-                aria-label={`Ir a página ${index + 1}`}
-              />
-            ))}
-          </div>
         </>
+      )}
+
+      {/* Indicadores de página */}
+      {banners.length > itemsPerPage && (
+        <div className="flex justify-center gap-2 mt-4">
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === currentIndex ? "bg-orange-500" : "bg-gray-300"
+              }`}
+              aria-label={`Ir a página ${index + 1}`}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
