@@ -11,15 +11,15 @@ const navLinks = [
 
 function Navbar() {
   return (
-    <header className="w-full border-b border-[#1e3f8a] bg-gradient-to-r from-[#051d66] via-[#09206d] to-[#041858] text-white">
+    <header className="w-full border-b border-brand-blue bg-brand-blue text-white">
       <div className="container mx-auto flex h-[84px] items-center justify-between px-4 sm:px-5 lg:px-10">
         <Link href="/" className="shrink-0">
           <Image
             src="/media/logo-destinos.webp"
             alt="Logo Destinos"
-            width={170}
-            height={62}
-            className="h-auto w-[132px] sm:w-[150px] lg:w-[170px]"
+            width={128}
+            height={46}
+            className="h-auto w-[96px] sm:w-[108px] lg:w-[128px]"
             priority
           />
         </Link>
@@ -68,7 +68,7 @@ function Navbar() {
         </div>
       </div>
 
-      <div className="border-t border-[#1f3f8a] lg:hidden">
+      <div className="border-t border-white/20 lg:hidden">
         <nav className="container mx-auto flex items-center justify-between px-4 py-2 text-sm text-white/95 sm:px-5">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-[#f0c85c]">

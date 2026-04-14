@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --brand-blue: #040b42;
+    --brand-gold: #e0ae33;
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -53,8 +55,52 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"] {
+    background-color: var(--brand-gold) !important;
+    border-color: var(--brand-gold) !important;
+    color: var(--brand-blue) !important;
+  }
+
+  button:hover,
+  input[type="button"]:hover,
+  input[type="submit"]:hover,
+  input[type="reset"]:hover {
+    background-color: #c99723 !important;
+    border-color: #c99723 !important;
+  }
+
+  button:disabled,
+  input[type="button"]:disabled,
+  input[type="submit"]:disabled,
+  input[type="reset"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@layer utilities {
+  .bg-brand-blue {
+    background-color: var(--brand-blue);
+  }
+
+  .text-brand-gold {
+    color: var(--brand-gold);
+  }
+
+  .border-brand-blue {
+    border-color: var(--brand-blue);
+  }
+
+  .border-brand-gold {
+    border-color: var(--brand-gold);
   }
 }
 

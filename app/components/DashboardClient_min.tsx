@@ -201,7 +201,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar — solo visible en desktop (lg+) */}
-      <aside className="hidden lg:flex w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white flex-col">
+      <aside className="hidden lg:flex w-64 bg-brand-blue text-white flex-col">
         <div className="px-6 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">D</div>

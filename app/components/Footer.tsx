@@ -6,7 +6,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-16 overflow-hidden bg-gradient-to-b from-[#132f7a] via-[#112b73] to-[#0c225f] text-white">
+    <footer className="relative mt-16 overflow-hidden bg-brand-blue text-white">
       <div className="absolute inset-x-0 top-0 h-14 bg-[#e5dcc6]" aria-hidden="true" />
       <div className="absolute inset-x-0 top-8 h-16 rounded-b-[60%] border-b border-[#d8cba9]/70 bg-gradient-to-b from-[#264694]/60 to-[#193b8f]/40" aria-hidden="true" />
 
@@ -16,17 +16,17 @@ export default function Footer() {
             <Image
               src="/media/logo-destinos.webp"
               alt="Logo Destinos"
-              width={170}
-              height={62}
-              className="h-auto w-[150px]"
+              width={128}
+              height={46}
+              className="h-auto w-[118px]"
             />
           </div>
 
           <div className="space-y-5 text-center">
             <div className="flex flex-wrap items-center justify-center gap-8 text-lg font-medium text-white/95">
-              <Link href="/" className="transition-colors hover:text-[#f0c85c]">Sobre Nosotros</Link>
+              <Link href="/terminos" className="transition-colors hover:text-[#f0c85c]">Términos y condiciones</Link>
               <Link href="/ayuda" className="transition-colors hover:text-[#f0c85c]">Preguntas Frecuentes</Link>
-              <Link href="/contacto" className="transition-colors hover:text-[#f0c85c]">Contacto</Link>
+              <Link href="/privacidad" className="transition-colors hover:text-[#f0c85c]">Política de privacidad</Link>
             </div>
             <div className="mx-auto h-px w-full max-w-[560px] bg-white/45" />
             <p className="text-2xl text-white/90">
