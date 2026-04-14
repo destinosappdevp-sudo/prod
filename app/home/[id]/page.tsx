@@ -156,7 +156,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
             categoryNames={data?.categoryName}
           />
           <Separator className="my-7" />
-          <p className="text-muted-foreground">{data?.description}</p>
+          <p className="text-muted-foreground whitespace-pre-line">{data?.description}</p>
           <Separator className="my-7" />
           {data?.exactAddress && (
             <>

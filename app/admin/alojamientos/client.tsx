@@ -157,7 +157,7 @@ export default function AlojamientosClient({
                     </p>
                   </div>
 
-                  <p className="text-gray-700 line-clamp-2 mb-3">{home.description}</p>
+                  <p className="text-gray-700 line-clamp-2 whitespace-pre-line mb-3">{home.description}</p>
 
                   <div className="flex items-center justify-between">
                     <div>

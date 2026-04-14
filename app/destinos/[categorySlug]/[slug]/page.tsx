@@ -230,7 +230,7 @@ async function DestinoPage({
       {/* Descripción */}
       {data.description && (
         <div className="mb-6">
-          <p className="text-gray-600 leading-relaxed">{data.description}</p>
+          <p className="text-gray-600 leading-relaxed whitespace-pre-line">{data.description}</p>
         </div>
       )}
 
