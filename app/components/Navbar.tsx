@@ -31,11 +31,11 @@ async function Navbar() {
         <div className="flex flex-wrap items-center justify-between gap-3 lg:flex-nowrap lg:gap-6">
           <Link href={"/"} className="shrink-0 flex items-center gap-2">
             <Image
-              src="/logo.png"
+              src="/media/logo-destinos.webp"
               alt="logo"
-              width={40}
-              height={40}
-              className="w-10 h-10 object-contain"
+              width={48}
+              height={48}
+              className="w-12 h-12 object-contain"
               priority
             />
             <div className="flex flex-col leading-tight">

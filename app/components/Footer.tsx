@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import Image from "next/image";
 import FooterAccountLinks from "./FooterAccountLinks";
 
 const footerColumns = [
@@ -27,7 +28,16 @@ export default function Footer() {
       <div className="hidden lg:block container mx-auto px-5 lg:px-10 py-12">
         {/* Top row: brand */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-          <span className="text-2xl font-bold text-white tracking-wide">Destinos Venezuela</span>
+          <div className="flex items-center gap-3">
+            <Image
+              src="/media/logo-destinos.webp"
+              alt="Logo Destinos"
+              width={56}
+              height={56}
+              className="w-14 h-14 object-contain"
+            />
+            <span className="text-2xl font-bold text-white tracking-wide">Destinos Venezuela</span>
+          </div>
         </div>
 
         {/* 4-column links grid */}
