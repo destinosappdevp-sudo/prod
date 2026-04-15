@@ -7,9 +7,6 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-0 overflow-hidden bg-brand-blue text-white">
-      <div className="absolute inset-x-0 top-0 h-14 bg-[#e5dcc6]" aria-hidden="true" />
-      <div className="absolute inset-x-0 top-8 h-16 rounded-b-[60%] border-b border-[#d8cba9]/70 bg-gradient-to-b from-[#264694]/60 to-[#193b8f]/40" aria-hidden="true" />
-
       <div className="relative container mx-auto px-4 py-16 sm:px-5 lg:px-10">
         <div className="grid items-start gap-8 lg:grid-cols-[220px_1fr_200px]">
           <div className="flex justify-center lg:justify-start">

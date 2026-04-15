@@ -6,6 +6,7 @@ import {
   getPrimaryCategoryName,
   parseMultiCategoryFilter,
 } from "@/app/lib/property-categories";
+import ReviewsSection from "@/app/components/ReviewsSection";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -313,6 +314,10 @@ export default async function DestinosHomePage({
           </div>
         )}
       </section>
+
+      <div className="w-full pt-0">
+        <ReviewsSection />
+      </div>
     </div>
   );
 }
