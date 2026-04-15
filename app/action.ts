@@ -68,14 +68,12 @@ async function sendWelcomeEmail(email: string) {
   const resend = getResendClient();
 
   if (!resend) {
-    console.warn("RESEND_API_KEY no configurada; se omite email de bienvenida.");
     return;
   }
 
   const displayName = email.split("@")[0] || "nuevo usuario";
 
   try {
-    console.log(`📧 Enviando email de bienvenida a: ${email}`);
     const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
@@ -87,13 +85,10 @@ async function sendWelcomeEmail(email: string) {
     });
 
     if (result.error) {
-      console.error(`❌ Resend rechazó el email de bienvenida a ${email}:`, result.error);
-      return;
+      console.error(`Resend rechazó el email de bienvenida a ${email}:`, result.error);
     }
-
-    console.log(`✅ Email de bienvenida enviado exitosamente a ${email}`, result.data);
   } catch (error) {
-    console.error("❌ Error enviando email de bienvenida:", error);
+    console.error("Error enviando email de bienvenida:", error);
   }
 }
 
@@ -171,11 +166,11 @@ export async function signUp(email: string, password: string) {
           role: initialRole,
         },
       });
-    } catch (e) {
-      console.log("Usuario ya existe en BD, continuando...");
+    } catch {
+      // El usuario ya existe en la base local; continuar sin bloquear el registro.
     }
 
-    await sendWelcomeEmail(data.user.email ?? email);
+    void sendWelcomeEmail(data.user.email ?? email);
   }
 
   return { success: true };
@@ -237,11 +232,11 @@ export async function signUpWithRole(
           municipalityCode: normalizedProfile.municipalityCode || null,
         },
       });
-    } catch (e) {
-      console.log("Usuario ya existe en BD, continuando...");
+    } catch {
+      // El usuario ya existe en la base local; continuar sin bloquear el registro.
     }
 
-    await sendWelcomeEmail(data.user.email ?? email);
+    void sendWelcomeEmail(data.user.email ?? email);
   }
 
   return { success: true };
@@ -266,25 +261,22 @@ export async function signInWithEmail(email: string, password: string) {
     return { error: errorMap[error.message] ?? "Error al iniciar sesión. Intenta de nuevo" };
   }
 
-  // Asegurar que el usuario existe en la base de datos
+  // Asegurar que el usuario existe en la base de datos sin hacer consultas extra innecesarias
   if (data.user) {
-    const userExists = await prisma.user.findUnique({
-      where: { id: data.user.id },
-    });
+    const initialRole = await getRoleForNewUserBootstrap();
 
-    if (!userExists) {
-      const initialRole = await getRoleForNewUserBootstrap();
-      await prisma.user.create({
-        data: {
-          id: data.user.id,
-          email: data.user.email ?? email,
-          firstName: "Usuario",
-          lastName: "",
-          profileImage: `https://avatar.vercel.sh/${email}`,
-          role: initialRole,
-        },
-      });
-    }
+    await prisma.user.upsert({
+      where: { id: data.user.id },
+      update: {},
+      create: {
+        id: data.user.id,
+        email: data.user.email ?? email,
+        firstName: "Usuario",
+        lastName: "",
+        profileImage: `https://avatar.vercel.sh/${email}`,
+        role: initialRole,
+      },
+    });
 
     await ensureAtLeastOneSuperadmin(data.user.id);
 

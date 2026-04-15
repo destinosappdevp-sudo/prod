@@ -1,7 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/app/lib/supabase/middleware";
 
-const MAINTENANCE_BYPASS = ["/mantenimiento", "/login", "/_next", "/api", "/favicon"];
+const MAINTENANCE_BYPASS = [
+  "/mantenimiento",
+  "/login",
+  "/auth",
+  "/admin",
+  "/my-dashboard",
+  "/_next",
+  "/api",
+  "/favicon",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

@@ -93,35 +93,9 @@ export function AuthPanel({
     return "Unknown";
   };
 
-  const getIpAndLocation = async () => {
-    let ipAddress: string | null = null;
-    let location: string | null = null;
-
-    try {
-      const ipResponse = await fetch("https://api.ipify.org?format=json");
-      if (ipResponse.ok) {
-        const ipData = await ipResponse.json();
-        ipAddress = ipData?.ip ?? null;
-      }
-    } catch {
-      ipAddress = null;
-    }
-
-    if (ipAddress) {
-      try {
-        const locationResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
-        if (locationResponse.ok) {
-          const locationData = await locationResponse.json();
-          if (locationData?.city && locationData?.country_name) {
-            location = `${locationData.city}, ${locationData.country_name}`;
-          }
-        }
-      } catch {
-        location = null;
-      }
-    }
-
-    return { ipAddress, location };
+  const getIpAndLocation = async (): Promise<{ ipAddress: string | null; location: string | null }> => {
+    // Evitamos llamadas externas aquí para no frenar el inicio de sesión.
+    return { ipAddress: null, location: null };
   };
 
   const trackActiveSession = async (fallbackUserId?: string) => {
@@ -180,7 +154,12 @@ export function AuthPanel({
   };
 
   const resolveGuestDestination = () => {
-    if (!nextPath || nextPath === "/" || nextPath.startsWith("/login")) {
+    if (
+      !nextPath ||
+      nextPath === "/" ||
+      nextPath.startsWith("/login") ||
+      nextPath.startsWith("/admin")
+    ) {
       return "/my-dashboard";
     }
 
@@ -202,7 +181,6 @@ export function AuthPanel({
         }
 
         if (result?.success) {
-          void trackActiveSession(result.userId);
           onSuccess?.();
           const adminRoles = ["ADMIN", "SUPERADMIN"];
           const dest =
@@ -211,8 +189,11 @@ export function AuthPanel({
             adminRoles.includes(result.role)
               ? "/admin"
               : resolveGuestDestination();
-          router.push(dest);
-          router.refresh();
+
+          router.replace(dest);
+          window.setTimeout(() => {
+            void trackActiveSession(result.userId);
+          }, 0);
         }
 
         return;
@@ -239,10 +220,11 @@ export function AuthPanel({
       const loginResult = await signInWithEmail(email, password);
 
       if (loginResult?.success) {
-        void trackActiveSession(loginResult.userId);
         onSuccess?.();
-        router.push("/my-dashboard?tab=profile");
-        router.refresh();
+        router.replace("/my-dashboard?tab=profile");
+        window.setTimeout(() => {
+          void trackActiveSession(loginResult.userId);
+        }, 0);
       } else {
         setSuccess("¡Cuenta creada! Por favor inicia sesión.");
         setIsLogin(true);
