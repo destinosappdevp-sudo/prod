@@ -2,128 +2,38 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LogIn, Facebook, Instagram, MessageCircle, AtSign } from "lucide-react";
-
-const navLinks = [
-  { href: "/", label: "Inicio" },
-  { href: "/destinos", label: "Destinos" },
-  { href: "/socio-premium", label: "Ahorrar" },
-  { href: "/contacto", label: "Contacto" },
-];
+import { LogIn } from "lucide-react";
 
 function Navbar() {
-  const pathname = usePathname();
-  const isHomePage =
-    pathname === "/" ||
-    pathname === "/login" ||
-    pathname.startsWith("/my-dashboard") ||
-    pathname.startsWith("/auth/");
-
-  if (isHomePage) {
-    return (
-      <header className="w-full border-b border-[#e5e7eb] bg-[#f3f4f6] text-slate-900">
-        <div className="mx-auto flex h-[88px] max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-10">
-          <Link href="/" className="flex min-w-0 items-center gap-3 sm:gap-4">
-            <Image
-              src="/media/logo-destinos.webp"
-              alt="Logo Destinos"
-              width={48}
-              height={48}
-              className="h-[42px] w-[42px] rounded-full object-cover sm:h-[48px] sm:w-[48px]"
-              priority
-            />
-            <div className="min-w-0 leading-tight">
-              <p className="text-[20px] font-extrabold tracking-[-0.02em] text-[#111827] sm:text-[22px]">
-                Destino&apos;s
-              </p>
-              <p className="text-[12px] text-slate-600 sm:text-[13px]">
-                Tu aventura comienza aquí
-              </p>
-            </div>
-          </Link>
-
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 rounded-[16px] bg-[#E0AE33] px-4 py-2.5 text-sm font-bold text-white shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition hover:bg-[#cf9f2f] sm:px-6 sm:py-3 sm:text-[15px]"
-          >
-            <LogIn size={18} strokeWidth={2.2} />
-            Iniciar Sesión
-          </Link>
-        </div>
-      </header>
-    );
-  }
-
   return (
-    <header className="w-full border-b border-brand-blue bg-brand-blue text-white">
-      <div className="container mx-auto flex h-[84px] items-center justify-between px-4 sm:px-5 lg:px-10">
-        <Link href="/" className="shrink-0">
+    <header className="w-full border-b border-[#e5e7eb] bg-[#f3f4f6] text-slate-900">
+      <div className="mx-auto flex h-[88px] max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-10">
+        <Link href="/" className="flex min-w-0 items-center gap-3 sm:gap-4">
           <Image
             src="/media/logo-destinos.webp"
             alt="Logo Destinos"
-            width={128}
-            height={46}
-            className="h-auto w-[96px] sm:w-[108px] lg:w-[128px]"
+            width={48}
+            height={48}
+            className="h-[42px] w-[42px] rounded-full object-cover sm:h-[48px] sm:w-[48px]"
             priority
           />
+          <div className="min-w-0 leading-tight">
+            <p className="text-[20px] font-extrabold tracking-[-0.02em] text-[#111827] sm:text-[22px]">
+              Destino&apos;s
+            </p>
+            <p className="text-[12px] text-slate-600 sm:text-[13px]">
+              Tu aventura comienza aquí
+            </p>
+          </div>
         </Link>
 
-        <nav className="hidden items-center gap-10 lg:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`text-lg font-medium tracking-wide text-white/95 transition-colors hover:text-[#f0c85c] ${
-                link.href === "/" ? "border-b-2 border-[#f0c85c] pb-1" : ""
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="hidden items-center gap-4 lg:flex">
-          <div className="flex items-center gap-3 text-[#f0c85c]">
-            <a href="https://www.facebook.com/manueld3/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="transition-opacity hover:opacity-80">
-              <Facebook size={20} />
-            </a>
-            <a href="https://www.instagram.com/destinosvzla_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="transition-opacity hover:opacity-80">
-              <Instagram size={20} />
-            </a>
-            <a href="https://www.threads.com/@destinosvzla_" target="_blank" rel="noopener noreferrer" aria-label="Threads" className="transition-opacity hover:opacity-80">
-              <AtSign size={20} />
-            </a>
-            <a href="https://api.whatsapp.com/send/?phone=584245047025&text&type=phone_number&app_absent=0&utm_source=webdestinos" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="transition-opacity hover:opacity-80">
-              <MessageCircle size={20} />
-            </a>
-          </div>
-          <Link
-            href="/login"
-            className="rounded-full bg-[#f0c85c] px-6 py-2.5 text-base font-semibold text-white shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-colors hover:bg-[#ddb451]"
-          >
-            Iniciar sesión
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3 lg:hidden">
-          <Link
-            href="/login"
-            className="rounded-full bg-[#f0c85c] px-3 py-2 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(0,0,0,0.14)]"
-          >
-            Iniciar sesión
-          </Link>
-        </div>
-      </div>
-
-      <div className="border-t border-white/20 lg:hidden">
-        <nav className="container mx-auto flex items-center justify-between px-4 py-2 text-sm text-white/95 sm:px-5">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition-colors hover:text-[#f0c85c]">
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 rounded-[16px] bg-[#E0AE33] px-4 py-2.5 text-sm font-bold text-white shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition hover:bg-[#cf9f2f] sm:px-6 sm:py-3 sm:text-[15px]"
+        >
+          <LogIn size={18} strokeWidth={2.2} />
+          Iniciar Sesión
+        </Link>
       </div>
     </header>
   );
