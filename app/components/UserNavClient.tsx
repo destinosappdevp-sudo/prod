@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Menu, CircleUserRound, PiggyBank, ArrowRight } from "lucide-react";
+import { CircleUserRound, PiggyBank, ArrowRight } from "lucide-react";
 import { signOut } from "../action";
 import { AuthDialog } from "./AuthDialog";
 
@@ -82,19 +82,18 @@ export function UserNavClient({
         <DropdownMenuTrigger asChild>
           <button
             aria-label="Abrir menú"
-            className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-2.5 py-2 transition-shadow hover:shadow-md focus:outline-none"
+            className="flex items-center rounded-full bg-transparent transition-opacity hover:opacity-90 focus:outline-none"
           >
-            <Menu size={18} className="text-gray-700" strokeWidth={1.8} />
             {user ? (
               imgSrc ? (
                 <img
                   src={imgSrc}
                   alt="avatar"
                   onError={() => setImgSrc(null)}
-                  className="h-8 w-8 rounded-full border border-[#E0AE33]/30 bg-gray-100 object-cover"
+                  className="h-11 w-11 rounded-full border border-[#E0AE33]/30 bg-gray-100 object-cover"
                 />
               ) : (
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-xs font-bold text-[#8A6500]">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-sm font-bold text-[#8A6500]">
                   {userInitials}
                 </span>
               )
@@ -108,7 +107,7 @@ export function UserNavClient({
           {user ? (
             <>
               <DropdownMenuItem asChild className={menuItemClassName}>
-                <Link href="/favorites" className={menuItemContentClassName}>
+                <Link href="/my-dashboard?tab=mi-alcancia" className={menuItemContentClassName}>
                   <PiggyBank size={15} className="text-gray-500" />
                   Mis Ahorros
                 </Link>
@@ -123,7 +122,7 @@ export function UserNavClient({
               </DropdownMenuItem>
 
 <DropdownMenuItem asChild className={menuItemClassName}>
-                <Link href="/my-dashboard" className={menuItemContentClassName}>
+                <Link href={userRole === "ADMIN" || userRole === "SUPERADMIN" ? "/admin" : "/my-dashboard"} className={menuItemContentClassName}>
                   Escritorio
                 </Link>
               </DropdownMenuItem>
@@ -140,7 +139,7 @@ export function UserNavClient({
           ) : (
             <>
               <DropdownMenuItem asChild className={menuItemClassName}>
-                <Link href="/favorites" className={menuItemContentClassName}>
+                <Link href="/login?next=%2Fmy-dashboard%3Ftab%3Dmi-alcancia" className={menuItemContentClassName}>
                   <PiggyBank size={15} className="text-gray-500" />
                   Mis Ahorros
                 </Link>
