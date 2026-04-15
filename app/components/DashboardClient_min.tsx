@@ -297,18 +297,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
       {/* Main */}
       <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-8 lg:pt-8">
-        <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
-          <button
-            type="button"
-            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700"
-            onClick={() => setMobileMenuOpen((value) => !value)}
-          >
-            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          <div className="min-w-0 flex-1 px-3">
-            <p className="truncate text-sm font-semibold text-slate-900">{activeMenuLabel}</p>
-          </div>
+        <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-end rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
           <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-xs font-bold text-[#8A6500]">
             {props.profileImage ? (
               <Image

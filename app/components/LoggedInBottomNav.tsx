@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Compass, Home, PiggyBank, PlusCircle, User } from "lucide-react";
+import { Heart, Home, PiggyBank, PlusCircle, User } from "lucide-react";
 
 interface LoggedInBottomNavProps {
   isLoggedIn: boolean;
@@ -10,7 +10,7 @@ interface LoggedInBottomNavProps {
 
 const items = [
   { key: "home", label: "Inicio", href: "/", icon: Home },
-  { key: "explore", label: "Explorar", href: "/destinos", icon: Compass },
+  { key: "favorites", label: "Favoritos", href: "/my-dashboard?tab=favorites", icon: Heart },
   { key: "wallet", label: "Mi Alcancía", href: "/my-dashboard?tab=mi-alcancia", icon: PiggyBank },
   { key: "save", label: "Ahorrar", href: "/my-dashboard?tab=ahorrar", icon: PlusCircle },
   { key: "profile", label: "Perfil", href: "/my-dashboard?tab=profile", icon: User },
@@ -32,7 +32,7 @@ export default function LoggedInBottomNav({ isLoggedIn }: LoggedInBottomNavProps
           const Icon = item.icon;
           const isActive =
             (item.key === "home" && pathname === "/") ||
-            (item.key === "explore" && pathname.startsWith("/destinos")) ||
+            (item.key === "favorites" && pathname.startsWith("/my-dashboard") && activeTab === "favorites") ||
             (item.key === "wallet" && pathname.startsWith("/my-dashboard") && activeTab === "mi-alcancia") ||
             (item.key === "save" && pathname.startsWith("/my-dashboard") && activeTab === "ahorrar") ||
             (item.key === "profile" && pathname.startsWith("/my-dashboard") && activeTab === "profile");
