@@ -31,7 +31,7 @@ function Navbar() {
             />
             <div className="min-w-0 leading-tight">
               <p className="text-[20px] font-extrabold tracking-[-0.02em] text-[#111827] sm:text-[22px]">
-                Destino's
+                Destino&apos;s
               </p>
               <p className="text-[12px] text-slate-600 sm:text-[13px]">
                 Tu aventura comienza aquí
