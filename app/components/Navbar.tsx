@@ -14,7 +14,11 @@ const navLinks = [
 
 function Navbar() {
   const pathname = usePathname();
-  const isHomePage = pathname === "/";
+  const isHomePage =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname.startsWith("/my-dashboard") ||
+    pathname.startsWith("/auth/");
 
   if (isHomePage) {
     return (

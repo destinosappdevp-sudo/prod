@@ -20,14 +20,15 @@ export default function Footer() {
           </div>
 
           <div className="space-y-5 text-center">
-            <div className="flex flex-wrap items-center justify-center gap-8 text-lg font-medium text-white/95">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-white/95">
               <Link href="/terminos" className="transition-colors hover:text-[#f0c85c]">Términos y condiciones</Link>
               <Link href="/ayuda" className="transition-colors hover:text-[#f0c85c]">Preguntas Frecuentes</Link>
               <Link href="/privacidad" className="transition-colors hover:text-[#f0c85c]">Política de privacidad</Link>
+              <Link href="/contacto" className="transition-colors hover:text-[#f0c85c]">Contacto</Link>
             </div>
             <div className="mx-auto h-px w-full max-w-[560px] bg-white/45" />
-            <p className="text-2xl text-white/90">
-              © {currentYear} Destino&apos;s - Todos los derechos reservados.
+            <p className="text-xs text-white/80">
+              © {currentYear} Destino&apos;s - Todos los derechos reservados. Desarrollado Por FocusDev C.A
             </p>
           </div>
 
