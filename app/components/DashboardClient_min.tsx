@@ -165,6 +165,20 @@ export default function DashboardClient(props: DashboardClientProps) {
     role: "GUEST",
   };
 
+  const displayName = (
+    props.firstName ||
+    props.userName ||
+    props.userEmail?.split("@")[0] ||
+    "Viajero"
+  ).trim();
+  const firstDisplayName = displayName.split(" ")[0] || "Viajero";
+  const userInitials = (displayName || "V")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
+    .slice(0, 2) || "V";
+
   function statusLabel(status?: string | null) {
     switch (status) {
       case "CONFIRMED": return "Confirmada";
@@ -266,7 +280,32 @@ export default function DashboardClient(props: DashboardClientProps) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8 pb-24 lg:pb-8">
+      <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-8 lg:pt-8">
+        <div className="sticky top-3 z-20 mb-6 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-slate-500">Bienvenido,</p>
+              <h2 className="truncate text-xl font-bold text-slate-900 sm:text-2xl">
+                Hola, {firstDisplayName}! 🌴
+              </h2>
+            </div>
+            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-sm font-bold text-[#8A6500]">
+              {props.profileImage ? (
+                <Image
+                  src={props.profileImage}
+                  alt="Foto de perfil"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                userInitials
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard"}

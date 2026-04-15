@@ -43,6 +43,12 @@ export function UserNavClient({
     "rounded-lg px-4 py-3 text-sm font-medium text-gray-700 focus:bg-gray-50";
 
   const menuItemContentClassName = "flex w-full items-center gap-2 text-left";
+  const userInitials = (userName || "Usuario")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
+    .slice(0, 2) || "US";
 
   useEffect(() => {
     setImgSrc(userPicture || null);
@@ -66,31 +72,32 @@ export function UserNavClient({
         {!user && (
           <button
             onClick={openLoginDialog}
-            className="flex items-center gap-2 rounded-full bg-[#E1B042] hover:bg-[#C99A38] px-4 py-2 text-sm font-semibold text-white transition-colors"
+            className="flex items-center gap-2 rounded-full bg-[#E1B042] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#C99A38]"
           >
             <ArrowRight size={16} />
             Iniciar Sesión
           </button>
         )}
-        {user && (
-          <span className="hidden sm:block text-sm font-medium text-gray-700">
-            Hola, {(userName || "usuario").split(" ")[0]}
-          </span>
-        )}
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             aria-label="Abrir menú"
-            className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 transition-shadow hover:shadow-md focus:outline-none"
+            className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-2.5 py-2 transition-shadow hover:shadow-md focus:outline-none"
           >
             <Menu size={18} className="text-gray-700" strokeWidth={1.8} />
-            {user && imgSrc ? (
-              <img
-                src={imgSrc}
-                alt="avatar"
-                onError={() => setImgSrc(null)}
-                className="h-7 w-7 rounded-full border border-gray-200 bg-gray-100 object-cover"
-              />
+            {user ? (
+              imgSrc ? (
+                <img
+                  src={imgSrc}
+                  alt="avatar"
+                  onError={() => setImgSrc(null)}
+                  className="h-8 w-8 rounded-full border border-[#E0AE33]/30 bg-gray-100 object-cover"
+                />
+              ) : (
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-xs font-bold text-[#8A6500]">
+                  {userInitials}
+                </span>
+              )
             ) : (
               <CircleUserRound size={26} className="text-gray-500" strokeWidth={1.4} />
             )}

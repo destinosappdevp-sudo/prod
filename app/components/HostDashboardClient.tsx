@@ -182,6 +182,14 @@ export default function HostDashboardClient({
   const [searchTerm, setSearchTerm] = useState("");
   const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
   const [analyticsRange, setAnalyticsRange] = useState<"weekly" | "monthly">("weekly");
+  const displayName = (firstName || userName || userEmail?.split("@")[0] || "Anfitrión").trim();
+  const firstDisplayName = displayName.split(" ")[0] || "Anfitrión";
+  const userInitials = (displayName || "A")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
+    .slice(0, 2) || "A";
 
   // ── Modal Bloquear Fechas ─────────────────────────────────────────────────
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -594,28 +602,35 @@ export default function HostDashboardClient({
         </div>
       </aside>
 
-      <main className="flex-1 px-8 py-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard Anfitrión</h1>
-            <p className="text-sm text-slate-500">Gestiona tus propiedades y reservas</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input
-                type="text"
-                placeholder="Buscar..."
-                className="w-56 rounded-full border border-slate-200 bg-white px-9 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-200"
-              />
+      <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
+        <div className="sticky top-3 z-20 mb-6 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-slate-500">Bienvenido,</p>
+              <h1 className="truncate text-xl font-bold text-slate-900 sm:text-2xl">
+                Hola, {firstDisplayName}! 🌴
+              </h1>
             </div>
-            <button
-              type="button"
-              className="h-10 w-10 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-500"
-            >
-              <Bell size={18} />
-            </button>
+            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-sm font-bold text-[#8A6500]">
+              {profileImage && !profileImage.includes('avatar.vercel.sh') ? (
+                <Image
+                  src={profileImage}
+                  alt="avatar"
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                userInitials
+              )}
+            </div>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-slate-900">Dashboard Anfitrión</h2>
+          <p className="text-sm text-slate-500">Gestiona tus propiedades y reservas</p>
         </div>
 
         {activeTab === "dashboard" && (

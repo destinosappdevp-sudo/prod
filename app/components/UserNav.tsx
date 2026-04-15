@@ -9,14 +9,18 @@ async function UserNav() {
   
   let userRole: string | null = null;
   let userProfileImage: string | null = null;
+  let dbFirstName: string | null = null;
+  let dbLastName: string | null = null;
   
   if (user?.id) {
     const userRecord = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { role: true, profileImage: true },
+      select: { role: true, profileImage: true, firstName: true, lastName: true },
     });
     userRole = userRecord?.role || null;
     userProfileImage = userRecord?.profileImage || null;
+    dbFirstName = userRecord?.firstName || null;
+    dbLastName = userRecord?.lastName || null;
   }
   
   const isRealPhoto = (url?: string | null) => !!url && !url.includes('avatar.vercel.sh');
@@ -27,9 +31,11 @@ async function UserNav() {
     ? user!.user_metadata.avatar_url
     : null;
 
-  const userName = user?.user_metadata?.first_name ? 
-    `${user.user_metadata.first_name} ${user.user_metadata.last_name || ""}`.trim() :
-    user?.email?.split("@")[0];
+  const userName = dbFirstName
+    ? `${dbFirstName} ${dbLastName || ""}`.trim()
+    : user?.user_metadata?.first_name
+    ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ""}`.trim()
+    : user?.email?.split("@")[0];
 
   return (
     <UserNavClient

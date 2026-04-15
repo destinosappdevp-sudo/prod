@@ -16,6 +16,7 @@ export function AdminShell({ children, userName, role, headerRight }: AdminShell
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
+  const firstDisplayName = (userName || "usuario").trim().split(" ")[0] || "usuario";
 
   return (
     <div className="fixed inset-0 z-50 flex bg-gray-50">
@@ -37,7 +38,7 @@ export function AdminShell({ children, userName, role, headerRight }: AdminShell
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:ml-64">
-        <div className="sticky top-0 z-40 flex shrink-0 items-center gap-2 border-b bg-white px-4 py-3 md:px-8">
+        <div className="sticky top-0 z-40 flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:px-8">
           <button
             type="button"
             aria-expanded={mobileOpen}
@@ -48,7 +49,13 @@ export function AdminShell({ children, userName, role, headerRight }: AdminShell
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <div className="ml-auto flex flex-1 justify-end">{headerRight}</div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500">Bienvenido,</p>
+            <h2 className="truncate text-lg font-bold text-slate-900 md:text-2xl">
+              Hola, {firstDisplayName}! 🌴
+            </h2>
+          </div>
+          <div className="ml-auto flex items-center justify-end">{headerRight}</div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-8">{children}</div>
       </div>
