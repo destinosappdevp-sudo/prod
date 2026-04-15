@@ -13,6 +13,8 @@ import {
   PiggyBank,
   PlusCircle,
   Smartphone,
+  Menu,
+  X,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import ProfileEditClient from "@/app/components/ProfileEditClient";
@@ -89,6 +91,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const previewBs =
     amountUsd && props.bcvRate && props.bcvRate > 0
@@ -211,11 +214,21 @@ export default function DashboardClient(props: DashboardClientProps) {
     { key: "ahorrar",      label: "Ahorrar",        icon: PlusCircle },
     { key: "profile",      label: "Perfil",         icon: User },
   ];
+  const activeMenuLabel = menuItems.find((item) => item.key === activeTab)?.label || "Mi Escritorio";
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar — solo visible en desktop (lg+) */}
-      <aside className="hidden lg:flex w-64 bg-brand-blue text-white flex-col">
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Cerrar menú"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-brand-blue text-white transition-transform duration-200 lg:static lg:w-64 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="px-6 py-6 border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center text-lg font-bold">D</div>
@@ -234,7 +247,10 @@ export default function DashboardClient(props: DashboardClientProps) {
               <button
                 key={item.key}
                 type="button"
-                onClick={() => setActiveTab(item.key)}
+                onClick={() => {
+                  setActiveTab(item.key);
+                  setMobileMenuOpen(false);
+                }}
                 className={`flex items-center gap-3 text-left transition-colors ${
                   isActive ? "text-white" : "text-white/70 hover:text-white"
                 }`}
@@ -281,28 +297,31 @@ export default function DashboardClient(props: DashboardClientProps) {
 
       {/* Main */}
       <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-8 lg:pt-8">
-        <div className="sticky top-3 z-20 mb-6 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-500">Bienvenido,</p>
-              <h2 className="truncate text-xl font-bold text-slate-900 sm:text-2xl">
-                Hola, {firstDisplayName}! 🌴
-              </h2>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-sm font-bold text-[#8A6500]">
-              {props.profileImage ? (
-                <Image
-                  src={props.profileImage}
-                  alt="Foto de perfil"
-                  width={44}
-                  height={44}
-                  className="h-full w-full object-cover"
-                  unoptimized
-                />
-              ) : (
-                userInitials
-              )}
-            </div>
+        <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
+          <button
+            type="button"
+            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700"
+            onClick={() => setMobileMenuOpen((value) => !value)}
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <div className="min-w-0 flex-1 px-3">
+            <p className="truncate text-sm font-semibold text-slate-900">{activeMenuLabel}</p>
+          </div>
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-xs font-bold text-[#8A6500]">
+            {props.profileImage ? (
+              <Image
+                src={props.profileImage}
+                alt="Foto de perfil"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+                unoptimized
+              />
+            ) : (
+              userInitials
+            )}
           </div>
         </div>
 
@@ -661,8 +680,8 @@ export default function DashboardClient(props: DashboardClientProps) {
         )}
       </main>
 
-      {/* Bottom navigation — solo visible en mobile y tablet (oculto en lg+) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+      {/* Bottom navigation — siempre visible para usuarios logueados */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
         <div className="flex items-center justify-around h-16">
           {menuItems.map((item) => {
             const Icon = item.icon;
