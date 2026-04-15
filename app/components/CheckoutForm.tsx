@@ -12,11 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Smartphone } from "lucide-react";
+import { CheckCircle2, Circle, PiggyBank, Smartphone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BANKS } from "@/app/lib/paymentBanks";
 
-type PaymentMethod = "PAGO_MOVIL";
+type CheckoutMode = "DIRECT" | "MIXED" | "SAVINGS";
 
 interface CheckoutFormProps {
   homeId: string;
@@ -29,6 +29,11 @@ interface CheckoutFormProps {
   total: number;
   bcvRate: number;
   totalBs: number;
+  savingsTotalUsd: number;
+}
+
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
 export default function CheckoutForm({
@@ -42,9 +47,9 @@ export default function CheckoutForm({
   total,
   bcvRate,
   totalBs,
+  savingsTotalUsd,
 }: CheckoutFormProps) {
   const router = useRouter();
-  const [selectedMethod] = useState<PaymentMethod>("PAGO_MOVIL");
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     phoneNumber: "",
@@ -53,7 +58,18 @@ export default function CheckoutForm({
     referenceNumber: "",
   });
 
+  const availableSavingsUsd = roundMoney(Math.max(0, savingsTotalUsd || 0));
   const hasValidBcvRate = Number.isFinite(bcvRate) && bcvRate > 0;
+  const savingsAppliedUsd = roundMoney(Math.min(availableSavingsUsd, total));
+  const savingsAppliedBs = hasValidBcvRate ? roundMoney(savingsAppliedUsd * bcvRate) : 0;
+  const externalDueUsd = roundMoney(Math.max(0, total - savingsAppliedUsd));
+  const externalDueBs = hasValidBcvRate ? roundMoney(Math.max(0, totalBs - savingsAppliedBs)) : 0;
+  const canPayWithSavingsOnly = availableSavingsUsd >= total;
+  const canUseMixed = savingsAppliedUsd > 0 && externalDueUsd > 0;
+
+  const [selectedMode, setSelectedMode] = useState<CheckoutMode>(
+    canPayWithSavingsOnly ? "SAVINGS" : canUseMixed ? "MIXED" : "DIRECT"
+  );
 
   const normalizePhone = (value: string) => {
     const hasLeadingPlus = value.startsWith("+");
@@ -67,15 +83,27 @@ export default function CheckoutForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const requiresPagoMovil = selectedMode !== "SAVINGS";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!hasValidBcvRate) {
+    if (requiresPagoMovil && !hasValidBcvRate) {
       alert("No hay tasa BCV válida configurada para procesar este pago.");
       return;
     }
 
-    if (!phoneValid) {
+    if (selectedMode === "SAVINGS" && !canPayWithSavingsOnly) {
+      alert("No tienes saldo suficiente en tu alcancía para cubrir este paquete.");
+      return;
+    }
+
+    if (selectedMode === "MIXED" && !canUseMixed) {
+      alert("No tienes saldo suficiente en tu alcancía para hacer un pago mixto.");
+      return;
+    }
+
+    if (requiresPagoMovil && !phoneValid) {
       alert("Ingresa un número de teléfono válido (solo dígitos, puede iniciar con +, entre 7 y 14 caracteres).");
       return;
     }
@@ -97,7 +125,8 @@ export default function CheckoutForm({
           totalAmount: subtotal,
           totalAmountBs: totalBs,
           bcvRateUsed: bcvRate,
-          paymentMethod: selectedMethod,
+          paymentMethod: "PAGO_MOVIL",
+          checkoutMode: selectedMode,
           paymentDetails: formData,
         }),
       });
@@ -119,98 +148,186 @@ export default function CheckoutForm({
     }
   };
 
+  const optionClass = (mode: CheckoutMode, enabled = true) =>
+    `w-full rounded-2xl border p-4 text-left transition ${
+      selectedMode === mode ? "border-slate-900 bg-white shadow-sm" : "border-slate-200 bg-white"
+    } ${enabled ? "cursor-pointer" : "cursor-not-allowed opacity-70"}`;
+
   return (
     <form onSubmit={handleSubmit}>
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-6">Como quieres pagar</h2>
+        <h2 className="mb-6 text-xl font-semibold">Método de Pago</h2>
 
-        <div className="mb-6">
-          <div className="w-full flex items-center justify-between p-4 rounded-lg border-2 border-orange-500 bg-orange-50">
-            <div className="flex items-center gap-3">
-              <Smartphone size={20} className="text-gray-600" />
-              <span className="font-medium">Pago Movil</span>
+        <div className="mb-6 space-y-4">
+          <button
+            type="button"
+            onClick={() => canPayWithSavingsOnly && setSelectedMode("SAVINGS")}
+            className={optionClass("SAVINGS", canPayWithSavingsOnly)}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                {selectedMode === "SAVINGS" ? (
+                  <CheckCircle2 size={22} className="mt-0.5 text-slate-900" />
+                ) : (
+                  <Circle size={22} className="mt-0.5 text-slate-300" />
+                )}
+                <div>
+                  <p className="text-xl font-semibold text-slate-900">Saldo de Ahorros</p>
+                  <p className="text-sm text-slate-600">Disponible: ${availableSavingsUsd.toFixed(2)}</p>
+                  {!canPayWithSavingsOnly && (
+                    <p className="mt-2 text-sm text-red-500">Saldo insuficiente</p>
+                  )}
+                </div>
+              </div>
+              {canPayWithSavingsOnly && (
+                <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
+                  Recomendado
+                </span>
+              )}
             </div>
-            <div className="w-5 h-5 rounded-full border-2 border-orange-500 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-            </div>
-          </div>
+          </button>
 
-          <div className="mt-3 p-4 bg-gray-50 rounded-lg space-y-4">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold mb-2 text-sm">Informacion del receptor</h3>
-              <div className="space-y-1 text-xs">
-                <p><span className="font-medium">Banco:</span> 0102 - Banco de Venezuela</p>
-                <p><span className="font-medium">Telefono:</span> 0414-1234567</p>
-                <p><span className="font-medium">Cedula:</span> V-12345678</p>
-                <p><span className="font-medium">Monto a pagar:</span> {hasValidBcvRate ? `Bs ${totalBs.toFixed(2)}` : "No disponible"}</p>
-                <p><span className="font-medium">Tasa BCV:</span> {hasValidBcvRate ? `Bs ${bcvRate.toFixed(6)} por USD` : "No disponible"}</p>
+          <button
+            type="button"
+            onClick={() => canUseMixed && setSelectedMode("MIXED")}
+            className={optionClass("MIXED", canUseMixed)}
+          >
+            <div className="flex items-start gap-3">
+              {selectedMode === "MIXED" ? (
+                <CheckCircle2 size={22} className="mt-0.5 text-slate-900" />
+              ) : (
+                <Circle size={22} className="mt-0.5 text-slate-300" />
+              )}
+              <div>
+                <p className="text-xl font-semibold text-slate-900">Pago Mixto</p>
+                <p className="text-sm text-slate-600">
+                  Usa tus ${savingsAppliedUsd.toFixed(2)} y paga la diferencia
+                </p>
+                {canUseMixed && hasValidBcvRate && (
+                  <p className="mt-2 text-sm text-slate-500">
+                    Restante por Pago Móvil: Bs {externalDueBs.toFixed(2)}
+                  </p>
+                )}
               </div>
             </div>
+          </button>
 
-            <div>
-              <Label htmlFor="emisorBank">Tu Banco Emisor</Label>
-              <Select
-                value={formData.emisorBank}
-                onValueChange={(value) => handleInputChange("emisorBank", value)}
-                required
-              >
-                <SelectTrigger id="emisorBank">
-                  <SelectValue placeholder="Seleccionar..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {BANKS.map((bank) => (
-                    <SelectItem key={bank.value} value={bank.value}>
-                      {bank.code} - {bank.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <button
+            type="button"
+            onClick={() => setSelectedMode("DIRECT")}
+            className={optionClass("DIRECT")}
+          >
+            <div className="flex items-start gap-3">
+              {selectedMode === "DIRECT" ? (
+                <CheckCircle2 size={22} className="mt-0.5 text-slate-900" />
+              ) : (
+                <Circle size={22} className="mt-0.5 text-slate-300" />
+              )}
+              <div>
+                <p className="text-xl font-semibold text-slate-900">Pago Directo</p>
+                <p className="text-sm text-slate-600">Pago Móvil, Zelle o Transferencia</p>
+              </div>
             </div>
+          </button>
 
-            <div>
-              <Label
-                htmlFor="phoneNumber"
-                className={formData.phoneNumber && !phoneValid ? "text-red-600" : undefined}
-              >
-                Tu Teléfono
-              </Label>
-              <Input
-                id="phoneNumber"
-                type="tel"
-                inputMode="tel"
-                maxLength={14}
-                pattern="^\+?\d{7,14}$"
-                title="Solo números y + al inicio, entre 7 y 14 caracteres"
-                placeholder={formData.phoneNumber && !phoneValid ? "Ej: +584141234567 (solo números)" : "+584141234567"}
-                value={formData.phoneNumber}
-                onChange={(e) =>
-                  handleInputChange("phoneNumber", normalizePhone(e.target.value))
-                }
-                required
-                className={formData.phoneNumber && !phoneValid ? "border-red-300 placeholder:text-red-500 focus-visible:ring-red-400" : undefined}
-              />
-            </div>
+          {selectedMode !== "SAVINGS" && (
+            <div className="space-y-4 rounded-2xl bg-gray-50 p-4">
+              <div className="rounded-lg bg-blue-50 p-3">
+                <h3 className="mb-2 text-sm font-semibold">Información del receptor</h3>
+                <div className="space-y-1 text-xs">
+                  <p><span className="font-medium">Banco:</span> 0102 - Banco de Venezuela</p>
+                  <p><span className="font-medium">Teléfono:</span> 0414-1234567</p>
+                  <p><span className="font-medium">Cédula:</span> V-12345678</p>
+                  <p>
+                    <span className="font-medium">Monto a pagar:</span>{" "}
+                    {hasValidBcvRate
+                      ? `Bs ${(selectedMode === "MIXED" ? externalDueBs : totalBs).toFixed(2)}`
+                      : "No disponible"}
+                  </p>
+                  <p><span className="font-medium">Tasa BCV:</span> {hasValidBcvRate ? `Bs ${bcvRate.toFixed(6)} por USD` : "No disponible"}</p>
+                  {selectedMode === "MIXED" && (
+                    <div className="mt-2 rounded-lg bg-white p-3 text-slate-700">
+                      <p className="flex items-center gap-2 font-medium">
+                        <PiggyBank size={14} /> Se aplicarán ${savingsAppliedUsd.toFixed(2)} de tu alcancía
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <div>
-              <Label htmlFor="referenceNumber">Número de referencia</Label>
-              <Input
-                id="referenceNumber"
-                type="text"
-                placeholder="123456"
-                value={formData.referenceNumber}
-                onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
-                required
-              />
+              <div>
+                <Label htmlFor="emisorBank">Tu Banco Emisor</Label>
+                <Select
+                  value={formData.emisorBank}
+                  onValueChange={(value) => handleInputChange("emisorBank", value)}
+                  required={requiresPagoMovil}
+                >
+                  <SelectTrigger id="emisorBank">
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BANKS.map((bank) => (
+                      <SelectItem key={bank.value} value={bank.value}>
+                        {bank.code} - {bank.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="phoneNumber"
+                  className={formData.phoneNumber && !phoneValid ? "text-red-600" : undefined}
+                >
+                  Tu Teléfono
+                </Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  inputMode="tel"
+                  maxLength={14}
+                  pattern="^\+?\d{7,14}$"
+                  title="Solo números y + al inicio, entre 7 y 14 caracteres"
+                  placeholder={formData.phoneNumber && !phoneValid ? "Ej: +584141234567 (solo números)" : "+584141234567"}
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleInputChange("phoneNumber", normalizePhone(e.target.value))}
+                  required={requiresPagoMovil}
+                  className={formData.phoneNumber && !phoneValid ? "border-red-300 placeholder:text-red-500 focus-visible:ring-red-400" : undefined}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="referenceNumber">Número de referencia</Label>
+                <Input
+                  id="referenceNumber"
+                  type="text"
+                  placeholder="123456"
+                  value={formData.referenceNumber}
+                  onChange={(e) => handleInputChange("referenceNumber", e.target.value)}
+                  required={requiresPagoMovil}
+                />
+              </div>
             </div>
-          </div>
+          )}
+
+          {selectedMode === "SAVINGS" && (
+            <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800">
+              Se debitará el total del paquete desde tu alcancía y la reserva quedará confirmada al instante.
+            </div>
+          )}
         </div>
 
-        <Button type="submit" className="w-full mt-6" disabled={loading || !hasValidBcvRate}>
-          {loading ? "Procesando..." : "Confirmar y pagar"}
+        <Button
+          type="submit"
+          className="mt-6 w-full"
+          disabled={loading || (requiresPagoMovil && !hasValidBcvRate)}
+        >
+          {loading ? "Procesando..." : selectedMode === "SAVINGS" ? "Confirmar con ahorros" : "Confirmar pago"}
         </Button>
 
-        {!hasValidBcvRate && (
-          <p className="text-xs text-red-500 mt-3">
+        {!hasValidBcvRate && requiresPagoMovil && (
+          <p className="mt-3 text-xs text-red-500">
             No se puede procesar el pago porque falta la tasa BCV del día.
           </p>
         )}

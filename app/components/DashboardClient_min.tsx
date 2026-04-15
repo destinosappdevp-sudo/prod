@@ -212,7 +212,7 @@ export default function DashboardClient(props: DashboardClientProps) {
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1">
+        <nav className="flex-1 px-6 py-6 space-y-4">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.key;
@@ -221,8 +221,8 @@ export default function DashboardClient(props: DashboardClientProps) {
                 key={item.key}
                 type="button"
                 onClick={() => setActiveTab(item.key)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition ${
-                  isActive ? "bg-orange-500 text-white" : "text-white/70 hover:bg-white/10 hover:text-primary"
+                className={`flex items-center gap-3 text-left transition-colors ${
+                  isActive ? "text-white" : "text-white/70 hover:text-white"
                 }`}
               >
                 <Icon size={18} />

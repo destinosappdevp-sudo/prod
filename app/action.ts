@@ -4,15 +4,11 @@ import { redirect } from "next/navigation";
 import prisma from "./lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { headers } from "next/headers";
-import { randomUUID } from "crypto";
-import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
-import { generateWelcomeEmail } from "@/app/lib/email-templates";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
 import {
   ensureAtLeastOneSuperadmin,
   getRoleForNewUserBootstrap,
 } from "@/app/lib/user-role-bootstrap";
-import { optimizeImageForUpload } from "@/app/lib/image-upload";
 import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
@@ -64,6 +60,11 @@ function validateRegistrationProfile(profile: RegistrationProfile) {
 }
 
 async function sendWelcomeEmail(email: string) {
+  const [{ getResendClient, FROM_EMAIL }, { generateWelcomeEmail }] = await Promise.all([
+    import("@/app/lib/resend"),
+    import("@/app/lib/email-templates"),
+  ]);
+
   const resend = getResendClient();
 
   if (!resend) {
@@ -446,6 +447,8 @@ export async function createDescription(formData: FormData) {
   const roomsNumber = formData.get("rooms") as string;
   const bathroomsNumber = formData.get("bathrooms") as string;
 
+  const { optimizeImageForUpload } = await import("@/app/lib/image-upload");
+
   const optimizedImage = await optimizeImageForUpload(imageFiles, {
     maxWidth: 1920,
     maxHeight: 1920,
@@ -674,6 +677,15 @@ export async function updateProfile(formData: FormData) {
     let document2ImageUrl =
       (formData.get("currentDocument2Image") as string) || currentUser?.document2Image || null;
 
+    const requiresImageOptimization =
+      (profileImageFile && profileImageFile.size > 0) ||
+      (document1File && document1File.size > 0) ||
+      (document2File && document2File.size > 0);
+
+    const { optimizeImageForUpload } = requiresImageOptimization
+      ? await import("@/app/lib/image-upload")
+      : { optimizeImageForUpload: null as any };
+
     // Si hay una nueva foto, subirla a Supabase Storage
     if (profileImageFile && profileImageFile.size > 0) {
       const optimizedProfileImage = await optimizeImageForUpload(profileImageFile, {
@@ -792,7 +804,7 @@ export async function logAuditAction(
 
     await prisma.auditLog.create({
       data: {
-        id: randomUUID(),
+        id: crypto.randomUUID(),
         userId,
         action,
         details: details || undefined,
@@ -836,7 +848,7 @@ export async function updateNotificationPreferences(
         updatedAt: new Date(),
       },
       create: {
-        id: randomUUID(),
+        id: crypto.randomUUID(),
         userId,
         emailOnReservation: preferences.emailOnReservation ?? true,
         emailOnReview: preferences.emailOnReview ?? true,
@@ -868,7 +880,7 @@ export async function getNotificationPreferences(userId: string) {
       // Create default preferences if not exists
       return await prisma.notificationPreferences.create({
         data: {
-          id: randomUUID(),
+          id: crypto.randomUUID(),
           userId,
           emailOnReservation: true,
           emailOnReview: true,
@@ -909,7 +921,7 @@ export async function sendMessage(
 
     const message = await prisma.message.create({
       data: {
-        id: randomUUID(),
+        id: crypto.randomUUID(),
         senderId,
         recipientId,
         content: content.trim(),

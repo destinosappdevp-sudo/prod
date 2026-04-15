@@ -113,9 +113,15 @@ export default async function CheckoutPage({
     },
   });
 
+  const savingsAggregate = await (prisma as any).saving.aggregate({
+    where: { userId: user.id },
+    _sum: { amountUsd: true },
+  });
+
   const bcvRate = platformConfig?.bcvRate ? Number(platformConfig.bcvRate) : 0;
   const hasValidBcvRate = Number.isFinite(bcvRate) && bcvRate > 0;
   const totalBs = hasValidBcvRate ? Number((total * bcvRate).toFixed(2)) : 0;
+  const savingsTotalUsd = Number((savingsAggregate?._sum?.amountUsd ?? 0).toFixed(2));
   const bcvRateDateLabel = platformConfig?.bcvRateDate
     ? new Date(platformConfig.bcvRateDate).toLocaleDateString("es-VE")
     : null;
@@ -255,6 +261,7 @@ export default async function CheckoutPage({
           total={total}
           bcvRate={bcvRate}
           totalBs={totalBs}
+          savingsTotalUsd={savingsTotalUsd}
         />
       </div>
     </div>

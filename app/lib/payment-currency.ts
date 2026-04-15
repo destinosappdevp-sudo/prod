@@ -26,6 +26,38 @@ export type ParsedPaymentFinancials = {
   paymentDate: string | null;
 };
 
+export function getPaymentMethodLabel(
+  method?: string | null,
+  paymentDetails?: unknown
+): string {
+  const details = getDetailsObject(paymentDetails);
+  const checkoutMode = typeof details?.checkoutMode === "string" ? details.checkoutMode : null;
+  const explicitLabel =
+    typeof details?.displayMethodLabel === "string" ? details.displayMethodLabel : null;
+
+  if (checkoutMode === "SAVINGS") {
+    return "Saldo de Ahorros";
+  }
+
+  if (checkoutMode === "MIXED") {
+    return "Pago Mixto";
+  }
+
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  const methods: Record<string, string> = {
+    PAGO_MOVIL: "Pago Móvil",
+    ZELLE: "Zelle",
+    ZILLI: "Zilli",
+    TARJETA_INTERNACIONAL: "Tarjeta Internacional",
+    TRANSFERENCIA_BANCARIA: "Transferencia Bancaria",
+  };
+
+  return method ? methods[method] || method : "-";
+}
+
 function toNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;

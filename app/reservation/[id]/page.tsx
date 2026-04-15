@@ -4,6 +4,7 @@ import prisma from "@/app/lib/db";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
+import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
 
 const supabaseImagesBase = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images`
@@ -370,7 +371,10 @@ export default async function ReservationDetailPage({
                       Método de Pago
                     </p>
                     <p className="font-semibold">
-                      {reservation.Payment.paymentMethod.replace(/_/g, " ")}
+                      {getPaymentMethodLabel(
+                        reservation.Payment.paymentMethod,
+                        reservation.Payment.paymentDetails
+                      )}
                     </p>
                   </div>
                   <div>

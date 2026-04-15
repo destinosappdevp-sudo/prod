@@ -14,7 +14,7 @@ export default function LoginPage() {
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/";
+  const nextPath = searchParams.get("next") || "/my-dashboard";
   const initialMode = searchParams.get("mode") === "register" ? "register" : "login";
   const initialRole = "GUEST";
 

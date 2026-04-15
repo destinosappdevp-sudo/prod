@@ -37,6 +37,7 @@ import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { ArrowLeft, Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
 
 const prismaAny = prisma as any;
 
@@ -281,13 +282,6 @@ export default async function PropertyDetailPage({
             <div className="space-y-3">
               {property.Reservation.map((reservation: Reservation) => {
                 const payment = reservation.Payment;
-                const paymentMethodLabels: Record<string, string> = {
-                  PAGO_MOVIL: "Pago Móvil",
-                  ZELLE: "Zelle",
-                  ZILLI: "Zilli",
-                  INTERNATIONAL_CARD: "Tarjeta Internacional",
-                  BANK_TRANSFER: "Transferencia Bancaria",
-                };
                 
                 const reservationStatusColors: Record<string, string> = {
                   PENDING: "bg-yellow-100 text-yellow-800",
@@ -332,7 +326,7 @@ export default async function PropertyDetailPage({
                       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">
-                            Método: <span className="font-medium text-gray-900">{paymentMethodLabels[payment.paymentMethod as string] || payment.paymentMethod}</span>
+                            Método: <span className="font-medium text-gray-900">{getPaymentMethodLabel(payment.paymentMethod, (payment as any).paymentDetails)}</span>
                           </p>
                           {payment.referenceNumber && (
                             <p className="text-xs text-gray-500">

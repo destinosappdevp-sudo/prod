@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Mail } from "lucide-react";
+import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
 
 interface ActiveReservationsTableProps {
   reservations: any[];
@@ -66,17 +67,6 @@ export function ActiveReservationsTable({ reservations }: ActiveReservationsTabl
       usdLabel: usdAmount !== null ? formatUsd(usdAmount) : "-",
       bsLabel: bsAmount !== null ? formatBs(bsAmount) : null,
     };
-  };
-
-  const getPaymentMethodLabel = (method: string): string => {
-    const methods: Record<string, string> = {
-      PAGO_MOVIL: "Pago Móvil",
-      ZELLE: "Zelle",
-      ZILLI: "Zilli",
-      TARJETA_INTERNACIONAL: "Tarjeta Internacional",
-      TRANSFERENCIA_BANCARIA: "Transferencia Bancaria",
-    };
-    return methods[method] || method;
   };
 
   const getStatusBadge = (status: string) => {
@@ -203,7 +193,10 @@ export function ActiveReservationsTable({ reservations }: ActiveReservationsTabl
                 <td className="px-3 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
                     {reservation.Payment
-                      ? getPaymentMethodLabel(reservation.Payment.paymentMethod)
+                      ? getPaymentMethodLabel(
+                          reservation.Payment.paymentMethod,
+                          reservation.Payment.paymentDetails
+                        )
                       : "N/A"}
                   </div>
                   {reservation.Payment?.referenceNumber && (

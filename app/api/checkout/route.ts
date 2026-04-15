@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { currencyForPaymentMethod } from "@/app/lib/payment-currency";
 
+type CheckoutMode = "DIRECT" | "MIXED" | "SAVINGS";
+
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -23,10 +29,16 @@ export async function POST(request: Request) {
     const guests = Number(body?.guests ?? 1);
     const paymentMethod =
       typeof body?.paymentMethod === "string" ? body.paymentMethod : "";
+    const checkoutModeRaw =
+      typeof body?.checkoutMode === "string" ? body.checkoutMode : "DIRECT";
     const paymentDetailsRaw =
       body?.paymentDetails && typeof body.paymentDetails === "object"
         ? body.paymentDetails
         : {};
+    const checkoutMode: CheckoutMode =
+      checkoutModeRaw === "MIXED" || checkoutModeRaw === "SAVINGS"
+        ? checkoutModeRaw
+        : "DIRECT";
 
     const validPaymentMethods = new Set([
       "PAGO_MOVIL",
@@ -140,26 +152,24 @@ export async function POST(request: Request) {
       console.warn("No se pudo leer PlatformConfig en checkout:", configError);
     }
 
-    const paymentCurrency = currencyForPaymentMethod(paymentMethod);
+    const hasValidBcvRate = Number.isFinite(bcvRate) && bcvRate > 0;
 
-    if (paymentCurrency === "VES" && (!Number.isFinite(bcvRate) || bcvRate <= 0)) {
+    if (checkoutMode !== "SAVINGS" && !hasValidBcvRate) {
       return NextResponse.json(
         { error: "No hay tasa BCV del día configurada para procesar el pago" },
         { status: 400 }
       );
     }
 
+    const paymentCurrency = checkoutMode === "SAVINGS" ? "USD" : currencyForPaymentMethod(paymentMethod);
+
     const subtotalUsd = home.price * calculatedNights * guests;
     const serviceFeeUsd = subtotalUsd * (commissionPercent / 100);
     const totalAmountUsd = subtotalUsd; // El huésped paga solo el subtotal
 
-    const subtotalBs = Number((subtotalUsd * bcvRate).toFixed(2));
-    const serviceFeeBs = Number((serviceFeeUsd * bcvRate).toFixed(2));
-    const totalAmountBs = Number((totalAmountUsd * bcvRate).toFixed(2));
-
-    const paymentSubtotal = paymentCurrency === "VES" ? subtotalBs : subtotalUsd;
-    const paymentServiceFee = paymentCurrency === "VES" ? serviceFeeBs : serviceFeeUsd;
-    const paymentAmount = paymentCurrency === "VES" ? totalAmountBs : totalAmountUsd;
+    const subtotalBs = hasValidBcvRate ? Number((subtotalUsd * bcvRate).toFixed(2)) : 0;
+    const serviceFeeBs = hasValidBcvRate ? Number((serviceFeeUsd * bcvRate).toFixed(2)) : 0;
+    const totalAmountBs = hasValidBcvRate ? Number((totalAmountUsd * bcvRate).toFixed(2)) : 0;
 
     // Verificar disponibilidad (reservas activas + fechas bloqueadas por el host)
     const [conflictingReservationsCount, conflictingBlockedCount] = await Promise.all([
@@ -205,22 +215,92 @@ export async function POST(request: Request) {
         ? paymentDetailsInput.referenceNumber
         : null;
 
+    if (checkoutMode !== "SAVINGS") {
+      if (!emisorBank || !phoneNumber || !referenceNumber) {
+        return NextResponse.json(
+          { error: "Completa los datos de Pago Móvil para continuar" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const savingsSummary = await prisma.saving.aggregate({
+      where: { userId },
+      _sum: { amountUsd: true },
+    });
+    const availableSavingsUsd = roundMoney(Number(savingsSummary._sum.amountUsd ?? 0));
+    const savingsAppliedUsd =
+      checkoutMode === "DIRECT"
+        ? 0
+        : roundMoney(Math.min(Math.max(availableSavingsUsd, 0), totalAmountUsd));
+    const externalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - savingsAppliedUsd));
+    const savingsAppliedBs = hasValidBcvRate ? roundMoney(savingsAppliedUsd * bcvRate) : 0;
+    const externalAmountBs = hasValidBcvRate ? roundMoney(externalAmountUsd * bcvRate) : 0;
+
+    if (checkoutMode === "SAVINGS" && savingsAppliedUsd < totalAmountUsd) {
+      return NextResponse.json(
+        { error: "No tienes saldo suficiente en tu alcancía para cubrir este paquete" },
+        { status: 400 }
+      );
+    }
+
+    if (checkoutMode === "MIXED" && savingsAppliedUsd <= 0) {
+      return NextResponse.json(
+        { error: "No tienes saldo disponible para un pago mixto" },
+        { status: 400 }
+      );
+    }
+
     const paymentDetails = {
       ...paymentDetailsInput,
       currency: paymentCurrency,
+      checkoutMode,
+      displayMethodLabel:
+        checkoutMode === "SAVINGS"
+          ? "Saldo de Ahorros"
+          : checkoutMode === "MIXED"
+          ? "Pago Mixto"
+          : "Pago Móvil",
       amountUsd: Number(totalAmountUsd.toFixed(2)),
       amountBs: totalAmountBs,
       subtotalUsd: Number(subtotalUsd.toFixed(2)),
       subtotalBs,
       serviceFeeUsd: Number(serviceFeeUsd.toFixed(2)),
       serviceFeeBs,
-      bcvRateUsed: Number(bcvRate.toFixed(8)),
+      savingsAppliedUsd,
+      savingsAppliedBs,
+      externalAmountUsd,
+      externalAmountBs,
+      receiverMethod: checkoutMode === "SAVINGS" ? null : paymentMethod,
+      bcvRateUsed: hasValidBcvRate ? Number(bcvRate.toFixed(8)) : null,
       bcvRateDate: bcvRateDate ? bcvRateDate.toISOString() : null,
       paymentDate: new Date().toISOString(),
     };
 
     // Crear la reserva y el pago en una transacción
     const result = await prisma.$transaction(async (tx: any) => {
+      const txSavingsSummary = await tx.saving.aggregate({
+        where: { userId },
+        _sum: { amountUsd: true },
+      });
+      const txAvailableSavingsUsd = roundMoney(Number(txSavingsSummary._sum.amountUsd ?? 0));
+      const txSavingsAppliedUsd =
+        checkoutMode === "DIRECT"
+          ? 0
+          : roundMoney(Math.min(Math.max(txAvailableSavingsUsd, 0), totalAmountUsd));
+
+      if (checkoutMode === "SAVINGS" && txSavingsAppliedUsd < totalAmountUsd) {
+        throw new Error("Saldo insuficiente en ahorros para completar la reserva");
+      }
+
+      if (checkoutMode === "MIXED" && txSavingsAppliedUsd <= 0) {
+        throw new Error("No hay saldo disponible para aplicar a este pago mixto");
+      }
+
+      const txExternalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - txSavingsAppliedUsd));
+      const txSavingsAppliedBs = hasValidBcvRate ? roundMoney(txSavingsAppliedUsd * bcvRate) : 0;
+      const txExternalAmountBs = hasValidBcvRate ? roundMoney(txExternalAmountUsd * bcvRate) : 0;
+
       // Crear la reserva
       const reservation = await tx.reservation.create({
         data: {
@@ -230,7 +310,7 @@ export async function POST(request: Request) {
           endDate: end,
           nights: calculatedNights,
           totalAmount: totalAmountUsd,
-          status: "PENDING",
+          status: checkoutMode === "SAVINGS" ? "CONFIRMED" : "PENDING",
         },
       });
 
@@ -238,19 +318,45 @@ export async function POST(request: Request) {
       const payment = await tx.payment.create({
         data: {
           reservationId: reservation.id,
-          amount: paymentAmount,
-          subtotal: paymentSubtotal,
-          serviceFee: paymentServiceFee,
+          amount: paymentCurrency === "VES" ? totalAmountBs : totalAmountUsd,
+          subtotal: paymentCurrency === "VES" ? subtotalBs : subtotalUsd,
+          serviceFee: paymentCurrency === "VES" ? serviceFeeBs : serviceFeeUsd,
           paymentMethod,
-          status: "PENDING",
-          bankName: emisorBank,
-          phoneNumber,
-          cedula,
-          referenceNumber,
-          emisorBank,
-          paymentDetails: paymentDetails,
+          status: checkoutMode === "SAVINGS" ? "CONFIRMED" : "PENDING",
+          bankName: checkoutMode === "SAVINGS" ? null : emisorBank,
+          phoneNumber: checkoutMode === "SAVINGS" ? null : phoneNumber,
+          cedula: checkoutMode === "SAVINGS" ? null : cedula,
+          referenceNumber: checkoutMode === "SAVINGS" ? null : referenceNumber,
+          emisorBank: checkoutMode === "SAVINGS" ? null : emisorBank,
+          paymentDetails: {
+            ...paymentDetails,
+            savingsAppliedUsd: txSavingsAppliedUsd,
+            savingsAppliedBs: txSavingsAppliedBs,
+            externalAmountUsd: txExternalAmountUsd,
+            externalAmountBs: txExternalAmountBs,
+          },
         },
       });
+
+      if (txSavingsAppliedUsd > 0) {
+        await tx.saving.create({
+          data: {
+            userId,
+            bcvRate: hasValidBcvRate ? bcvRate : 0,
+            amountUsd: -txSavingsAppliedUsd,
+            amountBs: hasValidBcvRate ? -txSavingsAppliedBs : 0,
+            paymentDetails: {
+              kind: "CHECKOUT_DEBIT",
+              checkoutMode,
+              reservationId: reservation.id,
+              paymentId: payment.id,
+              homeId,
+              amountUsd: -txSavingsAppliedUsd,
+              amountBs: hasValidBcvRate ? -txSavingsAppliedBs : 0,
+            },
+          },
+        });
+      }
 
       return { reservation, payment };
     });

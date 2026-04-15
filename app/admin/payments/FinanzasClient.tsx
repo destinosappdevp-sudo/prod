@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import PaymentActions from "./PaymentActions";
-import { parsePaymentFinancials } from "@/app/lib/payment-currency";
+import { getPaymentMethodLabel, parsePaymentFinancials } from "@/app/lib/payment-currency";
 
 interface FinanzasClientProps {
   /** Pagos con Reservation → User, Home (puede faltar Reservation). */
@@ -75,17 +75,6 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
       usdLabel: usdAmount !== null ? formatUsd(usdAmount) : "-",
       bsLabel: bsAmount !== null ? formatBs(bsAmount) : null,
     };
-  };
-
-  const getPaymentMethodLabel = (method: string): string => {
-    const methods: Record<string, string> = {
-      PAGO_MOVIL: "Pago Móvil",
-      ZELLE: "Zelle",
-      ZILLI: "Zilli",
-      TARJETA_INTERNACIONAL: "Tarjeta Internacional",
-      TRANSFERENCIA_BANCARIA: "Transferencia Bancaria",
-    };
-    return methods[method] || method;
   };
 
   const getStatusBadge = (status: string) => {
@@ -175,7 +164,7 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
                     )}
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {getPaymentMethodLabel(payment.paymentMethod)}
+                    {getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails)}
                     {payment.referenceNumber && (
                       <div className="text-xs text-gray-500">Ref: {payment.referenceNumber}</div>
                     )}

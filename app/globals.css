@@ -64,21 +64,21 @@
   input[type="button"],
   input[type="submit"],
   input[type="reset"] {
-    background-color: var(--brand-gold) !important;
-    border-color: var(--brand-gold) !important;
-    color: #ffffff !important;
-    border-radius: 9999px !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14) !important;
-    font-weight: 700;
+    background-color: transparent;
+    border: none;
+    color: inherit;
+    border-radius: 0;
+    box-shadow: none;
+    font: inherit;
   }
 
   button:hover,
   input[type="button"]:hover,
   input[type="submit"]:hover,
   input[type="reset"]:hover {
-    background-color: #c99723 !important;
-    border-color: #c99723 !important;
-    color: #ffffff !important;
+    background-color: transparent;
+    border-color: transparent;
+    color: inherit;
   }
 
   button:disabled,

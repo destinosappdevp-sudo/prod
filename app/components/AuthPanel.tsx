@@ -179,6 +179,14 @@ export function AuthPanel({
     setIsLogin((currentValue) => !currentValue);
   };
 
+  const resolveGuestDestination = () => {
+    if (!nextPath || nextPath === "/" || nextPath.startsWith("/login")) {
+      return "/my-dashboard";
+    }
+
+    return nextPath;
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     resetFeedback();
@@ -202,7 +210,7 @@ export function AuthPanel({
             typeof result.role === "string" &&
             adminRoles.includes(result.role)
               ? "/admin"
-              : nextPath || "/";
+              : resolveGuestDestination();
           router.push(dest);
           router.refresh();
         }
