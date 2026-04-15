@@ -39,6 +39,18 @@
         q: "¿Los precios son en dólares o bolívares?",
         a: "Los precios se publican en USD. En la plataforma también verás el equivalente en Bs. calculado con la tasa BCV del día.",
       },
+      {
+        q: "¿Puedo retirar en efectivo el dinero de la caja de ahorro?",
+        a: "No. El dinero abonado en la caja de ahorro no puede retirarse en efectivo.",
+      },
+      {
+        q: "¿Puedo cambiar la fecha si estoy pagando por partes?",
+        a: "Sí, puedes solicitar cambio de fecha solo si aún no has cancelado el 100% del paquete. El cambio está sujeto a aprobación del organizador.",
+      },
+      {
+        q: "¿Hay penalización por cambio de fecha?",
+        a: "Sí, según el caso puede aplicarse una penalización de entre 30% y 40% del monto abonado.",
+      },
     ],
   },
   {
@@ -56,22 +68,30 @@
         q: "¿Qué pasa si no puedo asistir el día del viaje?",
         a: "Contacta al organizador del paquete con la mayor anticipación posible a través del chat de la plataforma o al número de contacto indicado.",
       },
+      {
+        q: "Si ya pagué todo y no asisto (No-show), ¿me reembolsan?",
+        a: "No. En Full Days, cuando el cliente paga el 100% y no asiste el día del servicio, no aplica reembolso.",
+      },
+      {
+        q: "Si yo cancelo mi viaje, ¿me devuelven el dinero?",
+        a: "No. Si el cliente decide no asistir por cuenta propia, no aplica reembolso de los montos pagados.",
+      },
+      {
+        q: "¿Qué pasa si la empresa cancela por motivos logísticos?",
+        a: "Si la cancelación es por motivos logísticos atribuibles a la agencia u organizador, corresponde reembolso del 100%.",
+      },
     ],
   },
   {
-    category: "Organizadores",
+    category: "Ahorro por Destino",
     items: [
       {
-        q: "¿Cómo publico mi paquete turístico?",
-        a: "Regístrate, cambia tu rol a Anfitrión desde tu perfil y crea tu primer paquete completando los pasos: categoría, descripción, ubicación de salida, amenidades y precio.",
+        q: "¿Puedo cambiar de destino si ya inicié mi plan de ahorro?",
+        a: "Para destinos como Margarita, Los Roques y Canaima, no se permite cambiar de destino una vez iniciado el plan de ahorro.",
       },
       {
-        q: "¿Cuándo recibo el pago por mis paquetes?",
-        a: "El pago se transfiere al organizador luego de que finalice el servicio y quede confirmado. Puedes hacer seguimiento desde tu panel de anfitrión.",
-      },
-      {
-        q: "¿Puedo ofrecer planes Básico y Premium en el mismo paquete?",
-        a: "Sí. Al crear o editar tu paquete puedes configurar ambos planes con distintos precios e inclusiones para que los viajeros elijan según su presupuesto.",
+        q: "¿El plan de ahorro sirve para cualquier destino?",
+        a: "No siempre. En destinos específicos (Margarita, Los Roques y Canaima), el plan de ahorro es exclusivo para el destino seleccionado al inicio.",
       },
     ],
   },

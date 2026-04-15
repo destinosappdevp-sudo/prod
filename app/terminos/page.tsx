@@ -22,7 +22,7 @@
           <h2 className="text-xl font-semibold text-gray-900 mb-3">2. Definiciones</h2>
           <ul className="space-y-1.5 list-none pl-0">
             <li><span className="font-semibold">Plataforma:</span> Sitio web y aplicación de Destinos Venezuela C.A.</li>
-            <li><span className="font-semibold">Anfitrión:</span> Persona o entidad que publica una propiedad para alquiler.</li>
+            <li><span className="font-semibold">Anfitrión:</span> Destinos Venezuela C.A., como organizador único de los paquetes publicados en la plataforma.</li>
             <li><span className="font-semibold">Huésped:</span> Persona que reserva y utiliza una propiedad publicada.</li>
             <li><span className="font-semibold">Propiedad:</span> Inmueble ofrecido para alquiler temporal.</li>
           </ul>
@@ -117,8 +117,59 @@
           <h2 className="text-xl font-semibold text-gray-900 mb-3">10. Legislación Aplicable</h2>
           <p>
             Estos Términos y Condiciones se rigen por las leyes de la República Bolivariana de
-            Venezuela. Cualquier disputa será resuelta en los tribunales competentes de Caracas.
+            Venezuela. Cualquier disputa será resuelta en los tribunales competentes de Barquisimeto, Estado Lara.
           </p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">11. Plan de Ahorro, Retiros, Pagos y Cancelaciones</h2>
+
+          <p className="mb-3">
+            Para paquetes con modalidad de ahorro y pagos parciales, aplican las siguientes
+            condiciones especiales:
+          </p>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">11.1 Restricciones de Retiro</h3>
+          <ul className="space-y-1.5 list-disc pl-5 mb-4">
+            <li>El dinero abonado en la caja de ahorro no puede retirarse en efectivo.</li>
+          </ul>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">11.2 Cambios de Fecha</h3>
+          <ul className="space-y-1.5 list-disc pl-5 mb-4">
+            <li>Se permite solicitar cambio de fecha únicamente si no se ha cancelado el 100% del paquete.</li>
+            <li>
+              En caso de cambio de fecha aprobado por el organizador, puede aplicarse una penalización
+              de entre 30% y 40% del monto abonado, según el caso.
+            </li>
+          </ul>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">11.3 Cancelaciones del Cliente y No-Show</h3>
+          <ul className="space-y-1.5 list-disc pl-5 mb-4">
+            <li>Si el cliente decide no asistir, no aplica reembolso de los montos pagados.</li>
+            <li>
+              En Full Days, si el cliente pagó el 100% y no asiste el día del servicio (no-show),
+              no aplica reembolso.
+            </li>
+          </ul>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">11.4 Cancelaciones por la Empresa</h3>
+          <ul className="space-y-1.5 list-disc pl-5 mb-4">
+            <li>
+              Si la cancelación ocurre por motivos logísticos atribuibles a la agencia u organizador,
+              corresponde reembolso del 100% de lo pagado por el cliente.
+            </li>
+          </ul>
+
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">11.5 Condiciones por Destino (Margarita, Los Roques, Canaima)</h3>
+          <ul className="space-y-1.5 list-disc pl-5">
+            <li>
+              El plan de ahorro para estos destinos es exclusivo del destino seleccionado al iniciar.
+            </li>
+            <li>
+              Una vez iniciado el plan de ahorro para Margarita, Los Roques o Canaima, no se permite
+              cambio de destino.
+            </li>
+          </ul>
         </section>
 
       </div>
