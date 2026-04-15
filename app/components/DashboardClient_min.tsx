@@ -680,38 +680,6 @@ export default function DashboardClient(props: DashboardClientProps) {
         )}
       </main>
 
-      {/* Bottom navigation — siempre visible para usuarios logueados */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-around h-16">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setActiveTab(item.key)}
-                className="flex flex-col items-center justify-center flex-1 h-full gap-1 transition"
-              >
-                <Icon
-                  size={22}
-                  className={isActive ? "text-orange-500" : "text-slate-400"}
-                />
-                <span
-                  className={`text-[10px] font-medium leading-tight ${
-                    isActive ? "text-orange-500" : "text-slate-400"
-                  }`}
-                >
-                  {item.label}
-                </span>
-                {isActive && (
-                  <span className="absolute bottom-0 h-0.5 w-8 rounded-full bg-orange-500 translate-y-0" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }
