@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { NavigationLoader } from "./components/NavigationLoader";
 import LoggedInBottomNav from "./components/LoggedInBottomNav";
+import CookieConsentBanner from "./components/CookieConsentBanner";
 import { createClient } from "@/app/lib/supabase/server";
 import "./globals.css";
 
@@ -35,6 +36,7 @@ export default async function RootLayout({
         <main className="flex-1 pb-20">{children}</main>
         <Footer />
         <LoggedInBottomNav isLoggedIn={!!user} />
+        <CookieConsentBanner isLoggedIn={!!user} />
       </body>
     </html>
   );
