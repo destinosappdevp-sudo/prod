@@ -427,25 +427,44 @@ export function AuthPanel({
       </Button>
 
       {isLogin && (
-        <button
-          type="button"
-          onClick={() => {
-            onClose?.();
-            router.push("/auth/forgot-password");
-          }}
-          className="block w-full text-center text-sm text-blue-600 hover:underline"
-        >
-          ¿Olvidaste la contraseña?
-        </button>
+        <div className="text-center">
+          <span
+            role="link"
+            tabIndex={0}
+            onClick={() => {
+              onClose?.();
+              router.push("/auth/forgot-password");
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onClose?.();
+                router.push("/auth/forgot-password");
+              }
+            }}
+            className="cursor-pointer text-sm font-medium text-[#040B42] hover:underline"
+          >
+            ¿Olvidaste la contraseña?
+          </span>
+        </div>
       )}
 
-      <button
-        type="button"
-        onClick={toggleMode}
-        className="w-full text-sm text-gray-600 hover:underline"
-      >
-        {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-      </button>
+      <div className="text-center">
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={toggleMode}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              toggleMode();
+            }
+          }}
+          className="cursor-pointer text-sm font-medium text-[#040B42] hover:underline"
+        >
+          {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+        </span>
+      </div>
     </form>
   );
 
