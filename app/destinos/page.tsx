@@ -226,7 +226,7 @@ export default async function DestinosHomePage({
         <div className="absolute bottom-8 left-6 z-20 sm:left-10 lg:left-14">
           <a
             href="/contacto"
-            className="inline-flex rounded-lg bg-[#E0AE33] px-6 py-3 text-lg font-semibold text-[#040B42] shadow-lg transition-colors hover:bg-[#c99723]"
+            className="inline-flex rounded-full bg-[#E0AE33] px-6 py-3 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-[#c99723]"
           >
             Reservar cupo
           </a>

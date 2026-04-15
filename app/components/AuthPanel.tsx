@@ -143,7 +143,7 @@ export function AuthPanel({
         return;
       }
 
-      await supabase.from("usersessions").upsert(
+      const { error: sessionWriteError } = await supabase.from("usersessions").upsert(
         {
           user_id: userId,
           device_id: deviceId,
@@ -160,6 +160,10 @@ export function AuthPanel({
           onConflict: "user_id,device_id",
         }
       );
+
+      if (sessionWriteError) {
+        console.warn("No se pudo registrar la sesión activa:", sessionWriteError.message);
+      }
     } catch (sessionError) {
       console.error("No se pudo registrar la sesión activa:", sessionError);
     }
@@ -190,7 +194,7 @@ export function AuthPanel({
         }
 
         if (result?.success) {
-          await trackActiveSession(result.userId);
+          void trackActiveSession(result.userId);
           onSuccess?.();
           const adminRoles = ["ADMIN", "SUPERADMIN"];
           const dest =
@@ -227,7 +231,7 @@ export function AuthPanel({
       const loginResult = await signInWithEmail(email, password);
 
       if (loginResult?.success) {
-        await trackActiveSession(loginResult.userId);
+        void trackActiveSession(loginResult.userId);
         onSuccess?.();
         router.push("/my-dashboard?tab=profile");
         router.refresh();
