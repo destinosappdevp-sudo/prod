@@ -624,7 +624,7 @@ async function getGuestDashboardData(userId: string) {
     prismaAny.saving.findMany({
       where: { userId },
       orderBy: { date: "desc" },
-      select: { id: true, date: true, bcvRate: true, amountBs: true, amountUsd: true },
+      select: { id: true, date: true, bcvRate: true, amountBs: true, amountUsd: true, paymentDetails: true },
     }),
     prismaAny.platformConfig.findFirst({ select: { bcvRate: true } }),
   ]);
@@ -675,6 +675,7 @@ async function getGuestDashboardData(userId: string) {
       bcvRate: s.bcvRate as number,
       amountBs: s.amountBs as number,
       amountUsd: s.amountUsd as number,
+      targetTitle: s.paymentDetails?.homeTitle || null,
     })),
     savingsTotal,
     bcvRate,
@@ -684,7 +685,7 @@ async function getGuestDashboardData(userId: string) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { tab?: string };
+  searchParams: { tab?: string; target?: string; homeId?: string };
 }) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -743,6 +744,8 @@ export default async function DashboardPage({
       savings={data.savings}
       savingsTotal={data.savingsTotal}
       bcvRate={data.bcvRate}
+      savingTarget={typeof searchParams.target === "string" ? searchParams.target : undefined}
+      savingTargetId={typeof searchParams.homeId === "string" ? searchParams.homeId : undefined}
       userData={{ ...userRecord, email: userRecord?.email || user.email }}
       initialDocs={initialDocs || []}
     />

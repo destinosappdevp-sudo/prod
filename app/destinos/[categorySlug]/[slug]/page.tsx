@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import FormattedDescription from "@/app/components/FormattedDescription";
-import { Clock, Users, MapPin } from "lucide-react";
+import { ArrowRight, Clock, MapPin, PiggyBank, Users } from "lucide-react";
 import Image from "next/image";
 
 const prismaAny = prisma as any;
@@ -94,6 +94,15 @@ async function DestinoPage({
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const savingsParams = new URLSearchParams({
+    tab: "ahorrar",
+    target: data.title || "este paquete",
+    homeId: data.id,
+  });
+  const savingsPath = `/my-dashboard?${savingsParams.toString()}`;
+  const savingsHref = user
+    ? savingsPath
+    : `/login?next=${encodeURIComponent(savingsPath)}`;
   const isApproved = data.publishStatus === "APPROVED";
 
   if (!isApproved) {
@@ -189,9 +198,9 @@ async function DestinoPage({
         </div>
       </div>
 
-      {/* Información de Salida */}
-      {(state || municipality || data.exactAddress || data.checkInTime) && (
-        <div className="border border-gray-200 rounded-2xl p-6 mb-6">
+      {/* Información de Salida + ahorro */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="border border-gray-200 rounded-2xl p-6">
           <h2 className="flex items-center gap-2 font-semibold text-base mb-4">
             <MapPin className="w-4 h-4 text-gray-500" />
             Información de Salida
@@ -224,9 +233,45 @@ async function DestinoPage({
                 </div>
               </div>
             )}
+            {!state && !municipality && !data.exactAddress && !data.checkInTime && (
+              <p className="text-sm text-gray-500">Los detalles de salida estarán disponibles pronto.</p>
+            )}
           </div>
         </div>
-      )}
+
+        <div className="border border-[#E1B042]/40 rounded-2xl p-4 bg-[#FBF9F2]">
+          <div className="rounded-xl bg-gradient-to-r from-[#8A880F] to-[#B49B1C] p-4 text-white shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-white/15 p-2">
+                <PiggyBank className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em]">Iniciar plan de ahorro</p>
+                <p className="mt-1 text-sm text-white/90">
+                  Paga cuotas mensuales y completa tu viaje hasta 30 días antes.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm font-semibold text-slate-900">Ahorra para este paquete</p>
+          <p className="mt-1 text-sm text-slate-600">
+            Haz tus abonos en la alcancía y usa ese saldo luego para reservar {data.title}.
+          </p>
+
+          <Link
+            href={savingsHref}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
+          >
+            Iniciar ahorro
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+
+          <p className="mt-3 text-[11px] text-slate-500">
+            Términos y condiciones del plan de ahorro aplican.
+          </p>
+        </div>
+      </div>
 
       {/* Descripción */}
       {data.description && (

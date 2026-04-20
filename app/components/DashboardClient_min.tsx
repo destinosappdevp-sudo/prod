@@ -55,6 +55,7 @@ interface SavingItem {
   bcvRate: number;
   amountBs: number;
   amountUsd: number;
+  targetTitle?: string | null;
 }
 
 interface DashboardClientProps {
@@ -77,6 +78,8 @@ interface DashboardClientProps {
   savings?: SavingItem[];
   savingsTotal?: number;
   bcvRate?: number;
+  savingTarget?: string;
+  savingTargetId?: string;
   userData?: any;
   initialDocs?: any[];
 }
@@ -138,7 +141,13 @@ export default function DashboardClient(props: DashboardClientProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amountBs: previewBs,
-          paymentDetails: { emisorBank, phoneNumber, referenceNumber: referenceNumber.trim() },
+          paymentDetails: {
+            emisorBank,
+            phoneNumber,
+            referenceNumber: referenceNumber.trim(),
+            homeId: props.savingTargetId || null,
+            homeTitle: props.savingTarget || null,
+          },
         }),
       });
       if (!res.ok) {
@@ -459,6 +468,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                       <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                         <th className="px-6 py-3">#</th>
                         <th className="px-6 py-3">Fecha</th>
+                        <th className="px-6 py-3">Destino</th>
                         <th className="px-6 py-3">Tasa BCV</th>
                         <th className="px-6 py-3">Monto Bs.</th>
                         <th className="px-6 py-3">Monto USD</th>
@@ -472,6 +482,11 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </td>
                           <td className="px-6 py-4 text-slate-700 whitespace-nowrap">
                             {formatDate(s.date)}
+                          </td>
+                          <td className="px-6 py-4 text-slate-700">
+                            <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                              {s.targetTitle || "Alcancía general"}
+                            </span>
                           </td>
                           <td className="px-6 py-4 text-slate-700 font-mono">
                             {Number(s.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -524,6 +539,18 @@ export default function DashboardClient(props: DashboardClientProps) {
                 </div>
 
                 <div className="px-6 py-6">
+                  {props.savingTarget && (
+                    <div className="mb-5 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                        Ahorro para este paquete
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-emerald-900">{props.savingTarget}</p>
+                      <p className="mt-1 text-xs text-emerald-700">
+                        Los depósitos que registres aquí quedarán asociados a este destino.
+                      </p>
+                    </div>
+                  )}
+
                   <form onSubmit={handleSave} className="space-y-5">
                     {/* Monto USD */}
                     <div>
