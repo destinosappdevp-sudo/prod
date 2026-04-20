@@ -103,6 +103,7 @@ interface DashboardClientProps {
 export default function DashboardClient(props: DashboardClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
+  const [selectedSavingId, setSelectedSavingId] = useState<string | null>(props.savingTargetId ?? null);
   const [amountUsd, setAmountUsd] = useState("");
   const [emisorBank, setEmisorBank] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -161,8 +162,8 @@ export default function DashboardClient(props: DashboardClientProps) {
             emisorBank,
             phoneNumber,
             referenceNumber: referenceNumber.trim(),
-            homeId: props.savingTargetId || null,
-            homeTitle: props.savingTarget || null,
+            homeId: selectedSavingId || null,
+            homeTitle: selectedSavingId ? packageTargetLabel : null,
           },
         }),
       });
@@ -233,10 +234,45 @@ export default function DashboardClient(props: DashboardClientProps) {
   }
 
   const savingsRows = props.savings ?? [];
-  const packageTargetLabel = props.savingPackage?.title || props.savingTarget || "este paquete";
-  const isPackageSavingsView = Boolean(props.savingTargetId && packageTargetLabel);
-  const displayedSavings = isPackageSavingsView
-    ? savingsRows.filter((item) => item.targetId === props.savingTargetId)
+  const generalSavings = savingsRows.filter((item) => !item.targetId);
+  const packageSavingsMap = new Map<string, { title: string; totalUsd: number; movementCount: number }>();
+
+  savingsRows.forEach((item) => {
+    if (!item.targetId) return;
+    const current = packageSavingsMap.get(item.targetId) ?? {
+      title: item.targetTitle || "Paquete",
+      totalUsd: 0,
+      movementCount: 0,
+    };
+    current.totalUsd = roundMoney(current.totalUsd + Number(item.amountUsd ?? 0));
+    current.movementCount += 1;
+    packageSavingsMap.set(item.targetId, current);
+  });
+
+  const savingsWallets = [
+    {
+      key: "general",
+      title: "Alcancía general",
+      totalUsd: roundMoney(generalSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0)),
+      movementCount: generalSavings.length,
+      targetId: null as string | null,
+    },
+    ...Array.from(packageSavingsMap.entries()).map(([targetId, wallet]) => ({
+      key: targetId,
+      title: wallet.title,
+      totalUsd: wallet.totalUsd,
+      movementCount: wallet.movementCount,
+      targetId,
+    })),
+  ];
+
+  const selectedWallet = selectedSavingId
+    ? savingsWallets.find((wallet) => wallet.targetId === selectedSavingId) ?? null
+    : null;
+  const packageTargetLabel = selectedWallet?.title || props.savingPackage?.title || props.savingTarget || "este paquete";
+  const isPackageSavingsView = Boolean(selectedWallet?.targetId);
+  const displayedSavings = selectedWallet?.targetId
+    ? savingsRows.filter((item) => item.targetId === selectedWallet.targetId)
     : savingsRows;
   const displayedSavingsTotal = Math.round(
     displayedSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0) * 100
@@ -259,6 +295,17 @@ export default function DashboardClient(props: DashboardClientProps) {
     { key: "profile",      label: "Perfil",         icon: User },
   ];
   const activeMenuLabel = menuItems.find((item) => item.key === activeTab)?.label || "Mi Escritorio";
+
+  function handlePanelTabClick(nextTab: string) {
+    setActiveTab(nextTab);
+    setMobileMenuOpen(false);
+
+    if (nextTab === "mi-alcancia" || nextTab === "ahorrar") {
+      setSelectedSavingId(null);
+    }
+
+    router.replace(`/my-dashboard?tab=${nextTab}`);
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -291,10 +338,7 @@ export default function DashboardClient(props: DashboardClientProps) {
               <button
                 key={item.key}
                 type="button"
-                onClick={() => {
-                  setActiveTab(item.key);
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => handlePanelTabClick(item.key)}
                 className={`flex items-center gap-3 text-left transition-colors ${
                   isActive ? "text-white" : "text-white/70 hover:text-white"
                 }`}
@@ -362,15 +406,15 @@ export default function DashboardClient(props: DashboardClientProps) {
           <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard"}
             {activeTab === "favorites" && "Mis Favoritos"}
-            {activeTab === "mi-alcancia" && (isPackageSavingsView ? `Ahorros de ${props.savingTarget}` : "Mi Alcancía")}
-            {activeTab === "ahorrar" && (isPackageSavingsView ? `Ahorrar para ${props.savingTarget}` : "Ahorrar")}
+            {activeTab === "mi-alcancia" && (isPackageSavingsView ? `Ahorros de ${packageTargetLabel}` : "Mi Alcancía")}
+            {activeTab === "ahorrar" && (isPackageSavingsView ? `Ahorrar para ${packageTargetLabel}` : "Ahorrar")}
             {activeTab === "profile" && "Editar Perfil"}
           </h1>
           <p className="text-sm text-slate-500">
             {activeTab === "reservations" && "Explora, reserva y gestiona tus alojamientos"}
             {activeTab === "favorites" && "Alojamientos que guardaste"}
-            {activeTab === "mi-alcancia" && (isPackageSavingsView ? "Movimientos asociados a este paquete" : "Historial de tus ahorros")}
-            {activeTab === "ahorrar" && (isPackageSavingsView ? "Deposita saldo para este paquete específico" : "Deposita a tu alcancía de viajes")}
+            {activeTab === "mi-alcancia" && (isPackageSavingsView ? "Movimientos asociados a este paquete" : "Historial de todas tus alcancías")}
+            {activeTab === "ahorrar" && (isPackageSavingsView ? "Deposita saldo para este paquete específico" : "Elige entre tu alcancía general o las alcancías de paquetes")}
             {activeTab === "profile" && "Actualiza tus datos personales"}
           </p>
         </div>
@@ -549,6 +593,33 @@ export default function DashboardClient(props: DashboardClientProps) {
               </div>
             )}
 
+            <div>
+              <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcancías</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {savingsWallets.map((wallet) => (
+                  <button
+                    key={wallet.key}
+                    type="button"
+                    onClick={() => setSelectedSavingId(wallet.targetId)}
+                    className={`rounded-2xl border p-5 text-left shadow-sm transition ${
+                      wallet.targetId === selectedSavingId
+                        ? "border-orange-300 bg-orange-50"
+                        : "border-slate-100 bg-white hover:border-slate-200"
+                    }`}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      {wallet.targetId ? "Paquete específico" : "General"}
+                    </p>
+                    <p className="mt-2 text-lg font-bold text-slate-900">{wallet.title}</p>
+                    <p className="mt-2 text-2xl font-bold text-emerald-600">${wallet.totalUsd.toFixed(2)}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {wallet.movementCount} movimiento{wallet.movementCount !== 1 ? "s" : ""}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Summary cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
@@ -632,6 +703,33 @@ export default function DashboardClient(props: DashboardClientProps) {
         {/* AHORRAR */}
         {activeTab === "ahorrar" && (
           <div className="space-y-6">
+            <div>
+              <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcancías</h3>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {savingsWallets.map((wallet) => (
+                  <button
+                    key={wallet.key}
+                    type="button"
+                    onClick={() => setSelectedSavingId(wallet.targetId)}
+                    className={`rounded-2xl border p-5 text-left shadow-sm transition ${
+                      wallet.targetId === selectedSavingId
+                        ? "border-orange-300 bg-orange-50"
+                        : "border-slate-100 bg-white hover:border-slate-200"
+                    }`}
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      {wallet.targetId ? "Paquete específico" : "General"}
+                    </p>
+                    <p className="mt-2 text-lg font-bold text-slate-900">{wallet.title}</p>
+                    <p className="mt-2 text-2xl font-bold text-emerald-600">${wallet.totalUsd.toFixed(2)}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {wallet.movementCount} movimiento{wallet.movementCount !== 1 ? "s" : ""}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {isPackageSavingsView && props.savingPackage && (
               <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -672,7 +770,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                 </div>
 
                 <div className="px-6 py-6">
-                  {props.savingTarget && (
+                  {isPackageSavingsView && (
                     <div className="mb-5 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
                         Ahorro para este paquete
