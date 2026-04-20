@@ -38,7 +38,7 @@ export function HomeSearchBar() {
           params.set("q", value.trim());
         }
 
-        const response = await fetch(`/api/homes-mobile?${params.toString()}`, {
+        const response = await fetch(`/api/search-destinations?${params.toString()}`, {
           signal: controller.signal,
         });
 
@@ -141,7 +141,7 @@ export function HomeSearchBar() {
       {isOpen && (
         <div className="absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-2xl border border-[#eadbb8] bg-white shadow-xl">
           <div className="border-b border-[#f2e7cb] bg-[#fffaf1] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#8a6500]">
-            {value.trim() ? "Destinos sugeridos" : "Destinos disponibles"}
+            {value.trim() ? "Resultados por título" : "Destinos disponibles"}
           </div>
 
           {loading ? (
@@ -172,7 +172,7 @@ export function HomeSearchBar() {
             </div>
           ) : (
             <div className="px-4 py-4 text-sm text-slate-500">
-              No se encontraron destinos para mostrar.
+              No se encontraron títulos de destinos para mostrar.
             </div>
           )}
         </div>
