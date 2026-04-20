@@ -96,6 +96,16 @@ interface DashboardClientProps {
     slug?: string | null;
     categoryName?: string[] | null;
   } | null;
+  savingPackages?: Array<{
+    id: string;
+    title: string;
+    photo?: string | null;
+    price?: number | null;
+    country?: string | null;
+    municipality?: string | null;
+    slug?: string | null;
+    categoryName?: string[] | null;
+  }>;
   userData?: any;
   initialDocs?: any[];
 }
@@ -269,7 +279,11 @@ export default function DashboardClient(props: DashboardClientProps) {
   const selectedWallet = selectedSavingId
     ? savingsWallets.find((wallet) => wallet.targetId === selectedSavingId) ?? null
     : null;
-  const packageTargetLabel = selectedWallet?.title || props.savingPackage?.title || props.savingTarget || "este paquete";
+  const selectedSavingPackage = selectedSavingId
+    ? props.savingPackages?.find((pkg) => pkg.id === selectedSavingId) ||
+      (props.savingPackage?.id === selectedSavingId ? props.savingPackage : null)
+    : null;
+  const packageTargetLabel = selectedWallet?.title || selectedSavingPackage?.title || props.savingTarget || "este paquete";
   const isPackageSavingsView = Boolean(selectedWallet?.targetId);
   const displayedSavings = selectedWallet?.targetId
     ? savingsRows.filter((item) => item.targetId === selectedWallet.targetId)
@@ -277,14 +291,14 @@ export default function DashboardClient(props: DashboardClientProps) {
   const displayedSavingsTotal = Math.round(
     displayedSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0) * 100
   ) / 100;
-  const packageGoalUsd = Number(props.savingPackage?.price ?? 0);
+  const packageGoalUsd = Number(selectedSavingPackage?.price ?? 0);
   const depositInstallments = displayedSavings.filter((item) => Number(item.amountUsd ?? 0) > 0);
   const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - displayedSavingsTotal));
   const progressPercent = packageGoalUsd > 0
     ? Math.min(100, Math.round((displayedSavingsTotal / packageGoalUsd) * 100))
     : 0;
-  const packageDetailHref = props.savingPackage?.slug
-    ? buildHomeUrl(props.savingPackage.slug, props.savingPackage.id, props.savingPackage.categoryName)
+  const packageDetailHref = selectedSavingPackage?.slug
+    ? buildHomeUrl(selectedSavingPackage.slug, selectedSavingPackage.id, selectedSavingPackage.categoryName)
     : null;
 
   const menuItems = [
@@ -522,12 +536,12 @@ export default function DashboardClient(props: DashboardClientProps) {
         {/* MI ALCANCÍA */}
         {activeTab === "mi-alcancia" && (
           <div className="space-y-6">
-            {isPackageSavingsView && props.savingPackage && (
+            {isPackageSavingsView && selectedSavingPackage && (
               <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
                 <div className="grid gap-0 md:grid-cols-[220px_1fr]">
                   <div className="relative min-h-[180px] bg-slate-100">
-                    {props.savingPackage.photo ? (
-                      <SupabaseImage imagePath={props.savingPackage.photo} alt={packageTargetLabel} fill className="object-cover" />
+                    {selectedSavingPackage.photo ? (
+                      <SupabaseImage imagePath={selectedSavingPackage.photo} alt={packageTargetLabel} fill className="object-cover" />
                     ) : null}
                   </div>
                   <div className="p-5 md:p-6">
@@ -536,8 +550,8 @@ export default function DashboardClient(props: DashboardClientProps) {
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Ahorro activo</p>
                         <h3 className="mt-1 text-xl font-bold text-slate-900">{packageTargetLabel}</h3>
                         <p className="mt-1 text-sm text-slate-500">
-                          {props.savingPackage.country || "Venezuela"}
-                          {props.savingPackage.municipality ? `, ${props.savingPackage.municipality}` : ""}
+                          {selectedSavingPackage.country || "Venezuela"}
+                          {selectedSavingPackage.municipality ? `, ${selectedSavingPackage.municipality}` : ""}
                         </p>
                       </div>
                       <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-right">
@@ -730,7 +744,7 @@ export default function DashboardClient(props: DashboardClientProps) {
               </div>
             </div>
 
-            {isPackageSavingsView && props.savingPackage && (
+            {isPackageSavingsView && selectedSavingPackage && (
               <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>

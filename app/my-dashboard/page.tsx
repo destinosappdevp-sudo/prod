@@ -640,6 +640,33 @@ async function getGuestDashboardData(userId: string) {
   ) / 100;
   const bcvRate = Number((config as any)?.bcvRate ?? 0);
 
+  const packageTargetIds = Array.from(
+    new Set(
+      (savings as any[])
+        .map((s: any) => {
+          const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};
+          return typeof details.homeId === "string" && details.homeId.trim() ? details.homeId : null;
+        })
+        .filter(Boolean)
+    )
+  ) as string[];
+
+  const savingPackages = packageTargetIds.length > 0
+    ? await prismaAny.home.findMany({
+        where: { id: { in: packageTargetIds } },
+        select: {
+          id: true,
+          title: true,
+          photo: true,
+          price: true,
+          country: true,
+          municipality: true,
+          slug: true,
+          categoryName: true,
+        },
+      })
+    : [];
+
   return {
     favorites: favorites.map((fav: any) => ({
       id: fav.Home.id,
@@ -682,6 +709,16 @@ async function getGuestDashboardData(userId: string) {
         kind: typeof details.kind === "string" ? details.kind : null,
       };
     }),
+    savingPackages: (savingPackages as any[]).map((pkg: any) => ({
+      id: pkg.id as string,
+      title: pkg.title || "Paquete",
+      photo: pkg.photo || null,
+      price: pkg.price ?? 0,
+      country: pkg.country || null,
+      municipality: pkg.municipality || null,
+      slug: pkg.slug || null,
+      categoryName: pkg.categoryName || null,
+    })),
     savingsTotal,
     bcvRate,
   };
@@ -764,6 +801,7 @@ export default async function DashboardPage({
       favorites={data.favorites}
       guestReservations={data.guestReservations}
       savings={data.savings}
+      savingPackages={data.savingPackages}
       savingsTotal={data.savingsTotal}
       bcvRate={data.bcvRate}
       savingTarget={typeof searchParams.target === "string" ? searchParams.target : undefined}
