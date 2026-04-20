@@ -729,8 +729,25 @@ export default async function DashboardPage({
   }
   const initialTab = searchParams.tab;
 
-  const data = await getGuestDashboardData(user.id);
-  const initialDocs = await getUserDocuments(user.id);
+  const [data, initialDocs, savingPackage] = await Promise.all([
+    getGuestDashboardData(user.id),
+    getUserDocuments(user.id),
+    typeof searchParams.homeId === "string"
+      ? (prisma as any).home.findUnique({
+          where: { id: searchParams.homeId },
+          select: {
+            id: true,
+            title: true,
+            photo: true,
+            price: true,
+            country: true,
+            municipality: true,
+            slug: true,
+            categoryName: true,
+          },
+        })
+      : Promise.resolve(null),
+  ]);
   return (
     <GuestDashboardClient
       role="GUEST"
@@ -751,6 +768,7 @@ export default async function DashboardPage({
       bcvRate={data.bcvRate}
       savingTarget={typeof searchParams.target === "string" ? searchParams.target : undefined}
       savingTargetId={typeof searchParams.homeId === "string" ? searchParams.homeId : undefined}
+      savingPackage={savingPackage}
       userData={{ ...userRecord, email: userRecord?.email || user.email }}
       initialDocs={initialDocs || []}
     />

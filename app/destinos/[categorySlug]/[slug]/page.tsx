@@ -94,8 +94,19 @@ async function DestinoPage({
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  let hasStartedPackageSaving = false;
+
+  if (user) {
+    const userSavings = await prismaAny.saving.findMany({
+      where: { userId: user.id },
+      select: { paymentDetails: true },
+    });
+
+    hasStartedPackageSaving = userSavings.some((item: any) => item?.paymentDetails?.homeId === data.id);
+  }
+
   const savingsParams = new URLSearchParams({
-    tab: "ahorrar",
+    tab: hasStartedPackageSaving ? "mi-alcancia" : "ahorrar",
     target: data.title || "este paquete",
     homeId: data.id,
   });
@@ -263,7 +274,7 @@ async function DestinoPage({
             href={savingsHref}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
           >
-            Iniciar ahorro
+            {hasStartedPackageSaving ? "Ver ahorro del paquete" : "Iniciar ahorro"}
             <ArrowRight className="h-4 w-4" />
           </Link>
 

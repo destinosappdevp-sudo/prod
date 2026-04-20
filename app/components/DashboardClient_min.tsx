@@ -60,6 +60,10 @@ interface SavingItem {
   kind?: string | null;
 }
 
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 interface DashboardClientProps {
   role?: string;
   userName?: string;
@@ -82,6 +86,16 @@ interface DashboardClientProps {
   bcvRate?: number;
   savingTarget?: string;
   savingTargetId?: string;
+  savingPackage?: {
+    id: string;
+    title: string;
+    photo?: string | null;
+    price?: number | null;
+    country?: string | null;
+    municipality?: string | null;
+    slug?: string | null;
+    categoryName?: string[] | null;
+  } | null;
   userData?: any;
   initialDocs?: any[];
 }
@@ -219,13 +233,23 @@ export default function DashboardClient(props: DashboardClientProps) {
   }
 
   const savingsRows = props.savings ?? [];
-  const isPackageSavingsView = Boolean(props.savingTargetId && props.savingTarget);
+  const packageTargetLabel = props.savingPackage?.title || props.savingTarget || "este paquete";
+  const isPackageSavingsView = Boolean(props.savingTargetId && packageTargetLabel);
   const displayedSavings = isPackageSavingsView
     ? savingsRows.filter((item) => item.targetId === props.savingTargetId)
     : savingsRows;
   const displayedSavingsTotal = Math.round(
     displayedSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0) * 100
   ) / 100;
+  const packageGoalUsd = Number(props.savingPackage?.price ?? 0);
+  const depositInstallments = displayedSavings.filter((item) => Number(item.amountUsd ?? 0) > 0);
+  const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - displayedSavingsTotal));
+  const progressPercent = packageGoalUsd > 0
+    ? Math.min(100, Math.round((displayedSavingsTotal / packageGoalUsd) * 100))
+    : 0;
+  const packageDetailHref = props.savingPackage?.slug
+    ? buildHomeUrl(props.savingPackage.slug, props.savingPackage.id, props.savingPackage.categoryName)
+    : null;
 
   const menuItems = [
     { key: "reservations", label: "Mis Reservas",  icon: CalendarCheck },
@@ -454,6 +478,77 @@ export default function DashboardClient(props: DashboardClientProps) {
         {/* MI ALCANCÍA */}
         {activeTab === "mi-alcancia" && (
           <div className="space-y-6">
+            {isPackageSavingsView && props.savingPackage && (
+              <div className="overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-sm">
+                <div className="grid gap-0 md:grid-cols-[220px_1fr]">
+                  <div className="relative min-h-[180px] bg-slate-100">
+                    {props.savingPackage.photo ? (
+                      <SupabaseImage imagePath={props.savingPackage.photo} alt={packageTargetLabel} fill className="object-cover" />
+                    ) : null}
+                  </div>
+                  <div className="p-5 md:p-6">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Ahorro activo</p>
+                        <h3 className="mt-1 text-xl font-bold text-slate-900">{packageTargetLabel}</h3>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {props.savingPackage.country || "Venezuela"}
+                          {props.savingPackage.municipality ? `, ${props.savingPackage.municipality}` : ""}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-right">
+                        <p className="text-xs text-emerald-700">Meta del paquete</p>
+                        <p className="text-2xl font-bold text-emerald-900">${packageGoalUsd.toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-xs text-slate-500">Cuotas abonadas</p>
+                        <p className="mt-1 text-2xl font-bold text-slate-900">{depositInstallments.length}</p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-xs text-slate-500">Ahorrado</p>
+                        <p className="mt-1 text-2xl font-bold text-green-600">${displayedSavingsTotal.toFixed(2)}</p>
+                      </div>
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-xs text-slate-500">Te falta</p>
+                        <p className="mt-1 text-2xl font-bold text-orange-600">${remainingUsd.toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5">
+                      <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+                        <span>Progreso del ahorro</span>
+                        <span>{progressPercent}%</span>
+                      </div>
+                      <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-orange-400" style={{ width: `${progressPercent}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("ahorrar")}
+                        className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+                      >
+                        Agregar cuota
+                      </button>
+                      {packageDetailHref && (
+                        <Link
+                          href={packageDetailHref}
+                          className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                        >
+                          Ver paquete
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Summary cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
@@ -536,15 +631,38 @@ export default function DashboardClient(props: DashboardClientProps) {
 
         {/* AHORRAR */}
         {activeTab === "ahorrar" && (
-          <div className="flex justify-center">
-            <div className="w-full max-w-md">
+          <div className="space-y-6">
+            {isPackageSavingsView && props.savingPackage && (
+              <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Detalle del paquete</p>
+                    <h3 className="mt-1 text-lg font-bold text-slate-900">{packageTargetLabel}</h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {depositInstallments.length > 0
+                        ? `Llevas ${depositInstallments.length} cuota${depositInstallments.length !== 1 ? "s" : ""} y te faltan $${remainingUsd.toFixed(2)}.`
+                        : "Aún no has abonado tu primera cuota."}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+                    <p className="text-slate-500">Meta: <span className="font-semibold text-slate-900">${packageGoalUsd.toFixed(2)}</span></p>
+                    <p className="text-slate-500">Ahorrado: <span className="font-semibold text-green-600">${displayedSavingsTotal.toFixed(2)}</span></p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center">
+              <div className="w-full max-w-md">
               {/* Card estilo mobile */}
               <div className="bg-white rounded-3xl border border-slate-100 shadow-lg overflow-hidden">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white">
                   <div className="flex items-center gap-3 mb-2">
                     <PiggyBank size={28} />
-                    <h2 className="text-xl font-bold">Depositar a Mi Alcancía</h2>
+                    <h2 className="text-xl font-bold">
+                      {isPackageSavingsView && depositInstallments.length > 0 ? "Registrar nueva cuota" : "Depositar a Mi Alcancía"}
+                    </h2>
                   </div>
                   <p className="text-sm text-white/80">
                     {props.bcvRate && props.bcvRate > 0
@@ -559,7 +677,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
                         Ahorro para este paquete
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-emerald-900">{props.savingTarget}</p>
+                      <p className="mt-1 text-sm font-semibold text-emerald-900">{packageTargetLabel}</p>
                       <p className="mt-1 text-xs text-emerald-700">
                         Los depósitos que registres aquí quedarán asociados a este destino.
                       </p>
@@ -697,6 +815,7 @@ export default function DashboardClient(props: DashboardClientProps) {
               </div>
             </div>
           </div>
+        </div>
         )}
 
         {/* PERFIL */}
