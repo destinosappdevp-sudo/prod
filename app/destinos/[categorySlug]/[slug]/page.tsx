@@ -278,9 +278,9 @@ async function DestinoPage({
             <ArrowRight className="h-4 w-4" />
           </Link>
 
-          <p className="mt-3 text-[11px] text-slate-500">
+          <Link href="/terminos" className="mt-3 inline-block text-[11px] text-slate-500 underline hover:text-slate-700">
             Términos y condiciones del plan de ahorro aplican.
-          </p>
+          </Link>
         </div>
       </div>
 

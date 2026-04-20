@@ -139,7 +139,10 @@ async function getListings({
       },
       Favorite: { where: { userId: userId ?? undefined } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [
+      { checkInTime: { sort: "asc", nulls: "last" } },
+      { createdAt: "desc" },
+    ],
     take: 12,
   });
 

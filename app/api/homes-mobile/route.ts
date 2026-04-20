@@ -132,9 +132,10 @@ export async function GET(request: NextRequest) {
         photo: true,
         createdAt: true,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: [
+        { checkInTime: { sort: "asc", nulls: "last" } },
+        { createdAt: "desc" },
+      ],
       take: 1000,
     });
 

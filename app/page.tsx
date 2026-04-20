@@ -116,6 +116,10 @@ async function getData({
       },
       Favorite: { where: { userId: userId ?? undefined } },
     },
+    orderBy: [
+      { checkInTime: { sort: "asc", nulls: "last" } },
+      { createdAt: "desc" },
+    ],
   });
 
   const appConfig = await prismaAny.platformConfig.findFirst({
