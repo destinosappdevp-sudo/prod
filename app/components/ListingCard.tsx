@@ -220,7 +220,7 @@ function ListingCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
-            className="mt-3 w-full rounded-full bg-[#E1B042] py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+            className="mt-3 w-full rounded-full bg-[#E1B042] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#E8C86F]"
           >
             Reservar Cupo
           </button>
