@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     // Verificar que la propiedad existe
     const home = await prisma.home.findUnique({
       where: { id: homeId },
-      select: { id: true, price: true, guests: true },
+      select: { id: true, title: true, price: true, guests: true },
     });
 
     if (!home) {
@@ -351,6 +351,7 @@ export async function POST(request: Request) {
               reservationId: reservation.id,
               paymentId: payment.id,
               homeId,
+              homeTitle: home.title ?? null,
               amountUsd: -txSavingsAppliedUsd,
               amountBs: hasValidBcvRate ? -txSavingsAppliedBs : 0,
             },

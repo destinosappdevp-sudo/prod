@@ -55,7 +55,40 @@ export async function POST(req: NextRequest) {
 
   const amountUsd = Math.round((amountBs / bcvRate) * 100) / 100;
 
-  const paymentDetails = (body as any)?.paymentDetails ?? null;
+  const paymentDetailsInput =
+    (body as any)?.paymentDetails && typeof (body as any).paymentDetails === "object"
+      ? { ...(body as any).paymentDetails }
+      : {};
+
+  const homeId =
+    typeof paymentDetailsInput.homeId === "string" && paymentDetailsInput.homeId.trim()
+      ? paymentDetailsInput.homeId.trim()
+      : null;
+
+  let homeTitle =
+    typeof paymentDetailsInput.homeTitle === "string" && paymentDetailsInput.homeTitle.trim()
+      ? paymentDetailsInput.homeTitle.trim()
+      : null;
+
+  if (homeId) {
+    const home = await prismaAny.home.findUnique({
+      where: { id: homeId },
+      select: { id: true, title: true },
+    });
+
+    if (!home) {
+      return NextResponse.json({ error: "Paquete no válido" }, { status: 400 });
+    }
+
+    homeTitle = homeTitle || home.title || "Paquete";
+  }
+
+  const paymentDetails = {
+    ...paymentDetailsInput,
+    homeId,
+    homeTitle,
+    kind: homeId ? "PACKAGE_SAVING_DEPOSIT" : "GENERAL_SAVING_DEPOSIT",
+  };
 
   const saving = await prismaAny.saving.create({
     data: {

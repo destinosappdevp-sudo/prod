@@ -669,14 +669,19 @@ async function getGuestDashboardData(userId: string) {
       favoriteId: favoriteByHomeId.get(res.Home.id),
       isInFavoriteList: favoriteHomeIds.has(res.Home.id),
     })),
-    savings: (savings as any[]).map((s: any) => ({
-      id: s.id as string,
-      date: s.date as Date,
-      bcvRate: s.bcvRate as number,
-      amountBs: s.amountBs as number,
-      amountUsd: s.amountUsd as number,
-      targetTitle: s.paymentDetails?.homeTitle || null,
-    })),
+    savings: (savings as any[]).map((s: any) => {
+      const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};
+      return {
+        id: s.id as string,
+        date: s.date as Date,
+        bcvRate: s.bcvRate as number,
+        amountBs: s.amountBs as number,
+        amountUsd: s.amountUsd as number,
+        targetTitle: typeof details.homeTitle === "string" ? details.homeTitle : null,
+        targetId: typeof details.homeId === "string" ? details.homeId : null,
+        kind: typeof details.kind === "string" ? details.kind : null,
+      };
+    }),
     savingsTotal,
     bcvRate,
   };

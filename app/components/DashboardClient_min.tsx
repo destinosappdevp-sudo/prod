@@ -56,6 +56,8 @@ interface SavingItem {
   amountBs: number;
   amountUsd: number;
   targetTitle?: string | null;
+  targetId?: string | null;
+  kind?: string | null;
 }
 
 interface DashboardClientProps {
@@ -216,6 +218,15 @@ export default function DashboardClient(props: DashboardClientProps) {
     return new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
   }
 
+  const savingsRows = props.savings ?? [];
+  const isPackageSavingsView = Boolean(props.savingTargetId && props.savingTarget);
+  const displayedSavings = isPackageSavingsView
+    ? savingsRows.filter((item) => item.targetId === props.savingTargetId)
+    : savingsRows;
+  const displayedSavingsTotal = Math.round(
+    displayedSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0) * 100
+  ) / 100;
+
   const menuItems = [
     { key: "reservations", label: "Mis Reservas",  icon: CalendarCheck },
     { key: "favorites",    label: "Favoritos",      icon: Heart },
@@ -327,15 +338,15 @@ export default function DashboardClient(props: DashboardClientProps) {
           <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard"}
             {activeTab === "favorites" && "Mis Favoritos"}
-            {activeTab === "mi-alcancia" && "Mi Alcancía"}
-            {activeTab === "ahorrar" && "Ahorrar"}
+            {activeTab === "mi-alcancia" && (isPackageSavingsView ? `Ahorros de ${props.savingTarget}` : "Mi Alcancía")}
+            {activeTab === "ahorrar" && (isPackageSavingsView ? `Ahorrar para ${props.savingTarget}` : "Ahorrar")}
             {activeTab === "profile" && "Editar Perfil"}
           </h1>
           <p className="text-sm text-slate-500">
             {activeTab === "reservations" && "Explora, reserva y gestiona tus alojamientos"}
             {activeTab === "favorites" && "Alojamientos que guardaste"}
-            {activeTab === "mi-alcancia" && "Historial de tus ahorros"}
-            {activeTab === "ahorrar" && "Deposita a tu alcancía de viajes"}
+            {activeTab === "mi-alcancia" && (isPackageSavingsView ? "Movimientos asociados a este paquete" : "Historial de tus ahorros")}
+            {activeTab === "ahorrar" && (isPackageSavingsView ? "Deposita saldo para este paquete específico" : "Deposita a tu alcancía de viajes")}
             {activeTab === "profile" && "Actualiza tus datos personales"}
           </p>
         </div>
@@ -448,20 +459,20 @@ export default function DashboardClient(props: DashboardClientProps) {
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <p className="text-xs text-slate-500 mb-1">Total ahorrado (USD)</p>
                 <p className="text-3xl font-bold text-green-600">
-                  ${(props.savingsTotal ?? 0).toFixed(2)}
+                  ${displayedSavingsTotal.toFixed(2)}
                 </p>
               </div>
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <p className="text-xs text-slate-500 mb-1">Movimientos</p>
                 <p className="text-3xl font-bold text-slate-800">
-                  {props.savings?.length ?? 0}
+                  {displayedSavings.length}
                 </p>
               </div>
             </div>
 
             {/* Savings table */}
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
-              {props.savings && props.savings.length > 0 ? (
+              {displayedSavings.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -475,10 +486,10 @@ export default function DashboardClient(props: DashboardClientProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {props.savings.map((s, index) => (
+                      {displayedSavings.map((s, index) => (
                         <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
                           <td className="px-6 py-4 text-slate-400 text-xs font-mono">
-                            {props.savings!.length - index}
+                            {displayedSavings.length - index}
                           </td>
                           <td className="px-6 py-4 text-slate-700 whitespace-nowrap">
                             {formatDate(s.date)}
@@ -505,13 +516,17 @@ export default function DashboardClient(props: DashboardClientProps) {
               ) : (
                 <div className="p-12 text-center">
                   <PiggyBank className="mx-auto mb-3 text-slate-300" size={48} />
-                  <p className="text-slate-500">Aún no tienes ahorros registrados.</p>
+                  <p className="text-slate-500">
+                    {isPackageSavingsView
+                      ? "Aún no tienes ahorros registrados para este paquete."
+                      : "Aún no tienes ahorros registrados."}
+                  </p>
                   <button
                     type="button"
                     onClick={() => setActiveTab("ahorrar")}
                     className="mt-4 inline-block text-sm text-orange-600 hover:underline"
                   >
-                    Comenzar a ahorrar
+                    {isPackageSavingsView ? "Ahorrar para este paquete" : "Comenzar a ahorrar"}
                   </button>
                 </div>
               )}
