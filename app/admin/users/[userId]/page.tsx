@@ -2,6 +2,7 @@ import prisma from "@/app/lib/db";
 import { notFound } from "next/navigation";
 import { EditUserClient } from "../../components/EditUserClient";
 import { UserDocumentItem } from "@/app/components/DocumentsSection";
+import { Prisma } from "@prisma/client";
 
 async function getUser(userId: string) {
   const user = await prisma.user.findUnique({
@@ -22,10 +23,9 @@ async function getUser(userId: string) {
 
 async function getUserDocuments(userId: string) {
   try {
-    return await prisma.$queryRawUnsafe(
-      'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
-      userId
-    ) as UserDocumentItem[];
+    return (await prisma.$queryRaw(
+      Prisma.sql`SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = ${userId} ORDER BY "uploadedAt" DESC`
+    )) as UserDocumentItem[];
   } catch (error) {
     const err = error as { code?: string; meta?: { code?: string; message?: string }; message?: string };
     const message = `${err?.message ?? ""} ${err?.meta?.message ?? ""}`.toLowerCase();

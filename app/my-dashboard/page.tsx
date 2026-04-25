@@ -4,6 +4,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import HostDashboardClient from "@/app/components/HostDashboardClient";
 import GuestDashboardClient from "@/app/components/DashboardClient_min";
+import { Prisma } from "@prisma/client";
 import {
   formatCurrencyAmount,
   parsePaymentFinancials,
@@ -251,9 +252,8 @@ function buildHostAnalyticsData(
 async function getUserDocuments(userId: string) {
   noStore();
   return (prisma as any)
-    .$queryRawUnsafe(
-      'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
-      userId
+    .$queryRaw(
+      Prisma.sql`SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = ${userId} ORDER BY "uploadedAt" DESC`
     )
     .catch(() => []);
 }

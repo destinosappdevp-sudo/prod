@@ -22,9 +22,9 @@ function generateSlug(title, id) {
 }
 
 async function run() {
-  const homes = await prisma.$queryRawUnsafe(
-    `SELECT id, title FROM "Home" WHERE slug IS NULL AND title IS NOT NULL`
-  );
+  const homes = await prisma.$queryRaw`
+    SELECT id, title FROM "Home" WHERE slug IS NULL AND title IS NOT NULL
+  `;
 
   console.log(`Backfilling ${homes.length} homes...`);
 
@@ -32,21 +32,13 @@ async function run() {
   for (const home of homes) {
     const slug = generateSlug(home.title, home.id);
     try {
-      await prisma.$executeRawUnsafe(
-        `UPDATE "Home" SET slug = $1 WHERE id = $2`,
-        slug,
-        home.id
-      );
+      await prisma.$executeRaw`UPDATE "Home" SET slug = ${slug} WHERE id = ${home.id}`;
       updated++;
     } catch (e) {
       // Slug collision (very unlikely) — append more chars
       const fallback = `${slug}-${home.id.slice(6, 10)}`;
       try {
-        await prisma.$executeRawUnsafe(
-          `UPDATE "Home" SET slug = $1 WHERE id = $2`,
-          fallback,
-          home.id
-        );
+        await prisma.$executeRaw`UPDATE "Home" SET slug = ${fallback} WHERE id = ${home.id}`;
         updated++;
       } catch (e2) {
         console.warn(`Could not set slug for ${home.id}: ${e2.message}`);

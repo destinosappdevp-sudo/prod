@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +18,9 @@ export async function DELETE(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const rows = await prisma.$queryRawUnsafe(
-      'SELECT id, "userId" FROM "UserDocument" WHERE id = $1 LIMIT 1',
-      params.id
-    ) as any[];
+    const rows = (await prisma.$queryRaw(
+      Prisma.sql`SELECT id, "userId" FROM "UserDocument" WHERE id = ${params.id} LIMIT 1`
+    )) as any[];
     const doc = rows[0] ?? null;
 
     if (!doc) {
@@ -32,7 +32,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Prohibido" }, { status: 403 });
     }
 
-    await prisma.$queryRawUnsafe('DELETE FROM "UserDocument" WHERE id = $1', params.id);
+    await prisma.$executeRaw(
+      Prisma.sql`DELETE FROM "UserDocument" WHERE id = ${params.id}`
+    );
 
     return NextResponse.json({ ok: true });
   } catch (err) {

@@ -1,6 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -128,16 +129,12 @@ export async function PATCH(
         typeof updateData.name === "string" &&
         updateData.name !== existingCategory.name
       ) {
-        await tx.$executeRawUnsafe(
-          'UPDATE "Home" SET "categoryName" = array_replace("categoryName", $1, $2) WHERE $1 = ANY("categoryName")',
-          existingCategory.name,
-          updateData.name
+        await tx.$executeRaw(
+          Prisma.sql`UPDATE "Home" SET "categoryName" = array_replace("categoryName", ${existingCategory.name}, ${updateData.name}) WHERE ${existingCategory.name} = ANY("categoryName")`
         );
 
-        await tx.$executeRawUnsafe(
-          'UPDATE "Home" SET "categoryName" = array_append("categoryName", $2) WHERE $1 = ANY("propertyTypeId") AND NOT ($2 = ANY("categoryName"))',
-          categoryId,
-          updateData.name
+        await tx.$executeRaw(
+          Prisma.sql`UPDATE "Home" SET "categoryName" = array_append("categoryName", ${updateData.name}) WHERE ${categoryId} = ANY("propertyTypeId") AND NOT (${updateData.name} = ANY("categoryName"))`
         );
       }
 

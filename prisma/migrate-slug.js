@@ -3,13 +3,9 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function run() {
-  await prisma.$executeRawUnsafe(
-    `ALTER TABLE "Home" ADD COLUMN IF NOT EXISTS "slug" TEXT`
-  );
+  await prisma.$executeRaw`ALTER TABLE "Home" ADD COLUMN IF NOT EXISTS "slug" TEXT`;
   console.log("Column added");
-  await prisma.$executeRawUnsafe(
-    `CREATE UNIQUE INDEX IF NOT EXISTS "Home_slug_key" ON "Home"("slug")`
-  );
+  await prisma.$executeRaw`CREATE UNIQUE INDEX IF NOT EXISTS "Home_slug_key" ON "Home"("slug")`;
   console.log("Index created");
   await prisma.$disconnect();
 }
