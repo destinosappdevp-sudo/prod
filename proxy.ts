@@ -12,7 +12,7 @@ const MAINTENANCE_BYPASS = [
   "/favicon",
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Saltar rutas excluidas del modo mantenimiento
@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
       if (res.ok) {
         const data = await res.json();
         if (data.maintenanceMode) {
-          // Verificar si es admin via cookie de sesión
+          // Verificar si es admin via cookie de sesion
           const isAdmin = data.isAdmin ?? false;
           if (!isAdmin) {
             return NextResponse.redirect(new URL("/mantenimiento", request.url));
