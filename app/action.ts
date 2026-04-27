@@ -790,7 +790,7 @@ export async function logAuditAction(
   details?: Record<string, any>
 ) {
   try {
-    const headersList = headers();
+    const headersList = await headers();
     const ip = headersList.get("x-forwarded-for") || "unknown";
     const userAgent = headersList.get("user-agent") || "unknown";
 
