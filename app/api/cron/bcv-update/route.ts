@@ -91,6 +91,20 @@ export async function GET(request: Request) {
       timestamp: now.toISOString(),
     });
 
+    // --- SIEMPRE: pasar a DRAFT paquetes cuya fecha de partida ya llegó ---
+    const expiredPackages = await prismaAny.home.updateMany({
+      where: {
+        publishStatus: "APPROVED",
+        checkInTime: { lte: now },
+      },
+      data: {
+        publishStatus: "DRAFT",
+      },
+    });
+    if (expiredPackages.count > 0) {
+      console.log(`[BCV_CRON] ${expiredPackages.count} paquete(s) pasados a DRAFT por fecha de partida alcanzada`);
+    }
+
     // Obtener configuración actual
     const config = await prismaAny.platformConfig.findFirst({
       select: {
@@ -114,7 +128,8 @@ export async function GET(request: Request) {
         message: "No configuration found",
         reason: "NO_CONFIG",
         source,
-        updated: false 
+        updated: false,
+        expiredPackagesDrafted: expiredPackages.count,
       });
     }
 
@@ -137,7 +152,8 @@ export async function GET(request: Request) {
         reason: "NO_NEXT_RATE",
         source,
         updated: false,
-        nextScheduled: null 
+        nextScheduled: null,
+        expiredPackagesDrafted: expiredPackages.count,
       });
     }
 
@@ -168,6 +184,7 @@ export async function GET(request: Request) {
         daysRemaining: Math.ceil(
           (proximaDateOnly.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24)
         ),
+        expiredPackagesDrafted: expiredPackages.count,
       });
     }
 
@@ -234,6 +251,7 @@ export async function GET(request: Request) {
       newRate: config.bcvProximaRate,
       newDate: proximaDate.toISOString(),
       timestamp: now.toISOString(),
+      expiredPackagesDrafted: expiredPackages.count,
     });
 
   } catch (error) {

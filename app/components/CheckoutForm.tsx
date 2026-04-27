@@ -30,6 +30,8 @@ interface CheckoutFormProps {
   bcvRate: number;
   totalBs: number;
   savingsTotalUsd: number;
+  seatId?: string;
+  plan?: string;
 }
 
 function roundMoney(value: number) {
@@ -48,6 +50,8 @@ export default function CheckoutForm({
   bcvRate,
   totalBs,
   savingsTotalUsd,
+  seatId,
+  plan,
 }: CheckoutFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -128,6 +132,8 @@ export default function CheckoutForm({
           paymentMethod: "PAGO_MOVIL",
           checkoutMode: selectedMode,
           paymentDetails: formData,
+          seatId: seatId || null,
+          plan: plan || null,
         }),
       });
       const data = await response.json();

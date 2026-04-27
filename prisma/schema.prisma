@@ -103,6 +103,8 @@ model Home {
   latitude                Float?
   longitude               Float?
   slug                    String?        @unique
+  vipSeats                Int?           @default(0)
+  standardSeats           Int?           @default(0)
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
   User                    User?          @relation(fields: [userId], references: [id])
@@ -110,6 +112,7 @@ model Home {
   Reservation             Reservation[]
   Review                  Review[]
   BlockedDate             BlockedDate[]
+  PackageSeat             PackageSeat[]
 }
 
 model HomeAmenity {
@@ -178,9 +181,11 @@ model Reservation {
   nights      Int
   status      ReservationStatus @default(PENDING)
   totalAmount Float
+  seatId      String?           @unique
   Payment     Payment?
   Home        Home?             @relation(fields: [homeId], references: [id])
   User        User?             @relation(fields: [userId], references: [id])
+  PackageSeat PackageSeat?      @relation(fields: [seatId], references: [id])
   Review      Review?
 }
 
@@ -323,6 +328,20 @@ model property_types {
   icon String? @default("home")
 }
 
+model PackageSeat {
+  id          String      @id @default(uuid())
+  homeId      String
+  zone        SeatZone
+  row         Int
+  column      String      // A, B, C o D
+  status      SeatStatus  @default(AVAILABLE)
+  createdAt   DateTime    @default(now())
+  Home        Home        @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  Reservation Reservation?
+
+  @@unique([homeId, row, column])
+}
+
 enum BannerTipo {
   HERO1
   HERO2
@@ -384,4 +403,14 @@ enum WithdrawalStatus {
   PROCESSING
   COMPLETED
   REJECTED
+}
+
+enum SeatZone {
+  VIP
+  STANDARD
+}
+
+enum SeatStatus {
+  AVAILABLE
+  OCCUPIED
 }

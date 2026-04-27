@@ -54,7 +54,7 @@ export default async function CheckoutPage({
   searchParams,
 }: {
   params: { homeId: string };
-  searchParams: { startDate?: string; endDate?: string; guests?: string; plan?: string };
+  searchParams: { startDate?: string; endDate?: string; guests?: string; plan?: string; seatId?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -65,7 +65,7 @@ export default async function CheckoutPage({
     return redirect("/api/auth/login");
   }
 
-  const { startDate, endDate, guests, plan } = searchParams;
+  const { startDate, endDate, guests, plan, seatId } = searchParams;
 
   const planLabel = plan === "vip" ? "Plan Premium VIP" : "Plan Estándar";
 
@@ -209,6 +209,22 @@ export default async function CheckoutPage({
                   Editar
                 </Link>
               </div>
+              {seatId && (
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium mb-1">Asiento</p>
+                    <p className="text-sm text-gray-600 font-semibold text-amber-600">
+                      {planLabel}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/seats/${params.homeId}?plan=${plan || "estandar"}`}
+                    className="text-sm font-semibold underline hover:text-gray-600"
+                  >
+                    Cambiar
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
@@ -262,6 +278,8 @@ export default async function CheckoutPage({
           bcvRate={bcvRate}
           totalBs={totalBs}
           savingsTotalUsd={savingsTotalUsd}
+          seatId={seatId}
+          plan={plan}
         />
       </div>
     </div>

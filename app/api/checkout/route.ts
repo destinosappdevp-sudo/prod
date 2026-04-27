@@ -27,6 +27,8 @@ export async function POST(request: Request) {
     const startDate = typeof body?.startDate === "string" ? body.startDate : "";
     const endDate = typeof body?.endDate === "string" ? body.endDate : "";
     const guests = Number(body?.guests ?? 1);
+    const seatId = typeof body?.seatId === "string" && body.seatId ? body.seatId : null;
+    const plan = typeof body?.plan === "string" ? body.plan : null;
     const paymentMethod =
       typeof body?.paymentMethod === "string" ? body.paymentMethod : "";
     const checkoutModeRaw =
@@ -251,6 +253,27 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validar asiento si fue seleccionado
+    if (seatId) {
+      const seat = await (prisma as any).packageSeat.findUnique({
+        where: { id: seatId },
+        select: { id: true, homeId: true, zone: true, status: true },
+      });
+      if (!seat || seat.homeId !== homeId) {
+        return NextResponse.json({ error: "Asiento no válido para este paquete" }, { status: 400 });
+      }
+      if (seat.status === "OCCUPIED") {
+        return NextResponse.json({ error: "El asiento seleccionado ya está ocupado. Por favor elige otro." }, { status: 409 });
+      }
+      // Validar que la zona coincida con el plan
+      if (plan === "vip" && seat.zone !== "VIP") {
+        return NextResponse.json({ error: "El asiento seleccionado no pertenece a la zona VIP" }, { status: 400 });
+      }
+      if (plan === "estandar" && seat.zone !== "STANDARD") {
+        return NextResponse.json({ error: "El asiento seleccionado no pertenece a la zona Estándar" }, { status: 400 });
+      }
+    }
+
     const paymentDetails = {
       ...paymentDetailsInput,
       currency: paymentCurrency,
@@ -311,8 +334,24 @@ export async function POST(request: Request) {
           nights: calculatedNights,
           totalAmount: totalAmountUsd,
           status: checkoutMode === "SAVINGS" ? "CONFIRMED" : "PENDING",
+          ...(seatId ? { seatId } : {}),
         },
       });
+
+      // Marcar el asiento como OCUPADO si se seleccionó uno
+      if (seatId) {
+        const seatCheck = await tx.packageSeat.findUnique({
+          where: { id: seatId },
+          select: { status: true },
+        });
+        if (!seatCheck || seatCheck.status === "OCCUPIED") {
+          throw new Error("El asiento ya fue ocupado por otro usuario. Por favor elige otro.");
+        }
+        await tx.packageSeat.update({
+          where: { id: seatId },
+          data: { status: "OCCUPIED" },
+        });
+      }
 
       // Crear el pago
       const payment = await tx.payment.create({

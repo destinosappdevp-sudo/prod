@@ -8,6 +8,7 @@ import {
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
 import { generateHomeSlug } from "@/app/lib/slug";
+import { syncPackageSeats } from "@/app/lib/syncPackageSeats";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,10 @@ export async function POST(request: Request) {
     const latitude = latRaw ? parseFloat(latRaw) : null;
     const longitude = lngRaw ? parseFloat(lngRaw) : null;
     const price = (formData.get("price") as string) || "";
+    const vipSeatsRaw = (formData.get("vipSeats") as string) || "";
+    const standardSeatsRaw = (formData.get("standardSeats") as string) || "";
+    const vipSeats = vipSeatsRaw ? Math.max(0, parseInt(vipSeatsRaw, 10)) : 0;
+    const standardSeats = standardSeatsRaw ? Math.max(0, parseInt(standardSeatsRaw, 10)) : 0;
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = (formData.get("propertyTypeId") as string) || "";
     const propertyTypeIdsRaw = formData
@@ -142,6 +147,8 @@ export async function POST(request: Request) {
         latitude,
         longitude,
         price: price ? parseInt(price) : null,
+        vipSeats: vipSeats || 0,
+        standardSeats: standardSeats || 0,
         photo: photoPath,
         categoryName: selectedCategoryNames,
         propertyTypeId: selectedPropertyTypeIds,
@@ -176,6 +183,13 @@ export async function POST(request: Request) {
       } catch {
         // ignore amenity errors
       }
+    }
+
+    // Generar asientos si se configuraron cupos
+    if (vipSeats > 0 || standardSeats > 0) {
+      await prismaAny.$transaction(async (tx: any) => {
+        await syncPackageSeats(tx, newId, vipSeats, standardSeats);
+      });
     }
 
     await syncHomeVisibilityFlags(newId);

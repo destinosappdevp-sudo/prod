@@ -319,7 +319,7 @@ async function DestinoPage({
               ))}
             </ul>
             <Link
-              href={`/checkout/${data.id}?plan=estandar&guests=1`}
+              href={`/seats/${data.id}?plan=estandar`}
               className="block w-full text-center border border-gray-900 rounded-full py-2.5 text-sm font-semibold hover:bg-gray-900 hover:text-white transition"
             >
               Seleccionar Estándar
@@ -353,7 +353,7 @@ async function DestinoPage({
                   ))}
                 </ul>
                 <Link
-                  href={`/checkout/${data.id}?plan=vip&guests=1`}
+                  href={`/seats/${data.id}?plan=vip`}
                   className="block w-full text-center border-2 border-[#E1B042] rounded-full py-2.5 text-sm font-semibold text-[#C49A28] hover:bg-[#E1B042] hover:text-white transition"
                 >
                   Seleccionar Premium

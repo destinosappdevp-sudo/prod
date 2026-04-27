@@ -39,6 +39,8 @@ interface PropertyEditFormProps {
     photo: string | null;
     price: number | null;
     priceVip?: number | null;
+    vipSeats?: number | null;
+    standardSeats?: number | null;
     propertyTypeId: number | null;
     propertyTypeIds?: number[] | null;
     addedCategory: boolean;
@@ -85,6 +87,8 @@ export default function PropertyEditForm({
     longitude: property.longitude?.toString() || "",
     price: property.price?.toString() || "",
     priceVip: property.priceVip?.toString() || "",
+    vipSeats: property.vipSeats?.toString() || "",
+    standardSeats: property.standardSeats?.toString() || "",
     propertyTypeIds:
       property.propertyTypeIds && property.propertyTypeIds.length > 0
         ? property.propertyTypeIds
@@ -228,6 +232,8 @@ export default function PropertyEditForm({
       if (formData.longitude) payload.append("longitude", formData.longitude);
       payload.append("price", formData.price);
       if (formData.priceVip) payload.append("priceVip", formData.priceVip);
+      if (formData.vipSeats) payload.append("vipSeats", formData.vipSeats);
+      if (formData.standardSeats) payload.append("standardSeats", formData.standardSeats);
 
       const selectedCategories = categories.filter((category) =>
         formData.propertyTypeIds.includes(category.id)
@@ -590,6 +596,34 @@ export default function PropertyEditForm({
                   min={1}
                   placeholder="Precio del Paquete VIP (opcional)"
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label htmlFor="vipSeats">Cupos Premium (VIP)</Label>
+                <Input
+                  id="vipSeats"
+                  type="number"
+                  value={formData.vipSeats}
+                  onChange={(e) => handleChange("vipSeats", e.target.value)}
+                  min={0}
+                  step={4}
+                  placeholder="Ej: 12"
+                />
+                <p className="text-xs text-gray-400 mt-1">Se generan asientos VIP automáticamente (filas de 4)</p>
+              </div>
+              <div>
+                <Label htmlFor="standardSeats">Cupos Estándar</Label>
+                <Input
+                  id="standardSeats"
+                  type="number"
+                  value={formData.standardSeats}
+                  onChange={(e) => handleChange("standardSeats", e.target.value)}
+                  min={0}
+                  step={4}
+                  placeholder="Ej: 28"
+                />
+                <p className="text-xs text-gray-400 mt-1">Se generan asientos Estándar automáticamente (filas de 4)</p>
               </div>
             </div>
           </div>
