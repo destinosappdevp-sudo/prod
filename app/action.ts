@@ -120,7 +120,7 @@ export async function getUserProfile() {
 
 export async function signIn() {
   const supabase = await createClient();
-  const origin = headers().get("origin");
+  const origin = (await headers()).get("origin");
   
   // Por ahora redirigir directo a Google OAuth
   const { data, error } = await supabase.auth.signInWithOAuth({
