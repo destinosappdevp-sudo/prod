@@ -45,6 +45,10 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
   };
 
   const handleContinue = () => {
+    if (seats.length === 0) {
+      router.push(`/checkout/${homeId}?plan=${plan}`);
+      return;
+    }
     if (!selectedSeatId) return;
     router.push(`/checkout/${homeId}?plan=${plan}&seatId=${selectedSeatId}`);
   };
@@ -116,6 +120,20 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
 
   const selectedSeat = selectedSeatId ? seats.find((s) => s.id === selectedSeatId) : null;
 
+  if (seats.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-6 py-8">
+        <div className="text-center space-y-2">
+          <p className="text-gray-600 font-medium">Tu cupo está reservado.</p>
+          <p className="text-sm text-gray-400">Los asientos serán asignados por el organizador.</p>
+        </div>
+        <Button className="w-full max-w-xs" onClick={handleContinue}>
+          Continuar al pago
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center gap-4">
       {/* Leyenda */}
@@ -181,7 +199,11 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
 
       {/* Asiento seleccionado + botón */}
       <div className="w-full max-w-xs space-y-3 mt-2">
-        {selectedSeat ? (
+        {seats.length === 0 ? (
+          <p className="text-center text-sm text-gray-400">
+            Los asientos serán asignados por el organizador.
+          </p>
+        ) : selectedSeat ? (
           <p className="text-center text-sm font-medium text-gray-700">
             Asiento seleccionado:{" "}
             <span className="font-bold text-amber-600">
@@ -196,7 +218,7 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
 
         <Button
           className="w-full"
-          disabled={!selectedSeatId}
+          disabled={seats.length > 0 && !selectedSeatId}
           onClick={handleContinue}
         >
           Continuar al pago

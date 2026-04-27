@@ -60,11 +60,6 @@ export default async function SeatSelectionPage({
 
   const seats: SeatData[] = home.PackageSeat ?? [];
 
-  // Si no hay asientos configurados, redirigir al checkout directamente
-  if (seats.length === 0) {
-    redirect(`/checkout/${homeId}?plan=${plan}`);
-  }
-
   const planLabel = plan === "vip" ? "Plan Premium VIP" : "Plan Estándar";
 
   return (
