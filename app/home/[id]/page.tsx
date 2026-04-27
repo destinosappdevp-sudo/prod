@@ -101,8 +101,9 @@ async function getAmenities(homeId: string) {
   }));
 }
 
-async function SingleHomePage({ params }: { params: { id: string } }) {
-  const data = await getData(params.id);
+async function SingleHomePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const data = await getData(id);
 
   // Redirigir 301 al nuevo URL SEO si el paquete tiene slug
   if (data?.slug && data?.categoryName) {
@@ -110,7 +111,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
     redirect(`/destinos/${categorySlug}/${data.slug}`);
   }
 
-  const amenityCategories = await getAmenities(params.id);
+  const amenityCategories = await getAmenities(id);
   const state = getStateByValue(data?.country as string);
   const municipality =
     data?.country && data?.municipality
@@ -238,7 +239,7 @@ async function SingleHomePage({ params }: { params: { id: string } }) {
           />
         </div>
         <HomeReservationForm
-          homeId={params.id}
+          homeId={id}
           userId={user?.id}
           reservation={data?.Reservation}
           price={data?.price as number}

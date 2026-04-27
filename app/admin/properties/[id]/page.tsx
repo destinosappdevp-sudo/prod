@@ -88,9 +88,10 @@ async function getProperty(id: string) {
 export default async function PropertyDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const property = await getProperty(params.id);
+  const { id } = await params;
+  const property = await getProperty(id);
   const amenityCategories = await prismaAny.amenityCategory.findMany({
     where: { isActive: true },
     orderBy: [{ order: "asc" }, { name: "asc" }],

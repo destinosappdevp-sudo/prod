@@ -37,9 +37,10 @@ async function getData(userId: string) {
 export default async function UserSavingsPage({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
-  const data = await getData(params.userId);
+  const { userId } = await params;
+  const data = await getData(userId);
 
   if (!data) notFound();
 

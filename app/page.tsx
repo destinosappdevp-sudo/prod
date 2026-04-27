@@ -130,18 +130,19 @@ async function getData({
   return { data, bcvRate };
 }
 
-export default function Home({
+export default async function Home({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams: Promise<{
     filter?: string;
     country?: string;
     guest?: string;
     rooms?: string;
     bathrooms?: string;
     q?: string;
-  };
+  }>;
 }) {
+  const sp = await searchParams;
   return (
     <div className="container mx-auto px-5 lg:px-10">
       <BannerPopup />
@@ -149,8 +150,8 @@ export default function Home({
       <MapFilter />
       <HomeSearchBar />
 
-      <Suspense key={`${searchParams?.filter}-${searchParams?.q}`} fallback={<SkeletonLoader />}>
-        <ShowPlace searchParams={searchParams} />
+      <Suspense key={`${sp?.filter}-${sp?.q}`} fallback={<SkeletonLoader />}>
+        <ShowPlace searchParams={sp} />
       </Suspense>
     </div>
   );

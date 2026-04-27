@@ -53,8 +53,8 @@ export default async function CheckoutPage({
   params,
   searchParams,
 }: {
-  params: { homeId: string };
-  searchParams: { startDate?: string; endDate?: string; guests?: string; plan?: string; seatId?: string };
+  params: Promise<{ homeId: string }>;
+  searchParams: Promise<{ startDate?: string; endDate?: string; guests?: string; plan?: string; seatId?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -65,7 +65,8 @@ export default async function CheckoutPage({
     return redirect("/api/auth/login");
   }
 
-  const { startDate, endDate, guests, plan, seatId } = searchParams;
+  const { homeId } = await params;
+  const { startDate, endDate, guests, plan, seatId } = await searchParams;
 
   const planLabel = plan === "vip" ? "Plan Premium VIP" : "Plan Estándar";
 
@@ -73,7 +74,7 @@ export default async function CheckoutPage({
   const resolvedStartDate = startDate || new Date().toISOString().split("T")[0];
   const resolvedEndDate = endDate || new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
-  const home = await getHomeData(params.homeId);
+  const home = await getHomeData(homeId);
 
   if (!home || !home.price) {
     return redirect("/");
@@ -91,7 +92,7 @@ export default async function CheckoutPage({
   const endTime = end.getTime();
 
   if (Number.isNaN(startTime) || Number.isNaN(endTime)) {
-    return redirect(`/home/${params.homeId}`);
+    return redirect(`/home/${homeId}`);
   }
 
   const nights = Math.max(1, Math.ceil((endTime - startTime) / (1000 * 60 * 60 * 24)));
@@ -191,7 +192,7 @@ export default async function CheckoutPage({
                   </p>
                 </div>
                 <Link 
-                  href={`/home/${params.homeId}`}
+                  href={`/home/${homeId}`}
                   className="text-sm font-semibold underline hover:text-gray-600"
                 >
                   Editar
@@ -203,7 +204,7 @@ export default async function CheckoutPage({
                   <p className="text-sm text-gray-600">{guests || 1} cupo{(guests && parseInt(guests) > 1) ? 's' : ''}</p>
                 </div>
                 <Link 
-                  href={`/home/${params.homeId}`}
+                  href={`/home/${homeId}`}
                   className="text-sm font-semibold underline hover:text-gray-600"
                 >
                   Editar
@@ -218,7 +219,7 @@ export default async function CheckoutPage({
                     </p>
                   </div>
                   <Link
-                    href={`/seats/${params.homeId}?plan=${plan || "estandar"}`}
+                    href={`/seats/${homeId}?plan=${plan || "estandar"}`}
                     className="text-sm font-semibold underline hover:text-gray-600"
                   >
                     Cambiar
@@ -267,7 +268,7 @@ export default async function CheckoutPage({
 
         {/* Formulario de pago */}
         <CheckoutForm
-          homeId={params.homeId}
+          homeId={homeId}
           userId={user.id}
           startDate={resolvedStartDate}
           endDate={resolvedEndDate}

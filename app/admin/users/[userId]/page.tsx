@@ -44,15 +44,16 @@ async function getUserDocuments(userId: string) {
 export default async function EditUserPage({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
-  const user = await getUser(params.userId);
+  const { userId } = await params;
+  const user = await getUser(userId);
 
   if (!user) {
     notFound();
   }
 
-  const documents = await getUserDocuments(params.userId);
+  const documents = await getUserDocuments(userId);
 
   return (
     <div className="space-y-6">

@@ -38,28 +38,31 @@ export default async function SeatSelectionPage({
   params,
   searchParams,
 }: {
-  params: { homeId: string };
-  searchParams: { plan?: string };
+  params: Promise<{ homeId: string }>;
+  searchParams: Promise<{ plan?: string }>;
 }) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { homeId } = await params;
+  const { plan: planParam } = await searchParams;
+
   if (!user) {
-    redirect(`/login?next=/seats/${params.homeId}?plan=${searchParams.plan || "estandar"}`);
+    redirect(`/login?next=/seats/${homeId}?plan=${planParam || "estandar"}`);
   }
 
-  const plan = searchParams.plan === "vip" ? "vip" : "estandar";
+  const plan = planParam === "vip" ? "vip" : "estandar";
 
-  const home = await getPackageWithSeats(params.homeId);
+  const home = await getPackageWithSeats(homeId);
   if (!home) notFound();
 
   const seats: SeatData[] = home.PackageSeat ?? [];
 
   // Si no hay asientos configurados, redirigir al checkout directamente
   if (seats.length === 0) {
-    redirect(`/checkout/${params.homeId}?plan=${plan}`);
+    redirect(`/checkout/${homeId}?plan=${plan}`);
   }
 
   const planLabel = plan === "vip" ? "Plan Premium VIP" : "Plan Estándar";
@@ -82,7 +85,7 @@ export default async function SeatSelectionPage({
           </p>
         </div>
 
-        <SeatSelector seats={seats} plan={plan} homeId={params.homeId} />
+        <SeatSelector seats={seats} plan={plan} homeId={homeId} />
       </div>
     </div>
   );

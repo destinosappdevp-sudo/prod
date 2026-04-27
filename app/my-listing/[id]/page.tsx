@@ -58,7 +58,7 @@ async function getPropertyForHost(id: string, userId: string) {
 export default async function HostPropertyDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -67,7 +67,8 @@ export default async function HostPropertyDetailPage({
     return redirect("/login");
   }
 
-  const property = await getPropertyForHost(params.id, user.id);
+  const { id } = await params;
+  const property = await getPropertyForHost(id, user.id);
   const amenityCategories = await prismaAny.amenityCategory.findMany({
     where: { isActive: true },
     orderBy: [{ order: "asc" }, { name: "asc" }],

@@ -78,8 +78,9 @@ function formatCurrencyValue(amount: number, currency: "USD" | "VES"): string {
 export default async function ReservationDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const userSummarySelect = {
     id: true,
     firstName: true,
@@ -100,7 +101,7 @@ export default async function ReservationDetailPage({
   try {
     // Fetch reservation with related data
     const reservation = await (prisma as any).reservation.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         User: {
           select: userSummarySelect,

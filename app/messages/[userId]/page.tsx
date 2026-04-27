@@ -9,7 +9,7 @@ import { sendMessage } from "@/app/action";
 export default async function ChatPage({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -20,10 +20,12 @@ export default async function ChatPage({
     redirect("/login");
   }
 
+  const { userId } = await params;
+
   try {
     // Get conversation partner info
     const partner = await (prisma as any).user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       select: {
         id: true,
         firstName: true,
@@ -40,8 +42,8 @@ export default async function ChatPage({
     const messages = await (prisma as any).message.findMany({
       where: {
         OR: [
-          { senderId: user.id, recipientId: params.userId },
-          { senderId: params.userId, recipientId: user.id },
+          { senderId: user.id, recipientId: userId },
+          { senderId: userId, recipientId: user.id },
         ],
       },
       include: {
@@ -120,7 +122,7 @@ export default async function ChatPage({
             action={async (formData) => {
               "use server";
               const content = formData.get("message") as string;
-              await sendMessage(user.id, params.userId, content);
+              await sendMessage(user.id, userId, content);
             }}
             className="max-w-4xl mx-auto flex gap-3"
           >

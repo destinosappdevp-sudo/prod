@@ -68,9 +68,10 @@ async function getAmenities(homeId: string) {
 export async function generateMetadata({
   params,
 }: {
-  params: { categorySlug: string; slug: string };
+  params: Promise<{ categorySlug: string; slug: string }>;
 }): Promise<Metadata> {
-  const data = await getDataBySlug(params.slug);
+  const { slug } = await params;
+  const data = await getDataBySlug(slug);
   if (!data) return { title: "Paquete no encontrado" };
   return {
     title: `${data.title} | Destinos Venezuela`,
@@ -81,14 +82,15 @@ export async function generateMetadata({
 async function DestinoPage({
   params,
 }: {
-  params: { categorySlug: string; slug: string };
+  params: Promise<{ categorySlug: string; slug: string }>;
 }) {
-  const data = await getDataBySlug(params.slug);
+  const { slug, categorySlug } = await params;
+  const data = await getDataBySlug(slug);
 
   if (!data) notFound();
 
   const correctCategorySlug = toCategorySlug(data.categoryName);
-  if (params.categorySlug !== correctCategorySlug) {
+  if (categorySlug !== correctCategorySlug) {
     redirect(`/destinos/${correctCategorySlug}/${data.slug}`);
   }
 

@@ -727,7 +727,7 @@ async function getGuestDashboardData(userId: string) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { tab?: string; target?: string; homeId?: string };
+  searchParams: Promise<{ tab?: string; target?: string; homeId?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -764,14 +764,15 @@ export default async function DashboardPage({
   if (userRecord.role === "ADMIN" || userRecord.role === "SUPERADMIN") {
     redirect("/admin");
   }
-  const initialTab = searchParams.tab;
+  const sp = await searchParams;
+  const initialTab = sp.tab;
 
   const [data, initialDocs, savingPackage] = await Promise.all([
     getGuestDashboardData(user.id),
     getUserDocuments(user.id),
-    typeof searchParams.homeId === "string"
+    typeof sp.homeId === "string"
       ? (prisma as any).home.findUnique({
-          where: { id: searchParams.homeId },
+          where: { id: sp.homeId },
           select: {
             id: true,
             title: true,
@@ -804,8 +805,8 @@ export default async function DashboardPage({
       savingPackages={data.savingPackages}
       savingsTotal={data.savingsTotal}
       bcvRate={data.bcvRate}
-      savingTarget={typeof searchParams.target === "string" ? searchParams.target : undefined}
-      savingTargetId={typeof searchParams.homeId === "string" ? searchParams.homeId : undefined}
+      savingTarget={typeof sp.target === "string" ? sp.target : undefined}
+      savingTargetId={typeof sp.homeId === "string" ? sp.homeId : undefined}
       savingPackage={savingPackage}
       userData={{ ...userRecord, email: userRecord?.email || user.email }}
       initialDocs={initialDocs || []}
