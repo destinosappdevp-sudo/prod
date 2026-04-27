@@ -92,17 +92,17 @@ export async function GET(request: Request) {
     });
 
     // --- SIEMPRE: pasar a DRAFT paquetes cuya fecha de partida ya llegó ---
-    const expiredPackages = await prismaAny.home.updateMany({
-      where: {
-        publishStatus: "APPROVED",
-        checkInTime: { lte: now },
-      },
-      data: {
-        publishStatus: "DRAFT",
-      },
-    });
-    if (expiredPackages.count > 0) {
-      console.log(`[BCV_CRON] ${expiredPackages.count} paquete(s) pasados a DRAFT por fecha de partida alcanzada`);
+    // checkInTime es STRING "YYYY-MM-DDTHH:mm" → se compara via CAST en SQL
+    const expiredCount = await prisma.$executeRaw`
+      UPDATE "Home"
+      SET "publishStatus" = 'DRAFT'
+      WHERE "publishStatus" = 'APPROVED'
+        AND "checkInTime" IS NOT NULL
+        AND "checkInTime" != ''
+        AND CAST("checkInTime" AS TIMESTAMP) < NOW()
+    `;
+    if (expiredCount > 0) {
+      console.log(`[BCV_CRON] ${expiredCount} paquete(s) pasados a DRAFT por fecha de partida alcanzada`);
     }
 
     // Obtener configuración actual
@@ -129,7 +129,7 @@ export async function GET(request: Request) {
         reason: "NO_CONFIG",
         source,
         updated: false,
-        expiredPackagesDrafted: expiredPackages.count,
+        expiredPackagesDrafted: expiredCount,
       });
     }
 
@@ -153,7 +153,7 @@ export async function GET(request: Request) {
         source,
         updated: false,
         nextScheduled: null,
-        expiredPackagesDrafted: expiredPackages.count,
+        expiredPackagesDrafted: expiredCount,
       });
     }
 
@@ -184,7 +184,7 @@ export async function GET(request: Request) {
         daysRemaining: Math.ceil(
           (proximaDateOnly.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24)
         ),
-        expiredPackagesDrafted: expiredPackages.count,
+        expiredPackagesDrafted: expiredCount,
       });
     }
 
@@ -251,7 +251,7 @@ export async function GET(request: Request) {
       newRate: config.bcvProximaRate,
       newDate: proximaDate.toISOString(),
       timestamp: now.toISOString(),
-      expiredPackagesDrafted: expiredPackages.count,
+      expiredPackagesDrafted: expiredCount,
     });
 
   } catch (error) {

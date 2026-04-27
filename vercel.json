@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/bcv-update",
       "schedule": "5 0 * * *"
+    },
+    {
+      "path": "/api/cron/expire-packages",
+      "schedule": "0 6 * * *"
     }
   ]
 }
