@@ -55,6 +55,11 @@ export async function POST(request: Request) {
     const standardSeatsRaw = (formData.get("standardSeats") as string) || "";
     const vipSeats = vipSeatsRaw ? Math.max(0, parseInt(vipSeatsRaw, 10)) : 0;
     const standardSeats = standardSeatsRaw ? Math.max(0, parseInt(standardSeatsRaw, 10)) : 0;
+    // Zona VIP = bedrooms, Zona Estándar = bathrooms; usar como fallback si no se especificaron cupos
+    const bedroomsInt = bedrooms ? Math.max(0, parseInt(bedrooms, 10)) : 0;
+    const bathroomsInt = bathrooms ? Math.max(0, parseInt(bathrooms, 10)) : 0;
+    const effectiveVipSeats = vipSeats || bedroomsInt;
+    const effectiveStandardSeats = standardSeats || bathroomsInt;
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = (formData.get("propertyTypeId") as string) || "";
     const propertyTypeIdsRaw = formData
@@ -147,8 +152,8 @@ export async function POST(request: Request) {
         latitude,
         longitude,
         price: price ? parseInt(price) : null,
-        vipSeats: vipSeats || 0,
-        standardSeats: standardSeats || 0,
+        vipSeats: effectiveVipSeats,
+        standardSeats: effectiveStandardSeats,
         photo: photoPath,
         categoryName: selectedCategoryNames,
         propertyTypeId: selectedPropertyTypeIds,
@@ -186,9 +191,9 @@ export async function POST(request: Request) {
     }
 
     // Generar asientos si se configuraron cupos
-    if (vipSeats > 0 || standardSeats > 0) {
+    if (effectiveVipSeats > 0 || effectiveStandardSeats > 0) {
       await prismaAny.$transaction(async (tx: any) => {
-        await syncPackageSeats(tx, newId, vipSeats, standardSeats);
+        await syncPackageSeats(tx, newId, effectiveVipSeats, effectiveStandardSeats);
       });
     }
 

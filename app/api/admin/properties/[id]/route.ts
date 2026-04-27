@@ -98,6 +98,11 @@ export async function PATCH(
     const standardSeatsRaw = (formData.get("standardSeats") as string) || "";
     const vipSeats = vipSeatsRaw ? Math.max(0, parseInt(vipSeatsRaw, 10)) : 0;
     const standardSeats = standardSeatsRaw ? Math.max(0, parseInt(standardSeatsRaw, 10)) : 0;
+    // Zona VIP = bedrooms, Zona Estándar = bathrooms; usar como fallback si no se especificaron cupos
+    const bedroomsInt = bedrooms ? Math.max(0, parseInt(bedrooms, 10)) : 0;
+    const bathroomsInt = bathrooms ? Math.max(0, parseInt(bathrooms, 10)) : 0;
+    const effectiveVipSeats = vipSeats || bedroomsInt;
+    const effectiveStandardSeats = standardSeats || bathroomsInt;
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = (formData.get("propertyTypeId") as string) || "";
     const propertyTypeIdsRaw = formData
@@ -218,8 +223,8 @@ export async function PATCH(
       longitude: longitude,
       price: price ? parseInt(price) : null,
       priceVip: priceVipRaw ? parseInt(priceVipRaw) : null,
-      vipSeats: vipSeats,
-      standardSeats: standardSeats,
+      vipSeats: effectiveVipSeats,
+      standardSeats: effectiveStandardSeats,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
@@ -240,7 +245,7 @@ export async function PATCH(
 
     // Regenerar asientos si cambiaron los cupos
     await prismaAny.$transaction(async (tx: any) => {
-      await syncPackageSeats(tx, id, vipSeats, standardSeats);
+      await syncPackageSeats(tx, id, effectiveVipSeats, effectiveStandardSeats);
     });
 
     await syncHomeVisibilityFlags(id);
