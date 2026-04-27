@@ -53,9 +53,10 @@ async function applyAmenityUpdates(homeId: string, payload?: string | null) {
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -222,11 +223,11 @@ export async function PATCH(
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
-      slug: title ? generateHomeSlug(title, params.id) : undefined,
+      slug: title ? generateHomeSlug(title, id) : undefined,
     };
 
     const updated = await prisma.home.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...baseUpdateData,
         categoryName: selectedCategoryNames,
@@ -235,15 +236,15 @@ export async function PATCH(
       },
     });
 
-    await applyAmenityUpdates(params.id, amenitiesPayload);
+    await applyAmenityUpdates(id, amenitiesPayload);
 
     // Regenerar asientos si cambiaron los cupos
     await prismaAny.$transaction(async (tx: any) => {
-      await syncPackageSeats(tx, params.id, vipSeats, standardSeats);
+      await syncPackageSeats(tx, id, vipSeats, standardSeats);
     });
 
-    await syncHomeVisibilityFlags(params.id);
-    revalidateHomeVisibilityPaths(params.id);
+    await syncHomeVisibilityFlags(id);
+    revalidateHomeVisibilityPaths(id);
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -257,9 +258,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -278,7 +280,7 @@ export async function DELETE(
     }
 
     const property = await prismaAny.home.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         photo: true,
@@ -305,10 +307,10 @@ export async function DELETE(
     }
 
     await prismaAny.$transaction(async (tx: any) => {
-      await tx.favorite.deleteMany({ where: { homeId: params.id } });
-      await tx.homeAmenity.deleteMany({ where: { homeId: params.id } });
-      await tx.review.deleteMany({ where: { homeId: params.id } });
-      await tx.home.delete({ where: { id: params.id } });
+      await tx.favorite.deleteMany({ where: { homeId: id } });
+      await tx.homeAmenity.deleteMany({ where: { homeId: id } });
+      await tx.review.deleteMany({ where: { homeId: id } });
+      await tx.home.delete({ where: { id } });
     });
 
     if (property.photo) {

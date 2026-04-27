@@ -11,9 +11,10 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -49,7 +50,7 @@ export async function PATCH(
 
     // Obtener el pago con su reserva
     const payment = await prismaAny.payment.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         Reservation: {
           include: {
@@ -84,7 +85,7 @@ export async function PATCH(
     const result = await prismaAny.$transaction(async (tx: any) => {
       // Actualizar el pago
       const updatedPayment = await tx.payment.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           status: action === "confirm" ? "CONFIRMED" : "REJECTED",
           confirmedAt: action === "confirm" ? new Date() : null,

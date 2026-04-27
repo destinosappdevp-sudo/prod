@@ -49,9 +49,10 @@ async function applyAmenityUpdates(homeId: string, payload?: string | null) {
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -60,7 +61,7 @@ export async function PATCH(
     }
 
     const home = await prisma.home.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { userId: true },
     });
 
@@ -201,11 +202,11 @@ export async function PATCH(
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
-      slug: title ? generateHomeSlug(title, params.id) : undefined,
+      slug: title ? generateHomeSlug(title, id) : undefined,
     };
 
     const updated = await prisma.home.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...baseUpdateData,
         categoryName: selectedCategoryNames,
@@ -214,9 +215,9 @@ export async function PATCH(
       },
     });
 
-    await applyAmenityUpdates(params.id, amenitiesPayload);
-    await syncHomeVisibilityFlags(params.id);
-    revalidateHomeVisibilityPaths(params.id);
+    await applyAmenityUpdates(id, amenitiesPayload);
+    await syncHomeVisibilityFlags(id);
+    revalidateHomeVisibilityPaths(id);
 
     return NextResponse.json(updated);
   } catch (error) {

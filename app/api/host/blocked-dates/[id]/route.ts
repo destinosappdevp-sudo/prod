@@ -4,15 +4,16 @@ import prisma from "@/app/lib/db";
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const record = await (prisma as any).blockedDate.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { Home: { select: { userId: true } } },
     });
 
@@ -21,7 +22,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await (prisma as any).blockedDate.delete({ where: { id: params.id } });
+    await (prisma as any).blockedDate.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

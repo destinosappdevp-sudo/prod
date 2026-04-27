@@ -8,9 +8,10 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -49,7 +50,7 @@ export async function PATCH(
 
     // Validar que el banner existe
     const existingBanner = await prisma.banner.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingBanner) {
@@ -104,7 +105,7 @@ export async function PATCH(
     }
 
     const updatedBanner = await prisma.banner.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title: title || existingBanner.title,
         startDate: startDate ? new Date(startDate) : existingBanner.startDate,
@@ -132,9 +133,10 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -160,7 +162,7 @@ export async function DELETE(
 
     // Verificar que existe
     const banner = await prisma.banner.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!banner) {
@@ -178,7 +180,7 @@ export async function DELETE(
 
     // Eliminar banner de BD
     await prisma.banner.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Banner eliminado exitosamente" });

@@ -31,9 +31,10 @@ async function applyAmenityUpdates(homeId: string, amenities: { amenityId: strin
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -42,7 +43,7 @@ export async function PATCH(
     }
 
     const home = await prisma.home.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { userId: true },
     });
 
@@ -53,7 +54,7 @@ export async function PATCH(
     const body = await request.json();
     const amenities = Array.isArray(body?.amenities) ? body.amenities : [];
 
-    await applyAmenityUpdates(params.id, amenities);
+    await applyAmenityUpdates(id, amenities);
 
     return NextResponse.json({ success: true });
   } catch (error) {

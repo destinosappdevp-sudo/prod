@@ -47,12 +47,13 @@ async function requireAdmin() {
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 
-  const categoryId = parseCategoryId(params.id);
+  const { id } = await params;
+  const categoryId = parseCategoryId(id);
   if (!categoryId) {
     return NextResponse.json({ error: "Invalid category id" }, { status: 400 });
   }
@@ -70,12 +71,13 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 
-  const categoryId = parseCategoryId(params.id);
+  const { id } = await params;
+  const categoryId = parseCategoryId(id);
   if (!categoryId) {
     return NextResponse.json({ error: "Invalid category id" }, { status: 400 });
   }
@@ -153,12 +155,13 @@ export async function PATCH(
 
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 
-  const categoryId = parseCategoryId(params.id);
+  const { id } = await params;
+  const categoryId = parseCategoryId(id);
   if (!categoryId) {
     return NextResponse.json({ error: "Invalid category id" }, { status: 400 });
   }

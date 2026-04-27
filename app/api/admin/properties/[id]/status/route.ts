@@ -12,9 +12,10 @@ type AllowedStatus = "APPROVED" | "PENDING_APPROVAL" | "DRAFT" | "REJECTED";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -45,7 +46,7 @@ export async function PATCH(
     }
 
     const property = await prisma.home.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { id: true },
     });
 
@@ -54,7 +55,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.home.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         publishStatus: nextStatus,
         approvedById: nextStatus === "APPROVED" ? user.id : null,
@@ -68,8 +69,8 @@ export async function PATCH(
       },
     });
 
-    await syncHomeVisibilityFlags(params.id);
-    revalidateHomeVisibilityPaths(params.id);
+    await syncHomeVisibilityFlags(id);
+    revalidateHomeVisibilityPaths(id);
 
     return NextResponse.json(updated);
   } catch (error) {

@@ -7,9 +7,10 @@ const prismaAny = prisma as any;
 
 export async function POST(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const {
       data: { user },
@@ -22,7 +23,7 @@ export async function POST(
 
     const sourceHome = await prismaAny.home.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: user.id,
       },
       select: {

@@ -8,9 +8,10 @@ export const dynamic = "force-dynamic";
 // DELETE /api/user/documents/[id] — elimina un documento del usuario autenticado
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -19,7 +20,7 @@ export async function DELETE(
     }
 
     const rows = (await prisma.$queryRaw(
-      Prisma.sql`SELECT id, "userId" FROM "UserDocument" WHERE id = ${params.id} LIMIT 1`
+      Prisma.sql`SELECT id, "userId" FROM "UserDocument" WHERE id = ${id} LIMIT 1`
     )) as any[];
     const doc = rows[0] ?? null;
 
@@ -33,7 +34,7 @@ export async function DELETE(
     }
 
     await prisma.$executeRaw(
-      Prisma.sql`DELETE FROM "UserDocument" WHERE id = ${params.id}`
+      Prisma.sql`DELETE FROM "UserDocument" WHERE id = ${id}`
     );
 
     return NextResponse.json({ ok: true });

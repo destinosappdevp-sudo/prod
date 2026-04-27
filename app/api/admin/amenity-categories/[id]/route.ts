@@ -28,16 +28,17 @@ async function requireAdmin() {
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 
   try {
+    const { id } = await params;
     const body = await request.json();
 
     const updated = await prismaAny.amenityCategory.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: body?.name?.trim(),
         order: typeof body?.order === "number" ? body.order : undefined,

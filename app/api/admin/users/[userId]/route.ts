@@ -42,9 +42,10 @@ async function findAuthUserIdByEmail(adminClient: AdminClient, email: string) {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -101,7 +102,7 @@ export async function PATCH(
 
     // Actualizar usuario
     const updatedUser = await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: updateData,
       include: {
         _count: {
@@ -123,7 +124,7 @@ export async function PATCH(
     if (hostApproved) {
       const homesToApprove = await prisma.home.findMany({
         where: {
-          userId: params.userId,
+          userId,
           publishStatus: {
             not: "APPROVED"
           }
@@ -133,7 +134,7 @@ export async function PATCH(
 
       await prisma.home.updateMany({
         where: {
-          userId: params.userId,
+          userId,
           publishStatus: {
             not: "APPROVED"
           }
@@ -163,9 +164,10 @@ export async function PATCH(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -187,7 +189,7 @@ export async function GET(
     }
 
     const targetUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       include: {
         _count: {
           select: {
@@ -219,9 +221,10 @@ export async function GET(
 // PUT /api/admin/users/[userId] — cambiar contraseña
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
@@ -251,7 +254,7 @@ export async function PUT(
     }
 
     const targetUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       select: { id: true, email: true },
     });
 
@@ -270,9 +273,9 @@ export async function PUT(
       );
     }
 
-    let authUserId = params.userId;
+    let authUserId = userId;
     let { error: updateError } = await adminClient.auth.admin.updateUserById(
-      params.userId,
+      userId,
       { password }
     );
 
@@ -316,7 +319,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       authUserId,
-      resolvedByEmail: authUserId !== params.userId,
+      resolvedByEmail: authUserId !== userId,
     });
   } catch (error) {
     console.error("Error changing password:", error);
