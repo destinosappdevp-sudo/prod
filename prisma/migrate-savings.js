@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.$executeRawUnsafe(`
+  await prisma.$executeRaw`
     CREATE TABLE IF NOT EXISTS "Saving" (
       "id"        TEXT NOT NULL,
       "userId"    TEXT NOT NULL,
@@ -15,11 +15,11 @@ async function main() {
       CONSTRAINT "Saving_userId_fkey" FOREIGN KEY ("userId")
         REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
     );
-  `);
+  `;
 
-  await prisma.$executeRawUnsafe(`
+  await prisma.$executeRaw`
     CREATE INDEX IF NOT EXISTS "Saving_userId_idx" ON "Saving"("userId");
-  `);
+  `;
 
   console.log("Tabla Saving creada correctamente");
 }

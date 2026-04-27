@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -101,10 +102,16 @@ export async function POST() {
     );
 
     // Tablas legacy
-    const legacyTables = ["bids", "comments", "images"];
+    const legacyTables = ["bids", "comments", "images"] as const;
+    const legacyDeleteSql: Record<(typeof legacyTables)[number], Prisma.Sql> = {
+      bids: Prisma.sql`DELETE FROM "bids"`,
+      comments: Prisma.sql`DELETE FROM "comments"`,
+      images: Prisma.sql`DELETE FROM "images"`,
+    };
+
     for (const table of legacyTables) {
       await safeDeletion(`legacy ${table}`, () =>
-        (prisma as any).$executeRawUnsafe(`DELETE FROM "${table}"`)
+        (prisma as any).$executeRaw(legacyDeleteSql[table])
       );
     }
 

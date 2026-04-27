@@ -2,10 +2,10 @@ const { PrismaClient } = require('@prisma/client');
 const p = new PrismaClient();
 async function main() {
   // Restore Home.slug (dropped by accidental DB reset)
-  await p.$executeRawUnsafe(`ALTER TABLE "Home" ADD COLUMN IF NOT EXISTS "slug" TEXT`);
+  await p.$executeRaw`ALTER TABLE "Home" ADD COLUMN IF NOT EXISTS "slug" TEXT`;
   console.log('Home.slug column added');
 
-  await p.$executeRawUnsafe(`
+  await p.$executeRaw`
     DO $$ BEGIN
       IF NOT EXISTS (
         SELECT 1 FROM pg_indexes WHERE tablename = 'Home' AND indexname = 'Home_slug_key'
@@ -13,11 +13,11 @@ async function main() {
         CREATE UNIQUE INDEX "Home_slug_key" ON "Home"("slug");
       END IF;
     END $$
-  `);
+  `;
   console.log('Home.slug unique index created');
 
   // Backfill slugs for homes that don't have one
-  const homes = await p.$queryRawUnsafe(`SELECT id, title FROM "Home" WHERE slug IS NULL`);
+  const homes = await p.$queryRaw`SELECT id, title FROM "Home" WHERE slug IS NULL`;
   console.log(`Homes needing slug backfill: ${homes.length}`);
 
   let updated = 0;
@@ -31,12 +31,12 @@ async function main() {
       .slice(0, 60);
     const slug = base + '-' + home.id.replace(/-/g, '').slice(0, 8);
     try {
-      await p.$executeRawUnsafe(`UPDATE "Home" SET "slug" = $1 WHERE "id" = $2`, slug, home.id);
+      await p.$executeRaw`UPDATE "Home" SET "slug" = ${slug} WHERE "id" = ${home.id}`;
       updated++;
     } catch(e) {
       // Collision: add extra suffix
       const fallback = base + '-' + home.id.replace(/-/g, '').slice(0, 12);
-      await p.$executeRawUnsafe(`UPDATE "Home" SET "slug" = $1 WHERE "id" = $2`, fallback, home.id);
+      await p.$executeRaw`UPDATE "Home" SET "slug" = ${fallback} WHERE "id" = ${home.id}`;
       updated++;
     }
   }

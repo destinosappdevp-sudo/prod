@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,8 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const docs = await prisma.$queryRawUnsafe(
-      'SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = $1 ORDER BY "uploadedAt" DESC',
-      user.id
+    const docs = await prisma.$queryRaw(
+      Prisma.sql`SELECT id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt" FROM "UserDocument" WHERE "userId" = ${user.id} ORDER BY "uploadedAt" DESC`
     );
 
     return NextResponse.json(docs);
@@ -80,15 +80,9 @@ export async function POST(request: Request) {
     const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
 
     const id = crypto.randomUUID();
-    const rows = await prisma.$queryRawUnsafe(
-      'INSERT INTO "UserDocument" (id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt") VALUES ($1, $2, $3, $4, $5, $6, NOW()) RETURNING id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt"',
-      id,
-      user.id,
-      url,
-      file.name,
-      optimizedFile.file.size,
-      optimizedFile.contentType
-    ) as any[];
+    const rows = (await prisma.$queryRaw(
+      Prisma.sql`INSERT INTO "UserDocument" (id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt") VALUES (${id}, ${user.id}, ${url}, ${file.name}, ${optimizedFile.file.size}, ${optimizedFile.contentType}, NOW()) RETURNING id, "userId", url, "fileName", "fileSize", "mimeType", "uploadedAt"`
+    )) as any[];
     const doc = rows[0];
 
     return NextResponse.json(doc, { status: 201 });

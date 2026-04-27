@@ -1,0 +1,15 @@
+Security check (npm audit)
+Date: 2026-04-25
+
+Result:
+- vulnerabilities.total: 0
+- vulnerabilities.critical: 0
+- vulnerabilities.high: 0
+- vulnerabilities.moderate: 0
+- vulnerabilities.low: 0
+
+Dependencies audited:
+- prod: 258
+- dev: 291
+- optional: 35
+- total: 583
