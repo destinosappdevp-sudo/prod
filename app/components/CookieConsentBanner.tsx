@@ -67,7 +67,9 @@ export default function CookieConsentBanner({ isLoggedIn = false }: CookieConsen
   }, []);
 
   const bottomOffset = useMemo(() => {
-    return isLoggedIn ? "bottom-20" : "bottom-4";
+    return isLoggedIn
+      ? "bottom-[calc(5rem+env(safe-area-inset-bottom))]"
+      : "bottom-[calc(1rem+env(safe-area-inset-bottom))]";
   }, [isLoggedIn]);
 
   const savePreferences = (nextPreferences: CookiePreferences) => {

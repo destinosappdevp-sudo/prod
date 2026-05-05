@@ -26,7 +26,7 @@ export default function LoggedInBottomNav({ isLoggedIn }: LoggedInBottomNavProps
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[70] border-t border-slate-200 bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-[70] border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-around px-1">
         {items.map((item) => {
           const Icon = item.icon;
@@ -41,7 +41,7 @@ export default function LoggedInBottomNav({ isLoggedIn }: LoggedInBottomNavProps
             <Link
               key={item.key}
               href={item.href}
-              className="relative flex h-full flex-1 flex-col items-center justify-center gap-1 transition"
+              className="relative flex h-full flex-1 touch-manipulation flex-col items-center justify-center gap-1 transition"
             >
               <Icon size={21} className={isActive ? "text-orange-500" : "text-slate-400"} />
               <span
