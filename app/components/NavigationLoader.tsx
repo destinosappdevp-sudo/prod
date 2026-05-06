@@ -1,10 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function NavigationLoader() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -46,10 +47,10 @@ export function NavigationLoader() {
     };
   }, []);
 
-  // Ocultar cuando termina la navegación (cambia el pathname)
+  // Ocultar cuando termina la navegación (cambia el pathname o los search params)
   useEffect(() => {
     setLoading(false);
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   // Fallback: ocultar después de 1.5s por si algo falla
   useEffect(() => {

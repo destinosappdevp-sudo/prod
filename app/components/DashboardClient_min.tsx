@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -114,6 +114,13 @@ export default function DashboardClient(props: DashboardClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
   const [selectedSavingId, setSelectedSavingId] = useState<string | null>(props.savingTargetId ?? null);
+
+  useEffect(() => {
+    if (props.initialTab && props.initialTab !== activeTab) {
+      setActiveTab(props.initialTab);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.initialTab]);
   const [amountUsd, setAmountUsd] = useState("");
   const [emisorBank, setEmisorBank] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -399,7 +406,16 @@ export default function DashboardClient(props: DashboardClientProps) {
 
       {/* Main */}
       <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-8 lg:pt-8">
-        <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-end rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
+        <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
+          <button
+            type="button"
+            aria-label="Abrir menú"
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-slate-50"
+          >
+            <Menu size={20} />
+          </button>
+          <span className="text-sm font-semibold text-slate-700">{activeMenuLabel}</span>
           <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-xs font-bold text-[#8A6500]">
             {props.profileImage ? (
               <Image
