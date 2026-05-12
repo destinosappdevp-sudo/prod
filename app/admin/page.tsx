@@ -10,7 +10,8 @@ async function getAdminStats() {
 
   const now = new Date();
 
-  const [totalUsers, totalProperties, pendingPayments, platformConfig, savingsAgg, savingsCount] =
+  const prismaAny = prisma as any;
+  const [totalUsers, totalProperties, pendingPayments, platformConfig, savingsAgg, savingsCount, pendingSavings] =
     await Promise.all([
       prisma.user.count(),
       prisma.home.count(),
@@ -22,6 +23,7 @@ async function getAdminStats() {
         _sum: { amountUsd: true },
       }),
       prisma.saving.count(),
+      prismaAny.saving.count({ where: { status: "PENDING" } }),
     ]);
 
   const venezuelaTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Caracas" }));
@@ -60,6 +62,7 @@ async function getAdminStats() {
     bcvDate,
     savingsCount,
     totalEnAlcancias,
+    pendingSavings,
   };
 }
 
@@ -134,6 +137,25 @@ export default async function AdminDashboard() {
               className="text-sm font-medium text-yellow-700 hover:text-yellow-800 underline shrink-0"
             >
               Ver pagos →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {stats.pendingSavings > 0 && (
+        <div className="bg-orange-50 border-l-4 border-orange-400 p-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center min-w-0">
+              <PiggyBank className="h-5 w-5 text-orange-500 flex-shrink-0" />
+              <p className="ml-3 text-sm text-orange-800">
+                Tienes <span className="font-bold">{stats.pendingSavings}</span> depósito(s) a alcancía esperando aprobación.
+              </p>
+            </div>
+            <Link
+              href="/admin/savings"
+              className="text-sm font-medium text-orange-800 hover:text-orange-900 underline shrink-0"
+            >
+              Revisar depósitos →
             </Link>
           </div>
         </div>
