@@ -130,6 +130,22 @@ export default function DashboardClient(props: DashboardClientProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Movimientos
+  const [movimientos, setMovimientos] = useState<any[]>([]);
+  const [movimientosLoading, setMovimientosLoading] = useState(false);
+  const [movimientosError, setMovimientosError] = useState("");
+
+  useEffect(() => {
+    if (activeTab !== "movimientos") return;
+    setMovimientosLoading(true);
+    setMovimientosError("");
+    fetch("/api/user/payments")
+      .then((res) => res.ok ? res.json() : Promise.reject(res))
+      .then((data) => setMovimientos(Array.isArray(data) ? data : []))
+      .catch(() => setMovimientosError("No se pudieron cargar los movimientos."))
+      .finally(() => setMovimientosLoading(false));
+  }, [activeTab]);
+
   const previewBs =
     amountUsd && props.bcvRate && props.bcvRate > 0
       ? Math.round(Number(amountUsd) * props.bcvRate * 100) / 100
@@ -454,11 +470,95 @@ export default function DashboardClient(props: DashboardClientProps) {
         {/* MIS MOVIMIENTOS */}
         {activeTab === "movimientos" && (
           <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
-            <div className="p-6 text-center text-slate-500">
-              <Smartphone className="mx-auto mb-3 text-slate-300" size={48} />
-              <p className="mb-2">Aquí verás todos tus pagos, depósitos y retiros con su estado y detalles.</p>
-              <p className="text-xs text-slate-400">(Próximamente: tabla de movimientos reales)</p>
-            </div>
+            {movimientosLoading ? (
+              <div className="p-12 text-center text-slate-400">Cargando movimientos...</div>
+            ) : movimientosError ? (
+              <div className="p-12 text-center text-red-500">{movimientosError}</div>
+            ) : movimientos.length === 0 ? (
+              <div className="p-12 text-center">
+                <Smartphone className="mx-auto mb-3 text-slate-300" size={48} />
+                <p className="text-slate-500">No tienes movimientos registrados aún.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
+                      <th className="px-6 py-3">Fecha</th>
+                      <th className="px-6 py-3">Alojamiento</th>
+                      <th className="px-6 py-3">Método</th>
+                      <th className="px-6 py-3">Monto</th>
+                      <th className="px-6 py-3">Estado</th>
+                      <th className="px-6 py-3">Referencia</th>
+                      <th className="px-6 py-3">Motivo rechazo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movimientos.map((mov) => {
+                      const home = mov.Reservation?.Home;
+                      const paymentMethodLabel: Record<string, string> = {
+                        PAGO_MOVIL: "Pago Móvil",
+                        ZELLE: "Zelle",
+                        ZILLI: "Zilli",
+                        TARJETA_INTERNACIONAL: "Tarjeta Internacional",
+                        TRANSFERENCIA_BANCARIA: "Transferencia Bancaria",
+                      };
+                      const paymentStatusLabel: Record<string, string> = {
+                        PENDING: "Pendiente",
+                        CONFIRMED: "Confirmado",
+                        REJECTED: "Rechazado",
+                        CANCELLED: "Cancelado",
+                      };
+                      const paymentStatusStyle: Record<string, string> = {
+                        PENDING: "bg-yellow-100 text-yellow-700",
+                        CONFIRMED: "bg-green-100 text-green-700",
+                        REJECTED: "bg-red-100 text-red-700",
+                        CANCELLED: "bg-gray-100 text-gray-600",
+                      };
+                      return (
+                        <tr key={mov.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
+                          <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
+                            {formatDate(mov.createdAt)}
+                          </td>
+                          <td className="px-6 py-4 text-slate-800">
+                            {home ? (
+                              <div>
+                                <div className="font-medium">{home.title}</div>
+                                <div className="text-xs text-slate-400">{home.country}{home.municipality ? `, ${home.municipality}` : ""}</div>
+                              </div>
+                            ) : "—"}
+                          </td>
+                          <td className="px-6 py-4 text-slate-700">
+                            {paymentMethodLabel[mov.paymentMethod] ?? mov.paymentMethod ?? "—"}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
+                            {(() => {
+                              const details = mov.paymentDetails && typeof mov.paymentDetails === "object" ? mov.paymentDetails as Record<string, any> : null;
+                              const usd = details?.amountUsd ?? details?.subtotalUsd ?? null;
+                              const bs = details?.amountBs ?? details?.subtotalBs ?? null;
+                              if (usd != null) return `$${Number(usd).toFixed(2)}`;
+                              if (bs != null) return `Bs ${Number(bs).toFixed(2)}`;
+                              return `$${Number(mov.amount ?? 0).toFixed(2)}`;
+                            })()}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${paymentStatusStyle[mov.status] ?? "bg-gray-100 text-gray-600"}`}>
+                              {paymentStatusLabel[mov.status] ?? mov.status ?? "—"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                            {mov.referenceNumber ?? "—"}
+                          </td>
+                          <td className="px-6 py-4 text-red-500 text-xs">
+                            {mov.rejectionReason ?? "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
