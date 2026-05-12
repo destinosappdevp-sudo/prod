@@ -329,12 +329,8 @@ export async function POST(request: Request) {
       const txSavingsAppliedBs = hasValidBcvRate ? roundMoney(txSavingsAppliedUsd * bcvRate) : 0;
       const txExternalAmountBs = hasValidBcvRate ? roundMoney(txExternalAmountUsd * bcvRate) : 0;
 
-      // Crear la reserva
-      // Si el método de pago es PAGO_MOVIL o MIXED, siempre PENDING
-      let reservationStatus: string = "PENDING";
-      if (checkoutMode === "SAVINGS") {
-        reservationStatus = "CONFIRMED";
-      }
+      // Crear la reserva siempre en PENDING para revisión manual del pago.
+      const reservationStatus: string = "PENDING";
 
       const reservation = await tx.reservation.create({
         data: {
@@ -364,11 +360,8 @@ export async function POST(request: Request) {
         });
       }
 
-      // Crear el pago
-      let paymentStatus: string = "PENDING";
-      if (checkoutMode === "SAVINGS") {
-        paymentStatus = "CONFIRMED";
-      }
+      // Crear el pago siempre en PENDING para evitar aprobaciones automáticas.
+      const paymentStatus: string = "PENDING";
 
       const payment = await tx.payment.create({
         data: {
