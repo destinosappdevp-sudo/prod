@@ -230,11 +230,18 @@ export async function POST(request: Request) {
       }
     }
 
-    const savingsSummary = await prisma.saving.aggregate({
+    // Solo contar ahorros APROBADOS para el saldo disponible
+    const savingsRows = await (prisma as any).saving.findMany({
       where: { userId },
-      _sum: { amountUsd: true },
+      select: { amountUsd: true, status: true },
     });
-    const availableSavingsUsd = roundMoney(Number(savingsSummary._sum.amountUsd ?? 0));
+    const availableSavingsUsd = roundMoney(
+      savingsRows.reduce((sum: number, s: any) => {
+        const usd = Number(s.amountUsd ?? 0);
+        if (usd < 0) return sum + usd;
+        return s.status === "APPROVED" ? sum + usd : sum;
+      }, 0)
+    );
     const savingsAppliedUsd =
       checkoutMode === "DIRECT"
         ? 0
@@ -307,11 +314,18 @@ export async function POST(request: Request) {
 
     // Crear la reserva y el pago en una transacción
     const result = await prisma.$transaction(async (tx: any) => {
-      const txSavingsSummary = await tx.saving.aggregate({
+      // Solo contar ahorros APROBADOS dentro de la transacción
+      const txSavingsRows = await tx.saving.findMany({
         where: { userId },
-        _sum: { amountUsd: true },
+        select: { amountUsd: true, status: true },
       });
-      const txAvailableSavingsUsd = roundMoney(Number(txSavingsSummary._sum.amountUsd ?? 0));
+      const txAvailableSavingsUsd = roundMoney(
+        txSavingsRows.reduce((sum: number, s: any) => {
+          const usd = Number(s.amountUsd ?? 0);
+          if (usd < 0) return sum + usd;
+          return s.status === "APPROVED" ? sum + usd : sum;
+        }, 0)
+      );
       const txSavingsAppliedUsd =
         checkoutMode === "DIRECT"
           ? 0

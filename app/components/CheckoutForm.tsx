@@ -373,7 +373,7 @@ export default function CheckoutForm({
 
           {selectedMode === "SAVINGS" && (
             <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800">
-              Se debitará el total del paquete desde tu alcancía y la reserva quedará confirmada al instante.
+              Se debitará el total del paquete desde tu alcancía (saldo aprobado disponible). La reserva quedará pendiente de confirmación por nuestro equipo.
             </div>
           )}
         </div>

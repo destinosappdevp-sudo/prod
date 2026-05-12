@@ -58,6 +58,8 @@ interface SavingItem {
   targetTitle?: string | null;
   targetId?: string | null;
   kind?: string | null;
+  status?: string | null;
+  rejectionReason?: string | null;
 }
 
 function roundMoney(value: number) {
@@ -792,10 +794,15 @@ export default function DashboardClient(props: DashboardClientProps) {
                         <th className="px-6 py-3">Tasa BCV</th>
                         <th className="px-6 py-3">Monto Bs.</th>
                         <th className="px-6 py-3">Monto USD</th>
+                        <th className="px-6 py-3">Estado</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {displayedSavings.map((s, index) => (
+                      {displayedSavings.map((s, index) => {
+                        const savingStatusLabel: Record<string, string> = { PENDING: "En revisión", APPROVED: "Aprobado", REJECTED: "Rechazado" };
+                        const savingStatusStyle: Record<string, string> = { PENDING: "bg-yellow-100 text-yellow-700", APPROVED: "bg-green-100 text-green-700", REJECTED: "bg-red-100 text-red-700" };
+                        const sStatus = s.status ?? (Number(s.amountUsd) < 0 ? "APPROVED" : "PENDING");
+                        return (
                         <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
                           <td className="px-6 py-4 text-slate-400 text-xs font-mono">
                             {displayedSavings.length - index}
@@ -817,8 +824,17 @@ export default function DashboardClient(props: DashboardClientProps) {
                           <td className="px-6 py-4 text-green-700 font-semibold font-mono">
                             ${Number(s.amountUsd).toFixed(2)}
                           </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${savingStatusStyle[sStatus] ?? "bg-gray-100 text-gray-600"}`}>
+                              {savingStatusLabel[sStatus] ?? sStatus}
+                            </span>
+                            {sStatus === "REJECTED" && s.rejectionReason && (
+                              <p className="mt-1 text-xs text-red-500">{s.rejectionReason}</p>
+                            )}
+                          </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1032,12 +1048,13 @@ export default function DashboardClient(props: DashboardClientProps) {
                     )}
 
                     {saveSuccess && (
-                      <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3">
-                        <p className="text-sm text-green-700 font-medium">¡Depósito registrado correctamente!</p>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
+                        <p className="text-sm text-yellow-800 font-semibold">¡Depósito registrado y en revisión!</p>
+                        <p className="text-xs text-yellow-700 mt-1">Tu comprobante fue recibido. Nuestro equipo lo verificará y, una vez aprobado, el saldo se abonará a tu alcancía.</p>
                         <button
                           type="button"
                           onClick={() => setActiveTab("mi-alcancia")}
-                          className="text-xs text-green-600 hover:underline mt-1"
+                          className="text-xs text-yellow-700 hover:underline mt-1"
                         >
                           Ver Mi Alcancía →
                         </button>

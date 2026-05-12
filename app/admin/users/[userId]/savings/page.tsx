@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import SavingActions from "./SavingActions";
+import { unstable_noStore } from "next/cache";
 
 const prismaAny = prisma as any;
 
@@ -13,9 +15,13 @@ interface Saving {
   amountBs: number;
   amountUsd: number;
   createdAt: Date;
+  status: string;
+  rejectionReason?: string | null;
+  paymentDetails?: any;
 }
 
 async function getData(userId: string) {
+  unstable_noStore();
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { firstName: true, lastName: true, email: true },
@@ -28,11 +34,25 @@ async function getData(userId: string) {
     orderBy: { date: "desc" },
   });
 
-  const totalUsd = savings.reduce((sum, s) => sum + s.amountUsd, 0);
-  const totalBs = savings.reduce((sum, s) => sum + s.amountBs, 0);
+  const approvedUsd = savings
+    .filter((s) => s.status === "APPROVED" || Number(s.amountUsd) < 0)
+    .reduce((sum, s) => sum + s.amountUsd, 0);
+  const totalBs = savings
+    .filter((s) => s.status === "APPROVED" || Number(s.amountBs) < 0)
+    .reduce((sum, s) => sum + s.amountBs, 0);
+  const pendingUsd = savings
+    .filter((s) => s.status === "PENDING" && Number(s.amountUsd) >= 0)
+    .reduce((sum, s) => sum + s.amountUsd, 0);
 
-  return { user, savings, totalUsd, totalBs };
+  return { user, savings, approvedUsd, totalBs, pendingUsd };
 }
+
+const statusLabel: Record<string, string> = { PENDING: "En revisión", APPROVED: "Aprobado", REJECTED: "Rechazado" };
+const statusStyle: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-700",
+  APPROVED: "bg-green-100 text-green-700",
+  REJECTED: "bg-red-100 text-red-700",
+};
 
 export default async function UserSavingsPage({
   params,
@@ -44,7 +64,7 @@ export default async function UserSavingsPage({
 
   if (!data) notFound();
 
-  const { user, savings, totalUsd, totalBs } = data;
+  const { user, savings, approvedUsd, totalBs, pendingUsd } = data;
 
   return (
     <div className="space-y-6">
@@ -63,93 +83,79 @@ export default async function UserSavingsPage({
       </div>
 
       {/* Resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Total acumulado (USD)</p>
-          <p className="text-3xl font-bold text-green-700">
-            ${totalUsd.toFixed(2)}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            {savings.length} depósito{savings.length !== 1 ? "s" : ""}
-          </p>
+          <p className="text-sm text-gray-500 mb-1">Saldo aprobado (USD)</p>
+          <p className="text-3xl font-bold text-green-700">${approvedUsd.toFixed(2)}</p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Total acumulado (Bs.)</p>
+          <p className="text-sm text-gray-500 mb-1">Pendiente de revisión (USD)</p>
+          <p className="text-3xl font-bold text-yellow-600">${pendingUsd.toFixed(2)}</p>
+        </Card>
+        <Card className="p-6">
+          <p className="text-sm text-gray-500 mb-1">Saldo aprobado (Bs.)</p>
           <p className="text-3xl font-bold text-blue-700">
             Bs. {totalBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </Card>
       </div>
 
-      {/* Tabla de detalle */}
+      {/* Tabla */}
       <Card className="overflow-hidden">
+        <div className="px-6 py-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">Historial de depósitos</h2>
+          <p className="text-sm text-gray-500">Aprueba o rechaza los depósitos en revisión</p>
+        </div>
         <div className="overflow-x-auto">
           {savings.length === 0 ? (
-            <div className="p-10 text-center text-gray-500">
-              Este usuario no tiene ahorros registrados.
-            </div>
+            <div className="p-10 text-center text-gray-500">Este usuario no tiene ahorros registrados.</div>
           ) : (
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tasa BCV
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto Bs.
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Monto USD
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referencia</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tasa BCV</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto Bs.</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto USD</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {savings.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-mono text-xs text-gray-500">
-                        {s.id.slice(0, 8).toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(s.date).toLocaleDateString("es-VE", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-right">
-                      {s.bcvRate.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                      Bs.{" "}
-                      {s.amountBs.toLocaleString("es-VE", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-700 text-right">
-                      ${s.amountUsd.toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                {savings.map((s) => {
+                  const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails as Record<string, any> : {};
+                  const ref = details.referenceNumber ?? "—";
+                  const bank = details.emisorBank ?? "";
+                  return (
+                    <tr key={s.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(s.date).toLocaleDateString("es-VE", { day: "2-digit", month: "short", year: "numeric" })}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-700">
+                        <div className="font-mono">{ref}</div>
+                        {bank && <div className="text-xs text-gray-400">{bank}</div>}
+                        {s.status === "REJECTED" && s.rejectionReason && (
+                          <div className="text-xs text-red-500 mt-0.5">Motivo: {s.rejectionReason}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-700 text-right font-mono">{s.bcvRate.toFixed(2)}</td>
+                      <td className="px-4 py-4 text-sm text-gray-900 text-right">
+                        Bs. {s.amountBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-4 py-4 text-sm font-semibold text-green-700 text-right">${s.amountUsd.toFixed(2)}</td>
+                      <td className="px-4 py-4 text-center">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[s.status] ?? "bg-gray-100 text-gray-600"}`}>
+                          {statusLabel[s.status] ?? s.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <SavingActions savingId={s.id} currentStatus={s.status} />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
-              <tfoot className="bg-gray-50 border-t">
-                <tr>
-                  <td colSpan={4} className="px-6 py-3 text-right text-sm font-bold text-gray-700">
-                    Total
-                  </td>
-                  <td className="px-6 py-3 text-right text-sm font-bold text-green-700">
-                    ${totalUsd.toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           )}
         </div>

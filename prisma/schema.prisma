@@ -313,15 +313,17 @@ model WithdrawalRequest {
 }
 
 model Saving {
-  id             String   @id @default(uuid())
+  id             String      @id @default(uuid())
   userId         String
-  date           DateTime @default(now())
+  date           DateTime    @default(now())
   bcvRate        Float
   amountBs       Float
   amountUsd      Float
   paymentDetails Json?
-  createdAt      DateTime @default(now())
-  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime    @default(now())
+  status         SavingStatus @default(PENDING)
+  rejectionReason String?
+  User           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model property_types {
@@ -371,6 +373,12 @@ enum PaymentStatus {
   CONFIRMED
   REJECTED
   CANCELLED
+}
+
+enum SavingStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum PublishStatus {

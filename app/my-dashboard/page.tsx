@@ -624,7 +624,7 @@ async function getGuestDashboardData(userId: string) {
     prismaAny.saving.findMany({
       where: { userId },
       orderBy: { date: "desc" },
-      select: { id: true, date: true, bcvRate: true, amountBs: true, amountUsd: true, paymentDetails: true },
+      select: { id: true, date: true, bcvRate: true, amountBs: true, amountUsd: true, paymentDetails: true, status: true, rejectionReason: true },
     }),
     prismaAny.platformConfig.findFirst({ select: { bcvRate: true } }),
   ]);
@@ -635,8 +635,15 @@ async function getGuestDashboardData(userId: string) {
     favorites.map((fav: any) => [fav.Home.id, fav.id])
   );
 
+  // El saldo disponible solo cuenta los depósitos aprobados (descontando los negativos por checkout)
   const savingsTotal = Math.round(
-    (savings as any[]).reduce((sum: number, s: any) => sum + (s.amountUsd ?? 0), 0) * 100
+    (savings as any[]).reduce((sum: number, s: any) => {
+      const usd = s.amountUsd ?? 0;
+      // Los registros negativos (débitos de checkout) siempre se restan
+      if (usd < 0) return sum + usd;
+      // Los positivos solo cuentan si están APPROVED
+      return s.status === "APPROVED" ? sum + usd : sum;
+    }, 0) * 100
   ) / 100;
   const bcvRate = Number((config as any)?.bcvRate ?? 0);
 
@@ -707,6 +714,8 @@ async function getGuestDashboardData(userId: string) {
         targetTitle: typeof details.homeTitle === "string" ? details.homeTitle : null,
         targetId: typeof details.homeId === "string" ? details.homeId : null,
         kind: typeof details.kind === "string" ? details.kind : null,
+        status: typeof s.status === "string" ? s.status : "PENDING",
+        rejectionReason: typeof s.rejectionReason === "string" ? s.rejectionReason : null,
       };
     }),
     savingPackages: (savingPackages as any[]).map((pkg: any) => ({

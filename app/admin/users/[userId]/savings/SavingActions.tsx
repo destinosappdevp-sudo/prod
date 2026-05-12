@@ -1,0 +1,80 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Check, X, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+interface SavingActionsProps {
+  savingId: string;
+  currentStatus: string;
+}
+
+export default function SavingActions({ savingId, currentStatus }: SavingActionsProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  if (currentStatus !== "PENDING") return null;
+
+  const handleAction = async (action: "approve" | "reject") => {
+    let rejectionReason = "";
+
+    if (action === "reject") {
+      const reasonInput = window.prompt(
+        "Indica el motivo del rechazo para notificar al usuario:",
+        ""
+      );
+      if (reasonInput === null) return;
+      rejectionReason = reasonInput.trim();
+      if (!rejectionReason) {
+        alert("Debes indicar un motivo para rechazar el depósito.");
+        return;
+      }
+    }
+
+    if (!confirm(`¿Estás seguro de que deseas ${action === "approve" ? "aprobar" : "rechazar"} este depósito?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/savings/${savingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, rejectionReason: rejectionReason || null }),
+      });
+
+      if (response.ok) {
+        router.refresh();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Error al procesar la acción");
+      }
+    } catch {
+      alert("Error al procesar la solicitud");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex gap-2 justify-center">
+      <Button
+        size="sm"
+        onClick={() => handleAction("approve")}
+        disabled={loading}
+        className="bg-green-600 hover:bg-green-700 text-white"
+      >
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-1" />Aprobar</>}
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={() => handleAction("reject")}
+        disabled={loading}
+      >
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><X className="w-4 h-4 mr-1" />Rechazar</>}
+      </Button>
+    </div>
+  );
+}

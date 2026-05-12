@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
     kind: homeId ? "PACKAGE_SAVING_DEPOSIT" : "GENERAL_SAVING_DEPOSIT",
   };
 
+  // El depósito se crea en PENDING hasta que el admin lo apruebe
   const saving = await prismaAny.saving.create({
     data: {
       userId: user.id,
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
       amountBs,
       amountUsd,
       paymentDetails,
+      status: "PENDING",
     },
   });
 

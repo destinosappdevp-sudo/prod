@@ -114,15 +114,23 @@ export default async function CheckoutPage({
     },
   });
 
-  const savingsAggregate = await (prisma as any).saving.aggregate({
+  // Solo contar ahorros APROBADOS para el saldo disponible
+  const savingsApproved = await (prisma as any).saving.findMany({
     where: { userId: user.id },
-    _sum: { amountUsd: true },
+    select: { amountUsd: true, status: true },
   });
-
+  const savingsTotalUsd = Number(
+    savingsApproved
+      .reduce((sum: number, s: any) => {
+        const usd = Number(s.amountUsd ?? 0);
+        if (usd < 0) return sum + usd; // débitos siempre se restan
+        return s.status === "APPROVED" ? sum + usd : sum;
+      }, 0)
+      .toFixed(2)
+  );
   const bcvRate = platformConfig?.bcvRate ? Number(platformConfig.bcvRate) : 0;
   const hasValidBcvRate = Number.isFinite(bcvRate) && bcvRate > 0;
   const totalBs = hasValidBcvRate ? Number((total * bcvRate).toFixed(2)) : 0;
-  const savingsTotalUsd = Number((savingsAggregate?._sum?.amountUsd ?? 0).toFixed(2));
   const bcvRateDateLabel = platformConfig?.bcvRateDate
     ? new Date(platformConfig.bcvRateDate).toLocaleDateString("es-VE")
     : null;
