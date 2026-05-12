@@ -115,6 +115,7 @@ export default async function UserSavingsPage({
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referencia</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comprobante</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tasa BCV</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto Bs.</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto USD</th>
@@ -127,6 +128,7 @@ export default async function UserSavingsPage({
                   const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails as Record<string, any> : {};
                   const ref = details.referenceNumber ?? "—";
                   const bank = details.emisorBank ?? "";
+                  const paymentProofUrl = typeof details.paymentProofUrl === "string" ? details.paymentProofUrl : "";
                   return (
                     <tr key={s.id} className="hover:bg-gray-50">
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -137,6 +139,20 @@ export default async function UserSavingsPage({
                         {bank && <div className="text-xs text-gray-400">{bank}</div>}
                         {s.status === "REJECTED" && s.rejectionReason && (
                           <div className="text-xs text-red-500 mt-0.5">Motivo: {s.rejectionReason}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-sm">
+                        {paymentProofUrl ? (
+                          <a
+                            href={paymentProofUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            Ver captura
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">Sin archivo</span>
                         )}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-700 text-right font-mono">{s.bcvRate.toFixed(2)}</td>

@@ -60,6 +60,15 @@ export async function POST(req: NextRequest) {
       ? { ...(body as any).paymentDetails }
       : {};
 
+  const paymentProofUrl =
+    typeof paymentDetailsInput.paymentProofUrl === "string" && paymentDetailsInput.paymentProofUrl.trim()
+      ? paymentDetailsInput.paymentProofUrl.trim()
+      : null;
+
+  if (!paymentProofUrl) {
+    return NextResponse.json({ error: "Debes adjuntar la captura del pago móvil" }, { status: 400 });
+  }
+
   const homeId =
     typeof paymentDetailsInput.homeId === "string" && paymentDetailsInput.homeId.trim()
       ? paymentDetailsInput.homeId.trim()
@@ -85,6 +94,7 @@ export async function POST(req: NextRequest) {
 
   const paymentDetails = {
     ...paymentDetailsInput,
+    paymentProofUrl,
     homeId,
     homeTitle,
     kind: homeId ? "PACKAGE_SAVING_DEPOSIT" : "GENERAL_SAVING_DEPOSIT",

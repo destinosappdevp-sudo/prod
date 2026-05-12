@@ -127,7 +127,9 @@ export default function DashboardClient(props: DashboardClientProps) {
   const [emisorBank, setEmisorBank] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -161,6 +163,27 @@ export default function DashboardClient(props: DashboardClientProps) {
     return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
   };
 
+  const uploadPaymentProof = async () => {
+    if (!paymentProofFile) {
+      throw new Error("Debes adjuntar la captura del pago para continuar.");
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", paymentProofFile);
+
+    const uploadResponse = await fetch("/api/checkout/payment-proof", {
+      method: "POST",
+      body: uploadFormData,
+    });
+
+    const uploadData = await uploadResponse.json();
+    if (!uploadResponse.ok || !uploadData?.url) {
+      throw new Error(uploadData?.error || "No se pudo subir la captura del pago");
+    }
+
+    return uploadData.url as string;
+  };
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaveError("");
@@ -186,8 +209,16 @@ export default function DashboardClient(props: DashboardClientProps) {
       setSaveError("Ingresa el número de referencia.");
       return;
     }
+    if (!paymentProofFile) {
+      setSaveError("Adjunta la captura del pago móvil.");
+      return;
+    }
     setSaving(true);
     try {
+      setUploadingProof(true);
+      const paymentProofUrl = await uploadPaymentProof();
+      setUploadingProof(false);
+
       const res = await fetch("/api/user/savings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -197,6 +228,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             emisorBank,
             phoneNumber,
             referenceNumber: referenceNumber.trim(),
+            paymentProofUrl,
             homeId: selectedSavingId || null,
             homeTitle: selectedSavingId ? packageTargetLabel : null,
           },
@@ -211,11 +243,13 @@ export default function DashboardClient(props: DashboardClientProps) {
         setEmisorBank("");
         setPhoneNumber("");
         setReferenceNumber("");
+        setPaymentProofFile(null);
         router.refresh();
       }
-    } catch {
-      setSaveError("Error de conexión. Intenta nuevamente.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Error de conexión. Intenta nuevamente.");
     } finally {
+      setUploadingProof(false);
       setSaving(false);
     }
   }
@@ -1048,6 +1082,23 @@ export default function DashboardClient(props: DashboardClientProps) {
                       />
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Adjuntar captura</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          setPaymentProofFile(e.target.files?.[0] ?? null);
+                          setSaveError("");
+                        }}
+                        required
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 file:mr-3 file:rounded-md file:border-0 file:bg-orange-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-orange-700"
+                      />
+                      <p className="mt-1 text-xs text-slate-500">
+                        Sube la captura del comprobante (JPG, PNG o WebP).
+                      </p>
+                    </div>
+
                     {saveError && (
                       <p className="text-sm text-red-600">{saveError}</p>
                     )}
@@ -1068,10 +1119,10 @@ export default function DashboardClient(props: DashboardClientProps) {
 
                     <button
                       type="submit"
-                      disabled={saving || !amountUsd || !previewBs}
+                      disabled={saving || uploadingProof || !amountUsd || !previewBs}
                       className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {saving ? "Procesando..." : "Registrar Depósito"}
+                      {saving || uploadingProof ? "Procesando..." : "Registrar Depósito"}
                     </button>
                   </form>
                 </div>
