@@ -1,6 +1,96 @@
-﻿"use client";
+﻿// Helpers para mostrar estado
+function statusLabel(status?: string) {
+  switch (status) {
+    case "PENDING": return "Pendiente";
+    case "CONFIRMED": return "Confirmado";
+    case "REJECTED": return "Rechazado";
+    default: return status || "-";
+  }
+}
+
+function statusStyle(status?: string) {
+  switch (status) {
+    case "PENDING": return "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200";
+    case "CONFIRMED": return "bg-green-50 text-green-700 ring-1 ring-green-200";
+    case "REJECTED": return "bg-red-50 text-red-700 ring-1 ring-red-200";
+    default: return "bg-slate-100 text-slate-500 ring-1 ring-slate-200";
+  }
+}
+"use client";
 
 import { useEffect, useState } from "react";
+import useSWR from "swr";
+// Utilidad para obtener pagos del usuario
+function useUserPayments() {
+  return useSWR("/api/user/payments", async (url) => {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Error al cargar movimientos");
+    return res.json();
+  });
+}
+        {/* MIS MOVIMIENTOS */}
+        {activeTab === "movimientos" && (
+          <MovimientosTab />
+        )}
+
+// Componente MovimientosTab
+function MovimientosTab() {
+  const { data, error, isLoading } = useUserPayments();
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-8 text-center text-slate-500">
+        Cargando movimientos...
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-red-100 bg-white shadow-sm p-8 text-center text-red-500">
+        Error al cargar movimientos
+      </div>
+    );
+  }
+  const payments = Array.isArray(data) ? data : [];
+  if (payments.length === 0) {
+    return (
+      <div className="rounded-2xl border border-slate-100 bg-white shadow-sm p-8 text-center text-slate-500">
+        No tienes movimientos registrados.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
+            <th className="px-4 py-3">Fecha</th>
+            <th className="px-4 py-3">Alojamiento</th>
+            <th className="px-4 py-3">Monto</th>
+            <th className="px-4 py-3">Método</th>
+            <th className="px-4 py-3">Estado</th>
+            <th className="px-4 py-3">Referencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {payments.map((p) => (
+            <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
+              <td className="px-4 py-3 whitespace-nowrap">{new Date(p.createdAt).toLocaleDateString("es-ES")}</td>
+              <td className="px-4 py-3">{p.Reservation?.Home?.title || "-"}</td>
+              <td className="px-4 py-3 font-semibold">${p.amount?.toFixed(2)}</td>
+              <td className="px-4 py-3">{p.paymentMethod}</td>
+              <td className="px-4 py-3">
+                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle(p.status)}`}>
+                  {statusLabel(p.status)}
+                </span>
+              </td>
+              <td className="px-4 py-3">{p.referenceNumber || "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -311,6 +401,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   const menuItems = [
     { key: "reservations", label: "Mis Reservas",  icon: CalendarCheck },
     { key: "favorites",    label: "Favoritos",      icon: Heart },
+    { key: "movimientos",  label: "Mis Movimientos", icon: Smartphone },
     { key: "mi-alcancia",  label: "Mi Alcancía",    icon: PiggyBank },
     { key: "ahorrar",      label: "Ahorrar",        icon: PlusCircle },
     { key: "profile",      label: "Perfil",         icon: User },
@@ -436,6 +527,7 @@ export default function DashboardClient(props: DashboardClientProps) {
           <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard"}
             {activeTab === "favorites" && "Mis Favoritos"}
+            {activeTab === "movimientos" && "Mis Movimientos"}
             {activeTab === "mi-alcancia" && (isPackageSavingsView ? `Ahorros de ${packageTargetLabel}` : "Mi Alcancía")}
             {activeTab === "ahorrar" && (isPackageSavingsView ? `Ahorrar para ${packageTargetLabel}` : "Ahorrar")}
             {activeTab === "profile" && "Editar Perfil"}
@@ -443,11 +535,22 @@ export default function DashboardClient(props: DashboardClientProps) {
           <p className="text-sm text-slate-500">
             {activeTab === "reservations" && "Explora, reserva y gestiona tus alojamientos"}
             {activeTab === "favorites" && "Alojamientos que guardaste"}
+            {activeTab === "movimientos" && "Consulta todos tus pagos, depósitos y retiros con su estado y detalles."}
             {activeTab === "mi-alcancia" && (isPackageSavingsView ? "Movimientos asociados a este paquete" : "Historial de todas tus alcancías")}
             {activeTab === "ahorrar" && (isPackageSavingsView ? "Deposita saldo para este paquete específico" : "Elige entre tu alcancía general o las alcancías de paquetes")}
             {activeTab === "profile" && "Actualiza tus datos personales"}
           </p>
         </div>
+        {/* MIS MOVIMIENTOS */}
+        {activeTab === "movimientos" && (
+          <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
+            <div className="p-6 text-center text-slate-500">
+              <Smartphone className="mx-auto mb-3 text-slate-300" size={48} />
+              <p className="mb-2">Aquí verás todos tus pagos, depósitos y retiros con su estado y detalles.</p>
+              <p className="text-xs text-slate-400">(Próximamente: tabla de movimientos reales)</p>
+            </div>
+          </div>
+        )}
 
         {/* MIS RESERVAS */}
         {activeTab === "reservations" && (
