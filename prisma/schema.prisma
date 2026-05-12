@@ -164,6 +164,8 @@ model Payment {
   cedula          String?
   referenceNumber String?
   emisorBank      String?
+  paymentProofUrl String?
+  rejectionReason String?
   paymentDetails  Json?
   createdAt       DateTime      @default(now())
   confirmedAt     DateTime?

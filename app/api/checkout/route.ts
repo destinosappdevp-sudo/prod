@@ -216,11 +216,15 @@ export async function POST(request: Request) {
       typeof paymentDetailsInput.referenceNumber === "string"
         ? paymentDetailsInput.referenceNumber
         : null;
+    const paymentProofUrl =
+      typeof paymentDetailsInput.paymentProofUrl === "string"
+        ? paymentDetailsInput.paymentProofUrl
+        : null;
 
     if (checkoutMode !== "SAVINGS") {
-      if (!emisorBank || !phoneNumber || !referenceNumber) {
+      if (!emisorBank || !phoneNumber || !referenceNumber || !paymentProofUrl) {
         return NextResponse.json(
-          { error: "Completa los datos de Pago Móvil para continuar" },
+          { error: "Completa los datos de Pago Móvil y adjunta la captura para continuar" },
           { status: 400 }
         );
       }
@@ -295,6 +299,7 @@ export async function POST(request: Request) {
       externalAmountUsd,
       externalAmountBs,
       receiverMethod: checkoutMode === "SAVINGS" ? null : paymentMethod,
+      paymentProofUrl: checkoutMode === "SAVINGS" ? null : paymentProofUrl,
       bcvRateUsed: hasValidBcvRate ? Number(bcvRate.toFixed(8)) : null,
       bcvRateDate: bcvRateDate ? bcvRateDate.toISOString() : null,
       paymentDate: new Date().toISOString(),
@@ -367,6 +372,7 @@ export async function POST(request: Request) {
           cedula: checkoutMode === "SAVINGS" ? null : cedula,
           referenceNumber: checkoutMode === "SAVINGS" ? null : referenceNumber,
           emisorBank: checkoutMode === "SAVINGS" ? null : emisorBank,
+          paymentProofUrl: checkoutMode === "SAVINGS" ? null : paymentProofUrl,
           paymentDetails: {
             ...paymentDetails,
             savingsAppliedUsd: txSavingsAppliedUsd,

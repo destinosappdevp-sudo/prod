@@ -15,6 +15,25 @@ export default function PaymentActions({ paymentId, reservationId }: PaymentActi
   const [loading, setLoading] = useState(false);
 
   const handleAction = async (action: "confirm" | "reject") => {
+    let rejectionReason = "";
+
+    if (action === "reject") {
+      const reasonInput = window.prompt(
+        "Indica el motivo del rechazo para notificar al usuario:",
+        ""
+      );
+
+      if (reasonInput === null) {
+        return;
+      }
+
+      rejectionReason = reasonInput.trim();
+      if (!rejectionReason) {
+        alert("Debes indicar un motivo para rechazar el pago.");
+        return;
+      }
+    }
+
     if (!confirm(`¿Estás seguro de que deseas ${action === "confirm" ? "confirmar" : "rechazar"} este pago?`)) {
       return;
     }
@@ -25,7 +44,7 @@ export default function PaymentActions({ paymentId, reservationId }: PaymentActi
       const response = await fetch(`/api/admin/payments/${paymentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, rejectionReason: rejectionReason || null }),
       });
 
       if (response.ok) {

@@ -160,6 +160,12 @@ export default async function ReservationDetailPage({
       typeof reservation.Payment.paymentDetails === "object"
         ? (reservation.Payment.paymentDetails as Record<string, unknown>)
         : null;
+    const paymentRejectionReason =
+      typeof reservation.Payment?.rejectionReason === "string" && reservation.Payment.rejectionReason.trim()
+        ? reservation.Payment.rejectionReason.trim()
+        : typeof paymentDetails?.rejectionReason === "string" && paymentDetails.rejectionReason.trim()
+        ? paymentDetails.rejectionReason.trim()
+        : null;
     const paymentCurrency =
       paymentDetails?.paymentCurrency === "VES" ? "VES" : "USD";
     const paymentSubtotalUsd = parseNumberFromUnknown(paymentDetails?.subtotalUsd);
@@ -396,6 +402,13 @@ export default async function ReservationDetailPage({
                         : "Rechazado"}
                     </span>
                   </div>
+
+                  {reservation.Payment.status === "REJECTED" && paymentRejectionReason && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                      <p className="text-sm font-semibold text-red-800">Motivo del rechazo</p>
+                      <p className="mt-1 text-sm text-red-700">{paymentRejectionReason}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

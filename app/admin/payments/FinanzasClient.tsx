@@ -96,6 +96,23 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
     );
   };
 
+  const getPaymentProofUrl = (payment: any) => {
+    if (typeof payment?.paymentProofUrl === "string" && payment.paymentProofUrl.trim()) {
+      return payment.paymentProofUrl;
+    }
+
+    const details =
+      payment?.paymentDetails && typeof payment.paymentDetails === "object"
+        ? (payment.paymentDetails as Record<string, unknown>)
+        : null;
+
+    if (typeof details?.paymentProofUrl === "string" && details.paymentProofUrl.trim()) {
+      return details.paymentProofUrl;
+    }
+
+    return null;
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="border-b px-6 py-4">
@@ -134,6 +151,7 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
             {payments.map((payment: any) => {
               const res = payment.Reservation;
               const totals = getRowTotals(payment, res);
+              const paymentProofUrl = getPaymentProofUrl(payment);
               const dateSrc = payment.confirmedAt || payment.createdAt;
               return (
                 <tr key={payment.id} className="hover:bg-gray-50">
@@ -167,6 +185,23 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
                     {getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails)}
                     {payment.referenceNumber && (
                       <div className="text-xs text-gray-500">Ref: {payment.referenceNumber}</div>
+                    )}
+                    {paymentProofUrl && (
+                      <div className="mt-1">
+                        <a
+                          href={paymentProofUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                        >
+                          Ver captura
+                        </a>
+                      </div>
+                    )}
+                    {payment.status === "REJECTED" && payment.rejectionReason && (
+                      <div className="mt-1 max-w-xs text-xs text-red-600">
+                        Motivo: {payment.rejectionReason}
+                      </div>
                     )}
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-center">

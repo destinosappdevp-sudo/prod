@@ -1,0 +1,2 @@
+ALTER TABLE "Payment"
+ADD COLUMN IF NOT EXISTS "paymentProofUrl" TEXT;

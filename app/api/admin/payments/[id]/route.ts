@@ -41,9 +41,18 @@ export async function PATCH(
 
     const body = await request.json();
     const { action } = body; // "confirm" o "reject"
+    const rejectionReason =
+      typeof body?.rejectionReason === "string" ? body.rejectionReason.trim() : "";
 
     if (!["confirm", "reject"].includes(action)) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+
+    if (action === "reject" && !rejectionReason) {
+      return NextResponse.json(
+        { error: "Debes indicar un motivo para rechazar el pago" },
+        { status: 400 }
+      );
     }
 
     const prismaAny = prisma as any;
@@ -89,6 +98,7 @@ export async function PATCH(
         data: {
           status: action === "confirm" ? "CONFIRMED" : "REJECTED",
           confirmedAt: action === "confirm" ? new Date() : null,
+          rejectionReason: action === "reject" ? rejectionReason : null,
         },
       });
 

@@ -55,6 +55,8 @@ export default function CheckoutForm({
 }: CheckoutFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     phoneNumber: "",
     cedula: "",
@@ -89,6 +91,27 @@ export default function CheckoutForm({
 
   const requiresPagoMovil = selectedMode !== "SAVINGS";
 
+  const uploadPaymentProof = async () => {
+    if (!paymentProofFile) {
+      throw new Error("Debes adjuntar la captura del pago para continuar.");
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", paymentProofFile);
+
+    const uploadResponse = await fetch("/api/checkout/payment-proof", {
+      method: "POST",
+      body: uploadFormData,
+    });
+
+    const uploadData = await uploadResponse.json();
+    if (!uploadResponse.ok || !uploadData?.url) {
+      throw new Error(uploadData?.error || "No se pudo subir la captura del pago");
+    }
+
+    return uploadData.url as string;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -112,8 +135,21 @@ export default function CheckoutForm({
       return;
     }
 
+    if (requiresPagoMovil && !paymentProofFile) {
+      alert("Debes adjuntar la captura del pago móvil para continuar.");
+      return;
+    }
+
     setLoading(true);
     try {
+      let paymentProofUrl: string | null = null;
+
+      if (requiresPagoMovil) {
+        setUploadingProof(true);
+        paymentProofUrl = await uploadPaymentProof();
+        setUploadingProof(false);
+      }
+
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +167,10 @@ export default function CheckoutForm({
           bcvRateUsed: bcvRate,
           paymentMethod: "PAGO_MOVIL",
           checkoutMode: selectedMode,
-          paymentDetails: formData,
+          paymentDetails: {
+            ...formData,
+            paymentProofUrl,
+          },
           seatId: seatId || null,
           plan: plan || null,
         }),
@@ -148,8 +187,9 @@ export default function CheckoutForm({
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al procesar la solicitud");
+      alert(error instanceof Error ? error.message : "Error al procesar la solicitud");
     } finally {
+      setUploadingProof(false);
       setLoading(false);
     }
   };
@@ -314,6 +354,20 @@ export default function CheckoutForm({
                   required={requiresPagoMovil}
                 />
               </div>
+
+              <div>
+                <Label htmlFor="paymentProof">Adjuntar captura</Label>
+                <Input
+                  id="paymentProof"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPaymentProofFile(e.target.files?.[0] ?? null)}
+                  required={requiresPagoMovil}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Sube la captura de tu comprobante (JPG, PNG o WebP).
+                </p>
+              </div>
             </div>
           )}
 
@@ -327,9 +381,13 @@ export default function CheckoutForm({
         <Button
           type="submit"
           className="mt-6 w-full"
-          disabled={loading || (requiresPagoMovil && !hasValidBcvRate)}
+          disabled={loading || uploadingProof || (requiresPagoMovil && !hasValidBcvRate)}
         >
-          {loading ? "Procesando..." : selectedMode === "SAVINGS" ? "Confirmar con ahorros" : "Confirmar pago"}
+          {loading || uploadingProof
+            ? "Procesando..."
+            : selectedMode === "SAVINGS"
+            ? "Confirmar con ahorros"
+            : "Confirmar pago"}
         </Button>
 
         {!hasValidBcvRate && requiresPagoMovil && (
