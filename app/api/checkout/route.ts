@@ -330,6 +330,12 @@ export async function POST(request: Request) {
       const txExternalAmountBs = hasValidBcvRate ? roundMoney(txExternalAmountUsd * bcvRate) : 0;
 
       // Crear la reserva
+      // Si el método de pago es PAGO_MOVIL o MIXED, siempre PENDING
+      let reservationStatus: string = "PENDING";
+      if (checkoutMode === "SAVINGS") {
+        reservationStatus = "CONFIRMED";
+      }
+
       const reservation = await tx.reservation.create({
         data: {
           userId,
@@ -338,7 +344,7 @@ export async function POST(request: Request) {
           endDate: end,
           nights: calculatedNights,
           totalAmount: totalAmountUsd,
-          status: checkoutMode === "SAVINGS" ? "CONFIRMED" : "PENDING",
+          status: reservationStatus,
           ...(seatId ? { seatId } : {}),
         },
       });
@@ -359,6 +365,11 @@ export async function POST(request: Request) {
       }
 
       // Crear el pago
+      let paymentStatus: string = "PENDING";
+      if (checkoutMode === "SAVINGS") {
+        paymentStatus = "CONFIRMED";
+      }
+
       const payment = await tx.payment.create({
         data: {
           reservationId: reservation.id,
@@ -366,7 +377,7 @@ export async function POST(request: Request) {
           subtotal: paymentCurrency === "VES" ? subtotalBs : subtotalUsd,
           serviceFee: paymentCurrency === "VES" ? serviceFeeBs : serviceFeeUsd,
           paymentMethod,
-          status: checkoutMode === "SAVINGS" ? "CONFIRMED" : "PENDING",
+          status: paymentStatus,
           bankName: checkoutMode === "SAVINGS" ? null : emisorBank,
           phoneNumber: checkoutMode === "SAVINGS" ? null : phoneNumber,
           cedula: checkoutMode === "SAVINGS" ? null : cedula,
