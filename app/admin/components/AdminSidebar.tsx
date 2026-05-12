@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   X,
+  PiggyBank,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const getMenuItems = (role?: string) => {
     { href: "/admin/categories", icon: BarChart3, label: "Categorías" },
     { href: "/admin/amenities", icon: Home, label: "Servicios" },
     { href: "/admin/payments", icon: CreditCard, label: "Finanzas" },
+    { href: "/admin/savings", icon: PiggyBank, label: "Alcancía" },
   ];
   if (role === "SUPERADMIN") {
     items.splice(1, 0, { href: "/admin/banners", icon: BarChart3, label: "Publicidad" });

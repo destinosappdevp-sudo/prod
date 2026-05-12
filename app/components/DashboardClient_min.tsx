@@ -528,6 +528,11 @@ export default function DashboardClient(props: DashboardClientProps) {
                                 <div className="font-medium">{home.title}</div>
                                 <div className="text-xs text-slate-400">{home.country}{home.municipality ? `, ${home.municipality}` : ""}</div>
                               </div>
+                            ) : mov.isSaving ? (
+                              <div>
+                                <div className="font-medium">Depósito a alcancía</div>
+                                <div className="text-xs text-slate-400">Recarga de saldo</div>
+                              </div>
                             ) : "—"}
                           </td>
                           <td className="px-6 py-4 text-slate-700">
