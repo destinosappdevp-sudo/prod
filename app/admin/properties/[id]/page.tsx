@@ -38,6 +38,7 @@ import { ArrowLeft, Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
+import PropertyDetailTabs from "@/app/admin/components/PropertyDetailTabs";
 
 const prismaAny = prisma as any;
 
@@ -92,6 +93,47 @@ export default async function PropertyDetailPage({
 }) {
   const { id } = await params;
   const property = await getProperty(id);
+
+  // Obtener reservas confirmadas
+  const confirmedReservations = property.Reservation.filter((r: any) => r.Payment?.status === "CONFIRMED" && r.status === "CONFIRMED");
+
+  // Obtener usuarios ahorrando para este paquete
+  const savings = await prismaAny.saving.findMany({
+    where: {
+      status: "APPROVED",
+      amountUsd: { gt: 0 },
+      paymentDetails: {
+        path: ["homeId"],
+        equals: property.id,
+      },
+    },
+    select: {
+      id: true,
+      userId: true,
+      amountUsd: true,
+      createdAt: true,
+      User: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  // Obtener asientos
+  const seats = await prismaAny.packageSeat.findMany({
+    where: { homeId: property.id },
+    select: {
+      id: true,
+      zone: true,
+      row: true,
+      column: true,
+      status: true,
+    },
+    orderBy: [{ zone: "asc" }, { row: "asc" }, { column: "asc" }],
+  });
   const amenityCategories = await prismaAny.amenityCategory.findMany({
     where: { isActive: true },
     orderBy: [{ order: "asc" }, { name: "asc" }],
@@ -276,94 +318,14 @@ export default async function PropertyDetailPage({
           </div>
         </Card>
 
-        {/* Recent Reservations */}
-        <Card className="p-6 col-span-2">
-          <h3 className="text-lg font-semibold mb-4">Reservas Recientes</h3>
-          {property.Reservation.length > 0 ? (
-            <div className="space-y-3">
-              {property.Reservation.map((reservation: Reservation) => {
-                const payment = reservation.Payment;
-                
-                const reservationStatusColors: Record<string, string> = {
-                  PENDING: "bg-yellow-100 text-yellow-800",
-                  CONFIRMED: "bg-green-100 text-green-800",
-                  CANCELLED: "bg-red-100 text-red-800",
-                  COMPLETED: "bg-blue-100 text-blue-800",
-                };
-                
-                const paymentStatusColors: Record<string, string> = {
-                  PENDING: "bg-yellow-100 text-yellow-800",
-                  CONFIRMED: "bg-green-100 text-green-800",
-                  REJECTED: "bg-red-100 text-red-800",
-                  CANCELLED: "bg-gray-100 text-gray-800",
-                };
 
-                return (
-                  <div
-                    key={reservation.id}
-                    className="p-4 bg-gray-50 rounded-lg space-y-3"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium">
-                          {reservation.User?.firstName} {reservation.User?.lastName}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {reservation.User?.email}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
-                          {new Date(reservation.startDate).toLocaleDateString("es-ES")} -{" "}
-                          {new Date(reservation.endDate).toLocaleDateString("es-ES")}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {reservation.nights} {reservation.nights === 1 ? "noche" : "noches"}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {payment && (
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-600">
-                            Método: <span className="font-medium text-gray-900">{getPaymentMethodLabel(payment.paymentMethod, (payment as any).paymentDetails)}</span>
-                          </p>
-                          {payment.referenceNumber && (
-                            <p className="text-xs text-gray-500">
-                              Ref: {payment.referenceNumber}
-                            </p>
-                          )}
-                          <p className="text-sm font-semibold text-gray-900">
-                            ${payment.amount.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${paymentStatusColors[payment.status as string] || "bg-gray-100 text-gray-800"}`}>
-                            {payment.status === "PENDING" ? "Pago Pendiente" :
-                             payment.status === "CONFIRMED" ? "Pago Confirmado" :
-                             payment.status === "REJECTED" ? "Pago Rechazado" :
-                             payment.status}
-                          </span>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${reservationStatusColors[reservation.status as string] || "bg-gray-100 text-gray-800"}`}>
-                            {reservation.status === "PENDING" ? "Pendiente" :
-                             reservation.status === "CONFIRMED" ? "Confirmada" :
-                             reservation.status === "CANCELLED" ? "Cancelada" :
-                             reservation.status === "COMPLETED" ? "Completada" :
-                             reservation.status}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-8">
-              No hay reservas aún
-            </p>
-          )}
+        {/* Tabs: Reservas Confirmadas, Usuarios Ahorrando, Asientos */}
+        <Card className="p-6 col-span-2">
+          <PropertyDetailTabs
+            confirmedReservations={confirmedReservations}
+            savings={savings}
+            seats={seats}
+          />
         </Card>
       </div>
 
