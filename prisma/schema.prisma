@@ -224,6 +224,13 @@ model User {
   document2Image                    String?
   verificationStatus                VerificationStatus       @default(NOT_SUBMITTED)
   municipalityCode                  String?
+  cedula                            String?
+  dateOfBirth                       DateTime?
+  emergencyPhone                    String?
+  address                           String?
+  healthConditions                  String?
+  hasTraveledWithDestinos           Boolean                  @default(false)
+  lastTravelDestination             String?
   AuditLog                          AuditLog[]
   Banner                            Banner[]
   Favorite                          Favorite[]

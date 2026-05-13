@@ -28,16 +28,31 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
     firstName: userData?.firstName || "",
     lastName: userData?.lastName || "",
     phoneNumber: userData?.phoneNumber || "",
+    cedula: userData?.cedula || "",
+    dateOfBirth: userData?.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : "",
+    emergencyPhone: userData?.emergencyPhone || "",
+    address: userData?.address || "",
+    healthConditions: userData?.healthConditions || "",
+    hasTraveledWithDestinos: userData?.hasTraveledWithDestinos || false,
+    lastTravelDestination: userData?.lastTravelDestination || "",
   });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as any;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +90,13 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
     form.append("firstName", formData.firstName);
     form.append("lastName", formData.lastName);
     form.append("phoneNumber", formData.phoneNumber);
+    form.append("cedula", formData.cedula);
+    form.append("dateOfBirth", formData.dateOfBirth);
+    form.append("emergencyPhone", formData.emergencyPhone);
+    form.append("address", formData.address);
+    form.append("healthConditions", formData.healthConditions);
+    form.append("hasTraveledWithDestinos", String(formData.hasTraveledWithDestinos));
+    form.append("lastTravelDestination", formData.lastTravelDestination);
     form.append("currentProfileImage", currentUserData?.profileImage || "");
     form.append("currentDocument1Image", currentUserData?.document1Image || "");
     form.append("currentDocument2Image", currentUserData?.document2Image || "");
@@ -93,6 +115,13 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
           firstName: updatedData?.firstName || "",
           lastName: updatedData?.lastName || "",
           phoneNumber: updatedData?.phoneNumber || "",
+          cedula: updatedData?.cedula || "",
+          dateOfBirth: updatedData?.dateOfBirth ? new Date(updatedData.dateOfBirth).toISOString().split('T')[0] : "",
+          emergencyPhone: updatedData?.emergencyPhone || "",
+          address: updatedData?.address || "",
+          healthConditions: updatedData?.healthConditions || "",
+          hasTraveledWithDestinos: updatedData?.hasTraveledWithDestinos || false,
+          lastTravelDestination: updatedData?.lastTravelDestination || "",
         });
         setSuccess(true);
         // Ya no volvemos al modo no-edición, mantenemos el formulario visible
@@ -234,6 +263,107 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
                 className="mt-1 bg-gray-50"
               />
             </div>
+
+            {/* Cédula */}
+            <div>
+              <Label htmlFor="cedula" className="text-sm font-medium">Número de Cédula</Label>
+              <Input
+                id="cedula"
+                name="cedula"
+                value={formData.cedula}
+                onChange={handleInputChange}
+                placeholder="V-12345678"
+                className="mt-1"
+              />
+            </div>
+
+            {/* Fecha de Nacimiento */}
+            <div>
+              <Label htmlFor="dateOfBirth" className="text-sm font-medium">Fecha de Nacimiento</Label>
+              <Input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={handleInputChange}
+                className="mt-1"
+              />
+            </div>
+
+            {/* Teléfono de Emergencia */}
+            <div>
+              <Label htmlFor="emergencyPhone" className="text-sm font-medium">Teléfono de Emergencia</Label>
+              <Input
+                id="emergencyPhone"
+                name="emergencyPhone"
+                type="tel"
+                value={formData.emergencyPhone}
+                onChange={handleInputChange}
+                placeholder="+58 412 1234567"
+                className="mt-1"
+              />
+            </div>
+
+            {/* Dirección de Habitación */}
+            <div>
+              <Label htmlFor="address" className="text-sm font-medium">Dirección de Habitación</Label>
+              <textarea
+                id="address"
+                name="address"
+                value={formData.address}
+                onChange={handleInputChange}
+                placeholder="Calle, Avenida, Número, Piso, etc."
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+              />
+            </div>
+
+            {/* Condiciones de Salud */}
+            <div>
+              <Label htmlFor="healthConditions" className="text-sm font-medium">Padece alguna enfermedad o lesión</Label>
+              <p className="text-xs text-gray-500 mb-2">De ser afirmativo, especifique</p>
+              <textarea
+                id="healthConditions"
+                name="healthConditions"
+                value={formData.healthConditions}
+                onChange={handleInputChange}
+                placeholder="Describa su condición (opcional)"
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+              />
+            </div>
+
+            {/* Viajes con Destinos Venezuela */}
+            <div>
+              <div className="flex items-center gap-3">
+                <input
+                  id="hasTraveledWithDestinos"
+                  name="hasTraveledWithDestinos"
+                  type="checkbox"
+                  checked={formData.hasTraveledWithDestinos}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 rounded"
+                />
+                <Label htmlFor="hasTraveledWithDestinos" className="text-sm font-medium cursor-pointer">
+                  Ha viajado con Destinos Venezuela
+                </Label>
+              </div>
+            </div>
+
+            {/* Último Destino */}
+            {formData.hasTraveledWithDestinos && (
+              <div>
+                <Label htmlFor="lastTravelDestination" className="text-sm font-medium">Especifique cuál destino</Label>
+                <Input
+                  id="lastTravelDestination"
+                  name="lastTravelDestination"
+                  value={formData.lastTravelDestination}
+                  onChange={handleInputChange}
+                  placeholder="Nombre del destino visitado"
+                  className="mt-1"
+                />
+              </div>
+            )}
 
             {/* Botones */}
             <div className="flex gap-3 pt-4">

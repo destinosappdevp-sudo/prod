@@ -647,6 +647,13 @@ export async function updateProfile(formData: FormData) {
     const firstName = (formData.get("firstName") as string)?.trim();
     const lastName = (formData.get("lastName") as string)?.trim();
     const phoneNumber = (formData.get("phoneNumber") as string)?.trim();
+    const cedula = (formData.get("cedula") as string)?.trim();
+    const dateOfBirth = (formData.get("dateOfBirth") as string)?.trim();
+    const emergencyPhone = (formData.get("emergencyPhone") as string)?.trim();
+    const address = (formData.get("address") as string)?.trim();
+    const healthConditions = (formData.get("healthConditions") as string)?.trim();
+    const hasTraveledWithDestinos = formData.get("hasTraveledWithDestinos") === "true";
+    const lastTravelDestination = (formData.get("lastTravelDestination") as string)?.trim();
     const profileImageFile = formData.get("profileImage") as File | null;
     const document1File = formData.get("document1Image") as File | null;
     const document2File = formData.get("document2Image") as File | null;
@@ -751,6 +758,13 @@ export async function updateProfile(formData: FormData) {
       firstName: firstName || "Usuario",
       lastName: lastName || "",
       phoneNumber: phoneNumber || null,
+      cedula: cedula || null,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      emergencyPhone: emergencyPhone || null,
+      address: address || null,
+      healthConditions: healthConditions || null,
+      hasTraveledWithDestinos: hasTraveledWithDestinos,
+      lastTravelDestination: hasTraveledWithDestinos && lastTravelDestination ? lastTravelDestination : null,
       profileImage: profileImageUrl || null,
       document1Image: document1ImageUrl,
       document2Image: document2ImageUrl,
