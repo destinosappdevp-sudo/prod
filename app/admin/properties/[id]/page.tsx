@@ -37,7 +37,6 @@ import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { ArrowLeft, Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
 import PropertyDetailTabs from "@/app/admin/components/PropertyDetailTabs";
 
 const prismaAny = prisma as any;
@@ -342,9 +341,12 @@ export default async function PropertyDetailPage({
         </Card>
 
 
-        {/* Tabs: Reservas Confirmadas, Usuarios Ahorrando, Asientos */}
+        {/* Tabs: Reservas Confirmadas, Usuarios Ahorrando, Asientos y Reservar */}
         <Card className="p-6 col-span-2">
           <PropertyDetailTabs
+            propertyId={property.id}
+            price={property.price ?? 0}
+            priceVip={property.priceVip ?? null}
             confirmedReservations={confirmedReservations}
             savings={savings}
             seats={seats}

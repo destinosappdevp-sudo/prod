@@ -74,9 +74,11 @@ export default function SeatMap({ seats, onSelectSeat, selectedSeatId }: SeatMap
                   <button
                     key={seat.id}
                     className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold border transition-all duration-150 ${getSeatColor(seat, selectedSeatId)}`}
-                    disabled={seat.status === "OCCUPIED"}
                     title={getSeatTitle(seat)}
-                    onClick={() => onSelectSeat && onSelectSeat(seat)}
+                    onClick={() => {
+                      if (seat.status === "OCCUPIED") return;
+                      if (onSelectSeat) onSelectSeat(seat);
+                    }}
                   >
                     {getSeatContent(seat)}
                   </button>
@@ -98,9 +100,11 @@ export default function SeatMap({ seats, onSelectSeat, selectedSeatId }: SeatMap
                   <button
                     key={seat.id}
                     className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold border transition-all duration-150 ${getSeatColor(seat, selectedSeatId)}`}
-                    disabled={seat.status === "OCCUPIED"}
                     title={getSeatTitle(seat)}
-                    onClick={() => onSelectSeat && onSelectSeat(seat)}
+                    onClick={() => {
+                      if (seat.status === "OCCUPIED") return;
+                      if (onSelectSeat) onSelectSeat(seat);
+                    }}
                   >
                     {getSeatContent(seat)}
                   </button>
