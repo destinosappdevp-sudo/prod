@@ -14,6 +14,14 @@ export const dynamic = "force-dynamic";
 
 const prismaAny = prisma as any;
 
+function parseSeatInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (Number.isNaN(parsed) || parsed < 0) return null;
+  return parsed;
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -35,7 +43,6 @@ export async function POST(request: Request) {
     const formData = (await request.formData()) as unknown as globalThis.FormData;
     const title = (formData.get("title") as string) || "";
     const description = (formData.get("description") as string) || "";
-    const guests = (formData.get("guests") as string) || "";
     const bedrooms = (formData.get("bedrooms") as string) || "";
     const bathrooms = (formData.get("bathrooms") as string) || "";
     const country = (formData.get("country") as string) || "";
@@ -53,13 +60,14 @@ export async function POST(request: Request) {
     const price = (formData.get("price") as string) || "";
     const vipSeatsRaw = (formData.get("vipSeats") as string) || "";
     const standardSeatsRaw = (formData.get("standardSeats") as string) || "";
-    const vipSeats = vipSeatsRaw ? Math.max(0, parseInt(vipSeatsRaw, 10)) : 0;
-    const standardSeats = standardSeatsRaw ? Math.max(0, parseInt(standardSeatsRaw, 10)) : 0;
-    // Zona VIP = bedrooms, Zona Estándar = bathrooms; usar como fallback si no se especificaron cupos
-    const bedroomsInt = bedrooms ? Math.max(0, parseInt(bedrooms, 10)) : 0;
-    const bathroomsInt = bathrooms ? Math.max(0, parseInt(bathrooms, 10)) : 0;
-    const effectiveVipSeats = vipSeats || bedroomsInt;
-    const effectiveStandardSeats = standardSeats || bathroomsInt;
+    // Zona VIP = bedrooms, Zona Estándar = bathrooms; se usa el valor explícito de cupos cuando viene en payload
+    const vipSeats = parseSeatInput(vipSeatsRaw);
+    const standardSeats = parseSeatInput(standardSeatsRaw);
+    const bedroomsInt = parseSeatInput(bedrooms);
+    const bathroomsInt = parseSeatInput(bathrooms);
+    const effectiveVipSeats = vipSeats ?? bedroomsInt ?? 0;
+    const effectiveStandardSeats = standardSeats ?? bathroomsInt ?? 0;
+    const effectiveGuests = (effectiveVipSeats + effectiveStandardSeats).toString();
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = (formData.get("propertyTypeId") as string) || "";
     const propertyTypeIdsRaw = formData
@@ -104,6 +112,12 @@ export async function POST(request: Request) {
     if (isNaN(Number(price)) || Number(price) <= 0) {
       return NextResponse.json({ error: "El precio debe ser un número mayor a 0" }, { status: 400 });
     }
+    if (effectiveVipSeats % 2 !== 0 || effectiveStandardSeats % 2 !== 0) {
+      return NextResponse.json(
+        { error: "Los cupos VIP y Estándar deben ser números pares" },
+        { status: 400 }
+      );
+    }
 
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
@@ -141,9 +155,9 @@ export async function POST(request: Request) {
         userId: user.id,
         title: title || null,
         description: description || null,
-        guests: guests || null,
-        bedrooms: bedrooms || null,
-        bathrooms: bathrooms || null,
+        guests: effectiveGuests,
+        bedrooms: effectiveVipSeats.toString(),
+        bathrooms: effectiveStandardSeats.toString(),
         country: country || null,
         municipality: municipality || null,
         exactAddress: exactAddress || null,

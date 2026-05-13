@@ -159,13 +159,36 @@ export default function PropertyEditForm({
     return getMunicipalitiesByState(formData.country);
   }, [formData.country, getMunicipalitiesByState]);
 
+  const parseSeatValue = (value: string) => {
+    if (!value.trim()) return 0;
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? 0 : Math.max(0, parsed);
+  };
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => {
       const next = { ...prev, [field]: value };
-      // Auto-calcular cupos totales cuando cambian las zonas de asientos
-      if (field === "bedrooms" || field === "bathrooms") {
-        const vip = parseInt(field === "bedrooms" ? value : prev.bedrooms) || 0;
-        const std = parseInt(field === "bathrooms" ? value : prev.bathrooms) || 0;
+      if (field === "bedrooms") {
+        next.vipSeats = value;
+      }
+      if (field === "bathrooms") {
+        next.standardSeats = value;
+      }
+      if (field === "vipSeats") {
+        next.bedrooms = value;
+      }
+      if (field === "standardSeats") {
+        next.bathrooms = value;
+      }
+
+      if (
+        field === "bedrooms" ||
+        field === "bathrooms" ||
+        field === "vipSeats" ||
+        field === "standardSeats"
+      ) {
+        const vip = parseSeatValue(next.vipSeats || next.bedrooms);
+        const std = parseSeatValue(next.standardSeats || next.bathrooms);
         next.guests = (vip + std).toString();
       }
       return next;
@@ -226,12 +249,19 @@ export default function PropertyEditForm({
         );
       }
 
+      const vipSeats = parseSeatValue(formData.vipSeats || formData.bedrooms);
+      const standardSeats = parseSeatValue(formData.standardSeats || formData.bathrooms);
+
+      if (vipSeats % 2 !== 0 || standardSeats % 2 !== 0) {
+        throw new Error("Los cupos VIP y Estándar deben ser números pares");
+      }
+
       const payload = new FormData();
       payload.append("title", formData.title);
       payload.append("description", formData.description);
-      payload.append("guests", formData.guests);
-      payload.append("bedrooms", formData.bedrooms);
-      payload.append("bathrooms", formData.bathrooms);
+      payload.append("guests", (vipSeats + standardSeats).toString());
+      payload.append("bedrooms", vipSeats.toString());
+      payload.append("bathrooms", standardSeats.toString());
       payload.append("country", formData.country);
       payload.append("municipality", formData.municipality);
       payload.append("exactAddress", formData.exactAddress);
@@ -241,8 +271,8 @@ export default function PropertyEditForm({
       if (formData.longitude) payload.append("longitude", formData.longitude);
       payload.append("price", formData.price);
       if (formData.priceVip) payload.append("priceVip", formData.priceVip);
-      if (formData.vipSeats) payload.append("vipSeats", formData.vipSeats);
-      if (formData.standardSeats) payload.append("standardSeats", formData.standardSeats);
+      payload.append("vipSeats", vipSeats.toString());
+      payload.append("standardSeats", standardSeats.toString());
 
       const selectedCategories = categories.filter((category) =>
         formData.propertyTypeIds.includes(category.id)
@@ -474,9 +504,11 @@ export default function PropertyEditForm({
                   id="guests"
                   type="number"
                   value={formData.guests}
-                  onChange={(e) => handleChange("guests", e.target.value)}
+                  readOnly
+                  disabled
                   placeholder="Número de cupos"
                 />
+                <p className="text-xs text-gray-400 mt-1">Se calcula automáticamente como VIP + Estándar</p>
               </div>
               <div>
                 <Label htmlFor="bedrooms">Zona VIP</Label>
@@ -485,6 +517,8 @@ export default function PropertyEditForm({
                   type="number"
                   value={formData.bedrooms}
                   onChange={(e) => handleChange("bedrooms", e.target.value)}
+                  min={0}
+                  step={2}
                   placeholder="Número de zonas VIP"
                 />
               </div>
@@ -495,6 +529,8 @@ export default function PropertyEditForm({
                   type="number"
                   value={formData.bathrooms}
                   onChange={(e) => handleChange("bathrooms", e.target.value)}
+                  min={0}
+                  step={2}
                   placeholder="Número de zonas estándar"
                 />
               </div>
@@ -616,7 +652,7 @@ export default function PropertyEditForm({
                   value={formData.vipSeats}
                   onChange={(e) => handleChange("vipSeats", e.target.value)}
                   min={0}
-                  step={4}
+                  step={2}
                   placeholder="Ej: 12"
                 />
                 <p className="text-xs text-gray-400 mt-1">Se generan asientos VIP automáticamente (filas de 4)</p>
@@ -629,7 +665,7 @@ export default function PropertyEditForm({
                   value={formData.standardSeats}
                   onChange={(e) => handleChange("standardSeats", e.target.value)}
                   min={0}
-                  step={4}
+                  step={2}
                   placeholder="Ej: 28"
                 />
                 <p className="text-xs text-gray-400 mt-1">Se generan asientos Estándar automáticamente (filas de 4)</p>
