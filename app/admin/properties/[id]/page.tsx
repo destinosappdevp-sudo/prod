@@ -123,7 +123,21 @@ export default async function PropertyDetailPage({
   });
 
   // Obtener asientos
-  const seats = await prismaAny.packageSeat.findMany({
+  // Traer reservas confirmadas con asiento
+  const reservationsWithSeat = await prismaAny.reservation.findMany({
+    where: {
+      homeId: property.id,
+      status: "CONFIRMED",
+      seatId: { not: null },
+      Payment: { status: "CONFIRMED" },
+    },
+    select: {
+      seatId: true,
+      User: { select: { firstName: true, lastName: true, email: true } },
+    },
+  });
+
+  const seatsRaw = await prismaAny.packageSeat.findMany({
     where: { homeId: property.id },
     select: {
       id: true,
@@ -133,6 +147,15 @@ export default async function PropertyDetailPage({
       status: true,
     },
     orderBy: [{ zone: "asc" }, { row: "asc" }, { column: "asc" }],
+  });
+
+  // Mapear occupant a los asientos ocupados
+  const seats = seatsRaw.map((seat: any) => {
+    if (seat.status === "OCCUPIED") {
+      const occ = reservationsWithSeat.find((r: any) => r.seatId === seat.id);
+      return { ...seat, occupant: occ?.User || null };
+    }
+    return seat;
   });
   const amenityCategories = await prismaAny.amenityCategory.findMany({
     where: { isActive: true },

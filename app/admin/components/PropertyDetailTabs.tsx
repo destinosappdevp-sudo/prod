@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
+import SeatMap, { Seat } from "./SeatMap";
 
 type ReservationItem = {
   id: string;
@@ -146,32 +147,7 @@ export default function PropertyDetailTabs({
       {tab === "asientos" && (
         <div>
           {seats.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <th className="px-2 py-2">Zona</th>
-                    <th className="px-2 py-2">Fila</th>
-                    <th className="px-2 py-2">Columna</th>
-                    <th className="px-2 py-2">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {seats.map((seat) => (
-                    <tr key={seat.id}>
-                      <td className="px-2 py-2">{seat.zone}</td>
-                      <td className="px-2 py-2">{seat.row}</td>
-                      <td className="px-2 py-2">{seat.column}</td>
-                      <td className="px-2 py-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${seat.status === "AVAILABLE" ? "bg-green-100 text-green-700" : seat.status === "OCCUPIED" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"}`}>
-                          {seat.status === "AVAILABLE" ? "Disponible" : seat.status === "OCCUPIED" ? "Ocupado" : seat.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <SeatMap seats={seats as Seat[]} />
           ) : (
             <p className="text-gray-500 text-center py-8">No hay asientos registrados</p>
           )}
