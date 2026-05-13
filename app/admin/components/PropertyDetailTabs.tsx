@@ -2,8 +2,55 @@
 import { useState } from "react";
 import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
 
-export default function PropertyDetailTabs({ confirmedReservations, savings, seats }) {
-  const [tab, setTab] = useState("reservas");
+type ReservationItem = {
+  id: string;
+  startDate: string | Date;
+  endDate: string | Date;
+  nights: number;
+  User?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+  } | null;
+  Payment?: {
+    paymentMethod?: string | null;
+    paymentDetails?: unknown;
+    referenceNumber?: string | null;
+    amount: number;
+  } | null;
+};
+
+type SavingItem = {
+  id: string;
+  amountUsd: number;
+  createdAt: string | Date;
+  User?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+  } | null;
+};
+
+type SeatItem = {
+  id: string;
+  zone: string;
+  row: number;
+  column: string;
+  status: string;
+};
+
+type PropertyDetailTabsProps = {
+  confirmedReservations: ReservationItem[];
+  savings: SavingItem[];
+  seats: SeatItem[];
+};
+
+export default function PropertyDetailTabs({
+  confirmedReservations,
+  savings,
+  seats,
+}: PropertyDetailTabsProps) {
+  const [tab, setTab] = useState<"reservas" | "ahorrando" | "asientos">("reservas");
 
   return (
     <div>
