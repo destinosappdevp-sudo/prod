@@ -22,6 +22,14 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber?: string | null;
+  cedula?: string | null;
+  dateOfBirth?: Date | string | null;
+  emergencyPhone?: string | null;
+  address?: string | null;
+  healthConditions?: string | null;
+  hasTraveledWithDestinos?: boolean;
+  lastTravelDestination?: string | null;
   role: "GUEST" | "ADMIN" | "SUPERADMIN";
   isVerified?: boolean;
   verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
@@ -49,10 +57,22 @@ function roleToSelectValue(role: User["role"]): "GUEST" | "ADMIN" {
 
 export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
   const router = useRouter();
+  const dateOfBirthValue = user.dateOfBirth
+    ? new Date(user.dateOfBirth).toISOString().split("T")[0]
+    : "";
+
   const [formData, setFormData] = useState({
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
+    phoneNumber: user.phoneNumber || "",
+    cedula: user.cedula || "",
+    dateOfBirth: dateOfBirthValue,
+    emergencyPhone: user.emergencyPhone || "",
+    address: user.address || "",
+    healthConditions: user.healthConditions || "",
+    hasTraveledWithDestinos: user.hasTraveledWithDestinos || false,
+    lastTravelDestination: user.lastTravelDestination || "",
     role: user.role,
     isVerified: user.isVerified || false,
     verificationStatus: user.verificationStatus || "NOT_SUBMITTED",
@@ -179,6 +199,102 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
               required
             />
           </div>
+          <div>
+            <Label htmlFor="cedula">Cedula</Label>
+            <Input
+              id="cedula"
+              value={formData.cedula}
+              onChange={(e) =>
+                setFormData({ ...formData, cedula: e.target.value })
+              }
+              placeholder="V-12345678"
+            />
+          </div>
+          <div>
+            <Label htmlFor="phoneNumber">Telefono</Label>
+            <Input
+              id="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={(e) =>
+                setFormData({ ...formData, phoneNumber: e.target.value })
+              }
+              placeholder="0414-1234567"
+            />
+          </div>
+          <div>
+            <Label htmlFor="dateOfBirth">Fecha de Nacimiento</Label>
+            <Input
+              id="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={(e) =>
+                setFormData({ ...formData, dateOfBirth: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <Label htmlFor="emergencyPhone">Telefono de Emergencia</Label>
+            <Input
+              id="emergencyPhone"
+              value={formData.emergencyPhone}
+              onChange={(e) =>
+                setFormData({ ...formData, emergencyPhone: e.target.value })
+              }
+              placeholder="0412-0000000"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label htmlFor="address">Direccion</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
+              placeholder="Direccion completa"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label htmlFor="healthConditions">Condiciones de Salud</Label>
+            <Input
+              id="healthConditions"
+              value={formData.healthConditions}
+              onChange={(e) =>
+                setFormData({ ...formData, healthConditions: e.target.value })
+              }
+              placeholder="Alergias, medicacion, restricciones, etc."
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={formData.hasTraveledWithDestinos}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    hasTraveledWithDestinos: e.target.checked,
+                    lastTravelDestination: e.target.checked ? formData.lastTravelDestination : "",
+                  })
+                }
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Ha viajado con Destinos anteriormente
+            </label>
+          </div>
+          {formData.hasTraveledWithDestinos && (
+            <div className="md:col-span-2">
+              <Label htmlFor="lastTravelDestination">Ultimo destino de viaje</Label>
+              <Input
+                id="lastTravelDestination"
+                value={formData.lastTravelDestination}
+                onChange={(e) =>
+                  setFormData({ ...formData, lastTravelDestination: e.target.value })
+                }
+                placeholder="Ej: Merida, Mochima, Los Roques"
+              />
+            </div>
+          )}
         </div>
       </Card>
 

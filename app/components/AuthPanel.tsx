@@ -46,6 +46,7 @@ export function AuthPanel({
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
+  const [cedula, setCedula] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [stateCode, setStateCode] = useState("");
   const [municipalityCode, setMunicipalityCode] = useState("");
@@ -208,6 +209,7 @@ export function AuthPanel({
         firstName: fullName.split(/\s+/)[0] || "",
         lastName: fullName.split(/\s+/).slice(1).join(" ") || "",
         phoneNumber,
+        cedula,
         stateCode,
         municipalityCode,
         dateOfBirth,
@@ -311,6 +313,21 @@ export function AuthPanel({
             value={dateOfBirth}
             onChange={(event) => setDateOfBirth(event.target.value)}
             required={!isLogin}
+            className={inputClassName}
+          />
+        </div>
+      )}
+
+      {!isLogin && (
+        <div className="space-y-2">
+          <Label htmlFor={`auth-cedula-${variant}`}>Cédula</Label>
+          <Input
+            id={`auth-cedula-${variant}`}
+            type="text"
+            value={cedula}
+            onChange={(event) => setCedula(event.target.value.toUpperCase())}
+            required={!isLogin}
+            placeholder="V-12345678"
             className={inputClassName}
           />
         </div>

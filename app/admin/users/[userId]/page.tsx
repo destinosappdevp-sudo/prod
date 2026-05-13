@@ -63,7 +63,7 @@ export default async function EditUserPage({
             Editar Usuario
           </h1>
           <p className="text-gray-600 mt-1">
-            {user.firstName} {user.lastName}
+            Cedula: {user.cedula || "No registrada"}
           </p>
         </div>
       </div>

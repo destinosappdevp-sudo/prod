@@ -19,6 +19,7 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
+  cedula?: string | null;
   profileImage?: string | null;
   role: "GUEST" | "ADMIN" | "SUPERADMIN";
   isVerified?: boolean;
@@ -50,7 +51,8 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
     const matchesSearch =
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchQuery.toLowerCase());
+      user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.cedula || "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
 
@@ -138,7 +140,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input
               type="text"
-              placeholder="Buscar por nombre o email..."
+              placeholder="Buscar por nombre, email o cédula..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="pl-10"
@@ -227,6 +229,9 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
                           {user.firstName} {user.lastName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Cédula: {user.cedula || "No registrada"}
                         </div>
                       </div>
                     </div>

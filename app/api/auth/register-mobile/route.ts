@@ -13,10 +13,15 @@ type RegisterMobileBody = {
   lastName?: string;
   phoneNumber?: string;
   phone?: string;
+  cedula?: string;
   stateCode?: string;
   state?: string;
   role?: "GUEST";
 };
+
+function normalizeCedulaValue(cedula?: string | null) {
+  return (cedula || "").trim().toUpperCase();
+}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -92,6 +97,7 @@ export async function POST(request: NextRequest) {
     const firstName = (body.firstName ?? body.name ?? "").trim();
     const lastName = (body.lastName ?? "").trim();
     const phoneNumber = (body.phoneNumber ?? body.phone ?? "").trim();
+    const cedula = normalizeCedulaValue(body.cedula);
     const stateCode = (body.stateCode ?? body.state ?? "").trim().toUpperCase();
     const role = "GUEST";
 
@@ -107,8 +113,26 @@ export async function POST(request: NextRequest) {
       return jsonResponse({ error: "Ingresa un número de teléfono válido" }, 400);
     }
 
+    if (!cedula) {
+      return jsonResponse({ error: "La cédula es requerida" }, 400);
+    }
+
     if (!stateCode || !getStateByValue(stateCode)) {
       return jsonResponse({ error: "Debes seleccionar un estado válido" }, 400);
+    }
+
+    const cedulaInUse = await prisma.user.findFirst({
+      where: {
+        cedula: {
+          equals: cedula,
+          mode: "insensitive",
+        },
+      },
+      select: { id: true },
+    });
+
+    if (cedulaInUse) {
+      return jsonResponse({ error: "La cédula ya está registrada por otro usuario" }, 409);
     }
 
     const supabase = createSupabaseClient();
@@ -137,6 +161,7 @@ export async function POST(request: NextRequest) {
           firstName,
           lastName,
           phoneNumber,
+          cedula,
           stateCode,
           role,
         },
@@ -147,6 +172,7 @@ export async function POST(request: NextRequest) {
           lastName,
           profileImage: `https://avatar.vercel.sh/${email}`,
           phoneNumber,
+          cedula,
           stateCode,
           role,
         },

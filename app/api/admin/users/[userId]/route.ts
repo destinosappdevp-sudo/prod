@@ -11,6 +11,10 @@ export const dynamic = "force-dynamic";
 
 type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
 
+function normalizeCedulaValue(cedula?: string | null) {
+  return (cedula || "").trim().toUpperCase();
+}
+
 async function findAuthUserIdByEmail(adminClient: AdminClient, email: string) {
   const normalizedEmail = email.trim().toLowerCase();
   let page = 1;
@@ -71,17 +75,55 @@ export async function PATCH(
       firstName,
       lastName,
       email,
+      phoneNumber,
+      cedula,
+      dateOfBirth,
+      emergencyPhone,
+      address,
+      healthConditions,
+      hasTraveledWithDestinos,
+      lastTravelDestination,
       role,
       isVerified,
       verificationStatus,
       verificationReason,
     } = body;
 
+    const normalizedCedula = normalizeCedulaValue(cedula);
+
+    if (normalizedCedula) {
+      const cedulaInUse = await prisma.user.findFirst({
+        where: {
+          cedula: {
+            equals: normalizedCedula,
+            mode: "insensitive",
+          },
+          NOT: { id: userId },
+        },
+        select: { id: true },
+      });
+
+      if (cedulaInUse) {
+        return NextResponse.json(
+          { error: "La cédula ya está registrada por otro usuario" },
+          { status: 409 }
+        );
+      }
+    }
+
     // Preparar datos de actualización
     const updateData: any = {
       firstName,
       lastName,
       email,
+      phoneNumber: phoneNumber || null,
+      cedula: normalizedCedula || null,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      emergencyPhone: emergencyPhone || null,
+      address: address || null,
+      healthConditions: healthConditions || null,
+      hasTraveledWithDestinos: !!hasTraveledWithDestinos,
+      lastTravelDestination: hasTraveledWithDestinos ? (lastTravelDestination || null) : null,
       role,
       verificationStatus,
       verificationReason,

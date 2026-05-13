@@ -19,16 +19,22 @@ type RegistrationProfile = {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  cedula?: string;
   stateCode: string;
   municipalityCode?: string;
   dateOfBirth?: string;
 };
+
+function normalizeCedulaValue(cedula?: string | null) {
+  return (cedula || "").trim().toUpperCase();
+}
 
 function normalizeRegistrationProfile(profile: RegistrationProfile) {
   return {
     firstName: profile.firstName.trim(),
     lastName: profile.lastName.trim(),
     phoneNumber: profile.phoneNumber.trim(),
+    cedula: normalizeCedulaValue(profile.cedula),
     stateCode: profile.stateCode.trim().toUpperCase(),
     municipalityCode: profile.municipalityCode?.trim().toUpperCase(),
     dateOfBirth: profile.dateOfBirth?.trim(),
@@ -52,6 +58,10 @@ function validateRegistrationProfile(profile: RegistrationProfile) {
 
   if (normalizedProfile.phoneNumber.length < 7) {
     return { error: "Ingresa un número de teléfono válido" };
+  }
+
+  if (!normalizedProfile.cedula) {
+    return { error: "Debes ingresar tu cédula" };
   }
 
   if (!normalizedProfile.stateCode || !getStateByValue(normalizedProfile.stateCode)) {
@@ -211,6 +221,22 @@ export async function signUpWithRole(
 
     normalizedProfile = validatedProfile.data;
   }
+
+  if (normalizedProfile.cedula) {
+    const cedulaInUse = await prisma.user.findFirst({
+      where: {
+        cedula: {
+          equals: normalizedProfile.cedula,
+          mode: "insensitive",
+        },
+      },
+      select: { id: true },
+    });
+
+    if (cedulaInUse) {
+      return { error: "La cédula ya está registrada por otro usuario" };
+    }
+  }
   
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -234,6 +260,7 @@ export async function signUpWithRole(
           profileImage: `https://avatar.vercel.sh/${email}`,
           role: role,
           phoneNumber: normalizedProfile.phoneNumber,
+          cedula: normalizedProfile.cedula || null,
           stateCode: normalizedProfile.stateCode,
           municipalityCode: normalizedProfile.municipalityCode || null,
           dateOfBirth: normalizedProfile.dateOfBirth ? new Date(normalizedProfile.dateOfBirth) : null,
@@ -654,7 +681,7 @@ export async function updateProfile(formData: FormData) {
     const firstName = (formData.get("firstName") as string)?.trim();
     const lastName = (formData.get("lastName") as string)?.trim();
     const phoneNumber = (formData.get("phoneNumber") as string)?.trim();
-    const cedula = (formData.get("cedula") as string)?.trim();
+    const cedula = normalizeCedulaValue(formData.get("cedula") as string);
     const dateOfBirth = (formData.get("dateOfBirth") as string)?.trim();
     const emergencyPhone = (formData.get("emergencyPhone") as string)?.trim();
     const address = (formData.get("address") as string)?.trim();
@@ -668,6 +695,7 @@ export async function updateProfile(formData: FormData) {
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: {
+        id: true,
         role: true,
         isVerified: true,
         profileImage: true,
@@ -675,6 +703,23 @@ export async function updateProfile(formData: FormData) {
         document2Image: true,
       },
     });
+
+    if (cedula) {
+      const cedulaInUse = await prisma.user.findFirst({
+        where: {
+          cedula: {
+            equals: cedula,
+            mode: "insensitive",
+          },
+          NOT: { id: user.id },
+        },
+        select: { id: true },
+      });
+
+      if (cedulaInUse) {
+        return { success: false, error: "La cédula ya está registrada por otro usuario" };
+      }
+    }
 
     let profileImageUrl =
       (formData.get("currentProfileImage") as string) || currentUser?.profileImage || "";
