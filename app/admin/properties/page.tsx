@@ -55,6 +55,28 @@ async function getActiveReservations() {
 
 async function getProperties() {
   unstable_noStore();
+
+  const savings = await prismaAny.saving.findMany({
+    where: {
+      status: "APPROVED",
+      amountUsd: { gt: 0 },
+    },
+    select: {
+      userId: true,
+      paymentDetails: true,
+    },
+  });
+
+  const savingsUsersByHome = new Map<string, Set<string>>();
+  for (const saving of savings) {
+    const details = saving.paymentDetails as { homeId?: string } | null;
+    const homeId = typeof details?.homeId === "string" ? details.homeId : null;
+    if (!homeId) continue;
+
+    const users = savingsUsersByHome.get(homeId) ?? new Set<string>();
+    users.add(saving.userId);
+    savingsUsersByHome.set(homeId, users);
+  }
   
   // Optimized: use select instead of include _count to avoid extra joins
   // Limit to prevent loading too many properties at once
@@ -63,6 +85,8 @@ async function getProperties() {
       id: true,
       title: true,
       price: true,
+      guests: true,
+      checkInTime: true,
       country: true,
       municipality: true,
       categoryName: true,
@@ -91,7 +115,10 @@ async function getProperties() {
     take: 500, // Limit to prevent overwhelming the page - client-side pagination handles rest
   });
 
-  return properties;
+  return properties.map((property) => ({
+    ...property,
+    savingsUsersCount: savingsUsersByHome.get(property.id)?.size ?? 0,
+  }));
 }
 
 export default async function PropertiesPage() {

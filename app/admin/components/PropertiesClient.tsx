@@ -37,6 +37,9 @@ interface Property {
   id: string;
   title: string | null;
   price: number | null;
+  guests: string | null;
+  checkInTime: string | null;
+  savingsUsersCount: number;
   country: string | null;
   municipality: string | null;
   categoryName: string[] | null;
@@ -241,16 +244,16 @@ export function PropertiesClient({
                   Paquete
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Categoría
+                  Fecha de salida
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Precio
+                  Cupos
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Reservas
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Favoritos
+                  Usuarios Ahorrando
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Estado
@@ -262,14 +265,6 @@ export function PropertiesClient({
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {paginated.map((property) => {
-                const normalizedCategories = normalizeCategoryNames(property.categoryName);
-                const categoryLabel =
-                  normalizedCategories.length > 0
-                    ? normalizedCategories.length > 1
-                      ? `${normalizedCategories[0]} +${normalizedCategories.length - 1}`
-                      : normalizedCategories[0]
-                    : "Sin categoría";
-
                 return (
                   <tr key={property.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
@@ -286,20 +281,20 @@ export function PropertiesClient({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 rounded-full">
-                        {categoryLabel}
+                      <span className="text-sm font-medium text-gray-700">
+                        {property.checkInTime || "-"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className="text-sm font-semibold">
-                        {property.price ? `$${property.price}` : "-"}
+                        {property.guests || "-"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <span className="text-sm font-semibold">{property._count.Reservation}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm font-semibold">{property._count.Favorite}</span>
+                      <span className="text-sm font-semibold">{property.savingsUsersCount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <select
