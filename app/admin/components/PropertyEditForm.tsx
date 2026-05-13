@@ -160,7 +160,16 @@ export default function PropertyEditForm({
   }, [formData.country, getMunicipalitiesByState]);
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [field]: value };
+      // Auto-calcular cupos totales cuando cambian las zonas de asientos
+      if (field === "bedrooms" || field === "bathrooms") {
+        const vip = parseInt(field === "bedrooms" ? value : prev.bedrooms) || 0;
+        const std = parseInt(field === "bathrooms" ? value : prev.bathrooms) || 0;
+        next.guests = (vip + std).toString();
+      }
+      return next;
+    });
   };
 
   const wrapDescriptionSelection = (before: string, after: string, fallback = "texto") => {

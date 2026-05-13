@@ -211,7 +211,8 @@ export async function PATCH(
     const baseUpdateData = {
       title: title || null,
       description: description || null,
-      guests: guests || null,
+      guests: (effectiveVipSeats + effectiveStandardSeats).toString(),
+
       bedrooms: bedrooms || null,
       bathrooms: bathrooms || null,
       country: country || null,
