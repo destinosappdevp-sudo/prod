@@ -228,7 +228,7 @@ export default async function UserSavingsPage({
           </p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Saldo aprobado (USD)</p>
+          <p className="text-sm text-gray-500 mb-1">Saldo disponible</p>
           <p className="text-3xl font-bold text-green-700">${approvedUsd.toFixed(2)}</p>
           <p className="text-xs text-gray-500 mt-1">
             {referenceRate > 0
