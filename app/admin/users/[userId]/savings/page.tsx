@@ -47,6 +47,9 @@ async function getData(userId: string) {
   const approvedUsd = savings
     .filter((s) => s.status === "APPROVED" || Number(s.amountUsd) < 0)
     .reduce((sum, s) => sum + s.amountUsd, 0);
+  const totalDepositedApprovedUsd = savings
+    .filter((s) => s.status === "APPROVED" && Number(s.amountUsd) > 0)
+    .reduce((sum, s) => sum + s.amountUsd, 0);
   const totalBs = savings
     .filter((s) => s.status === "APPROVED" || Number(s.amountBs) < 0)
     .reduce((sum, s) => sum + s.amountBs, 0);
@@ -148,6 +151,7 @@ async function getData(userId: string) {
     user,
     savings,
     approvedUsd,
+    totalDepositedApprovedUsd,
     totalBs,
     pendingUsd,
     totalSavingsUsd,
@@ -180,6 +184,7 @@ export default async function UserSavingsPage({
     user,
     savings,
     approvedUsd,
+    totalDepositedApprovedUsd,
     totalBs,
     pendingUsd,
     totalSavingsUsd,
@@ -192,6 +197,8 @@ export default async function UserSavingsPage({
   const approvedBsFromRate = approvedUsd * referenceRate;
   const pendingBsFromRate = pendingUsd * referenceRate;
   const totalSavingsBsFromRate = totalSavingsUsd * referenceRate;
+  const usedOrRedeemedUsd = Math.max(0, totalDepositedApprovedUsd - approvedUsd);
+  const usedOrRedeemedBsFromRate = usedOrRedeemedUsd * referenceRate;
 
   return (
     <div className="space-y-6">
@@ -239,9 +246,12 @@ export default async function UserSavingsPage({
           </p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Saldo aprobado (Bs.)</p>
-          <p className="text-3xl font-bold text-blue-700">
-            Bs. {totalBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <p className="text-sm text-gray-500 mb-1">Saldo usado o canjeado</p>
+          <p className="text-3xl font-bold text-slate-800">${usedOrRedeemedUsd.toFixed(2)}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            {referenceRate > 0
+              ? `Bs. ${usedOrRedeemedBsFromRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : "Tasa no disponible"}
           </p>
         </Card>
       </div>
