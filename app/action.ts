@@ -21,6 +21,7 @@ type RegistrationProfile = {
   phoneNumber: string;
   stateCode: string;
   municipalityCode?: string;
+  dateOfBirth?: string;
 };
 
 function normalizeRegistrationProfile(profile: RegistrationProfile) {
@@ -30,6 +31,7 @@ function normalizeRegistrationProfile(profile: RegistrationProfile) {
     phoneNumber: profile.phoneNumber.trim(),
     stateCode: profile.stateCode.trim().toUpperCase(),
     municipalityCode: profile.municipalityCode?.trim().toUpperCase(),
+    dateOfBirth: profile.dateOfBirth?.trim(),
   };
 }
 
@@ -54,6 +56,10 @@ function validateRegistrationProfile(profile: RegistrationProfile) {
 
   if (!normalizedProfile.stateCode || !getStateByValue(normalizedProfile.stateCode)) {
     return { error: "Debes seleccionar un estado de Venezuela" };
+  }
+
+  if (!normalizedProfile.dateOfBirth) {
+    return { error: "Debes seleccionar tu fecha de nacimiento" };
   }
 
   return { data: normalizedProfile };
@@ -230,6 +236,7 @@ export async function signUpWithRole(
           phoneNumber: normalizedProfile.phoneNumber,
           stateCode: normalizedProfile.stateCode,
           municipalityCode: normalizedProfile.municipalityCode || null,
+          dateOfBirth: normalizedProfile.dateOfBirth ? new Date(normalizedProfile.dateOfBirth) : null,
         },
       });
     } catch {

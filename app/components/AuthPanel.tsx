@@ -44,8 +44,8 @@ export function AuthPanel({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [stateCode, setStateCode] = useState("");
   const [municipalityCode, setMunicipalityCode] = useState("");
@@ -205,11 +205,12 @@ export function AuthPanel({
       }
 
       const result = await signUpWithRole(email, password, role, {
-        firstName,
-        lastName,
+        firstName: fullName.split(/\s+/)[0] || "",
+        lastName: fullName.split(/\s+/).slice(1).join(" ") || "",
         phoneNumber,
         stateCode,
         municipalityCode,
+        dateOfBirth,
       });
       if (result && "error" in result && result.error) {
         setError(result.error);
@@ -250,32 +251,17 @@ export function AuthPanel({
   const formBody = (
     <form onSubmit={handleSubmit} className={cn("space-y-4", variant === "dialog" && "space-y-4") }>
       {!isLogin && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor={`auth-first-name-${variant}`}>Nombre</Label>
-            <Input
-              id={`auth-first-name-${variant}`}
-              type="text"
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-              required={!isLogin}
-              placeholder="Juan"
-              className={inputClassName}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={`auth-last-name-${variant}`}>Apellido</Label>
-            <Input
-              id={`auth-last-name-${variant}`}
-              type="text"
-              value={lastName}
-              onChange={(event) => setLastName(event.target.value)}
-              required={!isLogin}
-              placeholder="Pérez"
-              className={inputClassName}
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor={`auth-full-name-${variant}`}>Nombre y Apellido</Label>
+          <Input
+            id={`auth-full-name-${variant}`}
+            type="text"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            required={!isLogin}
+            placeholder="Juan Pérez"
+            className={inputClassName}
+          />
         </div>
       )}
 
@@ -315,6 +301,20 @@ export function AuthPanel({
           </button>
         </div>
       </div>
+
+      {!isLogin && (
+        <div className="space-y-2">
+          <Label htmlFor={`auth-date-of-birth-${variant}`}>Fecha de Nacimiento</Label>
+          <Input
+            id={`auth-date-of-birth-${variant}`}
+            type="date"
+            value={dateOfBirth}
+            onChange={(event) => setDateOfBirth(event.target.value)}
+            required={!isLogin}
+            className={inputClassName}
+          />
+        </div>
+      )}
 
       {!isLogin && (
         <div className="grid gap-4 sm:grid-cols-2">
