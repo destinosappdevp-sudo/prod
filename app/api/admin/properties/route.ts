@@ -13,6 +13,15 @@ export const dynamic = "force-dynamic";
 
 const prismaAny = prisma as any;
 
+function getPropertyTypesDelegate() {
+  const delegate =
+    prismaAny.property_types ?? prismaAny.propertyTypes ?? prismaAny.propertyType;
+  if (delegate && typeof delegate.findMany === "function") {
+    return delegate;
+  }
+  return null;
+}
+
 function parseSeatInput(value: string): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -87,25 +96,36 @@ export async function POST(request: Request) {
     ) as number[];
 
     let selectedCategories: Array<{ id: number; name: string }> = [];
+    const propertyTypes = getPropertyTypesDelegate();
 
-    if (selectedTypeIds.length > 0) {
-      const cats = (await prismaAny.property_types.findMany({
+    if (selectedTypeIds.length > 0 && propertyTypes) {
+      const cats = (await propertyTypes.findMany({
         where: { id: { in: selectedTypeIds } },
         select: { id: true, name: true },
       })) as Array<{ id: number; name: string }>;
       const byId = new Map(cats.map((c) => [c.id, c]));
-      selectedCategories = selectedTypeIds.map((id) => byId.get(id)).filter((c): c is { id: number; name: string } => !!c);
+      selectedCategories = selectedTypeIds
+        .map((id) => byId.get(id))
+        .filter((c): c is { id: number; name: string } => !!c);
     }
 
     if (selectedCategories.length === 0 && categoryNameRaw) {
       const names = Array.from(new Set(categoryNameRaw.split(",").map((n) => n.trim()).filter(Boolean)));
-      if (names.length > 0) {
-        const cats = (await prismaAny.property_types.findMany({
+      if (names.length > 0 && propertyTypes) {
+        const cats = (await propertyTypes.findMany({
           where: { name: { in: names } },
           select: { id: true, name: true },
         })) as Array<{ id: number; name: string }>;
         const byName = new Map(cats.map((c) => [c.name, c]));
-        selectedCategories = names.map((n) => byName.get(n)).filter((c): c is { id: number; name: string } => !!c);
+        selectedCategories = names
+          .map((n) => byName.get(n))
+          .filter((c): c is { id: number; name: string } => !!c);
+      } else if (names.length > 0) {
+        // Fallback en runtime cuando Prisma no expone el delegate esperado.
+        selectedCategories = names.map((name, index) => ({
+          id: selectedTypeIds[index] ?? 0,
+          name,
+        }));
       }
     }
 
@@ -156,7 +176,9 @@ export async function POST(request: Request) {
 
     const newId = crypto.randomUUID();
     const selectedCategoryNames = selectedCategories.map((c) => c.name);
-    const selectedPropertyTypeIds = selectedCategories.map((c) => c.id);
+    const selectedPropertyTypeIds = selectedCategories
+      .map((c) => c.id)
+      .filter((id) => id > 0);
 
     const created = await prismaAny.home.create({
       data: {

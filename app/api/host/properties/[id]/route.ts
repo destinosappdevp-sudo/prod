@@ -9,6 +9,15 @@ import {
 
 const prismaAny = prisma as any;
 
+function getPropertyTypesDelegate() {
+  const delegate =
+    prismaAny.property_types ?? prismaAny.propertyTypes ?? prismaAny.propertyType;
+  if (delegate && typeof delegate.findMany === "function") {
+    return delegate;
+  }
+  return null;
+}
+
 async function applyAmenityUpdates(homeId: string, payload?: string | null) {
   if (!payload) return;
 
@@ -104,9 +113,10 @@ export async function PATCH(
     ) as number[];
 
     let selectedCategories: Array<{ id: number; name: string }> = [];
+    const propertyTypes = getPropertyTypesDelegate();
 
-    if (selectedTypeIds.length > 0) {
-      const categoriesFromIds = (await prismaAny.property_types.findMany({
+    if (selectedTypeIds.length > 0 && propertyTypes) {
+      const categoriesFromIds = (await propertyTypes.findMany({
         where: { id: { in: selectedTypeIds } },
         select: { id: true, name: true },
       })) as Array<{ id: number; name: string }>;
@@ -130,8 +140,8 @@ export async function PATCH(
         )
       );
 
-      if (requestedNames.length > 0) {
-        const categoriesFromNames = (await prismaAny.property_types.findMany({
+      if (requestedNames.length > 0 && propertyTypes) {
+        const categoriesFromNames = (await propertyTypes.findMany({
           where: { name: { in: requestedNames } },
           select: { id: true, name: true },
         })) as Array<{ id: number; name: string }>;
@@ -143,11 +153,18 @@ export async function PATCH(
         selectedCategories = requestedNames
           .map((name) => categoryByName.get(name))
           .filter((category): category is { id: number; name: string } => !!category);
+      } else if (requestedNames.length > 0) {
+        selectedCategories = requestedNames.map((name, index) => ({
+          id: selectedTypeIds[index] ?? 0,
+          name,
+        }));
       }
     }
 
     const selectedCategoryNames = selectedCategories.map((category) => category.name);
-    const selectedPropertyTypeIds = selectedCategories.map((category) => category.id);
+    const selectedPropertyTypeIds = selectedCategories
+      .map((category) => category.id)
+      .filter((id) => id > 0);
 
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
