@@ -1,31 +1,43 @@
-# Manual de Administrador
+export default function AdminManualPage() {
+	return (
+		<div className="prose max-w-none">
+			<h1>Manual de Administrador</h1>
 
-Bienvenido al panel de administración de ZerKKa. Aquí encontrarás una guía rápida para las funciones principales:
+			<p>
+				Bienvenido al panel de administración de Destinos. Aquí encontrarás una guía rápida para las
+				funciones principales:
+			</p>
 
-## 1. Gestión de Usuarios
-- Visualiza, edita y elimina usuarios.
-- Asigna roles y verifica información.
+			<h2>1. Gestión de Usuarios</h2>
+			<ul>
+				<li>Visualiza, edita y elimina usuarios.</li>
+				<li>Asigna roles y verifica información.</li>
+			</ul>
+			<img src="/screenshot/logo.png" alt="Captura de gestión de usuarios" />
 
-![Captura de gestión de usuarios](/screenshot/logo.png)
+			<h2>2. Propiedades</h2>
+			<ul>
+				<li>Añade, edita o elimina propiedades.</li>
+				<li>Gestiona fotos, descripciones y disponibilidad.</li>
+			</ul>
+			<img src="/screenshot/logo.png" alt="Captura de gestión de propiedades" />
 
-## 2. Propiedades
-- Añade, edita o elimina propiedades.
-- Gestiona fotos, descripciones y disponibilidad.
+			<h2>3. Pagos y Reservas</h2>
+			<ul>
+				<li>Revisa pagos pendientes y confirmados.</li>
+				<li>Accede al historial de reservas.</li>
+			</ul>
+			<img src="/screenshot/logo.png" alt="Captura de pagos y reservas" />
 
-![Captura de gestión de propiedades](/screenshot/logo.png)
+			<h2>4. Publicidad (Banners)</h2>
+			<ul>
+				<li>Crea y administra banners publicitarios.</li>
+				<li>Activa o desactiva campañas.</li>
+			</ul>
+			<img src="/screenshot/logo.png" alt="Captura de banners" />
 
-## 3. Pagos y Reservas
-- Revisa pagos pendientes y confirmados.
-- Accede al historial de reservas.
-
-![Captura de pagos y reservas](/screenshot/logo.png)
-
-## 4. Publicidad (Banners)
-- Crea y administra banners publicitarios.
-- Activa o desactiva campañas.
-
-![Captura de banners](/screenshot/logo.png)
-
----
-
-*Las imágenes serán reemplazadas por capturas reales.*
+			<hr />
+			<p className="text-sm">*Las imágenes serán reemplazadas por capturas reales.*</p>
+		</div>
+	);
+}
