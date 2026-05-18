@@ -33,9 +33,14 @@ export async function POST(req: NextRequest) {
     const userId = typeof body?.userId === "string" ? body.userId : "";
     const type = body?.type === "package" ? "package" : body?.type === "general" ? "general" : null;
     const homeId = typeof body?.homeId === "string" ? body.homeId : null;
+    const amountBs = Number(body?.amountBs);
 
     if (!userId || !type) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
+    }
+
+    if (!Number.isFinite(amountBs) || amountBs <= 0) {
+      return NextResponse.json({ error: "Debes indicar un monto inicial válido en Bs." }, { status: 400 });
     }
 
     if (type === "package" && !homeId) {
@@ -53,10 +58,11 @@ export async function POST(req: NextRequest) {
 
     const allUserSavings = await (prisma as any).saving.findMany({
       where: { userId },
-      select: { id: true, paymentDetails: true },
+      orderBy: { date: "desc" },
+      select: { id: true, paymentDetails: true, amountBs: true, amountUsd: true },
     });
 
-    const alreadyExists = allUserSavings.some((saving: any) => {
+    const existingSaving = allUserSavings.find((saving: any) => {
       const details = saving.paymentDetails && typeof saving.paymentDetails === "object"
         ? saving.paymentDetails
         : {};
@@ -69,19 +75,10 @@ export async function POST(req: NextRequest) {
       return targetHomeId === homeId;
     });
 
-    if (alreadyExists) {
-      return NextResponse.json(
-        {
-          error:
-            type === "general"
-              ? "Ese usuario ya tiene una alcancía general"
-              : "Ese usuario ya tiene una alcancía para ese paquete",
-        },
-        { status: 409 }
-      );
-    }
-
-    let paymentDetails: Prisma.InputJsonValue = { createdByAdmin: true };
+    let paymentDetails: Prisma.InputJsonValue = {
+      createdByAdmin: true,
+      initialAmountBs: amountBs,
+    };
 
     if (type === "package" && homeId) {
       const home = await prisma.home.findUnique({
@@ -95,23 +92,71 @@ export async function POST(req: NextRequest) {
 
       paymentDetails = {
         createdByAdmin: true,
+        initialAmountBs: amountBs,
         homeId: home.id,
         homeTitle: home.title,
       };
     }
 
+    const config = await (prisma as any).platformConfig.findFirst({
+      select: { bcvRate: true },
+    });
+    const bcvRate = Number(config?.bcvRate ?? 0);
+
+    if (!bcvRate || bcvRate <= 0) {
+      return NextResponse.json({ error: "Tasa BCV no disponible" }, { status: 400 });
+    }
+
+    const amountUsd = Math.round((amountBs / bcvRate) * 100) / 100;
+
+    if (existingSaving) {
+      const previousDetails =
+        existingSaving.paymentDetails && typeof existingSaving.paymentDetails === "object"
+          ? (existingSaving.paymentDetails as Record<string, unknown>)
+          : {};
+
+      const currentAmountBs = Number(existingSaving.amountBs ?? 0);
+      const currentAmountUsd = Number(existingSaving.amountUsd ?? 0);
+
+      const updated = await (prisma as any).saving.update({
+        where: { id: existingSaving.id },
+        data: {
+          amountBs: currentAmountBs + amountBs,
+          amountUsd: currentAmountUsd + amountUsd,
+          bcvRate,
+          status: "APPROVED",
+          paymentDetails: {
+            ...previousDetails,
+            createdByAdmin: true,
+            lastAdminTopUpBs: amountBs,
+            lastAdminTopUpUsd: amountUsd,
+            lastAdminTopUpRate: bcvRate,
+            lastAdminTopUpAt: new Date().toISOString(),
+          },
+        },
+      });
+
+      return NextResponse.json({ saving: updated, mode: "updated" });
+    }
+
+    const paymentDetailsWithAudit = {
+      ...(paymentDetails as Record<string, unknown>),
+      initialAmountUsd: amountUsd,
+      bcvRateAtCreation: bcvRate,
+    };
+
     const saving = await prisma.saving.create({
       data: {
         userId,
-        amountBs: 0,
-        amountUsd: 0,
-        bcvRate: 0,
+        amountBs,
+        amountUsd,
+        bcvRate,
         status: "APPROVED",
-        paymentDetails,
+        paymentDetails: paymentDetailsWithAudit,
       },
     });
 
-    return NextResponse.json({ saving });
+    return NextResponse.json({ saving, mode: "created" });
   } catch (error) {
     console.error("Error al crear alcancía desde admin:", error);
     return NextResponse.json({ error: "Error al crear alcancía" }, { status: 500 });
