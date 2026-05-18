@@ -584,7 +584,6 @@ async function getGuestDashboardData(userId: string) {
             municipality: true,
             price: true,
             description: true,
-            slug: true,
             categoryName: true,
           },
         },
@@ -668,7 +667,6 @@ async function getGuestDashboardData(userId: string) {
           price: true,
           country: true,
           municipality: true,
-          slug: true,
           categoryName: true,
         },
       })
@@ -684,7 +682,7 @@ async function getGuestDashboardData(userId: string) {
       photo: fav.Home.photo || "",
       favoriteId: fav.id,
       description: fav.Home.description || "",
-      slug: fav.Home.slug,
+      slug: null,
       categoryName: fav.Home.categoryName,
     })),
     guestReservations: reservations.map((res: any) => ({
@@ -725,7 +723,7 @@ async function getGuestDashboardData(userId: string) {
       price: pkg.price ?? 0,
       country: pkg.country || null,
       municipality: pkg.municipality || null,
-      slug: pkg.slug || null,
+      slug: null,
       categoryName: pkg.categoryName || null,
     })),
     savingsTotal,
@@ -789,7 +787,6 @@ export default async function DashboardPage({
             price: true,
             country: true,
             municipality: true,
-            slug: true,
             categoryName: true,
           },
         })
