@@ -40,7 +40,8 @@
     "sharp": "^0.34.5",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
-    "world-countries": "^5.0.0"
+    "world-countries": "^5.0.0",
+    "ws": "^8.20.1"
   },
   "devDependencies": {
     "@prisma/client": "^5.22.0",
