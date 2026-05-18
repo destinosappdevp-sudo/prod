@@ -13,7 +13,6 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
-import { generateHomeSlug } from "@/app/lib/slug";
 import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 
 type RegistrationProfile = {
@@ -507,9 +506,6 @@ export async function createDescription(formData: FormData) {
     throw new Error(`No se pudo subir la imagen: ${error.message}`);
   }
 
-  // Generar slug SEO desde el título
-  const slug = generateHomeSlug(title, homeId);
-
   // Guardar en la base de datos con la URL pública completa
   const data = await (prisma as any).home.update({
     where: { id: homeId },
@@ -522,7 +518,6 @@ export async function createDescription(formData: FormData) {
       guests: guestsNumber,
       photo: filePath,
       addedDescription: true,
-      slug,
     },
   });
 

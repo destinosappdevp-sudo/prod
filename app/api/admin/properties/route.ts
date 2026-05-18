@@ -7,7 +7,6 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
-import { generateHomeSlug } from "@/app/lib/slug";
 import { syncPackageSeats } from "@/app/lib/syncPackageSeats";
 
 export const dynamic = "force-dynamic";
@@ -185,7 +184,6 @@ export async function POST(request: Request) {
         addedDescription: !!(title && description),
         addedLocation: !!(country && municipality),
         publishStatus: "PENDING_APPROVAL",
-        slug: generateHomeSlug(title, newId),
       },
     });
 

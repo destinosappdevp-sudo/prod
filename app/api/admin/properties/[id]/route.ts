@@ -7,7 +7,6 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
-import { generateHomeSlug } from "@/app/lib/slug";
 import { syncPackageSeats } from "@/app/lib/syncPackageSeats";
 
 export const dynamic = "force-dynamic";
@@ -251,7 +250,6 @@ export async function PATCH(
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
-      slug: title ? generateHomeSlug(title, id) : undefined,
     };
 
     const updated = await prisma.home.update({
