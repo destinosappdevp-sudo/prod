@@ -53,6 +53,8 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState("");
+  const [userQuery, setUserQuery] = useState("");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [savingType, setSavingType] = useState<"general" | "package">("general");
   const [selectedHome, setSelectedHome] = useState("");
   const [initialAmountBs, setInitialAmountBs] = useState("");
@@ -71,6 +73,17 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       }),
     [users]
   );
+
+  const filteredUsers = useMemo(() => {
+    const q = userQuery.trim().toLowerCase();
+    if (!q) return sortedUsers.slice(0, 50);
+    return sortedUsers.filter((u) => {
+      const ced = (u.cedula || "").toLowerCase();
+      const name = `${u.firstName} ${u.lastName}`.toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      return ced.includes(q) || name.includes(q) || email.includes(q);
+    }).slice(0, 50);
+  }, [userQuery, sortedUsers]);
 
   const existingWallet = useMemo(() => {
     if (!selectedUser) return null;
@@ -150,22 +163,45 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Usuario</label>
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un usuario (buscar por cédula)" />
-                </SelectTrigger>
-              <SelectContent>
-                {sortedUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{user.cedula ? `${user.cedula} — ` : ""}{user.firstName} {user.lastName}</span>
-                          <span className="text-xs text-gray-500">{user.email}</span>
-                        </div>
-                      </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <label className="block text-sm font-medium text-gray-700">Usuario</label>
+              <div className="relative">
+                <Input
+                  value={userQuery || (selectedUser ? (() => {
+                    const u = users.find((x) => x.id === selectedUser);
+                    return u ? `${u.cedula ? u.cedula + ' — ' : ''}${u.firstName} ${u.lastName}` : userQuery;
+                  })() : userQuery)}
+                  onChange={(e) => {
+                    setUserQuery(e.target.value);
+                    setShowUserDropdown(true);
+                  }}
+                  onFocus={() => setShowUserDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowUserDropdown(false), 150)}
+                  placeholder="Buscar por cédula, nombre o email"
+                />
+
+                <div className={`absolute left-0 right-0 mt-1 z-50 bg-white border rounded shadow max-h-60 overflow-auto ${showUserDropdown ? "" : "hidden"}`}>
+                  {filteredUsers.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-500">No se encontraron usuarios</div>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setSelectedUser(user.id);
+                          setUserQuery(`${user.cedula ? user.cedula + ' — ' : ''}${user.firstName} ${user.lastName}`);
+                          setShowUserDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                      >
+                        <div className="font-medium">{user.cedula ? `${user.cedula} — ` : ""}{user.firstName} {user.lastName}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
           </div>
 
           <div className="space-y-2">
