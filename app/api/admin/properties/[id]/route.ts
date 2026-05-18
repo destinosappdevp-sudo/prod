@@ -245,8 +245,6 @@ export async function PATCH(
       longitude: longitude,
       price: price ? parseInt(price) : null,
       priceVip: priceVipRaw ? parseInt(priceVipRaw) : null,
-      vipSeats: effectiveVipSeats,
-      standardSeats: effectiveStandardSeats,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),

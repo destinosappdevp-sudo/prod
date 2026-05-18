@@ -175,8 +175,6 @@ export async function POST(request: Request) {
         latitude,
         longitude,
         price: price ? parseInt(price) : null,
-        vipSeats: effectiveVipSeats,
-        standardSeats: effectiveStandardSeats,
         photo: photoPath,
         categoryName: selectedCategoryNames,
         propertyTypeId: selectedPropertyTypeIds,
