@@ -115,11 +115,19 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">
-          Bienvenido al panel de administración de Destinos Venezuela
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Bienvenido al panel de administración de Destinos Venezuela</p>
+        </div>
+        <div>
+          <Link
+            href="/admin/manual"
+            className="text-sm font-medium text-sky-600 hover:text-sky-700 underline"
+          >
+            Manual de Admin
+          </Link>
+        </div>
       </div>
 
       {stats.pendingPayments > 0 && (
