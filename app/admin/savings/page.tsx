@@ -18,8 +18,8 @@ async function getData() {
       },
     }),
     prisma.user.findMany({
-      select: { id: true, firstName: true, lastName: true, email: true },
-      orderBy: [{ firstName: "asc" }, { lastName: "asc" }, { email: "asc" }],
+      select: { id: true, firstName: true, lastName: true, email: true, cedula: true },
+      orderBy: [{ cedula: "asc" }, { firstName: "asc" }, { lastName: "asc" }],
     }),
     prisma.home.findMany({
       select: { id: true, title: true },

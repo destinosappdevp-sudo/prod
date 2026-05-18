@@ -26,6 +26,7 @@ type UserOption = {
   firstName: string;
   lastName: string;
   email: string;
+  cedula?: string | null;
 };
 
 type HomeOption = {
@@ -61,8 +62,11 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
   const sortedUsers = useMemo(
     () =>
       [...users].sort((a, b) => {
-        const nameA = `${a.firstName} ${a.lastName} ${a.email}`.toLowerCase();
-        const nameB = `${b.firstName} ${b.lastName} ${b.email}`.toLowerCase();
+        const idA = (a.cedula || "").toLowerCase();
+        const idB = (b.cedula || "").toLowerCase();
+        if (idA !== idB) return idA.localeCompare(idB, "es");
+        const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+        const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
         return nameA.localeCompare(nameB, "es");
       }),
     [users]
@@ -148,14 +152,17 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">Usuario</label>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona un usuario" />
-              </SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un usuario (buscar por cédula)" />
+                </SelectTrigger>
               <SelectContent>
                 {sortedUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.firstName} {user.lastName} ({user.email})
-                  </SelectItem>
+                      <SelectItem key={user.id} value={user.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{user.cedula ? `${user.cedula} — ` : ""}{user.firstName} {user.lastName}</span>
+                          <span className="text-xs text-gray-500">{user.email}</span>
+                        </div>
+                      </SelectItem>
                 ))}
               </SelectContent>
             </Select>
