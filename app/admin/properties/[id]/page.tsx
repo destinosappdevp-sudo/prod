@@ -97,20 +97,17 @@ export default async function PropertyDetailPage({
   const confirmedReservations = property.Reservation.filter((r: any) => r.Payment?.status === "CONFIRMED" && r.status === "CONFIRMED");
 
   // Obtener usuarios ahorrando para este paquete
-  const savings = await prismaAny.saving.findMany({
+  const allSavings = await prismaAny.saving.findMany({
     where: {
       status: "APPROVED",
       amountUsd: { gt: 0 },
-      paymentDetails: {
-        path: ["homeId"],
-        equals: property.id,
-      },
     },
     select: {
       id: true,
       userId: true,
       amountUsd: true,
       createdAt: true,
+      paymentDetails: true,
       User: {
         select: {
           firstName: true,
@@ -121,41 +118,17 @@ export default async function PropertyDetailPage({
     },
   });
 
+  // Filtrar en memoria por homeId dentro de paymentDetails
+  const savings = allSavings.filter((s: any) => {
+    const details = s.paymentDetails && typeof s.paymentDetails === "object"
+      ? s.paymentDetails
+      : {};
+    return details.homeId === property.id;
+  });
+
   // Obtener asientos
-  // Traer reservas confirmadas con asiento
-  const reservationsWithSeat = await prismaAny.reservation.findMany({
-    where: {
-      homeId: property.id,
-      status: "CONFIRMED",
-      seatId: { not: null },
-      Payment: { status: "CONFIRMED" },
-    },
-    select: {
-      seatId: true,
-      User: { select: { firstName: true, lastName: true, email: true } },
-    },
-  });
-
-  const seatsRaw = await prismaAny.packageSeat.findMany({
-    where: { homeId: property.id },
-    select: {
-      id: true,
-      zone: true,
-      row: true,
-      column: true,
-      status: true,
-    },
-    orderBy: [{ zone: "asc" }, { row: "asc" }, { column: "asc" }],
-  });
-
-  // Mapear occupant a los asientos ocupados
-  const seats = seatsRaw.map((seat: any) => {
-    if (seat.status === "OCCUPIED") {
-      const occ = reservationsWithSeat.find((r: any) => r.seatId === seat.id);
-      return { ...seat, occupant: occ?.User || null };
-    }
-    return seat;
-  });
+  // PackageSeat no existe en el schema actual
+  const seats: any[] = [];
   const amenityCategories = await prismaAny.amenityCategory.findMany({
     where: { isActive: true },
     orderBy: [{ order: "asc" }, { name: "asc" }],
