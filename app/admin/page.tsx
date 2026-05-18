@@ -228,6 +228,20 @@ export default async function AdminDashboard() {
           );
         })}
       </div>
+
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">Configuración</h2>
+        <Card className="mt-3 p-4">
+          <div className="flex flex-col gap-2">
+            <Link href="/admin/settings" className="text-sm text-gray-700 hover:underline">
+              Ajustes de la plataforma
+            </Link>
+            <Link href="/admin/manual" className="text-sm text-sky-600 hover:text-sky-700">
+              Manual de Admin
+            </Link>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
