@@ -57,13 +57,13 @@ function roleToSelectValue(role: User["role"]): "GUEST" | "ADMIN" {
 
 export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
   const router = useRouter();
+  const initialFullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
   const dateOfBirthValue = user.dateOfBirth
     ? new Date(user.dateOfBirth).toISOString().split("T")[0]
     : "";
 
   const [formData, setFormData] = useState({
-    firstName: user.firstName,
-    lastName: user.lastName,
+    fullName: initialFullName,
     email: user.email,
     phoneNumber: user.phoneNumber || "",
     cedula: user.cedula || "",
@@ -119,6 +119,19 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedFullName = formData.fullName.trim().replace(/\s+/g, " ");
+    if (!normalizedFullName) {
+      alert("Debes ingresar el nombre completo");
+      return;
+    }
+
+    const [firstNamePart, ...lastNameParts] = normalizedFullName.split(" ");
+    const payload = {
+      ...formData,
+      firstName: firstNamePart,
+      lastName: lastNameParts.join(" ") || "-",
+    };
+
     setSaving(true);
 
     try {
@@ -127,7 +140,7 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -165,25 +178,15 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Información Personal</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="firstName">Nombre</Label>
+          <div className="md:col-span-2">
+            <Label htmlFor="fullName">Nombre completo</Label>
             <Input
-              id="firstName"
-              value={formData.firstName}
+              id="fullName"
+              value={formData.fullName}
               onChange={(e) =>
-                setFormData({ ...formData, firstName: e.target.value })
+                setFormData({ ...formData, fullName: e.target.value })
               }
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="lastName">Apellido</Label>
-            <Input
-              id="lastName"
-              value={formData.lastName}
-              onChange={(e) =>
-                setFormData({ ...formData, lastName: e.target.value })
-              }
+              placeholder="Ej: Juan Perez"
               required
             />
           </div>

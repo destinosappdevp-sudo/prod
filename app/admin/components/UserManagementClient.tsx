@@ -52,8 +52,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [newUser, setNewUser] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     password: "",
     phoneNumber: "",
@@ -63,8 +62,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
 
   const resetCreateForm = () => {
     setNewUser({
-      firstName: "",
-      lastName: "",
+      fullName: "",
       email: "",
       password: "",
       phoneNumber: "",
@@ -77,10 +75,19 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateError(null);
-    if (!newUser.firstName.trim() || !newUser.lastName.trim() || !newUser.email.trim() || !newUser.password) {
-      setCreateError("Nombre, apellido, email y contraseña son obligatorios");
+    const normalizedFullName = newUser.fullName.trim().replace(/\s+/g, " ");
+    if (!normalizedFullName || !newUser.email.trim() || !newUser.password) {
+      setCreateError("Nombre completo, email y contraseña son obligatorios");
       return;
     }
+
+    const [firstNamePart, ...lastNameParts] = normalizedFullName.split(" ");
+    const payload = {
+      ...newUser,
+      firstName: firstNamePart,
+      lastName: lastNameParts.join(" ") || "-",
+    };
+
     if (newUser.password.length < 8) {
       setCreateError("La contraseña debe tener al menos 8 caracteres");
       return;
@@ -90,7 +97,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
@@ -221,23 +228,14 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
               </button>
             </div>
             <form onSubmit={handleCreateUser} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-                  <Input
-                    value={newUser.firstName}
-                    onChange={(e) => setNewUser((p) => ({ ...p, firstName: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Apellido *</label>
-                  <Input
-                    value={newUser.lastName}
-                    onChange={(e) => setNewUser((p) => ({ ...p, lastName: e.target.value }))}
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
+                <Input
+                  value={newUser.fullName}
+                  onChange={(e) => setNewUser((p) => ({ ...p, fullName: e.target.value }))}
+                  placeholder="Ej: Juan Perez"
+                  required
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
