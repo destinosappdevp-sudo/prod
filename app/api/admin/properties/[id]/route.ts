@@ -22,6 +22,10 @@ function parseSeatInput(value: string): number | null {
   return parsed;
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Internal server error";
+}
+
 async function applyAmenityUpdates(homeId: string, payload?: string | null) {
   if (!payload) return;
 
@@ -274,7 +278,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -355,7 +359,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }

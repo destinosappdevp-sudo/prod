@@ -22,6 +22,10 @@ function parseSeatInput(value: string): number | null {
   return parsed;
 }
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Internal server error";
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -223,6 +227,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ id: newId, ...created });
   } catch (error) {
     console.error("Error creating property:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
