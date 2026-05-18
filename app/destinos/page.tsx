@@ -6,6 +6,7 @@ import {
   getPrimaryCategoryName,
   parseMultiCategoryFilter,
 } from "@/app/lib/property-categories";
+import { generateHomeSlug } from "@/app/lib/slug";
 import ReviewsSection from "@/app/components/ReviewsSection";
 import Image from "next/image";
 import Link from "next/link";
@@ -305,7 +306,7 @@ export default async function DestinosHomePage({
               contactNumber={item.contactNumber}
               checkInTime={(item as any).checkInTime}
               bcvRate={bcvRate}
-              slug={null}
+              slug={generateHomeSlug(item.title || "paquete", item.id)}
             />
           ))}
         </div>

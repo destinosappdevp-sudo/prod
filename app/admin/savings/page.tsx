@@ -35,7 +35,58 @@ async function getData() {
     .filter((s: any) => s.status === "APPROVED" && Number(s.amountUsd) >= 0)
     .reduce((sum: number, s: any) => sum + Number(s.amountUsd), 0);
 
-  return { savings, pendingUsd, approvedUsd, users, homes };
+  const homeTitleById = new Map<string, string>();
+  homes.forEach((home: any) => {
+    homeTitleById.set(home.id, home.title || "Paquete sin título");
+  });
+
+  const walletMap = new Map<
+    string,
+    {
+      userId: string;
+      type: "general" | "package";
+      homeId: string | null;
+      homeTitle: string | null;
+      amountBs: number;
+      amountUsd: number;
+    }
+  >();
+
+  for (const s of savings as any[]) {
+    const details = s.paymentDetails && typeof s.paymentDetails === "object"
+      ? (s.paymentDetails as Record<string, any>)
+      : {};
+
+    const targetHomeId = typeof details.homeId === "string" ? details.homeId : null;
+    const walletType: "general" | "package" = targetHomeId ? "package" : "general";
+    const key = `${s.userId}:${targetHomeId ?? "general"}`;
+
+    const shouldCountForBalance =
+      s.status === "APPROVED" || Number(s.amountUsd) < 0 || Number(s.amountBs) < 0;
+
+    if (!shouldCountForBalance) continue;
+
+    if (!walletMap.has(key)) {
+      walletMap.set(key, {
+        userId: s.userId,
+        type: walletType,
+        homeId: targetHomeId,
+        homeTitle:
+          (typeof details.homeTitle === "string" ? details.homeTitle : null) ||
+          (targetHomeId ? homeTitleById.get(targetHomeId) || "Paquete sin título" : null),
+        amountBs: 0,
+        amountUsd: 0,
+      });
+    }
+
+    const wallet = walletMap.get(key)!;
+    wallet.amountBs += Number(s.amountBs ?? 0);
+    wallet.amountUsd += Number(s.amountUsd ?? 0);
+  }
+
+  const walletBalances = Array.from(walletMap.values());
+
+  return { savings, pendingUsd, approvedUsd, users, homes, walletBalances };
 }
 
 const statusLabel: Record<string, string> = {
@@ -51,7 +102,7 @@ const statusStyle: Record<string, string> = {
 };
 
 export default async function AdminSavingsPage() {
-  const { savings, pendingUsd, approvedUsd, users, homes } = await getData();
+  const { savings, pendingUsd, approvedUsd, users, homes, walletBalances } = await getData();
   const pendingCount = savings.filter((s: any) => s.status === "PENDING").length;
 
   return (
@@ -61,7 +112,7 @@ export default async function AdminSavingsPage() {
           <h1 className="text-3xl font-bold text-gray-900">Ahorros / Alcancía</h1>
           <p className="mt-1 text-gray-600">Aprueba, rechaza o crea alcancías para usuarios registrados</p>
         </div>
-        <AddSavingDialog users={users} homes={homes} />
+        <AddSavingDialog users={users} homes={homes} walletBalances={walletBalances} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -106,6 +157,10 @@ export default async function AdminSavingsPage() {
                       : {};
                   const ref = details.referenceNumber ?? "—";
                   const bank = details.emisorBank ?? "";
+                  const createdByAdmin = details.createdByAdmin === true;
+                  const initialAmountBs = Number(details.initialAmountBs ?? NaN);
+                  const initialAmountUsd = Number(details.initialAmountUsd ?? NaN);
+                  const bcvRateAtCreation = Number(details.bcvRateAtCreation ?? NaN);
                   const paymentProofUrl =
                     typeof details.paymentProofUrl === "string" ? details.paymentProofUrl : "";
                   const user = s.User;
@@ -132,6 +187,25 @@ export default async function AdminSavingsPage() {
                       <td className="px-4 py-4 text-sm text-gray-700">
                         <div className="font-mono">{ref}</div>
                         {bank && <div className="text-xs text-gray-400">{bank}</div>}
+                        {createdByAdmin && (
+                          <div className="mt-1 rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">
+                            Creada por admin
+                            {Number.isFinite(initialAmountBs) && (
+                              <span>
+                                {" "}- Inicial Bs. {initialAmountBs.toLocaleString("es-VE", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </span>
+                            )}
+                            {Number.isFinite(initialAmountUsd) && (
+                              <span> | USD ${initialAmountUsd.toFixed(2)}</span>
+                            )}
+                            {Number.isFinite(bcvRateAtCreation) && (
+                              <span> | BCV {bcvRateAtCreation.toFixed(2)}</span>
+                            )}
+                          </div>
+                        )}
                         {s.status === "REJECTED" && s.rejectionReason && (
                           <div className="mt-0.5 text-xs text-red-500">Motivo: {s.rejectionReason}</div>
                         )}

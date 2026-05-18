@@ -12,6 +12,8 @@ import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import Image from "next/image";
 import { getPrimaryCategoryName } from "@/app/lib/property-categories";
+import { generateHomeSlug, toCategorySlug } from "@/app/lib/slug";
+import { redirect } from "next/navigation";
 
 const prismaAny = prisma as any;
 
@@ -101,6 +103,12 @@ async function getAmenities(homeId: string) {
 async function SingleHomePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await getData(id);
+
+  if (data?.categoryName) {
+    const categorySlug = toCategorySlug(data.categoryName);
+    const generatedSlug = generateHomeSlug(data.title || "paquete", id);
+    redirect(`/destinos/${categorySlug}/${generatedSlug}`);
+  }
 
   const amenityCategories = await getAmenities(id);
   const state = getStateByValue(data?.country as string);

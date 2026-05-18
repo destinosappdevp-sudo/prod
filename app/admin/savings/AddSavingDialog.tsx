@@ -33,12 +33,22 @@ type HomeOption = {
   title: string | null;
 };
 
+type WalletBalance = {
+  userId: string;
+  type: "general" | "package";
+  homeId: string | null;
+  homeTitle: string | null;
+  amountBs: number;
+  amountUsd: number;
+};
+
 type AddSavingDialogProps = {
   users: UserOption[];
   homes: HomeOption[];
+  walletBalances: WalletBalance[];
 };
 
-export default function AddSavingDialog({ users, homes }: AddSavingDialogProps) {
+export default function AddSavingDialog({ users, homes, walletBalances }: AddSavingDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState("");
@@ -57,6 +67,16 @@ export default function AddSavingDialog({ users, homes }: AddSavingDialogProps) 
       }),
     [users]
   );
+
+  const existingWallet = useMemo(() => {
+    if (!selectedUser) return null;
+
+    return walletBalances.find((wallet) => {
+      if (wallet.userId !== selectedUser) return false;
+      if (savingType === "general") return wallet.type === "general";
+      return wallet.type === "package" && wallet.homeId === selectedHome;
+    }) || null;
+  }, [walletBalances, selectedUser, savingType, selectedHome]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -194,6 +214,26 @@ export default function AddSavingDialog({ users, homes }: AddSavingDialogProps) 
             />
           </div>
 
+          {selectedUser && (savingType === "general" || selectedHome) && (
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+              {existingWallet ? (
+                <>
+                  <p className="font-medium">Saldo actual de la alcancía:</p>
+                  <p>
+                    Bs. {Number(existingWallet.amountBs).toLocaleString("es-VE", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                    {" "}
+                    | USD ${Number(existingWallet.amountUsd).toFixed(2)}
+                  </p>
+                </>
+              ) : (
+                <p className="font-medium">No existe alcancía para esta selección. Se creará una nueva.</p>
+              )}
+            </div>
+          )}
+
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
           <DialogFooter>
@@ -207,7 +247,11 @@ export default function AddSavingDialog({ users, homes }: AddSavingDialogProps) 
               disabled={submitting}
               className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
-              {submitting ? "Guardando..." : "Crear/Agregar saldo"}
+              {submitting
+                ? "Guardando..."
+                : existingWallet
+                ? "Agregar saldo"
+                : "Crear alcancía"}
             </Button>
           </DialogFooter>
         </form>
