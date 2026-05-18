@@ -17,7 +17,6 @@ async function getPackageWithSeats(homeId: string) {
       title: true,
       vipSeats: true,
       standardSeats: true,
-      slug: true,
       categoryName: true,
       PackageSeat: {
         select: {
@@ -68,7 +67,7 @@ export default async function SeatSelectionPage({
         {/* Header */}
         <div className="mb-6">
           <Link
-            href={`/destinos/${encodeURIComponent(home.slug || home.id)}`}
+            href={`/home/${homeId}`}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />

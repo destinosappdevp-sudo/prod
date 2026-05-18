@@ -126,7 +126,6 @@ async function getListings({
       bedrooms: true,
       contactNumber: true,
       checkInTime: true,
-      slug: true,
       Review: {
         select: {
           rating: true,
@@ -306,7 +305,7 @@ export default async function DestinosHomePage({
               contactNumber={item.contactNumber}
               checkInTime={(item as any).checkInTime}
               bcvRate={bcvRate}
-              slug={item.slug}
+              slug={null}
             />
           ))}
         </div>

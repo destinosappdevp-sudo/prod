@@ -16,8 +16,13 @@ const prismaAny = prisma as any;
 
 async function getDataBySlug(slug: string) {
   noStore();
-  return await prismaAny.home.findUnique({
-    where: { slug },
+  // Los slugs tienen formato "{titulo}-{id.slice(0,6)}".
+  // Extraemos el prefijo del ID (últimos 6 chars tras el último guión)
+  // para buscar la propiedad aunque el campo slug ya no esté en el schema.
+  const idPrefix = slug.split('-').pop() || '';
+  if (!idPrefix || idPrefix.length < 4) return null;
+  return await prismaAny.home.findFirst({
+    where: { id: { startsWith: idPrefix } },
     select: {
       id: true,
       photo: true,
@@ -31,7 +36,6 @@ async function getDataBySlug(slug: string) {
       exactAddress: true,
       checkInTime: true,
       guests: true,
-      slug: true,
       publishStatus: true,
       User: {
         select: { id: true, role: true },
@@ -91,7 +95,7 @@ async function DestinoPage({
 
   const correctCategorySlug = toCategorySlug(data.categoryName);
   if (categorySlug !== correctCategorySlug) {
-    redirect(`/destinos/${correctCategorySlug}/${data.slug}`);
+    redirect(`/home/${data.id}`);
   }
 
   const supabase = await createClient();
