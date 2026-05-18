@@ -14,6 +14,7 @@ import {
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
 import { generateHomeSlug } from "@/app/lib/slug";
+import { createAdminClient } from "@/app/lib/supabase/admin";
 
 type RegistrationProfile = {
   firstName: string;
@@ -485,8 +486,10 @@ export async function createDescription(formData: FormData) {
   const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${optimizedImage.extension}`;
   const filePath = `user-${user.id}/${uniqueFileName}`;
 
-  // Subir imagen a Supabase usando cliente de servidor
-  const { error } = await supabaseServer.storage
+  // Usamos service role en servidor si existe para no depender de políticas RLS del bucket.
+  const storageClient = createAdminClient() ?? supabaseServer;
+
+  const { error } = await storageClient.storage
     .from("images")
     .upload(filePath, optimizedImage.file, {
       cacheControl: "3600",
@@ -499,22 +502,11 @@ export async function createDescription(formData: FormData) {
     throw new Error("Failed to upload image: " + error.message);
   }
 
-  // Obtener URL pública
-  const { data: publicUrlData } = supabaseServer.storage
-    .from("images")
-    .getPublicUrl(filePath);
-
-  const imagePublicUrl = publicUrlData?.publicUrl;
-
-  if (!imagePublicUrl) {
-    throw new Error("Failed to get public URL for image");
-  }
-
   // Generar slug SEO desde el título
   const slug = generateHomeSlug(title, homeId);
 
   // Guardar en la base de datos con la URL pública completa
-  const data = await prisma.home.update({
+  const data = await (prisma as any).home.update({
     where: { id: homeId },
     data: {
       title: title,

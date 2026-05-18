@@ -48,21 +48,6 @@ const nextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns,
   },
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.destinos.pro',
-          },
-        ],
-        destination: 'https://destinos.pro/:path*',
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default nextConfig;

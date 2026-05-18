@@ -28,6 +28,7 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.envviejo
 
 # vercel
 .vercel
@@ -38,3 +39,7 @@ next-env.d.ts
 
 # mobile app (React Native/Expo)
 /ZerkkApp
+
+# local AI agent tooling
+/.agents
+skills-lock.json

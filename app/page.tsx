@@ -101,7 +101,6 @@ async function getData({
       exactAddress: true,
       contactNumber: true,
       checkInTime: true,
-      slug: true,
       latitude: true,
       longitude: true,
       Review: {
@@ -170,9 +169,34 @@ async function ShowPlace({
     q?: string;
   };
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data, bcvRate } = await getData({ searchParams: searchParams, userId: user?.id });
+  let userId: string | undefined;
+  let data: Awaited<ReturnType<typeof getData>>["data"] = [];
+  let bcvRate: number | null = null;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    userId = user?.id;
+
+    const result = await getData({
+      searchParams: searchParams,
+      userId,
+    });
+
+    data = result.data;
+    bcvRate = result.bcvRate;
+  } catch (error) {
+    console.error("[home] Error rendering listings:", error);
+
+    return (
+      <Nothing
+        title="Estamos preparando los listados"
+        description="Intenta nuevamente en unos minutos"
+      />
+    );
+  }
 
   // Is this a search? (any filter active)
   const isSearch = !!(searchParams?.country || searchParams?.rooms || searchParams?.bathrooms || searchParams?.guest);
@@ -195,7 +219,7 @@ async function ShowPlace({
       price={item.price as number}
       stateValue={item.country as string}
       municipalityValue={item.municipality}
-      userId={user?.id}
+      userId={userId}
       favoriteId={item.Favorite[0]?.id}
       isInFavoriteList={item.Favorite.length > 0}
       homeId={item.id}
@@ -209,7 +233,6 @@ async function ShowPlace({
       contactNumber={item.contactNumber}
       checkInTime={(item as any).checkInTime}
       bcvRate={bcvRate}
-      slug={item.slug}
     />
   );
 
