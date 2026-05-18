@@ -14,7 +14,7 @@ import {
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
 import { generateHomeSlug } from "@/app/lib/slug";
-import { createAdminClient } from "@/app/lib/supabase/admin";
+import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 
 type RegistrationProfile = {
   firstName: string;
@@ -486,8 +486,10 @@ export async function createDescription(formData: FormData) {
   const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${optimizedImage.extension}`;
   const filePath = `user-${user.id}/${uniqueFileName}`;
 
-  // Usamos service role en servidor si existe para no depender de políticas RLS del bucket.
-  const storageClient = createAdminClient() ?? supabaseServer;
+  const storageClient = await getAdminStorageClientOrThrow(
+    "images",
+    "createDescription"
+  );
 
   const { error } = await storageClient.storage
     .from("images")
@@ -498,8 +500,11 @@ export async function createDescription(formData: FormData) {
     });
 
   if (error) {
-    console.error("Error subiendo imagen:", error.message);
-    throw new Error("Failed to upload image: " + error.message);
+    console.error("Error subiendo imagen:", {
+      code: error.name,
+      message: error.message,
+    });
+    throw new Error(`No se pudo subir la imagen: ${error.message}`);
   }
 
   // Generar slug SEO desde el título

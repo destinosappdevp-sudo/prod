@@ -1,7 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
-import { createAdminClient } from "@/app/lib/supabase/admin";
+import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
 import {
   revalidateHomeVisibilityPaths,
@@ -200,7 +200,10 @@ export async function PATCH(
         .substring(7)}.${optimizedImage.extension}`;
       const filePath = `user-${user.id}/${uniqueFileName}`;
 
-      const storageClient = createAdminClient() ?? supabase;
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "admin properties PATCH"
+      );
 
       const { error: uploadError } = await storageClient.storage
         .from("images")
@@ -211,9 +214,12 @@ export async function PATCH(
         });
 
       if (uploadError) {
-        console.error("Error subiendo imagen:", uploadError.message);
+        console.error("Error subiendo imagen:", {
+          code: uploadError.name,
+          message: uploadError.message,
+        });
         return NextResponse.json(
-          { error: "Failed to upload image" },
+          { error: `No se pudo subir la imagen: ${uploadError.message}` },
           { status: 500 }
         );
       }
@@ -332,7 +338,10 @@ export async function DELETE(
     });
 
     if (property.photo) {
-      const storageClient = createAdminClient() ?? supabase;
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "admin properties DELETE"
+      );
       const { error: removeError } = await storageClient.storage
         .from("images")
         .remove([property.photo]);

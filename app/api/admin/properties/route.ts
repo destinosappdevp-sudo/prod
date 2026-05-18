@@ -1,7 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
-import { createAdminClient } from "@/app/lib/supabase/admin";
+import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
 import {
   revalidateHomeVisibilityPaths,
@@ -131,7 +131,10 @@ export async function POST(request: Request) {
       });
       const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${optimized.extension}`;
       const filePath = `user-${user.id}/${uniqueFileName}`;
-      const storageClient = createAdminClient() ?? supabase;
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "admin properties POST"
+      );
       const { error: uploadError } = await storageClient.storage
         .from("images")
         .upload(filePath, optimized.file, {
@@ -140,7 +143,10 @@ export async function POST(request: Request) {
           upsert: false,
         });
       if (uploadError) {
-        return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
+        return NextResponse.json(
+          { error: `No se pudo subir la imagen: ${uploadError.message}` },
+          { status: 500 }
+        );
       }
       photoPath = filePath;
     }
