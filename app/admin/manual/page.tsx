@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-type ManualKey = "admin" | "banner";
+type ManualKey = "admin";
 
 type ManualSectionData = {
   titulo: string;
@@ -19,7 +19,7 @@ const manuales: {
     titulo: "Administrador",
     secciones: [
       { id: "usuarios", titulo: "Gestión de Usuarios" },
-      { id: "propiedades", titulo: "Propiedades" },
+      { id: "paquetes", titulo: "Paquetes" },
       { id: "pagos", titulo: "Pagos y Reservas" },
       { id: "banners", titulo: "Publicidad (Banners)" },
     ],
@@ -57,17 +57,17 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
       titulo: "Propiedades",
       texto: (
         <>
-          <ul className="list-disc ml-6 mb-2">
+          <ul className="list-disc ml-6 mb-2 space-y-2 text-gray-800 leading-relaxed">
             <li>Agrega nuevas propiedades desde el botón <b>"Añadir Propiedad"</b>.</li>
             <li>Edita información, fotos, precios y disponibilidad.</li>
             <li>Elimina propiedades obsoletas o con problemas.</li>
             <li>Gestiona servicios y comodidades desde la pestaña correspondiente.</li>
             <li>Para editar, selecciona la propiedad y haz clic en <b>"Editar"</b>.</li>
           </ul>
-          <div className="text-sm text-muted-foreground">Recomendación: Mantén la información siempre actualizada para mejor experiencia de usuario.</div>
+          <div className="mt-3 text-sm text-gray-400">Recomendación: Mantén la información siempre actualizada para mejor experiencia de usuario.</div>
         </>
       ),
-      img: "/screenshot/manual-admin-propiedades.png",
+      img: "/admin/packages-list.svg",
     },
     pagos: {
       titulo: "Pagos y Reservas",
@@ -82,7 +82,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="text-sm text-muted-foreground">Importante: Revisa pagos pendientes diariamente para evitar retrasos.</div>
         </>
       ),
-      img: "/screenshot/manual-admin-pagos.png",
+      img: "/screenshot/mlogo.png",
     },
     banners: {
       titulo: "Publicidad (Banners)",
@@ -106,7 +106,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="text-sm text-muted-foreground">Las imágenes fuera de medida pueden verse recortadas o deformadas.</div>
         </>
       ),
-      img: "/screenshot/manual-admin-banners.png",
+      img: "/screenshot/logo.png",
     },
   },
   banner: {
@@ -150,7 +150,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           </div>
         </>
       ),
-      img: "/screenshot/1-1.webp",
+      img: "/screenshot/logo",
     },
     activos: {
       titulo: "Banners Activos",
@@ -164,7 +164,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           </ul>
         </>
       ),
-      img: "/screenshot/manual-banner-activos.png",
+      img: "/screenshot/logo.png",
     },
     inactivos: {
       titulo: "Banners Inactivos",
@@ -177,7 +177,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           </ul>
         </>
       ),
-      img: "/screenshot/manual-banner-inactivos.png",
+      img: "/screenshot/logo.png",
     },
   },
 };
@@ -222,7 +222,7 @@ export default function ManualesPage() {
           const data = contenido[manualActivo][sec.id];
           return (
             <section key={sec.id} id={sec.id} className="scroll-mt-24">
-              <h3 className="text-lg font-bold mb-2 text-primary mt-8">{data.titulo}</h3>
+              <h3 className={`font-bold mb-2 mt-8 ${sec.id === 'propiedades' ? 'text-2xl text-orange-500' : 'text-lg text-primary'}`}>{data.titulo}</h3>
               <div className="mb-4 text-foreground/90">{data.texto}</div>
               <div className="w-full flex justify-center mb-2">
                 <img
