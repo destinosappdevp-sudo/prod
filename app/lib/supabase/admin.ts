@@ -29,10 +29,30 @@ export async function getAdminStorageClientOrThrow(bucket: string, context: stri
   }
 
   if (!checkedBuckets.has(bucket)) {
-    const { error } = await client.storage.getBucket(bucket);
+    const { data, error } = await client.storage.getBucket(bucket);
+
     if (error) {
-      throw new Error(`${context}: bucket \"${bucket}\" no disponible (${error.message})`);
+      const { error: createError } = await client.storage.createBucket(bucket, {
+        public: true,
+      });
+
+      if (createError) {
+        throw new Error(
+          `${context}: bucket \"${bucket}\" no disponible y no se pudo crear (${createError.message})`
+        );
+      }
+    } else if (data && data.public === false) {
+      const { error: updateError } = await client.storage.updateBucket(bucket, {
+        public: true,
+      });
+
+      if (updateError) {
+        throw new Error(
+          `${context}: bucket \"${bucket}\" existe pero no se pudo volver público (${updateError.message})`
+        );
+      }
     }
+
     checkedBuckets.add(bucket);
   }
 
