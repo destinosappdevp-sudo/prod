@@ -101,46 +101,36 @@ export function AuthPanel({
 
   const trackActiveSession = async (fallbackUserId?: string) => {
     try {
-      const supabase = createClient();
       const deviceId = getOrCreateDeviceId();
       const userAgent = navigator.userAgent;
       const browser = detectBrowser(userAgent);
       const os = detectOS(userAgent);
       const { ipAddress, location } = await getIpAndLocation();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const userId = user?.id ?? fallbackUserId;
-
-      if (!userId) {
-        return;
-      }
-
-      const { error: sessionWriteError } = await supabase.from("usersessions").upsert(
-        {
-          user_id: userId,
-          device_id: deviceId,
-          device_name: `${browser} en ${os}`,
-          os,
-          browser,
-          ip_address: ipAddress,
-          location,
-          last_active: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          is_active: true,
-        },
-        {
-          onConflict: "user_id,device_id",
-        }
-      );
-
-      if (sessionWriteError) {
-        console.warn("No se pudo registrar la sesión activa:", sessionWriteError.message);
+      // Use API endpoint instead of direct Supabase access
+      // This prevents auth/RLS issues from blocking the login flow
+      try {
+        await fetch("/api/user/track-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            device_id: deviceId,
+            device_name: `${browser} en ${os}`,
+            os,
+            browser,
+            ip_address: ipAddress,
+            location,
+          }),
+        });
+      } catch (fetchError) {
+        // Silently ignore - session tracking is non-critical
+        console.warn("Could not track session:", fetchError);
       }
     } catch (sessionError) {
-      console.error("No se pudo registrar la sesión activa:", sessionError);
+      // Silently ignore - session tracking is non-critical
+      console.warn("Session tracking error:", sessionError);
     }
   };
 
