@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Home, CheckCircle, Clock, XCircle, CalendarCheck, PlusCircle } from "lucide-react";
+import { Search, Home, CheckCircle, Clock, XCircle, CalendarCheck, PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
@@ -75,6 +75,8 @@ export function PropertiesClient({
   const [currentPage, setCurrentPage] = useState(1);
   const [statuses, setStatuses] = useState<Record<string, PublishStatus>>({});
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
+  const [deleting, setDeleting] = useState<Record<string, boolean>>({});
+  const [propertyList, setPropertyList] = useState<Property[]>(properties);
 
   const getStatus = (p: Property): PublishStatus =>
     statuses[p.id] ?? (p.publishStatus as PublishStatus) ?? "DRAFT";
@@ -93,6 +95,35 @@ export function PropertiesClient({
       setStatuses((s) => { const c = { ...s }; delete c[id]; return c; });
     } finally {
       setUpdating((u) => { const c = { ...u }; delete c[id]; return c; });
+    }
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    const confirmed = window.confirm(
+      `¿Está seguro que desea eliminar la propiedad "${title}"? Esta acción no se puede deshacer.`
+    );
+
+    if (!confirmed) return;
+
+    setDeleting((d) => ({ ...d, [id]: true }));
+    try {
+      const response = await fetch(`/api/admin/properties/${id}/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || "No se pudo eliminar la propiedad");
+      }
+
+      // Remove from list
+      setPropertyList((list) => list.filter((p) => p.id !== id));
+      alert("Propiedad eliminada correctamente");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error al eliminar la propiedad");
+    } finally {
+      setDeleting((d) => { const c = { ...d }; delete c[id]; return c; });
     }
   };
 
@@ -121,10 +152,10 @@ export function PropertiesClient({
     setCurrentPage(1);
   };
 
-  const statsTotal = properties.length;
-  const statsActive = properties.filter((p) => getStatus(p) === "APPROVED").length;
-  const statsPending = properties.filter((p) => getStatus(p) === "PENDING_APPROVAL").length;
-  const statsDraft = properties.filter((p) => getStatus(p) === "DRAFT").length;
+  const statsTotal = propertyList.length;
+  const statsActive = propertyList.filter((p) => getStatus(p) === "APPROVED").length;
+  const statsPending = propertyList.filter((p) => getStatus(p) === "PENDING_APPROVAL").length;
+  const statsDraft = propertyList.filter((p) => getStatus(p) === "DRAFT").length;
 
   return (
     <div className="space-y-4">
@@ -312,12 +343,23 @@ export function PropertiesClient({
                       </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Link
-                        href={`/admin/properties/${property.id}`}
-                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
-                      >
-                        Ver/Editar
-                      </Link>
+                      <div className="flex items-center justify-center gap-2">
+                        <Link
+                          href={`/admin/properties/${property.id}`}
+                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 inline-block"
+                        >
+                          Ver/Editar
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(property.id, property.title || "Sin título")}
+                          disabled={!!deleting[property.id] || !!updating[property.id]}
+                          className="px-2 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Eliminar propiedad"
+                        >
+                          <Trash2 size={14} />
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

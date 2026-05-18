@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 
 type PublishStatus = "APPROVED" | "PENDING_APPROVAL" | "DRAFT" | "REJECTED";
 
@@ -55,6 +56,7 @@ export default function PropertyStatusControl({
   const router = useRouter();
   const [status, setStatus] = useState<PublishStatus>(initialStatus);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const currentUi = statusUiMap[status];
 
@@ -83,6 +85,36 @@ export default function PropertyStatusControl({
     }
   };
 
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "¿Está seguro que desea eliminar esta propiedad? Esta acción no se puede deshacer."
+    );
+
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/properties/${propertyId}/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || "No se pudo eliminar la propiedad");
+      }
+
+      alert("Propiedad eliminada correctamente");
+      router.push("/admin/properties");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error al eliminar la propiedad");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="flex items-center gap-3">
       <Badge className={currentUi.badgeClassName}>{currentUi.label}</Badge>
@@ -105,6 +137,15 @@ export default function PropertyStatusControl({
         </Select>
       </div>
       <p className="text-xs text-gray-500">Aprobación: {currentUi.approvalLabel}</p>
+      <button
+        onClick={handleDelete}
+        disabled={isDeleting || isUpdating}
+        className="ml-2 inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        title="Eliminar propiedad"
+      >
+        <Trash2 size={16} />
+        Eliminar
+      </button>
     </div>
   );
 }
