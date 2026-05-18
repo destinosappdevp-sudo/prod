@@ -88,9 +88,13 @@ export async function GET(request: NextRequest) {
         .filter((token) => /^\d+$/.test(token))
         .map((token) => Number(token));
 
+      const prismaAny = prisma as any;
+      const propertyTypes =
+        prismaAny.property_types ?? prismaAny.propertyTypes ?? prismaAny.propertyType;
+
       const categoriesById =
-        categoryIds.length > 0
-          ? ((await (prisma as any).property_types.findMany({
+        categoryIds.length > 0 && propertyTypes?.findMany
+          ? ((await propertyTypes.findMany({
               where: { id: { in: categoryIds } },
               select: { id: true, name: true },
             })) as Array<{ id: number; name: string }>).sort(

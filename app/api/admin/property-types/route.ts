@@ -40,7 +40,14 @@ export async function GET() {
   const auth = await requireAdmin();
   if (auth.error) return auth.error;
 
-  const categories = await prismaAny.property_types.findMany({
+  const propertyTypes =
+    prismaAny.property_types ?? prismaAny.propertyTypes ?? prismaAny.propertyType;
+
+  if (!propertyTypes?.findMany) {
+    return NextResponse.json([]);
+  }
+
+  const categories = await propertyTypes.findMany({
     orderBy: [{ name: "asc" }],
   });
 
@@ -68,7 +75,17 @@ export async function POST(request: Request) {
       createData.icon = icon;
     }
 
-    const createdCategory = await prismaAny.property_types.create({
+    const propertyTypes =
+      prismaAny.property_types ?? prismaAny.propertyTypes ?? prismaAny.propertyType;
+
+    if (!propertyTypes?.create) {
+      return NextResponse.json(
+        { error: "Delegate de property types no disponible en este entorno" },
+        { status: 500 }
+      );
+    }
+
+    const createdCategory = await propertyTypes.create({
       data: createData,
     });
 

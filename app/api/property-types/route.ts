@@ -22,7 +22,14 @@ function normalizeCategoryLabel(name: string) {
 
 export async function GET() {
   try {
-    const categories = await prismaAny.property_types.findMany({
+    const propertyTypes =
+      prismaAny.property_types ?? prismaAny.propertyTypes ?? prismaAny.propertyType;
+
+    if (!propertyTypes?.findMany) {
+      return NextResponse.json([]);
+    }
+
+    const categories = await propertyTypes.findMany({
       select: {
         id: true,
         name: true,

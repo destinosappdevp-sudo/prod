@@ -370,6 +370,8 @@ export async function addCategory(formData: FormData) {
   }
 
   const prismaAny = prisma as any;
+  const propertyTypes =
+    prismaAny.property_types ?? prismaAny.propertyTypes ?? prismaAny.propertyType;
 
   const selectedTypeIds = Array.from(
     new Set(
@@ -384,8 +386,8 @@ export async function addCategory(formData: FormData) {
 
   let selectedCategories: Array<{ id: number; name: string }> = [];
 
-  if (selectedTypeIds.length > 0) {
-    const categoriesFromIds = (await prismaAny.property_types.findMany({
+  if (selectedTypeIds.length > 0 && propertyTypes?.findMany) {
+    const categoriesFromIds = (await propertyTypes.findMany({
       where: { id: { in: selectedTypeIds } },
       select: { id: true, name: true },
     })) as Array<{ id: number; name: string }>;
@@ -409,8 +411,8 @@ export async function addCategory(formData: FormData) {
       )
     );
 
-    if (requestedNames.length > 0) {
-      const categoriesFromNames = (await prismaAny.property_types.findMany({
+    if (requestedNames.length > 0 && propertyTypes?.findMany) {
+      const categoriesFromNames = (await propertyTypes.findMany({
         where: { name: { in: requestedNames } },
         select: { id: true, name: true },
       })) as Array<{ id: number; name: string }>;
@@ -422,6 +424,11 @@ export async function addCategory(formData: FormData) {
       selectedCategories = requestedNames
         .map((name) => categoryByName.get(name))
         .filter((category): category is { id: number; name: string } => !!category);
+    } else if (requestedNames.length > 0) {
+      selectedCategories = requestedNames.map((name, index) => ({
+        id: selectedTypeIds[index] ?? 0,
+        name,
+      }));
     }
   }
 
@@ -430,7 +437,9 @@ export async function addCategory(formData: FormData) {
   }
 
   const selectedCategoryNames = selectedCategories.map((category) => category.name);
-  const selectedCategoryIds = selectedCategories.map((category) => category.id);
+  const selectedCategoryIds = selectedCategories
+    .map((category) => category.id)
+    .filter((id) => id > 0);
 
   const homeExists = await prismaAny.home.findUnique({
     where: { id: homeId },
