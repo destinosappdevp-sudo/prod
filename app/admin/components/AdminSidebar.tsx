@@ -9,6 +9,7 @@ import {
   CreditCard,
   BarChart3,
   Settings,
+  BookOpen,
   LogOut,
   X,
   PiggyBank,
@@ -38,6 +39,11 @@ const getMenuItems = (role?: string) => {
     items.splice(1, 0, { href: "/admin/banners", icon: BarChart3, label: "Publicidad" });
     items.push({ href: "/admin/reports", icon: BarChart3, label: "Informes" });
     items.push({ href: "/admin/settings", icon: Settings, label: "Configuración" });
+    items.push({ href: "/admin/manual", icon: BookOpen, label: "Manual" });
+  }
+  // Si no es superadmin, mostrar igualmente el manual al final del menú
+  if (role !== "SUPERADMIN") {
+    items.push({ href: "/admin/manual", icon: BookOpen, label: "Manual" });
   }
   return items;
 };
