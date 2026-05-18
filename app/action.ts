@@ -13,7 +13,7 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
-import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
+import { getAdminStorageClientOrThrow, createAdminClient } from "@/app/lib/supabase/admin";
 
 type RegistrationProfile = {
   firstName: string;
@@ -759,6 +759,12 @@ export async function updateProfile(formData: FormData) {
       ? await import("@/app/lib/image-upload")
       : { optimizeImageForUpload: null as any };
 
+    // Usamos admin client para los uploads y evitar bloqueo por RLS del bucket
+    const adminStorage = createAdminClient();
+    if (!adminStorage) {
+      return { success: false, error: "Error de configuración del servidor al subir imágenes" };
+    }
+
     // Si hay una nueva foto, subirla a Supabase Storage
     if (profileImageFile && profileImageFile.size > 0) {
       const optimizedProfileImage = await optimizeImageForUpload(profileImageFile, {
@@ -767,7 +773,7 @@ export async function updateProfile(formData: FormData) {
         quality: 82,
       });
       const fileName = `${user.id}-${Date.now()}.${optimizedProfileImage.extension}`;
-      const { data: storageData, error: storageError } = await supabase.storage
+      const { data: storageData, error: storageError } = await adminStorage.storage
         .from("images")
         .upload(`profiles/${fileName}`, optimizedProfileImage.file, {
           contentType: optimizedProfileImage.contentType,
@@ -775,7 +781,7 @@ export async function updateProfile(formData: FormData) {
         });
 
       if (storageError) {
-        console.error("Error subiendo imagen:", storageError);
+        console.error("Error subiendo imagen de perfil:", storageError);
         return { success: false, error: "Error al subir la imagen de perfil" };
       }
 
@@ -789,7 +795,7 @@ export async function updateProfile(formData: FormData) {
         quality: 88,
       });
       const fileName = `${user.id}-doc1-${Date.now()}.${optimizedDocument1.extension}`;
-      const { data: storageData, error: storageError } = await supabase.storage
+      const { data: storageData, error: storageError } = await adminStorage.storage
         .from("images")
         .upload(`verification-docs/${fileName}`, optimizedDocument1.file, {
           contentType: optimizedDocument1.contentType,
@@ -811,7 +817,7 @@ export async function updateProfile(formData: FormData) {
         quality: 88,
       });
       const fileName = `${user.id}-doc2-${Date.now()}.${optimizedDocument2.extension}`;
-      const { data: storageData, error: storageError } = await supabase.storage
+      const { data: storageData, error: storageError } = await adminStorage.storage
         .from("images")
         .upload(`verification-docs/${fileName}`, optimizedDocument2.file, {
           contentType: optimizedDocument2.contentType,

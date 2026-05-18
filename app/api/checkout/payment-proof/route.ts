@@ -1,4 +1,5 @@
 import { createClient } from "@/app/lib/supabase/server";
+import { createAdminClient } from "@/app/lib/supabase/admin";
 import { NextResponse } from "next/server";
 
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
@@ -58,7 +59,17 @@ export async function POST(request: Request) {
     const uniqueFileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${optimizedImage.extension}`;
     const filePath = `payments/${user.id}/${uniqueFileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    // Usamos el cliente admin (service role) para saltar las políticas RLS del bucket
+    // y poder escribir en la carpeta payments/ sin restricciones.
+    const adminClient = createAdminClient();
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: "Error de configuración del servidor" },
+        { status: 500 }
+      );
+    }
+
+    const { error: uploadError } = await adminClient.storage
       .from("images")
       .upload(filePath, optimizedImage.file, {
         cacheControl: "3600",
@@ -67,13 +78,14 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
+      console.error("[payment-proof] Supabase upload error:", uploadError);
       return NextResponse.json(
         { error: "No se pudo subir la captura del pago" },
         { status: 500 }
       );
     }
 
-    const { data: publicUrlData } = supabase.storage
+    const { data: publicUrlData } = adminClient.storage
       .from("images")
       .getPublicUrl(filePath);
 
