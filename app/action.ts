@@ -199,134 +199,155 @@ export async function signUpWithRole(
   role: 'GUEST' | 'ADMIN' | 'SUPERADMIN' = 'GUEST',
   profile?: RegistrationProfile
 ) {
-  const supabase = await createClient();
-  let normalizedProfile: RegistrationProfile;
+  try {
+    const supabase = await createClient();
+    let normalizedProfile: RegistrationProfile;
 
-  if (!profile) {
-    if (role === "GUEST") {
-      return { error: "Faltan datos del perfil para crear la cuenta" };
+    if (!profile) {
+      if (role === "GUEST") {
+        return { error: "Faltan datos del perfil para crear la cuenta" };
+      }
+
+      normalizedProfile = {
+        firstName: "Usuario",
+        lastName: "",
+        phoneNumber: "",
+        stateCode: "CC",
+      };
+    } else {
+      const validatedProfile = validateRegistrationProfile(profile);
+      if ("error" in validatedProfile) {
+        return validatedProfile;
+      }
+
+      normalizedProfile = validatedProfile.data;
     }
 
-    normalizedProfile = {
-      firstName: "Usuario",
-      lastName: "",
-      phoneNumber: "",
-      stateCode: "CC",
-    };
-  } else {
-    const validatedProfile = validateRegistrationProfile(profile);
-    if ("error" in validatedProfile) {
-      return validatedProfile;
+    if (normalizedProfile.cedula) {
+      try {
+        const cedulaInUse = await prisma.user.findFirst({
+          where: {
+            cedula: {
+              equals: normalizedProfile.cedula,
+              mode: "insensitive",
+            },
+          },
+          select: { id: true },
+        });
+
+        if (cedulaInUse) {
+          return { error: "La cédula ya está registrada por otro usuario" };
+        }
+      } catch (cedulaCheckError) {
+        console.error("Error verificando cédula:", cedulaCheckError);
+        return { error: "Error al verificar la cédula. Por favor intenta de nuevo." };
+      }
     }
-
-    normalizedProfile = validatedProfile.data;
-  }
-
-  if (normalizedProfile.cedula) {
-    const cedulaInUse = await prisma.user.findFirst({
-      where: {
-        cedula: {
-          equals: normalizedProfile.cedula,
-          mode: "insensitive",
-        },
-      },
-      select: { id: true },
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
     });
 
-    if (cedulaInUse) {
-      return { error: "La cédula ya está registrada por otro usuario" };
-    }
-  }
-  
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-
-  if (error) {
-    console.error("Error en registro:", error);
-    return { error: error.message };
-  }
-
-  // Crear usuario en la base de datos con rol especificado
-  if (data.user) {
-    try {
-      await prisma.user.create({
-        data: {
-          id: data.user.id,
-          email: data.user.email ?? email,
-          firstName: normalizedProfile.firstName,
-          lastName: normalizedProfile.lastName,
-          profileImage: `https://avatar.vercel.sh/${email}`,
-          role: role,
-          phoneNumber: normalizedProfile.phoneNumber,
-          cedula: normalizedProfile.cedula || null,
-          stateCode: normalizedProfile.stateCode,
-          municipalityCode: normalizedProfile.municipalityCode || null,
-          dateOfBirth: normalizedProfile.dateOfBirth ? new Date(normalizedProfile.dateOfBirth) : null,
-        },
-      });
-    } catch {
-      // El usuario ya existe en la base local; continuar sin bloquear el registro.
+    if (error) {
+      console.error("Error en registro de Supabase:", error);
+      return { error: error.message };
     }
 
-    void sendWelcomeEmail(data.user.email ?? email);
-  }
+    // Crear usuario en la base de datos con rol especificado
+    if (data.user) {
+      try {
+        await prisma.user.create({
+          data: {
+            id: data.user.id,
+            email: data.user.email ?? email,
+            firstName: normalizedProfile.firstName,
+            lastName: normalizedProfile.lastName,
+            profileImage: `https://avatar.vercel.sh/${email}`,
+            role: role,
+            phoneNumber: normalizedProfile.phoneNumber,
+            cedula: normalizedProfile.cedula || null,
+            stateCode: normalizedProfile.stateCode,
+            municipalityCode: normalizedProfile.municipalityCode || null,
+            dateOfBirth: normalizedProfile.dateOfBirth ? new Date(normalizedProfile.dateOfBirth) : null,
+          },
+        });
+      } catch (userCreateError) {
+        console.error("Error creando usuario en base de datos:", userCreateError);
+        // El usuario ya existe en la base local; continuar sin bloquear el registro.
+      }
 
-  return { success: true };
+      void sendWelcomeEmail(data.user.email ?? email);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error no capturado en signUpWithRole:", error);
+    throw error;
+  }
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  const supabase = await createClient();
-  
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) {
-    console.error("Error en login:", error);
-    const errorMap: Record<string, string> = {
-      "Invalid login credentials": "Correo o contraseña incorrectos",
-      "Email not confirmed": "Debes confirmar tu correo antes de iniciar sesión",
-      "Too many requests": "Demasiados intentos. Por favor intenta más tarde",
-      "User not found": "No existe una cuenta con ese correo",
-    };
-    return { error: errorMap[error.message] ?? "Error al iniciar sesión. Intenta de nuevo" };
-  }
-
-  // Asegurar que el usuario existe en la base de datos sin hacer consultas extra innecesarias
-  if (data.user) {
-    const initialRole = await getRoleForNewUserBootstrap();
-
-    await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: {},
-      create: {
-        id: data.user.id,
-        email: data.user.email ?? email,
-        firstName: "Usuario",
-        lastName: "",
-        profileImage: `https://avatar.vercel.sh/${email}`,
-        role: initialRole,
-      },
+  try {
+    const supabase = await createClient();
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    await ensureAtLeastOneSuperadmin(data.user.id);
+    if (error) {
+      console.error("Error en login de Supabase:", error);
+      const errorMap: Record<string, string> = {
+        "Invalid login credentials": "Correo o contraseña incorrectos",
+        "Email not confirmed": "Debes confirmar tu correo antes de iniciar sesión",
+        "Too many requests": "Demasiados intentos. Por favor intenta más tarde",
+        "User not found": "No existe una cuenta con ese correo",
+      };
+      return { error: errorMap[error.message] ?? "Error al iniciar sesión. Intenta de nuevo" };
+    }
 
-    const userRecord = await prisma.user.findUnique({
-      where: { id: data.user.id },
-      select: { role: true },
-    });
+    // Asegurar que el usuario existe en la base de datos sin hacer consultas extra innecesarias
+    if (data.user) {
+      try {
+        const initialRole = await getRoleForNewUserBootstrap();
 
-    return {
-      success: true,
-      userId: data.user.id,
-      role: userRecord?.role,
-    };
+        await prisma.user.upsert({
+          where: { id: data.user.id },
+          update: {},
+          create: {
+            id: data.user.id,
+            email: data.user.email ?? email,
+            firstName: "Usuario",
+            lastName: "",
+            profileImage: `https://avatar.vercel.sh/${email}`,
+            role: initialRole,
+          },
+        });
+
+        await ensureAtLeastOneSuperadmin(data.user.id);
+
+        const userRecord = await prisma.user.findUnique({
+          where: { id: data.user.id },
+          select: { role: true },
+        });
+
+        return {
+          success: true,
+          userId: data.user.id,
+          role: userRecord?.role,
+        };
+      } catch (dbError) {
+        console.error("Error en upsert/query de usuario en Prisma:", dbError);
+        throw dbError;
+      }
+    }
+
+    return { success: true, userId: undefined };
+  } catch (error) {
+    console.error("Error no capturado en signInWithEmail:", error);
+    throw error;
   }
-
-  return { success: true, userId: undefined };
 }
 
 export async function signOut() {

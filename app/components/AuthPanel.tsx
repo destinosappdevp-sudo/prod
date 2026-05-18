@@ -174,27 +174,36 @@ export function AuthPanel({
 
     try {
       if (isLogin) {
-        const result = await signInWithEmail(email, password);
+        try {
+          const result = await signInWithEmail(email, password);
 
-        if (result?.error) {
-          setError(result.error);
-          return;
-        }
+          if (result?.error) {
+            setError(result.error);
+            return;
+          }
 
-        if (result?.success) {
-          onSuccess?.();
-          const adminRoles = ["ADMIN", "SUPERADMIN"];
-          const dest =
-            "role" in result &&
-            typeof result.role === "string" &&
-            adminRoles.includes(result.role)
-              ? "/admin"
-              : resolveGuestDestination();
+          if (result?.success) {
+            onSuccess?.();
+            const adminRoles = ["ADMIN", "SUPERADMIN"];
+            const dest =
+              "role" in result &&
+              typeof result.role === "string" &&
+              adminRoles.includes(result.role)
+                ? "/admin"
+                : resolveGuestDestination();
 
-          router.replace(dest);
-          window.setTimeout(() => {
-            void trackActiveSession(result.userId);
-          }, 0);
+            router.replace(dest);
+            window.setTimeout(() => {
+              void trackActiveSession(result.userId);
+            }, 0);
+          }
+        } catch (authError) {
+          console.error("Error during login:", authError);
+          setError(
+            authError instanceof Error
+              ? authError.message
+              : "Error al iniciar sesión. Por favor intenta de nuevo."
+          );
         }
 
         return;
@@ -205,32 +214,41 @@ export function AuthPanel({
         return;
       }
 
-      const result = await signUpWithRole(email, password, role, {
-        firstName: fullName.split(/\s+/)[0] || "",
-        lastName: fullName.split(/\s+/).slice(1).join(" ") || "",
-        phoneNumber,
-        cedula,
-        stateCode,
-        municipalityCode,
-        dateOfBirth,
-      });
-      if (result && "error" in result && result.error) {
-        setError(result.error);
-        return;
-      }
+      try {
+        const result = await signUpWithRole(email, password, role, {
+          firstName: fullName.split(/\s+/)[0] || "",
+          lastName: fullName.split(/\s+/).slice(1).join(" ") || "",
+          phoneNumber,
+          cedula,
+          stateCode,
+          municipalityCode,
+          dateOfBirth,
+        });
+        if (result && "error" in result && result.error) {
+          setError(result.error);
+          return;
+        }
 
-      setSuccess("¡Cuenta creada! Redirigiendo...");
-      const loginResult = await signInWithEmail(email, password);
+        setSuccess("¡Cuenta creada! Redirigiendo...");
+        const loginResult = await signInWithEmail(email, password);
 
-      if (loginResult?.success) {
-        onSuccess?.();
-        router.replace("/my-dashboard?tab=profile");
-        window.setTimeout(() => {
-          void trackActiveSession(loginResult.userId);
-        }, 0);
-      } else {
-        setSuccess("¡Cuenta creada! Por favor inicia sesión.");
-        setIsLogin(true);
+        if (loginResult?.success) {
+          onSuccess?.();
+          router.replace("/my-dashboard?tab=profile");
+          window.setTimeout(() => {
+            void trackActiveSession(loginResult.userId);
+          }, 0);
+        } else {
+          setSuccess("¡Cuenta creada! Por favor inicia sesión.");
+          setIsLogin(true);
+        }
+      } catch (signupError) {
+        console.error("Error during registration:", signupError);
+        setError(
+          signupError instanceof Error
+            ? signupError.message
+            : "Error al registrarse. Por favor intenta de nuevo."
+        );
       }
     } finally {
       setIsSubmitting(false);
