@@ -10,6 +10,20 @@ export async function syncPackageSeats(
   vipSeats: number,
   standardSeats: number
 ) {
+  const packageSeatDelegate = tx?.packageSeat;
+  if (
+    !packageSeatDelegate ||
+    typeof packageSeatDelegate.findMany !== "function" ||
+    typeof packageSeatDelegate.deleteMany !== "function" ||
+    typeof packageSeatDelegate.upsert !== "function"
+  ) {
+    console.warn(
+      "syncPackageSeats omitido: delegate packageSeat no disponible en este entorno.",
+      { homeId, vipSeats, standardSeats }
+    );
+    return;
+  }
+
   const COLUMNS = ["A", "B", "C", "D"];
 
   function buildSeatList(total: number, zone: "VIP" | "STANDARD", startRow: number) {
@@ -28,7 +42,7 @@ export async function syncPackageSeats(
   }
 
   // Obtener asientos OCCUPIED actuales (no se tocan)
-  const occupiedSeats = await tx.packageSeat.findMany({
+  const occupiedSeats = await packageSeatDelegate.findMany({
     where: { homeId, status: "OCCUPIED" },
     select: { zone: true, row: true, column: true },
   });
@@ -38,7 +52,7 @@ export async function syncPackageSeats(
   );
 
   // Eliminar todos los asientos AVAILABLE
-  await tx.packageSeat.deleteMany({
+  await packageSeatDelegate.deleteMany({
     where: { homeId, status: "AVAILABLE" },
   });
 
@@ -57,7 +71,7 @@ export async function syncPackageSeats(
     const key = `${seat.zone}-${seat.row}-${seat.column}`;
     if (occupiedKeys.has(key)) continue; // ya existe como OCCUPIED
 
-    await tx.packageSeat.upsert({
+    await packageSeatDelegate.upsert({
       where: {
         homeId_row_column: { homeId, row: seat.row, column: seat.column },
       },
