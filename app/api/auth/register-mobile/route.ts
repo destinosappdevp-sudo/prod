@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     const role = "GUEST";
 
     if (!email || !password) {
-      return jsonResponse({ error: "Email y contrase�a son requeridos" }, 400);
+      return jsonResponse({ error: "Email y contraseña son requeridos" }, 400);
     }
 
     if (!firstName) {
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!phoneNumber || phoneNumber.length < 7) {
-      return jsonResponse({ error: "Ingresa un n�mero de tel�fono v�lido" }, 400);
+      return jsonResponse({ error: "Ingresa un número de teléfono válido" }, 400);
     }
 
     if (!cedula) {
@@ -130,13 +130,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (cedulaInUse) {
-      return jsonResponse({ error: "La c�dula ya est� registrada por otro usuario" }, 409);
+      return jsonResponse({ error: "La cédula ya está registrada por otro usuario" }, 409);
     }
 
     const supabase = createSupabaseClient();
     if (!supabase) {
       return jsonResponse(
-        { error: "Configuraci�n de servidor incompleta para autenticaci�n" },
+        { error: "Configuración de servidor incompleta para autenticación" },
         500
       );
     }
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
 
     let session = data.session;
 
-    // Fallback para apps m�viles: si signUp no devuelve sesi�n, intentamos login inmediato.
+    // Fallback para apps móviles: si signUp no devuelve sesión, intentamos login inmediato.
     if (!session) {
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (signInError) {
-        console.warn("[register-mobile] cuenta creada sin sesi�n autom�tica:", signInError.message);
+        console.warn("[register-mobile] cuenta creada sin sesión automática:", signInError.message);
       } else {
         session = signInData.session;
       }

@@ -315,12 +315,12 @@ export async function signInWithEmail(email: string, password: string) {
     if (error) {
       console.error("Error en login de Supabase:", error);
       const errorMap: Record<string, string> = {
-        "Invalid login credentials": "Correo o contrase�a incorrectos",
-        "Email not confirmed": "Debes confirmar tu correo antes de iniciar sesi�n",
-        "Too many requests": "Demasiados intentos. Por favor intenta m�s tarde",
+        "Invalid login credentials": "Correo o contraseña incorrectos",
+        "Email not confirmed": "Debes confirmar tu correo antes de iniciar sesión",
+        "Too many requests": "Demasiados intentos. Por favor intenta más tarde",
         "User not found": "No existe una cuenta con ese correo",
       };
-      return { error: errorMap[error.message] ?? "Error al iniciar sesi�n. Intenta de nuevo" };
+      return { error: errorMap[error.message] ?? "Error al iniciar sesión. Intenta de nuevo" };
     }
 
     // Asegurar que el usuario existe en la base de datos sin hacer consultas extra innecesarias

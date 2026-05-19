@@ -6,9 +6,9 @@ export const translations = {
       myListing: "Mis Anuncios",
       myFavorites: "Mis Favoritos",
       myReservation: "Mis Reservas",
-      logout: "Cerrar Sesi�n",
+      logout: "Cerrar sesión",
       register: "Registrarse",
-      login: "Iniciar Sesi�n",
+      login: "Iniciar sesión",
     },
 
     // Search Box
@@ -21,42 +21,42 @@ export const translations = {
 
     // Language
     language: {
-      spanish: "Espa�ol",
+      spanish: "Español",
       english: "English",
     },
 
     // Create Home
     createHome: {
-      describeHome: "�Cu�l de estas describe mejor tu hogar?",
+      describeHome: "¿Cuál de estas describe mejor tu hogar?",
       cancel: "Cancelar",
       next: "Siguiente",
       
       // Address page
-      address: "Direcci�n",
-      country: "Pa�s",
-      selectCountry: "Selecciona un pa�s",
+      address: "Dirección",
+      country: "País",
+      selectCountry: "Selecciona un país",
       
       // Description page
-      description: "Descripci�n",
+      description: "Descripción",
       price: "Precio",
       pricePerNight: "Precio por noche en USD",
       image: "Imagen",
-      guests: "Hu�spedes",
-      howManyGuests: "�Cu�ntos hu�spedes deseas?",
+      guests: "Huéspedes",
+      howManyGuests: "¿Cuántos huéspedes deseas?",
       bedrooms: "Dormitorios",
-      howManyBedrooms: "�Cu�ntos dormitorios tienes?",
-      bathrooms: "Ba�os",
-      howManyBathrooms: "�Cu�ntos ba�os tienes?",
+      howManyBedrooms: "¿Cuántos dormitorios tienes?",
+      bathrooms: "Baños",
+      howManyBathrooms: "¿Cuántos baños tienes?",
       beds: "Camas",
-      howManyBeds: "�Cu�ntas camas tienes?",
-      title: "T�tulo",
+      howManyBeds: "¿Cuántas camas tienes?",
+      title: "Título",
       titlePlaceholder: "Nombre de tu propiedad",
     },
 
     // Home Details
     homeDetails: {
-      hostedBy: "Anfitri�n: ",
-      hostSince: "Anfitri�n desde ",
+      hostedBy: "Anfitrión: ",
+      hostSince: "Anfitrión desde ",
       makeReservation: "Hacer una reserva",
       pleaseWait: "Por favor espera...",
     },
@@ -73,14 +73,14 @@ export const translations = {
     favorites: {
       myFavorites: "Mis Favoritos",
       noFavorites: "No tienes favoritos",
-      noFavoritesDescription: "Guarda propiedades en tus favoritos para verlas despu�s",
+      noFavoritesDescription: "Guarda propiedades en tus favoritos para verlas después",
     },
 
     // Reservations
     reservations: {
       myReservations: "Mis Reservas",
       noReservations: "No tienes reservas",
-      noReservationsDescription: "Realiza una reserva para verla aqu�",
+      noReservationsDescription: "Realiza una reserva para verla aquí",
     },
 
     // Buttons
@@ -97,7 +97,7 @@ export const translations = {
     messages: {
       loading: "Cargando...",
       error: "Error",
-      success: "�xito",
+      success: "Éxito",
       noResults: "Sin resultados",
     },
   },
