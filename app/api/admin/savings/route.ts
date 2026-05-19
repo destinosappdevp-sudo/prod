@@ -33,14 +33,17 @@ export async function POST(req: NextRequest) {
     const userId = typeof body?.userId === "string" ? body.userId : "";
     const type = body?.type === "package" ? "package" : body?.type === "general" ? "general" : null;
     const homeId = typeof body?.homeId === "string" ? body.homeId : null;
-    const amountBs = Number(body?.amountBs);
+    const amountUsdInput = Number(body?.amountUsd);
+    const amountBsLegacyInput = Number(body?.amountBs);
+    const hasAmountUsd = Number.isFinite(amountUsdInput) && amountUsdInput > 0;
+    const hasAmountBsLegacy = Number.isFinite(amountBsLegacyInput) && amountBsLegacyInput > 0;
 
     if (!userId || !type) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
 
-    if (!Number.isFinite(amountBs) || amountBs <= 0) {
-      return NextResponse.json({ error: "Debes indicar un monto inicial válido en Bs." }, { status: 400 });
+    if (!hasAmountUsd && !hasAmountBsLegacy) {
+      return NextResponse.json({ error: "Debes indicar un monto inicial válido en USD." }, { status: 400 });
     }
 
     if (type === "package" && !homeId) {
@@ -77,7 +80,6 @@ export async function POST(req: NextRequest) {
 
     let paymentDetails: Prisma.InputJsonValue = {
       createdByAdmin: true,
-      initialAmountBs: amountBs,
     };
 
     if (type === "package" && homeId) {
@@ -92,7 +94,6 @@ export async function POST(req: NextRequest) {
 
       paymentDetails = {
         createdByAdmin: true,
-        initialAmountBs: amountBs,
         homeId: home.id,
         homeTitle: home.title,
       };
@@ -107,7 +108,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Tasa BCV no disponible" }, { status: 400 });
     }
 
-    const amountUsd = Math.round((amountBs / bcvRate) * 100) / 100;
+    // Calcular montos: USD es la moneda principal; Bs se deriva con la tasa BCV.
+    const amountUsd = hasAmountUsd
+      ? Math.round(amountUsdInput * 100) / 100
+      : Math.round((amountBsLegacyInput / bcvRate) * 100) / 100;
+    const amountBs = hasAmountUsd
+      ? Math.round(amountUsdInput * bcvRate * 100) / 100
+      : Math.round(amountBsLegacyInput * 100) / 100;
 
     if (existingSaving) {
       const previousDetails =
@@ -142,6 +149,7 @@ export async function POST(req: NextRequest) {
     const paymentDetailsWithAudit = {
       ...(paymentDetails as Record<string, unknown>),
       initialAmountUsd: amountUsd,
+      initialAmountBs: amountBs,
       bcvRateAtCreation: bcvRate,
     };
 

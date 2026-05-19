@@ -56,7 +56,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [savingType, setSavingType] = useState<"general" | "package">("general");
   const [selectedHome, setSelectedHome] = useState("");
-  const [initialAmountBs, setInitialAmountBs] = useState("");
+  const [initialAmountUsd, setInitialAmountUsd] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -108,9 +108,9 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       return;
     }
 
-    const parsedAmountBs = Number(initialAmountBs);
-    if (!initialAmountBs || !Number.isFinite(parsedAmountBs) || parsedAmountBs <= 0) {
-      setError("Debes ingresar un monto inicial válido en Bs.");
+    const parsedAmountUsd = Number(initialAmountUsd);
+    if (!initialAmountUsd || !Number.isFinite(parsedAmountUsd) || parsedAmountUsd <= 0) {
+      setError("Debes ingresar un monto inicial válido en USD.");
       return;
     }
 
@@ -124,7 +124,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           userId: selectedUser,
           type: savingType,
           homeId: savingType === "package" ? selectedHome : null,
-          amountBs: parsedAmountBs,
+          amountUsd: parsedAmountUsd,
         }),
       });
 
@@ -139,7 +139,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       setSelectedUser("");
       setSavingType("general");
       setSelectedHome("");
-      setInitialAmountBs("");
+      setInitialAmountUsd("");
       router.refresh();
     } catch {
       setError("Ocurrió un error al crear la alcancía.");
@@ -243,17 +243,18 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           )}
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Monto a agregar (Bs)</label>
+            <label className="block text-sm font-medium text-gray-700">Monto a agregar (USD)</label>
             <Input
               type="number"
               min="0"
               step="0.01"
               inputMode="decimal"
-              value={initialAmountBs}
-              onChange={(event) => setInitialAmountBs(event.target.value)}
-              placeholder="Ej: 1500 (si ya existe, se suma)"
+              value={initialAmountUsd}
+              onChange={(event) => setInitialAmountUsd(event.target.value)}
+              placeholder="Ej: 50.00 (si ya existe, se suma)"
               required
             />
+            <p className="text-xs text-gray-500">El equivalente en Bs se calcula automáticamente con la tasa BCV vigente.</p>
           </div>
 
           {selectedUser && (savingType === "general" || selectedHome) && (
