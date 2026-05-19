@@ -368,6 +368,14 @@ export default async function PropertyDetailPage({
               hostName: property.User?.firstName || "Sin anfitrión",
               price: property.price ?? 0,
               priceVip: property.priceVip ?? null,
+              amenitiesStandard: amenityCategoriesForForm
+                .flatMap((c) => c.amenities)
+                .filter((a) => a.status === "YES")
+                .map((a) => a.name),
+              amenitiesVip: amenityCategoriesForForm
+                .flatMap((c) => c.amenities)
+                .filter((a) => a.status === "NO")
+                .map((a) => a.name),
             }}
           />
         </Card>

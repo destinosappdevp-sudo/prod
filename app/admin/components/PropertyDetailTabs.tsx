@@ -75,6 +75,8 @@ type PropertyDetailTabsProps = {
     hostName: string;
     price: number;
     priceVip: number | null;
+    amenitiesStandard?: string[];
+    amenitiesVip?: string[];
   };
 };
 
@@ -258,6 +260,15 @@ export default function PropertyDetailTabs({
         currentY += 14;
       });
 
+      // Amenidades
+      const standardAmenities = (packageInfo.amenitiesStandard || []).slice(0, 8).join(", ") || "Ninguna";
+      const vipAmenities = (packageInfo.amenitiesVip || []).slice(0, 8).join(", ") || "Ninguna";
+      currentY += 6;
+      doc.setFontSize(11);
+      doc.text(`Amenidades Estándar: ${standardAmenities}`, 40, currentY);
+      currentY += 14;
+      doc.text(`Amenidades VIP: ${vipAmenities}`, 40, currentY);
+      currentY += 10;
       currentY += 10;
       doc.setFontSize(12);
       doc.text("Usuarios Ahorrando", 40, currentY);
@@ -287,18 +298,28 @@ export default function PropertyDetailTabs({
 
       autoTable(doc, {
         startY: paidTableStartY + 8,
-        head: [["Usuario", "Email", "Asiento", "Metodo", "Monto USD", "Referencia"]],
+        head: [["Usuario", "Email", "Asiento", "Metodo", "Monto USD", "Plan"]],
         body:
           confirmedReservations.length > 0
             ? confirmedReservations.map((reservation) => {
                 const payment = reservation.Payment;
+                // Determinar etiqueta del plan: prioridad a reservation.plan, luego zona del asiento
+                const rawPlan = (reservation as any).plan;
+                let planLabel = "-";
+                if (rawPlan) {
+                  const p = String(rawPlan).toLowerCase();
+                  planLabel = p === "vip" || p === "v" ? "VIP" : "Estándar";
+                } else if (reservation.PackageSeat?.zone) {
+                  planLabel = reservation.PackageSeat.zone.toUpperCase() === "VIP" ? "VIP" : "Estándar";
+                }
+
                 return [
                   `${reservation.User?.firstName || ""} ${reservation.User?.lastName || ""}`.trim() || "Sin nombre",
                   reservation.User?.email || "-",
                   getSeatLabelFromReservation(reservation),
                   payment ? getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails) : "-",
                   payment ? `$${payment.amount.toFixed(2)}` : "-",
-                  payment?.referenceNumber || "-",
+                  planLabel,
                 ];
               })
             : [["Sin registros", "-", "-", "-", "-", "-"]],
