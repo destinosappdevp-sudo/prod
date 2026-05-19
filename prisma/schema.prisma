@@ -229,6 +229,8 @@ model User {
   healthConditions                  String?
   hasTraveledWithDestinos           Boolean                  @default(false)
   lastTravelDestination             String?
+  travelsWithChildren               Boolean                  @default(false)
+  childrenAges                      String?
   AuditLog                          AuditLog[]
   Banner                            Banner[]
   Favorite                          Favorite[]
