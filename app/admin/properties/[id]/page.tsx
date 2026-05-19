@@ -369,13 +369,13 @@ export default async function PropertyDetailPage({
               price: property.price ?? 0,
               priceVip: property.priceVip ?? null,
               amenitiesStandard: amenityCategoriesForForm
-                .flatMap((c) => c.amenities)
-                .filter((a) => a.status === "YES")
-                .map((a) => a.name),
+                .flatMap((c: any) => c.amenities)
+                .filter((a: any) => a.status === "YES")
+                .map((a: any) => a.name),
               amenitiesVip: amenityCategoriesForForm
-                .flatMap((c) => c.amenities)
-                .filter((a) => a.status === "NO")
-                .map((a) => a.name),
+                .flatMap((c: any) => c.amenities)
+                .filter((a: any) => a.status === "NO")
+                .map((a: any) => a.name),
             }}
           />
         </Card>
