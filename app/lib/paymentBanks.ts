@@ -37,3 +37,6 @@ export const getBankByValue = (value: string) => {
 export const getBankCode = (value: string) => {
   return BANKS.find((bank) => bank.value === value)?.code || "";
 };
+
+
+

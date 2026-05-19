@@ -26,7 +26,6 @@ export default async function MessagesPage() {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
             profileImage: true,
           },
         },
@@ -34,7 +33,6 @@ export default async function MessagesPage() {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
             profileImage: true,
           },
         },
@@ -156,3 +154,6 @@ export default async function MessagesPage() {
     redirect("/my-dashboard");
   }
 }
+
+
+

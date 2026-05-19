@@ -71,8 +71,11 @@ export async function POST() {
           data: {
             id: authUser.id,
             email: authUser.email || "",
-            firstName: authUser.user_metadata?.firstName || "Usuario",
-            lastName: authUser.user_metadata?.lastName || "",
+            firstName:
+              authUser.user_metadata?.fullName ||
+              authUser.user_metadata?.full_name ||
+              authUser.user_metadata?.firstName ||
+              "Usuario",
             profileImage: authUser.user_metadata?.profileImage || null,
             role: "GUEST", // Role por defecto para sincronizados
             phoneNumber: authUser.user_metadata?.phoneNumber || null,
@@ -115,3 +118,6 @@ export async function POST() {
     );
   }
 }
+
+
+

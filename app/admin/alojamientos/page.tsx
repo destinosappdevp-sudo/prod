@@ -44,7 +44,6 @@ export default async function AlojamientosPage() {
         select: {
           id: true,
           firstName: true,
-          lastName: true,
           email: true,
           isVerified: true,
         },
@@ -70,7 +69,7 @@ export default async function AlojamientosPage() {
       User: {
         id: home.User!.id,
         firstName: home.User!.firstName || "",
-        lastName: home.User!.lastName || "",
+        lastName: "",
         email: home.User!.email,
         isVerified: home.User!.isVerified,
       },
@@ -78,3 +77,6 @@ export default async function AlojamientosPage() {
 
   return <AlojamientosClient homes={normalizedHomes} userId={user.id} />;
 }
+
+
+

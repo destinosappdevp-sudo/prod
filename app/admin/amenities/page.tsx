@@ -31,3 +31,6 @@ export default async function AmenitiesPage() {
     </div>
   );
 }
+
+
+

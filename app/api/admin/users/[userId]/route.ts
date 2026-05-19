@@ -73,7 +73,6 @@ export async function PATCH(
     const body = await req.json();
     const {
       firstName,
-      lastName,
       email,
       phoneNumber,
       cedula,
@@ -90,6 +89,7 @@ export async function PATCH(
     } = body;
 
     const normalizedCedula = normalizeCedulaValue(cedula);
+    const normalizedFullName = String(firstName ?? "").trim().replace(/\s+/g, " ");
 
     if (normalizedCedula) {
       const cedulaInUse = await prisma.user.findFirst({
@@ -113,8 +113,7 @@ export async function PATCH(
 
     // Preparar datos de actualización
     const updateData: any = {
-      firstName,
-      lastName,
+      firstName: normalizedFullName || "Usuario",
       email,
       phoneNumber: phoneNumber || null,
       cedula: normalizedCedula || null,

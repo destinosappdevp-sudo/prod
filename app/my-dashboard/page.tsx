@@ -323,7 +323,7 @@ async function getHostDashboardData(userId: string) {
         endDate: true,
         status: true,
         totalAmount: true,
-        User: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } },
+        User: { select: { firstName: true, email: true, phoneNumber: true } },
         Home: { select: { guests: true } },
         Payment: {
           select: {
@@ -748,7 +748,6 @@ export default async function DashboardPage({
     select: {
       role: true,
       firstName: true,
-      lastName: true,
       phoneNumber: true,
       profileImage: true,
       document1Image: true,
@@ -819,3 +818,6 @@ export default async function DashboardPage({
     />
   );
 }
+
+
+

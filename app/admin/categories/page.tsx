@@ -15,3 +15,6 @@ export default async function CategoriesPage() {
 
   return <CategoriesClient initialCategories={initialCategories} />;
 }
+
+
+

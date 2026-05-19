@@ -22,7 +22,6 @@ async function getPaymentsForFinanzas() {
           User: {
             select: {
               firstName: true,
-              lastName: true,
               email: true,
             },
           },
@@ -184,3 +183,6 @@ export default async function FinanzasPage() {
     </div>
   );
 }
+
+
+

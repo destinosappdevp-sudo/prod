@@ -25,7 +25,6 @@ async function getActiveReservations() {
       User: {
         select: {
           firstName: true,
-          lastName: true,
           email: true,
         },
       },
@@ -98,7 +97,6 @@ async function getProperties() {
       User: {
         select: {
           firstName: true,
-          lastName: true,
           email: true,
         },
       },
@@ -146,3 +144,6 @@ export default async function PropertiesPage() {
     </div>
   );
 }
+
+
+

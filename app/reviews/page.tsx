@@ -36,7 +36,6 @@ export default async function ReviewsPage() {
           User: {
             select: {
               firstName: true,
-              lastName: true,
               profileImage: true,
             },
           },
@@ -65,7 +64,6 @@ export default async function ReviewsPage() {
           User: {
             select: {
               firstName: true,
-              lastName: true,
               profileImage: true,
             },
           },
@@ -207,3 +205,6 @@ export default async function ReviewsPage() {
     redirect("/my-dashboard");
   }
 }
+
+
+

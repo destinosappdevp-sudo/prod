@@ -1,4 +1,4 @@
-﻿export default function MantenimientoPage() {
+export default function MantenimientoPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white px-6">
       <div className="text-center max-w-lg space-y-6">
@@ -23,12 +23,15 @@
 
         {/* Divider */}
         <div className="border-t border-gray-700 pt-4 text-sm text-gray-500">
-          ¿Eres administrador?{" "}
+          �Eres administrador?{" "}
             <a href="/login" className="text-orange-500 hover:underline">
-            Inicia sesión aquí
+            Inicia sesi�n aqu�
           </a>
         </div>
       </div>
     </div>
   );
 }
+
+
+

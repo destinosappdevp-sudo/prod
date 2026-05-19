@@ -1,4 +1,4 @@
-﻿/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -75,13 +75,13 @@ export function UserNavClient({
             className="flex items-center gap-2 rounded-full bg-[#E1B042] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#C99A38]"
           >
             <ArrowRight size={16} />
-            Iniciar Sesión
+            Iniciar Sesi�n
           </button>
         )}
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            aria-label="Abrir menú"
+            aria-label="Abrir men�"
             className="flex items-center rounded-full bg-transparent transition-opacity hover:opacity-90 focus:outline-none"
           >
             {user ? (
@@ -131,7 +131,7 @@ export function UserNavClient({
               <DropdownMenuItem asChild className={menuItemClassName}>
                 <form action={signOut} className="w-full">
                   <button type="submit" className={menuItemContentClassName}>
-                    Cerrar Sesión
+                    Cerrar Sesi�n
                   </button>
                 </form>
               </DropdownMenuItem>
@@ -151,7 +151,7 @@ export function UserNavClient({
                 onSelect={openLoginDialog}
                 className="rounded-lg px-4 py-3 text-sm font-medium text-gray-800 focus:bg-gray-50"
               >
-                Iniciar Sesión
+                Iniciar Sesi�n
               </DropdownMenuItem>
 
               <DropdownMenuItem
@@ -176,3 +176,6 @@ export function UserNavClient({
     </>
   );
 }
+
+
+

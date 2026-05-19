@@ -84,7 +84,6 @@ export default async function ReservationDetailPage({
   const userSummarySelect = {
     id: true,
     firstName: true,
-    lastName: true,
     email: true,
     profileImage: true,
   } as const;

@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
       email,
       password,
       firstName,
-      lastName,
       role = "GUEST",
       phoneNumber,
       cedula,
@@ -94,18 +93,19 @@ export async function POST(req: NextRequest) {
       email?: string;
       password?: string;
       firstName?: string;
-      lastName?: string;
       role?: "GUEST" | "ADMIN" | "SUPERADMIN";
       phoneNumber?: string;
       cedula?: string;
     };
 
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !firstName) {
       return NextResponse.json(
-        { error: "Email, contraseña, nombre y apellido son obligatorios" },
+        { error: "Email, contraseña y nombre completo son obligatorios" },
         { status: 400 }
       );
     }
+
+    const normalizedFullName = firstName.trim().replace(/\s+/g, " ");
 
     if (password.length < 8) {
       return NextResponse.json(
@@ -172,8 +172,8 @@ export async function POST(req: NextRequest) {
         password,
         email_confirm: true,
         user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
+          first_name: normalizedFullName,
+          full_name: normalizedFullName,
         },
       });
 
@@ -189,8 +189,7 @@ export async function POST(req: NextRequest) {
         data: {
           id: created.user.id,
           email: normalizedEmail,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          firstName: normalizedFullName,
           role: finalRole,
           phoneNumber: phoneNumber?.trim() || null,
           cedula: normalizedCedula,
@@ -228,3 +227,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+
+

@@ -227,3 +227,6 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
     </div>
   );
 }
+
+
+

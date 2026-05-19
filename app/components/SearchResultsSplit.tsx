@@ -29,3 +29,6 @@ export default function SearchResultsSplit({ pins, children }: SearchResultsSpli
     </div>
   );
 }
+
+
+

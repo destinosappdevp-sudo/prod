@@ -34,7 +34,7 @@ async function getData(userId: string) {
   unstable_noStore();
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { firstName: true, lastName: true, email: true },
+    select: { firstName: true, email: true },
   });
 
   if (!user) return null;

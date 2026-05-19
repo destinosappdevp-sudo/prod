@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
@@ -182,8 +182,8 @@ export default function HostDashboardClient({
   const [searchTerm, setSearchTerm] = useState("");
   const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
   const [analyticsRange, setAnalyticsRange] = useState<"weekly" | "monthly">("weekly");
-  const displayName = (firstName || userName || userEmail?.split("@")[0] || "Anfitrión").trim();
-  const firstDisplayName = displayName.split(" ")[0] || "Anfitrión";
+  const displayName = (firstName || userName || userEmail?.split("@")[0] || "Anfitri�n").trim();
+  const firstDisplayName = displayName.split(" ")[0] || "Anfitri�n";
   const userInitials = (displayName || "A")
     .split(" ")
     .filter(Boolean)
@@ -191,7 +191,7 @@ export default function HostDashboardClient({
     .join("")
     .slice(0, 2) || "A";
 
-  // ── Modal Bloquear Fechas ─────────────────────────────────────────────────
+  // -- Modal Bloquear Fechas -------------------------------------------------
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [blockForm, setBlockForm] = useState({
     homeId: listings[0]?.id ?? "",
@@ -250,7 +250,7 @@ export default function HostDashboardClient({
         fetchBlockedDates(blockForm.homeId);
       }
     } catch {
-      setBlockMsg({ ok: false, text: "Error de conexión" });
+      setBlockMsg({ ok: false, text: "Error de conexi�n" });
     } finally {
       setBlockLoading(false);
     }
@@ -265,7 +265,7 @@ export default function HostDashboardClient({
     } catch {}
   };
 
-  // ── Modal Retirar Fondos ──────────────────────────────────────────────────
+  // -- Modal Retirar Fondos --------------------------------------------------
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawCurrency, setWithdrawCurrency] = useState<"USD" | "VES">("USD");
   const [withdrawData, setWithdrawData] = useState<any>(null);
@@ -344,11 +344,11 @@ export default function HostDashboardClient({
       if (!res.ok) {
         setWithdrawMsg({ ok: false, text: json.error ?? "No se pudo solicitar" });
       } else {
-        setWithdrawMsg({ ok: true, text: "¡Solicitud enviada! El equipo la procesará pronto." });
+        setWithdrawMsg({ ok: true, text: "�Solicitud enviada! El equipo la procesar� pronto." });
         fetchWithdrawData();
       }
     } catch {
-      setWithdrawMsg({ ok: false, text: "Error de conexión" });
+      setWithdrawMsg({ ok: false, text: "Error de conexi�n" });
     } finally {
       setWithdrawLoading(false);
     }
@@ -359,7 +359,7 @@ export default function HostDashboardClient({
       {
         label: "Ingresos Totales (USD)",
         value: `$${stats.walletUsd.totalRevenue.toFixed(2)}`,
-        note: `Comisión: $${stats.walletUsd.serviceFee.toFixed(2)}`,
+        note: `Comisi�n: $${stats.walletUsd.serviceFee.toFixed(2)}`,
         icon: DollarSign,
         color: "text-emerald-600",
         bg: "bg-emerald-50",
@@ -375,7 +375,7 @@ export default function HostDashboardClient({
       {
         label: "Ingresos Totales (Bs)",
         value: `Bs ${stats.walletBs.totalRevenue.toFixed(2)}`,
-        note: `Comisión: Bs ${stats.walletBs.serviceFee.toFixed(2)}`,
+        note: `Comisi�n: Bs ${stats.walletBs.serviceFee.toFixed(2)}`,
         icon: CalendarDays,
         color: "text-blue-600",
         bg: "bg-blue-50",
@@ -410,7 +410,7 @@ export default function HostDashboardClient({
     {
       label: "Calificacion",
       value: stats.rating ? stats.rating.toFixed(1) : "-",
-      note: stats.ratingCount ? `+${stats.ratingCount} reseñas` : "Sin reseñas",
+      note: stats.ratingCount ? `+${stats.ratingCount} rese�as` : "Sin rese�as",
       icon: Star,
       color: "text-orange-600",
     },
@@ -608,7 +608,7 @@ export default function HostDashboardClient({
             <div className="min-w-0">
               <p className="text-xs font-medium text-slate-500">Bienvenido,</p>
               <h1 className="truncate text-xl font-bold text-slate-900 sm:text-2xl">
-                Hola, {firstDisplayName}! 🌴
+                Hola, {firstDisplayName}! ??
               </h1>
             </div>
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-sm font-bold text-[#8A6500]">
@@ -629,7 +629,7 @@ export default function HostDashboardClient({
         </div>
 
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900">Dashboard Anfitrión</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Dashboard Anfitri�n</h2>
           <p className="text-sm text-slate-500">Gestiona tus propiedades y reservas</p>
         </div>
 
@@ -727,7 +727,7 @@ export default function HostDashboardClient({
             </div>
 
             <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white">
-              <h3 className="text-lg font-semibold">Acciones de Anfitrión</h3>
+              <h3 className="text-lg font-semibold">Acciones de Anfitri�n</h3>
               <p className="text-sm text-white/70 mt-1">Gestiona tus propiedades y fondos</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
@@ -751,14 +751,14 @@ export default function HostDashboardClient({
                   Retirar Fondos
                   {(stats.walletUsd.availableAmount > 0 || stats.walletBs.availableAmount > 0) && (
                     <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs">
-                      USD ${stats.walletUsd.availableAmount.toFixed(0)} · Bs {stats.walletBs.availableAmount.toFixed(0)}
+                      USD ${stats.walletUsd.availableAmount.toFixed(0)} � Bs {stats.walletBs.availableAmount.toFixed(0)}
                     </span>
                   )}
                 </button>
               </div>
             </div>
 
-            {/* ─── Modal Bloquear Fechas ─────────────────────────────────── */}
+            {/* --- Modal Bloquear Fechas ----------------------------------- */}
             {showBlockModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                 <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
@@ -775,7 +775,7 @@ export default function HostDashboardClient({
 
                   <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
                     {listings.length === 0 ? (
-                      <p className="text-sm text-slate-500">No tienes propiedades aún.</p>
+                      <p className="text-sm text-slate-500">No tienes propiedades a�n.</p>
                     ) : (
                       <>
                         {/* Selector de propiedad */}
@@ -789,7 +789,7 @@ export default function HostDashboardClient({
                             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
                           >
                             {listings.map((l) => (
-                              <option key={l.id} value={l.id}>{l.title || "Sin título"}</option>
+                              <option key={l.id} value={l.id}>{l.title || "Sin t�tulo"}</option>
                             ))}
                           </select>
                         </div>
@@ -823,7 +823,7 @@ export default function HostDashboardClient({
                           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Motivo (opcional)</label>
                           <input
                             type="text"
-                            placeholder="Ej. Mantenimiento, uso personal…"
+                            placeholder="Ej. Mantenimiento, uso personal�"
                             value={blockForm.reason}
                             onChange={(e) => handleBlockDateChange("reason", e.target.value)}
                             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
@@ -846,20 +846,20 @@ export default function HostDashboardClient({
                           className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
                         >
                           {blockLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Lock size={16} className="mr-2" />}
-                          Bloquear período
+                          Bloquear per�odo
                         </Button>
 
                         {/* Listado de bloqueos existentes */}
                         {blockedDates.length > 0 && (
                           <div className="pt-2">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Períodos bloqueados</p>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Per�odos bloqueados</p>
                             <div className="space-y-2">
                               {blockedDates.map((b: any) => (
                                 <div key={b.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
                                   <div>
                                     <p className="text-sm font-medium text-slate-800">
                                       {new Date(b.startDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
-                                      {" – "}
+                                      {" � "}
                                       {new Date(b.endDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
                                     </p>
                                     {b.reason && <p className="text-xs text-slate-500">{b.reason}</p>}
@@ -883,7 +883,7 @@ export default function HostDashboardClient({
               </div>
             )}
 
-            {/* ─── Modal Retirar Fondos ──────────────────────────────────── */}
+            {/* --- Modal Retirar Fondos ------------------------------------ */}
             {showWithdrawModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                 <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden">
@@ -968,7 +968,7 @@ export default function HostDashboardClient({
                             </div>
                             <p className="font-semibold text-slate-700">Sin fondos disponibles</p>
                             <p className="text-sm text-slate-500 mt-1">
-                              Los fondos se liberan una vez que finaliza la estadía del huésped.
+                              Los fondos se liberan una vez que finaliza la estad�a del hu�sped.
                             </p>
                           </div>
                         ) : (
@@ -993,13 +993,13 @@ export default function HostDashboardClient({
                                 />
                               </div>
                               <p className="text-xs text-slate-400 mt-1">
-                                Máximo disponible: <strong>{withdrawCurrencyPrefix}{(selectedWithdrawWallet.availableToWithdraw ?? 0).toFixed(2)}</strong>
+                                M�ximo disponible: <strong>{withdrawCurrencyPrefix}{(selectedWithdrawWallet.availableToWithdraw ?? 0).toFixed(2)}</strong>
                               </p>
                             </div>
 
-                            {/* Método de pago */}
+                            {/* M�todo de pago */}
                             <div>
-                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Método de cobro</label>
+                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">M�todo de cobro</label>
                               <div className="grid grid-cols-2 gap-2 text-center text-sm">
                                 {allowedWithdrawMethods.map((m) => (
                                   <button
@@ -1013,7 +1013,7 @@ export default function HostDashboardClient({
                                     }`}
                                   >
                                     {m === "PAGO_MOVIL"
-                                      ? "Pago Móvil"
+                                      ? "Pago M�vil"
                                       : m === "ZELLE"
                                       ? "Zelle"
                                       : "Transferencia"}
@@ -1023,7 +1023,7 @@ export default function HostDashboardClient({
                               <p className="text-xs text-slate-400 mt-1">
                                 {withdrawCurrency === "USD"
                                   ? "Para USD puedes retirar por Zelle o Transferencia."
-                                  : "Para Bs puedes retirar por Pago Móvil o Transferencia."}
+                                  : "Para Bs puedes retirar por Pago M�vil o Transferencia."}
                               </p>
                             </div>
 
@@ -1033,7 +1033,7 @@ export default function HostDashboardClient({
                                 <label className="block text-xs text-slate-500 mb-1">Nombre del titular</label>
                                 <input
                                   type="text"
-                                  placeholder="Juan Pérez"
+                                  placeholder="Juan P�rez"
                                   value={withdrawForm.holderName}
                                   onChange={(e) => setWithdrawForm((p) => ({ ...p, holderName: e.target.value }))}
                                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
@@ -1052,7 +1052,7 @@ export default function HostDashboardClient({
                                     />
                                   </div>
                                   <div className="col-span-2">
-                                    <label className="block text-xs text-slate-500 mb-1">Teléfono</label>
+                                    <label className="block text-xs text-slate-500 mb-1">Tel�fono</label>
                                     <input
                                       type="tel"
                                       placeholder="04XX-XXXXXXX"
@@ -1066,7 +1066,7 @@ export default function HostDashboardClient({
                               {(withdrawForm.paymentMethod === "ZELLE" || withdrawForm.paymentMethod === "TRANSFERENCIA") && (
                                 <div className="col-span-2">
                                   <label className="block text-xs text-slate-500 mb-1">
-                                    {withdrawForm.paymentMethod === "ZELLE" ? "Email / teléfono Zelle" : "Número de cuenta"}
+                                    {withdrawForm.paymentMethod === "ZELLE" ? "Email / tel�fono Zelle" : "N�mero de cuenta"}
                                   </label>
                                   <input
                                     type="text"
@@ -1095,7 +1095,7 @@ export default function HostDashboardClient({
                               className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3 font-semibold"
                             >
                               {withdrawLoading
-                                ? <><Loader2 size={16} className="animate-spin mr-2" />Enviando…</>
+                                ? <><Loader2 size={16} className="animate-spin mr-2" />Enviando�</>
                                 : (
                                   <>
                                     <ArrowDownToLine size={16} className="mr-2" />
@@ -1128,7 +1128,7 @@ export default function HostDashboardClient({
                                         {withdrawalPrefix}{Number(w.amount).toFixed(2)}
                                       </p>
                                       <p className="text-xs text-slate-500">
-                                        {w.paymentMethod?.replace(/_/g, " ")} ({withdrawalCurrency}) · {new Date(w.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                        {w.paymentMethod?.replace(/_/g, " ")} ({withdrawalCurrency}) � {new Date(w.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
                                       </p>
                                       {w.adminNotes && <p className="text-xs text-slate-500 mt-0.5 italic">{w.adminNotes}</p>}
                                     </div>
@@ -1144,7 +1144,7 @@ export default function HostDashboardClient({
                         )}
                       </>
                     ) : (
-                      <div className="py-10 text-center text-sm text-slate-500">No se pudo cargar la información.</div>
+                      <div className="py-10 text-center text-sm text-slate-500">No se pudo cargar la informaci�n.</div>
                     )}
                   </div>
                 </div>
@@ -1282,7 +1282,7 @@ export default function HostDashboardClient({
 
             {filteredReservations.length === 0 && (
               <div className="p-12 text-center">
-                <p className="text-slate-500 text-sm">No hay reservaciones que coincidan con tu búsqueda</p>
+                <p className="text-slate-500 text-sm">No hay reservaciones que coincidan con tu b�squeda</p>
               </div>
             )}
           </div>
@@ -1630,7 +1630,7 @@ export default function HostDashboardClient({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Estado / Región
+                      Estado / Regi�n
                     </label>
                     <input
                       type="text"
@@ -1660,7 +1660,7 @@ export default function HostDashboardClient({
                   <textarea
                     rows={4}
                     className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none resize-none"
-                    placeholder="Cuéntales a los huéspedes un poco sobre ti (máximo 500 caracteres)"
+                    placeholder="Cu�ntales a los hu�spedes un poco sobre ti (m�ximo 500 caracteres)"
                     maxLength={500}
                   />
                 </div>
@@ -1668,7 +1668,7 @@ export default function HostDashboardClient({
                 {/* Submit Button */}
                 <div className="flex items-center justify-between pt-4">
                   <p className="text-sm text-slate-500">
-                    Los cambios se guardarán automáticamente
+                    Los cambios se guardar�n autom�ticamente
                   </p>
                   <Button 
                     type="submit"
@@ -1686,3 +1686,6 @@ export default function HostDashboardClient({
     </div>
   );
 }
+
+
+

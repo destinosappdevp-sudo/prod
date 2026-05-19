@@ -35,3 +35,6 @@ export function buildPublicUrl(pathname: string) {
   const normalizedPath = pathname.startsWith("/") ? pathname : `/${pathname}`;
   return new URL(normalizedPath, getPublicBaseUrl()).toString();
 }
+
+
+

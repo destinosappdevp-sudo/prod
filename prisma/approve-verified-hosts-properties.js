@@ -16,7 +16,6 @@ async function main() {
         id: true,
         email: true,
         firstName: true,
-        lastName: true,
       },
     });
 
@@ -70,3 +69,6 @@ main()
     console.error(e);
     process.exit(1);
   });
+
+
+

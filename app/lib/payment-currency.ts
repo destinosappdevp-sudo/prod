@@ -193,3 +193,6 @@ export function formatCurrencyAmount(value: number, currency: WalletCurrency): s
   const symbol = getCurrencySymbol(currency);
   return `${symbol}${safeValue.toFixed(2)}`;
 }
+
+
+

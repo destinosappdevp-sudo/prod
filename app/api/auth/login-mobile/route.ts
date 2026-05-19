@@ -90,7 +90,6 @@ export async function POST(request: NextRequest) {
           id: data.user.id,
           email: data.user.email ?? email,
           firstName: "Usuario",
-          lastName: "",
           profileImage: `https://avatar.vercel.sh/${email}`,
         },
       });
@@ -112,3 +111,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+

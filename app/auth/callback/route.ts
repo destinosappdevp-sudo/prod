@@ -34,8 +34,10 @@ export async function GET(request: Request) {
               data: {
                 id: data.user.id,
                 email: data.user.email ?? "",
-                firstName: data.user.user_metadata?.given_name ?? data.user.user_metadata?.full_name ?? "User",
-                lastName: data.user.user_metadata?.family_name ?? "",
+                firstName:
+                  data.user.user_metadata?.full_name ??
+                  data.user.user_metadata?.given_name ??
+                  "User",
                 profileImage: data.user.user_metadata?.avatar_url ?? 
                   `https://avatar.vercel.sh/${data.user.user_metadata?.given_name ?? "user"}`,
                 role: initialRole,
@@ -70,3 +72,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${new URL(request.url).origin}/auth/auth-code-error?error=server`);
   }
 }
+
+
+

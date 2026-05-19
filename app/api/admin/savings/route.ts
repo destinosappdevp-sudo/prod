@@ -162,3 +162,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Error al crear alcancía" }, { status: 500 });
   }
 }
+
+
+

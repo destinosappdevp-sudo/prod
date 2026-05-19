@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { Card } from "@/components/ui/card";
 import { Bell, Shield, Database, Globe, Palette, Wrench, Landmark } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -32,7 +32,7 @@ function formatHistoryDate(value: string | null): string {
 }
 
 export default function SettingsPage() {
-  // Comisión
+  // Comisi�n
   const [commission, setCommission] = useState<number>(10);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -231,7 +231,7 @@ export default function SettingsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setResetMsg("✓ Base de datos reiniciada correctamente. Solo el superadmin permanece.");
+        setResetMsg("? Base de datos reiniciada correctamente. Solo el superadmin permanece.");
         setResetConfirm(false);
       } else {
         setResetMsg(`Error: ${data.error || "No se pudo reiniciar la base de datos"}`);
@@ -256,7 +256,7 @@ export default function SettingsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setSyncMsg(`✓ ${data.message} (Sincronizados: ${data.synced}, Ya existían: ${data.skipped})`);
+        setSyncMsg(`? ${data.message} (Sincronizados: ${data.synced}, Ya exist�an: ${data.skipped})`);
       } else {
         setSyncMsg(`Error: ${data.error || "No se pudo sincronizar usuarios"}`);
       }
@@ -271,7 +271,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Configuraci�n</h1>
         <p className="text-gray-600 mt-1">Gestiona las configuraciones de la plataforma</p>
       </div>
 
@@ -282,7 +282,7 @@ export default function SettingsPage() {
             <div className="p-2 bg-blue-100 rounded-lg">
               <Globe className="text-blue-600" size={20} />
             </div>
-            <h3 className="text-lg font-semibold">Configuración General</h3>
+            <h3 className="text-lg font-semibold">Configuraci�n General</h3>
           </div>
           <div className="space-y-4">
             {/* Modo Mantenimiento */}
@@ -295,8 +295,8 @@ export default function SettingsPage() {
                   <p className="font-medium">Modo de Mantenimiento</p>
                   <p className="text-sm text-gray-600">
                     {maintenance
-                      ? "El sitio está en mantenimiento  solo admins pueden acceder"
-                      : "El sitio está activo y accesible al público"}
+                      ? "El sitio est� en mantenimiento  solo admins pueden acceder"
+                      : "El sitio est� activo y accesible al p�blico"}
                   </p>
                   {maintenanceMsg && (
                     <p className={`text-xs mt-1 ${maintenance ? "text-red-600" : "text-green-600"}`}>
@@ -320,10 +320,10 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            {/* Registros Públicos */}
+            {/* Registros P�blicos */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium">Registros Públicos</p>
+                <p className="font-medium">Registros P�blicos</p>
                 <p className="text-sm text-gray-600">Permite que nuevos usuarios se registren</p>
               </div>
               <button className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors" disabled>
@@ -331,10 +331,10 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            {/* Comisión Destinos Venezuela */}
+            {/* Comisi�n Destinos Venezuela */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium">Comisión Destinos Venezuela</p>
+                <p className="font-medium">Comisi�n Destinos Venezuela</p>
                 <p className="text-sm text-gray-600">Porcentaje aplicado a cada pago</p>
               </div>
               <form className="flex items-center gap-2" onSubmit={handleSubmit}>
@@ -358,7 +358,7 @@ export default function SettingsPage() {
                 >
                   {saving ? "Guardando..." : "Guardar"}
                 </button>
-                {success && <span className="text-green-600 ml-2 text-sm">¡Guardado!</span>}
+                {success && <span className="text-green-600 ml-2 text-sm">�Guardado!</span>}
                 {error && <span className="text-red-600 ml-2 text-sm">{error}</span>}
               </form>
             </div>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Notificaciones de Email</p>
-                <p className="text-sm text-gray-600">Enviar emails automáticos a usuarios</p>
+                <p className="text-sm text-gray-600">Enviar emails autom�ticos a usuarios</p>
               </div>
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
                 Configurar
@@ -389,28 +389,28 @@ export default function SettingsPage() {
                 <p className="text-sm text-gray-600">Notificaciones en tiempo real</p>
               </div>
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
-                Próximamente
+                Pr�ximamente
               </button>
             </div>
           </div>
         </Card>
 
-        {/* Tasa BCV del día */}
+        {/* Tasa BCV del d�a */}
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 bg-emerald-100 rounded-lg">
               <Landmark className="text-emerald-600" size={20} />
             </div>
-            <h3 className="text-lg font-semibold">Tasa BCV del día y próxima tasa</h3>
+            <h3 className="text-lg font-semibold">Tasa BCV del d�a y pr�xima tasa</h3>
           </div>
           <form className="space-y-4" onSubmit={handleBcvSubmit}>
             <p className="text-sm text-gray-600">
-              Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La próxima tasa se guarda con la fecha que selecciones.
+              Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La pr�xima tasa se guarda con la fecha que selecciones.
             </p>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tasa BCV del día (Bs/USD)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tasa BCV del d�a (Bs/USD)</label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -423,7 +423,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de referencia del día</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de referencia del d�a</label>
                 <input
                   type="date"
                   value={bcvRateDate}
@@ -434,7 +434,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Próxima tasa (Bs/USD)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pr�xima tasa (Bs/USD)</label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -447,7 +447,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de la próxima tasa</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de la pr�xima tasa</label>
                 <input
                   type="date"
                   value={proximaTasaDate}
@@ -467,18 +467,18 @@ export default function SettingsPage() {
                 {bcvSaving ? "Guardando..." : "Guardar tasa BCV"}
               </button>
 
-              {bcvSuccess && <span className="text-green-600 text-sm">¡Guardado!</span>}
+              {bcvSuccess && <span className="text-green-600 text-sm">�Guardado!</span>}
               {bcvError && <span className="text-red-600 text-sm">{bcvError}</span>}
             </div>
 
             <p className="text-xs text-gray-500">
-              Fechas seleccionadas: día {bcvRateDate || "Sin fecha"} y próxima tasa {proximaTasaDate || "Sin fecha"}
+              Fechas seleccionadas: d�a {bcvRateDate || "Sin fecha"} y pr�xima tasa {proximaTasaDate || "Sin fecha"}
             </p>
 
             <div className="rounded-lg border bg-gray-50 p-3">
               <h4 className="text-sm font-semibold text-gray-900 mb-2">Tasas anteriores</h4>
               {tasasAnteriores.length === 0 ? (
-                <p className="text-xs text-gray-600">Aún no hay historial registrado.</p>
+                <p className="text-xs text-gray-600">A�n no hay historial registrado.</p>
               ) : (
                 <div className="space-y-2 max-h-56 overflow-auto pr-1">
                   {tasasAnteriores.map((item, index) => (
@@ -507,11 +507,11 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium">Autenticación de Dos Factores</p>
+                <p className="font-medium">Autenticaci�n de Dos Factores</p>
                 <p className="text-sm text-gray-600">Requerir 2FA para administradores</p>
               </div>
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
-                Próximamente
+                Pr�ximamente
               </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -539,10 +539,10 @@ export default function SettingsPage() {
             <div className="border-b pb-4 mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-blue-700">🔄 Sincronizar Usuarios</p>
+                  <p className="font-medium text-blue-700">?? Sincronizar Usuarios</p>
                   <p className="text-sm text-gray-600">Trae todos los usuarios de Supabase auth.users a la base de datos</p>
                   {syncMsg && (
-                    <p className={`text-xs mt-2 ${syncMsg.includes("✓") ? "text-green-600" : "text-red-600"}`}>
+                    <p className={`text-xs mt-2 ${syncMsg.includes("?") ? "text-green-600" : "text-red-600"}`}>
                       {syncMsg}
                     </p>
                   )}
@@ -559,11 +559,11 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium">Backup Automático</p>
-                <p className="text-sm text-gray-600">Crear respaldos periódicos de los datos</p>
+                <p className="font-medium">Backup Autom�tico</p>
+                <p className="text-sm text-gray-600">Crear respaldos peri�dicos de los datos</p>
               </div>
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
-                Próximamente
+                Pr�ximamente
               </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -578,10 +578,10 @@ export default function SettingsPage() {
             <div className="border-t pt-4 mt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-red-700">⚠️ Reiniciar Base de Datos</p>
-                  <p className="text-sm text-gray-600">Elimina TODOS los datos excepto el superadmin actual. Esta acción no se puede deshacer.</p>
+                  <p className="font-medium text-red-700">?? Reiniciar Base de Datos</p>
+                  <p className="text-sm text-gray-600">Elimina TODOS los datos excepto el superadmin actual. Esta acci�n no se puede deshacer.</p>
                   {resetMsg && (
-                    <p className={`text-xs mt-2 ${resetMsg.includes("✓") ? "text-green-600" : "text-red-600"}`}>
+                    <p className={`text-xs mt-2 ${resetMsg.includes("?") ? "text-green-600" : "text-red-600"}`}>
                       {resetMsg}
                     </p>
                   )}
@@ -595,7 +595,7 @@ export default function SettingsPage() {
                         onChange={() => setResetConfirm(!resetConfirm)}
                         className="w-4 h-4"
                       />
-                      Confirmar eliminación
+                      Confirmar eliminaci�n
                     </label>
                   )}
                   <button
@@ -658,3 +658,6 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+
+

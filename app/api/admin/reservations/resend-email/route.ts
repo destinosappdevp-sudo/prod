@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
         User: {
           select: {
             firstName: true,
-            lastName: true,
             email: true,
             phoneNumber: true,
           },
@@ -73,7 +72,6 @@ export async function POST(request: NextRequest) {
       where: { id: reservation.Home?.userId },
       select: {
         firstName: true,
-        lastName: true,
         email: true,
         phoneNumber: true,
       },
@@ -189,3 +187,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+

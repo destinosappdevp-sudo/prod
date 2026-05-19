@@ -6,3 +6,6 @@ export async function POST(request: Request) {
   // const result = await rejectHome(homeId, reason);
   return NextResponse.json({ success: false });
 }
+
+
+

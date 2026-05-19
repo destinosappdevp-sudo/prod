@@ -60,3 +60,6 @@ export default function BannerMedio({ tipo }: BannerMedioProps) {
     </div>
   );
 }
+
+
+

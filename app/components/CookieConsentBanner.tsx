@@ -177,3 +177,6 @@ export default function CookieConsentBanner({ isLoggedIn = false }: CookieConsen
     </div>
   );
 }
+
+
+

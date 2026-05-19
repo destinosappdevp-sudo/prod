@@ -19,7 +19,6 @@ async function getPropertyForHost(id: string, userId: string) {
       User: {
         select: {
           firstName: true,
-          lastName: true,
           email: true,
           profileImage: true,
         },
@@ -39,7 +38,6 @@ async function getPropertyForHost(id: string, userId: string) {
           User: {
             select: {
               firstName: true,
-              lastName: true,
               email: true,
             },
           },

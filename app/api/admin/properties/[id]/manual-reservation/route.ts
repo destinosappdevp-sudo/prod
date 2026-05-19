@@ -87,7 +87,7 @@ export async function POST(
           mode: "insensitive",
         },
       },
-      select: { id: true, firstName: true, lastName: true, email: true, cedula: true },
+      select: { id: true, firstName: true, email: true, cedula: true },
     });
 
     if (!targetUser) {

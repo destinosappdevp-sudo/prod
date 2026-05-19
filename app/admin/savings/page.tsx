@@ -14,12 +14,12 @@ async function getData() {
     prismaAny.saving.findMany({
       orderBy: [{ status: "asc" }, { date: "desc" }],
       include: {
-        User: { select: { id: true, firstName: true, lastName: true, email: true } },
+        User: { select: { id: true, firstName: true, email: true } },
       },
     }),
     prisma.user.findMany({
-      select: { id: true, firstName: true, lastName: true, email: true, cedula: true },
-      orderBy: [{ cedula: "asc" }, { firstName: "asc" }, { lastName: "asc" }],
+      select: { id: true, firstName: true, email: true, cedula: true },
+      orderBy: [{ cedula: "asc" }, { firstName: "asc" }],
     }),
     prisma.home.findMany({
       select: { id: true, title: true },
@@ -177,7 +177,7 @@ export default async function AdminSavingsPage() {
                       <td className="px-4 py-4 text-sm">
                         {user ? (
                           <Link href={`/admin/users/${user.id}/savings`} className="text-blue-600 hover:underline">
-                            <div className="font-medium">{user.firstName} {user.lastName}</div>
+                            <div className="font-medium">{user.firstName}</div>
                             <div className="text-xs text-gray-500">{user.email}</div>
                           </Link>
                         ) : (
@@ -256,3 +256,6 @@ export default async function AdminSavingsPage() {
     </div>
   );
 }
+
+
+

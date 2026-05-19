@@ -17,3 +17,6 @@ export default function MobileMapStrip({ pins }: { pins: MapPin[] }) {
     </div>
   );
 }
+
+
+

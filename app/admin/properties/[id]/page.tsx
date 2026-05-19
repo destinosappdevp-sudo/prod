@@ -48,7 +48,6 @@ async function getProperty(id: string) {
       User: {
         select: {
           firstName: true,
-          lastName: true,
           email: true,
           profileImage: true,
         },
@@ -68,7 +67,6 @@ async function getProperty(id: string) {
           User: {
             select: {
               firstName: true,
-              lastName: true,
               email: true,
             },
           },
@@ -111,7 +109,6 @@ export default async function PropertyDetailPage({
       User: {
         select: {
           firstName: true,
-          lastName: true,
           email: true,
         },
       },

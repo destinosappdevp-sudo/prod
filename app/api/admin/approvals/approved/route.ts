@@ -6,3 +6,6 @@ export async function GET() {
 // const result = await getApprovedHomes();
   return NextResponse.json({ success: false, homes: [] });
 }
+
+
+

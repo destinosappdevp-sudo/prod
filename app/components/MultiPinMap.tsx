@@ -103,3 +103,6 @@ export default function MultiPinMap({ pins }: { pins: MapPin[] }) {
     </MapContainer>
   );
 }
+
+
+

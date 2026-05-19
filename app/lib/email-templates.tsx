@@ -1,4 +1,4 @@
-﻿interface ReservationEmailData {
+interface ReservationEmailData {
   guestName: string;
   guestEmail: string;
   guestPhone?: string;
@@ -36,8 +36,8 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">🎉 ¡Reserva Confirmada!</h1>
-              <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Tu aventura está a punto de comenzar</p>
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">?? �Reserva Confirmada!</h1>
+              <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Tu aventura est� a punto de comenzar</p>
             </td>
           </tr>
 
@@ -48,16 +48,16 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
                 Hola <strong>${data.guestName}</strong>,
               </p>
               <p style="margin: 0 0 30px 0; color: #666666; font-size: 15px; line-height: 1.6;">
-                ¡Excelentes noticias! Tu reserva ha sido confirmada. Estamos emocionados de que elijas Destinos Venezuela para tu próxima estadía.
+                �Excelentes noticias! Tu reserva ha sido confirmada. Estamos emocionados de que elijas Destinos Venezuela para tu pr�xima estad�a.
               </p>
 
               <!-- Property Info -->
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                 <tr>
                   <td>
-                    <h2 style="margin: 0 0 15px 0; color: #333333; font-size: 20px; font-weight: 600;">📍 ${data.propertyTitle}</h2>
+                    <h2 style="margin: 0 0 15px 0; color: #333333; font-size: 20px; font-weight: 600;">?? ${data.propertyTitle}</h2>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                      <strong>Dirección:</strong> ${data.propertyAddress}
+                      <strong>Direcci�n:</strong> ${data.propertyAddress}
                     </p>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
                       <strong>Check-in:</strong> ${data.checkIn}
@@ -69,7 +69,7 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
                       <strong>Noches:</strong> ${data.nights}
                     </p>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                      <strong>Huéspedes:</strong> ${data.guests}
+                      <strong>Hu�spedes:</strong> ${data.guests}
                     </p>
                     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
                       <tr>
@@ -81,7 +81,7 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
                             <strong>Total Bs:</strong> Bs ${data.amountBs.toFixed(2)}
                           </p>` : ''}
                           ${data.bcvRate ? `<p style="margin: 8px 0 0 0; color: #999999; font-size: 12px;">
-                            <strong>Tasa BCV del día:</strong> 1 USD = Bs ${data.bcvRate.toFixed(8)}
+                            <strong>Tasa BCV del d�a:</strong> 1 USD = Bs ${data.bcvRate.toFixed(8)}
                           </p>` : ''}
                         </td>
                       </tr>
@@ -94,7 +94,7 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
               <table width="100%" cellpadding="0" cellspacing="0" style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                 <tr>
                   <td>
-                    <h3 style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">👤 Información del Anfitrión</h3>
+                    <h3 style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">?? Informaci�n del Anfitri�n</h3>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
                       <strong>Nombre:</strong> ${data.hostName}
                     </p>
@@ -103,11 +103,11 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
                     </p>
                     ${data.hostPhone ? `
                     <p style="margin: 0; color: #666666; font-size: 14px;">
-                      <strong>Teléfono:</strong> ${data.hostPhone}
+                      <strong>Tel�fono:</strong> ${data.hostPhone}
                     </p>
                     ` : ''}
                     <p style="margin: 15px 0 0 0; color: #666666; font-size: 13px; font-style: italic;">
-                      Te recomendamos contactar a tu anfitrión antes del check-in para coordinar la llegada.
+                      Te recomendamos contactar a tu anfitri�n antes del check-in para coordinar la llegada.
                     </p>
                   </td>
                 </tr>
@@ -121,7 +121,7 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
                       <strong>ID de Reserva:</strong> ${data.reservationId}
                     </p>
                     <p style="margin: 5px 0 0 0; color: #856404; font-size: 12px;">
-                      Guarda este número para futuras consultas
+                      Guarda este n�mero para futuras consultas
                     </p>
                   </td>
                 </tr>
@@ -129,9 +129,9 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
 
               <!-- Tips -->
               <div style="border-left: 4px solid #667eea; padding-left: 15px; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 10px 0; color: #333333; font-size: 16px; font-weight: 600;">💡 Consejos para tu estadía</h3>
+                <h3 style="margin: 0 0 10px 0; color: #333333; font-size: 16px; font-weight: 600;">?? Consejos para tu estad�a</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #666666; font-size: 14px; line-height: 1.8;">
-                  <li>Comunícate con tu anfitrión para coordinar el horario exacto de check-in</li>
+                  <li>Comun�cate con tu anfitri�n para coordinar el horario exacto de check-in</li>
                   <li>Verifica las reglas de la casa antes de llegar</li>
                   <li>Respeta los horarios de check-in y check-out</li>
                   <li>Reporta cualquier problema lo antes posible</li>
@@ -145,10 +145,10 @@ export function generateGuestConfirmationEmail(data: ReservationEmailData): stri
           <tr>
             <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
               <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                ¿Necesitas ayuda? Contáctanos en <a href="mailto:support@Destinos Venezuela.com" style="color: #667eea; text-decoration: none;">support@Destinos Venezuela.com</a>
+                �Necesitas ayuda? Cont�ctanos en <a href="mailto:support@Destinos Venezuela.com" style="color: #667eea; text-decoration: none;">support@Destinos Venezuela.com</a>
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
+                � ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -179,8 +179,8 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">🔔 ¡Nueva Reserva!</h1>
-              <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Tienes un nuevo huésped</p>
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">?? �Nueva Reserva!</h1>
+              <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Tienes un nuevo hu�sped</p>
             </td>
           </tr>
 
@@ -191,14 +191,14 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
                 Hola <strong>${data.hostName}</strong>,
               </p>
               <p style="margin: 0 0 30px 0; color: #666666; font-size: 15px; line-height: 1.6;">
-                ¡Buenas noticias! Has recibido una nueva reserva confirmada en tu propiedad. Aquí están los detalles:
+                �Buenas noticias! Has recibido una nueva reserva confirmada en tu propiedad. Aqu� est�n los detalles:
               </p>
 
               <!-- Property Info -->
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                 <tr>
                   <td>
-                    <h2 style="margin: 0 0 15px 0; color: #333333; font-size: 20px; font-weight: 600;">🏠 ${data.propertyTitle}</h2>
+                    <h2 style="margin: 0 0 15px 0; color: #333333; font-size: 20px; font-weight: 600;">?? ${data.propertyTitle}</h2>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
                       <strong>Check-in:</strong> ${data.checkIn}
                     </p>
@@ -209,7 +209,7 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
                       <strong>Noches:</strong> ${data.nights}
                     </p>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                      <strong>Huéspedes:</strong> ${data.guests}
+                      <strong>Hu�spedes:</strong> ${data.guests}
                     </p>
                     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 15px;">
                       <tr>
@@ -221,7 +221,7 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
                             <strong>Ingreso Bs:</strong> Bs ${data.amountBs.toFixed(2)}
                           </p>` : ''}
                           ${data.bcvRate ? `<p style="margin: 8px 0 0 0; color: #999999; font-size: 12px;">
-                            <strong>Tasa BCV del día:</strong> 1 USD = Bs ${data.bcvRate.toFixed(8)}
+                            <strong>Tasa BCV del d�a:</strong> 1 USD = Bs ${data.bcvRate.toFixed(8)}
                           </p>` : ''}
                         </td>
                       </tr>
@@ -234,7 +234,7 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
               <table width="100%" cellpadding="0" cellspacing="0" style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                 <tr>
                   <td>
-                    <h3 style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">👤 Información del Huésped</h3>
+                    <h3 style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">?? Informaci�n del Hu�sped</h3>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
                       <strong>Nombre:</strong> ${data.guestName}
                     </p>
@@ -243,11 +243,11 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
                     </p>
                     ${data.guestPhone ? `
                     <p style="margin: 0; color: #666666; font-size: 14px;">
-                      <strong>Teléfono:</strong> ${data.guestPhone}
+                      <strong>Tel�fono:</strong> ${data.guestPhone}
                     </p>
                     ` : ''}
                     <p style="margin: 15px 0 0 0; color: #666666; font-size: 13px; font-style: italic;">
-                      Te recomendamos contactar a tu huésped antes del check-in para dar la bienvenida y coordinar la llegada.
+                      Te recomendamos contactar a tu hu�sped antes del check-in para dar la bienvenida y coordinar la llegada.
                     </p>
                   </td>
                 </tr>
@@ -266,13 +266,13 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
 
               <!-- Action Items -->
               <div style="border-left: 4px solid #f5576c; padding-left: 15px; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 10px 0; color: #333333; font-size: 16px; font-weight: 600;">✅ Próximos pasos</h3>
+                <h3 style="margin: 0 0 10px 0; color: #333333; font-size: 16px; font-weight: 600;">? Pr�ximos pasos</h3>
                 <ul style="margin: 0; padding-left: 20px; color: #666666; font-size: 14px; line-height: 1.8;">
-                  <li>Prepara la propiedad para recibir a tu huésped</li>
-                  <li>Contacta al huésped para coordinar la llegada</li>
+                  <li>Prepara la propiedad para recibir a tu hu�sped</li>
+                  <li>Contacta al hu�sped para coordinar la llegada</li>
                   <li>Verifica que todos los servicios funcionen correctamente</li>
-                  <li>Asegúrate de tener las llaves/códigos de acceso listos</li>
-                  <li>Deja instrucciones claras sobre el uso de electrodomésticos</li>
+                  <li>Aseg�rate de tener las llaves/c�digos de acceso listos</li>
+                  <li>Deja instrucciones claras sobre el uso de electrodom�sticos</li>
                 </ul>
               </div>
 
@@ -283,10 +283,10 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
           <tr>
             <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
               <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                ¿Preguntas? Contáctanos en <a href="mailto:host-support@Destinos Venezuela.com" style="color: #f5576c; text-decoration: none;">host-support@Destinos Venezuela.com</a>
+                �Preguntas? Cont�ctanos en <a href="mailto:host-support@Destinos Venezuela.com" style="color: #f5576c; text-decoration: none;">host-support@Destinos Venezuela.com</a>
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
+                � ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -352,7 +352,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
           <tr>
             <td style="padding:22px 30px;background:#f8fafc;border-top:1px solid #e5e7eb;">
               <p style="margin:0;color:#6b7280;font-size:12px;text-align:center;">
-                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
+                � ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -377,7 +377,7 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recuperar Contraseña - Destinos Venezuela</title>
+  <title>Recuperar Contrase�a - Destinos Venezuela</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
@@ -388,7 +388,7 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">🔑 Recuperar Contraseña</h1>
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">?? Recuperar Contrase�a</h1>
               <p style="margin: 10px 0 0 0; color: #ffffff; font-size: 16px; opacity: 0.9;">Te ayudamos a restablecer tu acceso</p>
             </td>
           </tr>
@@ -400,7 +400,7 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
                 Hola,
               </p>
               <p style="margin: 0 0 30px 0; color: #666666; font-size: 15px; line-height: 1.6;">
-                Recibimos una solicitud para cambiar la contraseña asociada a esta cuenta. Si fuiste tú, haz clic en el botón de abajo para crear una nueva contraseña segura.
+                Recibimos una solicitud para cambiar la contrase�a asociada a esta cuenta. Si fuiste t�, haz clic en el bot�n de abajo para crear una nueva contrase�a segura.
               </p>
 
               <!-- CTA Button -->
@@ -408,7 +408,7 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
                 <tr>
                   <td align="center">
                     <a href="${data.resetLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
-                      Cambiar contraseña
+                      Cambiar contrase�a
                     </a>
                   </td>
                 </tr>
@@ -419,8 +419,8 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
                 <tr>
                   <td>
                     <p style="margin: 0; color: #1e3a8a; font-size: 13px; line-height: 1.6;">
-                      <strong>⏰ El enlace expira en:</strong> 24 horas<br>
-                      <strong>📧 Esta solicitud fue para:</strong> ${data.email}
+                      <strong>? El enlace expira en:</strong> 24 horas<br>
+                      <strong>?? Esta solicitud fue para:</strong> ${data.email}
                     </p>
                   </td>
                 </tr>
@@ -430,12 +430,12 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
               <table width="100%" cellpadding="0" cellspacing="0" style="border-left: 4px solid #667eea; padding-left: 15px; margin-bottom: 20px;">
                 <tr>
                   <td>
-                    <h3 style="margin: 0 0 10px 0; color: #333333; font-size: 16px; font-weight: 600;">🔐 Seguridad</h3>
+                    <h3 style="margin: 0 0 10px 0; color: #333333; font-size: 16px; font-weight: 600;">?? Seguridad</h3>
                     <p style="margin: 0 0 8px 0; color: #666666; font-size: 14px; line-height: 1.6;">
-                      Si no solicitaste cambiar tu contraseña, puedes ignorar este correo. Tu cuenta permanece segura.
+                      Si no solicitaste cambiar tu contrase�a, puedes ignorar este correo. Tu cuenta permanece segura.
                     </p>
                     <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.6;">
-                      Nunca compartas tu contraseña con nadie y sospecha de correos sospechosos.
+                      Nunca compartas tu contrase�a con nadie y sospecha de correos sospechosos.
                     </p>
                   </td>
                 </tr>
@@ -448,10 +448,10 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
           <tr>
             <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
               <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
-                ¿Necesitas ayuda? Contáctanos en <a href="mailto:support@Destinos Venezuela.com" style="color: #667eea; text-decoration: none;">support@Destinos Venezuela.com</a>
+                �Necesitas ayuda? Cont�ctanos en <a href="mailto:support@Destinos Venezuela.com" style="color: #667eea; text-decoration: none;">support@Destinos Venezuela.com</a>
               </p>
               <p style="margin: 0; color: #999999; font-size: 12px;">
-                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
+                � ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
               </p>
             </td>
           </tr>
@@ -463,3 +463,6 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
 </html>
   `;
 }
+
+
+

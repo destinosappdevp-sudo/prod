@@ -24,7 +24,6 @@ import { Input } from "@/components/ui/input";
 type UserOption = {
   id: string;
   firstName: string;
-  lastName: string;
   email: string;
   cedula?: string | null;
 };
@@ -67,8 +66,8 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
         const idA = (a.cedula || "").toLowerCase();
         const idB = (b.cedula || "").toLowerCase();
         if (idA !== idB) return idA.localeCompare(idB, "es");
-        const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
-        const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+        const nameA = `${a.firstName}`.toLowerCase();
+        const nameB = `${b.firstName}`.toLowerCase();
         return nameA.localeCompare(nameB, "es");
       }),
     [users]
@@ -79,7 +78,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
     if (!q) return sortedUsers.slice(0, 50);
     return sortedUsers.filter((u) => {
       const ced = (u.cedula || "").toLowerCase();
-      const name = `${u.firstName} ${u.lastName}`.toLowerCase();
+      const name = `${u.firstName}`.toLowerCase();
       const email = (u.email || "").toLowerCase();
       return ced.includes(q) || name.includes(q) || email.includes(q);
     }).slice(0, 50);
@@ -168,7 +167,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                 <Input
                   value={userQuery || (selectedUser ? (() => {
                     const u = users.find((x) => x.id === selectedUser);
-                    return u ? `${u.cedula ? u.cedula + ' — ' : ''}${u.firstName} ${u.lastName}` : userQuery;
+                    return u ? `${u.cedula ? u.cedula + ' — ' : ''}${u.firstName}` : userQuery;
                   })() : userQuery)}
                   onChange={(e) => {
                     setUserQuery(e.target.value);
@@ -190,12 +189,12 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setSelectedUser(user.id);
-                          setUserQuery(`${user.cedula ? user.cedula + ' — ' : ''}${user.firstName} ${user.lastName}`);
+                          setUserQuery(`${user.cedula ? user.cedula + ' — ' : ''}${user.firstName}`);
                           setShowUserDropdown(false);
                         }}
                         className="w-full text-left px-3 py-2 hover:bg-gray-100"
                       >
-                        <div className="font-medium">{user.cedula ? `${user.cedula} — ` : ""}{user.firstName} {user.lastName}</div>
+                        <div className="font-medium">{user.cedula ? `${user.cedula} — ` : ""}{user.firstName}</div>
                         <div className="text-xs text-gray-500">{user.email}</div>
                       </button>
                     ))
@@ -302,3 +301,5 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
     </Dialog>
   );
 }
+
+

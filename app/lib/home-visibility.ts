@@ -78,3 +78,6 @@ export function revalidateHomeVisibilityPaths(homeId: string) {
   revalidatePath(`/admin/properties/${homeId}`);
   revalidatePath("/admin/alojamientos");
 }
+
+
+

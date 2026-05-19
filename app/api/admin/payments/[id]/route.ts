@@ -76,7 +76,6 @@ export async function PATCH(
             User: {
               select: {
                 firstName: true,
-                lastName: true,
                 email: true,
                 phoneNumber: true,
               },
@@ -121,7 +120,6 @@ export async function PATCH(
           where: { id: payment.Reservation.Home?.userId },
           select: {
             firstName: true,
-            lastName: true,
             email: true,
             phoneNumber: true,
           },

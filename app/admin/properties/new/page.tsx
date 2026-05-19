@@ -117,3 +117,6 @@ export default async function NewPropertyPage() {
     </div>
   );
 }
+
+
+

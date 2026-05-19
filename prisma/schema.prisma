@@ -206,7 +206,6 @@ model User {
   id                                String                   @id @unique
   email                             String
   firstName                         String
-  lastName                          String
   profileImage                      String?
   role                              UserRole                 @default(GUEST)
   phoneNumber                       String?

@@ -16,13 +16,15 @@ async function Navbar() {
   if (user?.id) {
     const userRecord = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { firstName: true, lastName: true },
+      select: { firstName: true },
     });
 
     displayName = userRecord?.firstName
-      ? `${userRecord.firstName} ${userRecord.lastName || ""}`.trim()
+      ? `${userRecord.firstName}`.trim()
       : user?.user_metadata?.first_name
       ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ""}`.trim()
+      : user?.user_metadata?.full_name
+      ? `${user.user_metadata.full_name}`.trim()
       : user?.email?.split("@")[0] || "usuario";
   }
 
@@ -78,3 +80,6 @@ async function Navbar() {
 }
 
 export default Navbar;
+
+
+

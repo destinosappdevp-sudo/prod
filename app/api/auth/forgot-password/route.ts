@@ -1,4 +1,4 @@
-﻿import { createAdminClient } from "@/app/lib/supabase/admin";
+import { createAdminClient } from "@/app/lib/supabase/admin";
 import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
 import { generatePasswordResetEmail } from "@/app/lib/email-templates";
 import { NextRequest, NextResponse } from "next/server";
@@ -63,11 +63,11 @@ export async function POST(request: NextRequest) {
       }
 
       console.error(
-        `[forgot-password] Configuración incompleta. Faltan: ${missingVars.join(", ") || "variables requeridas"}`
+        `[forgot-password] Configuraci�n incompleta. Faltan: ${missingVars.join(", ") || "variables requeridas"}`
       );
 
       return NextResponse.json(
-        { error: "Configuración de servidor incompleta", missing: missingVars },
+        { error: "Configuraci�n de servidor incompleta", missing: missingVars },
         { status: 500 }
       );
     }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     if (linkError || !data?.properties) {
       console.error("Supabase link generation error:", linkError);
       return NextResponse.json(
-        { error: "No se pudo generar el enlace de recuperación" },
+        { error: "No se pudo generar el enlace de recuperaci�n" },
         { status: 500 }
       );
     }
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     if (!tokenHash) {
       console.error("Supabase link generation returned no token_hash");
       return NextResponse.json(
-        { error: "No se pudo generar un enlace valido de recuperación" },
+        { error: "No se pudo generar un enlace valido de recuperaci�n" },
         { status: 500 }
       );
     }
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     // Send email with Resend using custom template
     const resend = getResendClient();
     if (!resend) {
-      console.warn("RESEND_API_KEY no configurada; se omite email de recuperación.");
+      console.warn("RESEND_API_KEY no configurada; se omite email de recuperaci�n.");
       return NextResponse.json(
         { error: "Servicio de email no disponible" },
         { status: 500 }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     const result = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: "Recuperar tu contraseña - Destinos Venezuela",
+      subject: "Recuperar tu contrase�a - Destinos Venezuela",
       html: generatePasswordResetEmail({
         email,
         resetLink,
@@ -126,16 +126,16 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       console.error("Resend error:", result.error);
       return NextResponse.json(
-        { error: "Error al enviar el email de recuperación" },
+        { error: "Error al enviar el email de recuperaci�n" },
         { status: 500 }
       );
     }
 
-    console.log(`✅ Email de recuperación enviado a ${email}`);
+    console.log(`? Email de recuperaci�n enviado a ${email}`);
 
     return NextResponse.json({
       success: true,
-      message: "Email de recuperación enviado",
+      message: "Email de recuperaci�n enviado",
     });
   } catch (error: any) {
     console.error("Error en forgot-password:", error);
@@ -145,3 +145,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+

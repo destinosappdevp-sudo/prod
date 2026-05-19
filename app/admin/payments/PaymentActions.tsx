@@ -96,3 +96,6 @@ export default function PaymentActions({ paymentId, reservationId }: PaymentActi
     </div>
   );
 }
+
+
+

@@ -22,7 +22,6 @@ export default async function AnalyticsPage() {
         id: true,
         email: true,
         firstName: true,
-        lastName: true,
         profileImage: true,
         role: true,
       },
@@ -210,3 +209,6 @@ export default async function AnalyticsPage() {
     redirect("/my-dashboard");
   }
 }
+
+
+

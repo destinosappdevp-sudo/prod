@@ -50,7 +50,6 @@ export async function GET() {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
             email: true,
             isVerified: true,
           },
@@ -69,3 +68,6 @@ export async function GET() {
     );
   }
 }
+
+
+

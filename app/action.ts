@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "./lib/db";
@@ -17,7 +17,6 @@ import { getAdminStorageClientOrThrow, createAdminClient } from "@/app/lib/supab
 
 type RegistrationProfile = {
   firstName: string;
-  lastName: string;
   phoneNumber: string;
   cedula?: string;
   stateCode: string;
@@ -30,9 +29,9 @@ function normalizeCedulaValue(cedula?: string | null) {
 }
 
 function normalizeRegistrationProfile(profile: RegistrationProfile) {
+  const fullName = [profile.firstName].filter(Boolean).join(" ").trim().replace(/\s+/g, " ");
   return {
-    firstName: profile.firstName.trim(),
-    lastName: profile.lastName.trim(),
+    firstName: fullName,
     phoneNumber: profile.phoneNumber.trim(),
     cedula: normalizeCedulaValue(profile.cedula),
     stateCode: profile.stateCode.trim().toUpperCase(),
@@ -45,23 +44,19 @@ function validateRegistrationProfile(profile: RegistrationProfile) {
   const normalizedProfile = normalizeRegistrationProfile(profile);
 
   if (!normalizedProfile.firstName) {
-    return { error: "Debes ingresar tu nombre" };
-  }
-
-  if (!normalizedProfile.lastName) {
-    return { error: "Debes ingresar tu apellido" };
+    return { error: "Debes ingresar tu nombre completo" };
   }
 
   if (!normalizedProfile.phoneNumber) {
-    return { error: "Debes ingresar tu teléfono" };
+    return { error: "Debes ingresar tu tel�fono" };
   }
 
   if (normalizedProfile.phoneNumber.length < 7) {
-    return { error: "Ingresa un número de teléfono válido" };
+    return { error: "Ingresa un n�mero de tel�fono v�lido" };
   }
 
   if (!normalizedProfile.cedula) {
-    return { error: "Debes ingresar tu cédula" };
+    return { error: "Debes ingresar tu c�dula" };
   }
 
   if (!normalizedProfile.stateCode || !getStateByValue(normalizedProfile.stateCode)) {
@@ -101,7 +96,7 @@ async function sendWelcomeEmail(email: string) {
     });
 
     if (result.error) {
-      console.error(`Resend rechazó el email de bienvenida a ${email}:`, result.error);
+      console.error(`Resend rechaz� el email de bienvenida a ${email}:`, result.error);
     }
   } catch (error) {
     console.error("Error enviando email de bienvenida:", error);
@@ -148,7 +143,7 @@ export async function signIn() {
 
   if (error) {
     console.error("Error en login:", error);
-    // Si Google no está configurado, mostrar mensaje
+    // Si Google no est� configurado, mostrar mensaje
     return redirect("/?error=configure-google-oauth");
   }
 
@@ -177,8 +172,7 @@ export async function signUp(email: string, password: string) {
           id: data.user.id,
           email: data.user.email ?? email,
           firstName: "Usuario",
-          lastName: "",
-          profileImage: `https://avatar.vercel.sh/${email}`,
+          
           role: initialRole,
         },
       });
@@ -210,7 +204,6 @@ export async function signUpWithRole(
 
       normalizedProfile = {
         firstName: "Usuario",
-        lastName: "",
         phoneNumber: "",
         stateCode: "CC",
       };
@@ -236,11 +229,11 @@ export async function signUpWithRole(
         });
 
         if (cedulaInUse) {
-          return { error: "La cédula ya está registrada por otro usuario" };
+          return { error: "La c�dula ya est� registrada por otro usuario" };
         }
       } catch (cedulaCheckError) {
-        console.error("Error verificando cédula:", cedulaCheckError);
-        return { error: "Error al verificar la cédula. Por favor intenta de nuevo." };
+        console.error("Error verificando c�dula:", cedulaCheckError);
+        return { error: "Error al verificar la c�dula. Por favor intenta de nuevo." };
       }
     }
     
@@ -262,7 +255,6 @@ export async function signUpWithRole(
             id: data.user.id,
             email: data.user.email ?? email,
             firstName: normalizedProfile.firstName,
-            lastName: normalizedProfile.lastName,
             profileImage: `https://avatar.vercel.sh/${email}`,
             role: role,
             phoneNumber: normalizedProfile.phoneNumber,
@@ -299,12 +291,12 @@ export async function signInWithEmail(email: string, password: string) {
     if (error) {
       console.error("Error en login de Supabase:", error);
       const errorMap: Record<string, string> = {
-        "Invalid login credentials": "Correo o contraseña incorrectos",
-        "Email not confirmed": "Debes confirmar tu correo antes de iniciar sesión",
-        "Too many requests": "Demasiados intentos. Por favor intenta más tarde",
+        "Invalid login credentials": "Correo o contrase�a incorrectos",
+        "Email not confirmed": "Debes confirmar tu correo antes de iniciar sesi�n",
+        "Too many requests": "Demasiados intentos. Por favor intenta m�s tarde",
         "User not found": "No existe una cuenta con ese correo",
       };
-      return { error: errorMap[error.message] ?? "Error al iniciar sesión. Intenta de nuevo" };
+      return { error: errorMap[error.message] ?? "Error al iniciar sesi�n. Intenta de nuevo" };
     }
 
     // Asegurar que el usuario existe en la base de datos sin hacer consultas extra innecesarias
@@ -319,7 +311,6 @@ export async function signInWithEmail(email: string, password: string) {
             id: data.user.id,
             email: data.user.email ?? email,
             firstName: "Usuario",
-            lastName: "",
             profileImage: `https://avatar.vercel.sh/${email}`,
             role: initialRole,
           },
@@ -363,7 +354,7 @@ export async function AddToFavorite(formData: FormData) {
 
   if (!homeId || !userId) return;
 
-  // Generar ID único sin dependencia de uuid tipado
+  // Generar ID �nico sin dependencia de uuid tipado
   const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
   await prisma.favorite.upsert({
@@ -486,11 +477,11 @@ export async function addCategory(formData: FormData) {
 export async function createDescription(formData: FormData) {
   const supabaseServer = await createClient();
   
-  // Verificar que el usuario esté autenticado
+  // Verificar que el usuario est� autenticado
   const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
   
   if (userError || !user) {
-    throw new Error("Debes iniciar sesión antes de subir imágenes");
+    throw new Error("Debes iniciar sesi�n antes de subir im�genes");
   }
 
   const title = formData.get("title") as string;
@@ -511,7 +502,7 @@ export async function createDescription(formData: FormData) {
     quality: 82,
   });
 
-  // Generar nombre de archivo único y válido
+  // Generar nombre de archivo �nico y v�lido
   const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${optimizedImage.extension}`;
   const filePath = `user-${user.id}/${uniqueFileName}`;
 
@@ -536,7 +527,7 @@ export async function createDescription(formData: FormData) {
     throw new Error(`No se pudo subir la imagen: ${error.message}`);
   }
 
-  // Guardar en la base de datos con la URL pública completa
+  // Guardar en la base de datos con la URL p�blica completa
   const data = await (prisma as any).home.update({
     where: { id: homeId },
     data: {
@@ -561,7 +552,7 @@ export async function createLocation(formData: FormData) {
   const exactAddress = formData.get("exactAddress") as string;
   const checkInTime = formData.get("checkInTime") as string;
   const contactNumberRaw = (formData.get("contactNumber") as string) || "";
-  // Si parece una fecha ISO (YYYY-MM-DD) la guardamos tal cual; si no, normalizamos como teléfono
+  // Si parece una fecha ISO (YYYY-MM-DD) la guardamos tal cual; si no, normalizamos como tel�fono
   const isDateLike = /^\d{4}-\d{2}-\d{2}$/.test(contactNumberRaw.trim());
   const normalizedContactNumber = isDateLike
     ? contactNumberRaw.trim()
@@ -580,10 +571,10 @@ export async function createLocation(formData: FormData) {
   const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
 
   if (userError || !user) {
-    throw new Error("Debes iniciar sesión para publicar un alojamiento");
+    throw new Error("Debes iniciar sesi�n para publicar un alojamiento");
   }
 
-  // Obtener datos del usuario para verificar si está verificado
+  // Obtener datos del usuario para verificar si est� verificado
   const userData = await prisma.user.findUnique({
     where: { id: user.id },
     select: { isVerified: true },
@@ -591,7 +582,7 @@ export async function createLocation(formData: FormData) {
 
   const isUserVerified = userData?.isVerified ?? false;
 
-  // Determinar el estado de publicación
+  // Determinar el estado de publicaci�n
   const publishStatus = isUserVerified ? "APPROVED" : "PENDING_APPROVAL";
   const approvedAt = isUserVerified ? new Date() : null;
   const approvedById = isUserVerified ? user.id : null;
@@ -615,7 +606,7 @@ export async function createLocation(formData: FormData) {
     },
   });
 
-  // Actualizar también el municipio del usuario si es necesario
+  // Actualizar tambi�n el municipio del usuario si es necesario
   if (stateValue && municipalityValue) {
     await prisma.user.update({
       where: { id: user.id },
@@ -626,7 +617,7 @@ export async function createLocation(formData: FormData) {
     });
   }
 
-  // Log para auditoría
+  // Log para auditor�a
   await logAuditAction(user.id, "HOME_PUBLISHED", {
     homeId,
     status: publishStatus,
@@ -701,7 +692,6 @@ export async function updateProfile(formData: FormData) {
     }
 
     const firstName = (formData.get("firstName") as string)?.trim();
-    const lastName = (formData.get("lastName") as string)?.trim();
     const phoneNumber = (formData.get("phoneNumber") as string)?.trim();
     const cedula = normalizeCedulaValue(formData.get("cedula") as string);
     const dateOfBirth = (formData.get("dateOfBirth") as string)?.trim();
@@ -739,7 +729,7 @@ export async function updateProfile(formData: FormData) {
       });
 
       if (cedulaInUse) {
-        return { success: false, error: "La cédula ya está registrada por otro usuario" };
+        return { success: false, error: "La c�dula ya est� registrada por otro usuario" };
       }
     }
 
@@ -762,7 +752,7 @@ export async function updateProfile(formData: FormData) {
     // Usamos admin client para los uploads y evitar bloqueo por RLS del bucket
     const adminStorage = createAdminClient();
     if (!adminStorage) {
-      return { success: false, error: "Error de configuración del servidor al subir imágenes" };
+      return { success: false, error: "Error de configuraci�n del servidor al subir im�genes" };
     }
 
     // Si hay una nueva foto, subirla a Supabase Storage
@@ -836,7 +826,6 @@ export async function updateProfile(formData: FormData) {
 
     const updateData: any = {
       firstName: firstName || "Usuario",
-      lastName: lastName || "",
       phoneNumber: phoneNumber || null,
       cedula: cedula || null,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
@@ -1017,7 +1006,6 @@ export async function sendMessage(
           select: {
             id: true,
             firstName: true,
-            lastName: true,
             profileImage: true,
           },
         },
@@ -1069,7 +1057,6 @@ export async function getMessages(userId: string, otherUserId?: string) {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
             profileImage: true,
           },
         },
@@ -1077,7 +1064,6 @@ export async function getMessages(userId: string, otherUserId?: string) {
           select: {
             id: true,
             firstName: true,
-            lastName: true,
             profileImage: true,
           },
         },
@@ -1149,8 +1135,8 @@ export async function publishHome(homeId: string, userId: string) {
       return { success: false, error: "Solo los administradores pueden publicar alojamientos" };
     }
 
-    // Si el host está verificado, publicar directamente
-    // Si no, enviar a aprobación
+    // Si el host est� verificado, publicar directamente
+    // Si no, enviar a aprobaci�n
     const publishStatus = userRecord.isVerified ? "APPROVED" : "PENDING_APPROVAL";
 
     await prisma.home.update({
@@ -1174,7 +1160,7 @@ export async function publishHome(homeId: string, userId: string) {
       success: true,
       message: userRecord.isVerified
         ? "Alojamiento publicado exitosamente"
-        : "Alojamiento enviado a revisión. Un superadmin lo aprobará pronto.",
+        : "Alojamiento enviado a revisi�n. Un superadmin lo aprobar� pronto.",
       publishStatus,
     };
   } catch (error) {
@@ -1275,3 +1261,6 @@ export async function rejectHome(
     return { success: false, error: "Error al rechazar el alojamiento" };
   }
 }
+
+
+

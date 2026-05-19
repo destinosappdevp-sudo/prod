@@ -229,3 +229,6 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
     </Card>
   );
 }
+
+
+

@@ -74,3 +74,6 @@ export function HorizontalCarousel({ title, children }: HorizontalCarouselProps)
     </section>
   );
 }
+
+
+

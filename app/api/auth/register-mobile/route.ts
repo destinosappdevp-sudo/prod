@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import prisma from "@/app/lib/db";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
@@ -10,7 +10,6 @@ type RegisterMobileBody = {
   password?: string;
   firstName?: string;
   name?: string;
-  lastName?: string;
   phoneNumber?: string;
   phone?: string;
   cedula?: string;
@@ -74,7 +73,7 @@ async function sendWelcomeEmail(email: string) {
     });
 
     if (result.error) {
-      console.error("[register-mobile] Resend rechazó el email:", result.error);
+      console.error("[register-mobile] Resend rechaz� el email:", result.error);
     }
   } catch (error) {
     console.error("[register-mobile] error enviando email:", error);
@@ -94,31 +93,30 @@ export async function POST(request: NextRequest) {
 
     const email = (body.email ?? "").trim().toLowerCase();
     const password = (body.password ?? "").trim();
-    const firstName = (body.firstName ?? body.name ?? "").trim();
-    const lastName = (body.lastName ?? "").trim();
+    const firstName = (body.firstName ?? body.name ?? "").trim().replace(/\s+/g, " ");
     const phoneNumber = (body.phoneNumber ?? body.phone ?? "").trim();
     const cedula = normalizeCedulaValue(body.cedula);
     const stateCode = (body.stateCode ?? body.state ?? "").trim().toUpperCase();
     const role = "GUEST";
 
     if (!email || !password) {
-      return jsonResponse({ error: "Email y contraseña son requeridos" }, 400);
+      return jsonResponse({ error: "Email y contrase�a son requeridos" }, 400);
     }
 
-    if (!firstName || !lastName) {
-      return jsonResponse({ error: "Nombre y apellido son requeridos" }, 400);
+    if (!firstName) {
+      return jsonResponse({ error: "Nombre completo es requerido" }, 400);
     }
 
     if (!phoneNumber || phoneNumber.length < 7) {
-      return jsonResponse({ error: "Ingresa un número de teléfono válido" }, 400);
+      return jsonResponse({ error: "Ingresa un n�mero de tel�fono v�lido" }, 400);
     }
 
     if (!cedula) {
-      return jsonResponse({ error: "La cédula es requerida" }, 400);
+      return jsonResponse({ error: "La c�dula es requerida" }, 400);
     }
 
     if (!stateCode || !getStateByValue(stateCode)) {
-      return jsonResponse({ error: "Debes seleccionar un estado válido" }, 400);
+      return jsonResponse({ error: "Debes seleccionar un estado v�lido" }, 400);
     }
 
     const cedulaInUse = await prisma.user.findFirst({
@@ -132,13 +130,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (cedulaInUse) {
-      return jsonResponse({ error: "La cédula ya está registrada por otro usuario" }, 409);
+      return jsonResponse({ error: "La c�dula ya est� registrada por otro usuario" }, 409);
     }
 
     const supabase = createSupabaseClient();
     if (!supabase) {
       return jsonResponse(
-        { error: "Configuración de servidor incompleta para autenticación" },
+        { error: "Configuraci�n de servidor incompleta para autenticaci�n" },
         500
       );
     }
@@ -159,7 +157,6 @@ export async function POST(request: NextRequest) {
         update: {
           email: data.user.email ?? email,
           firstName,
-          lastName,
           phoneNumber,
           cedula,
           stateCode,
@@ -169,7 +166,6 @@ export async function POST(request: NextRequest) {
           id: data.user.id,
           email: data.user.email ?? email,
           firstName,
-          lastName,
           profileImage: `https://avatar.vercel.sh/${email}`,
           phoneNumber,
           cedula,
@@ -183,7 +179,7 @@ export async function POST(request: NextRequest) {
 
     let session = data.session;
 
-    // Fallback para apps móviles: si signUp no devuelve sesión, intentamos login inmediato.
+    // Fallback para apps m�viles: si signUp no devuelve sesi�n, intentamos login inmediato.
     if (!session) {
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -191,7 +187,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (signInError) {
-        console.warn("[register-mobile] cuenta creada sin sesión automática:", signInError.message);
+        console.warn("[register-mobile] cuenta creada sin sesi�n autom�tica:", signInError.message);
       } else {
         session = signInData.session;
       }
@@ -212,3 +208,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+

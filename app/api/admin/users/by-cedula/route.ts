@@ -49,7 +49,6 @@ export async function GET(request: Request) {
       select: {
         id: true,
         firstName: true,
-        lastName: true,
         email: true,
         cedula: true,
       },
@@ -65,3 +64,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+
+

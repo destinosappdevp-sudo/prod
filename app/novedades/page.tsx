@@ -5,3 +5,6 @@ export default function PromocionesPage() {
     </main>
   );
 }
+
+
+
