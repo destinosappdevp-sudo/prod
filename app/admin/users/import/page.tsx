@@ -60,8 +60,7 @@ export default function ImportUsersPage() {
           </p>
         </div>
         <a
-          href="/screenshot/importar%20usuarios.csv"
-          download
+          href="/api/admin/users/export"
           className="px-3 py-2 rounded-md bg-white border text-sm text-gray-700 hover:bg-gray-50"
         >
           Descargar usuarios
