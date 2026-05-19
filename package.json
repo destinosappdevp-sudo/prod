@@ -41,7 +41,8 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "world-countries": "^5.0.0",
-    "ws": "^8.20.1"
+    "ws": "^8.20.1",
+    "papaparse": "^5.4.1"
   },
   "devDependencies": {
     "@prisma/client": "^5.22.0",
@@ -50,6 +51,7 @@
     "@types/react": "^19.2.14",
     "@types/react-date-range": "^1.4.9",
     "@types/react-dom": "^19.2.3",
+    "@types/papaparse": "^5.2.6",
     "autoprefixer": "^10.0.1",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.4",

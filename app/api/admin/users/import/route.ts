@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import Papa from "papaparse";
 
 const prismaAny = prisma as any;
 
@@ -39,19 +40,19 @@ export async function POST(req: NextRequest) {
   if (!file) return NextResponse.json({ error: "No se recibió archivo" }, { status: 400 });
 
   const text = await file.text();
-  const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
-  if (lines.length < 2) {
+  // Detectar separador preferente
+  const sep = text.includes(";") ? ";" : ",";
+  const parsed = Papa.parse(text, { delimiter: sep, skipEmptyLines: true });
+  const rows = parsed.data as string[][];
+  if (!rows || rows.length < 2) {
     return NextResponse.json({ error: "El CSV está vacío o sin datos" }, { status: 400 });
   }
-
-  // Detectar separador (coma o punto y coma)
-  const sep = lines[0].includes(";") ? ";" : ",";
 
   // Normalizar encabezados: minúsculas, sin tildes, sin espacios
   const normalize = (s: string) =>
     s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
 
-  const headers = lines[0].split(sep).map(normalize);
+  const headers = (rows[0] as string[]).map((h) => normalize(String(h || "")));
 
   const idx = (keys: string[]): number => {
     for (const k of keys) {
@@ -79,8 +80,8 @@ export async function POST(req: NextRequest) {
 
   const results = { created: 0, updated: 0, errors: [] as string[] };
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(sep).map((c) => c.trim().replace(/^"|"$/g, ""));
+  for (let i = 1; i < rows.length; i++) {
+    const cols = (rows[i] as string[]).map((c) => String(c || "").trim().replace(/^"|"$/g, ""));
 
     const get = (colIdx: number) => (colIdx >= 0 ? cols[colIdx] ?? "" : "");
 
