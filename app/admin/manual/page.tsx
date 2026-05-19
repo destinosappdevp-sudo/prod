@@ -117,27 +117,27 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <h4 className="font-semibold mb-3">1. Crear Nuevo Banner</h4>
           <ol className="list-decimal ml-6 mb-4 space-y-6">
             <li>
-              <div><b>1.1 Titulo:</b> escribe el nombre de la campana para identificar el banner.</div>
+              <div><b>1.1 Título:</b> escribe el nombre de la campaña para identificar el banner.</div>
               <img src="/screenshot/1-1.webp" alt="Paso 1.1 Titulo" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
-              <div><b>1.2 Tipo de Banner:</b> selecciona donde se mostrara (HERO1, HERO2, MEDIO1, MEDIO2 o POP).</div>
+              <div><b>1.2 Tipo de Banner:</b> selecciona dónde se mostrará (HERO1, HERO2, MEDIO1, MEDIO2 o POP).</div>
               <img src="/screenshot/1-2.webp" alt="Paso 1.2 Tipo de Banner" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
-              <div><b>1.3 Fecha inicio / Fecha fin:</b> define desde cuando se publica y hasta cuando estara activo.</div>
+              <div><b>1.3 Fecha inicio / Fecha fin:</b> define desde cuándo se publica y hasta cuándo estará activo.</div>
               <img src="/screenshot/1-3.webp" alt="Paso 1.3 Fecha inicio y fin" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
-              <div><b>1.4 URL destino:</b> coloca el enlace al que ira el usuario al hacer clic en el banner.</div>
+              <div><b>1.4 URL destino:</b> coloca el enlace al que irá el usuario al hacer clic en el banner.</div>
               <img src="/screenshot/1-4.webp" alt="Paso 1.4 URL destino" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
-              <div><b>1.5 Telefono cliente / Email cliente:</b> registra los datos de contacto del anunciante.</div>
+              <div><b>1.5 Teléfono del cliente / Email del cliente:</b> registra los datos de contacto del anunciante.</div>
               <img src="/screenshot/1-5.webp" alt="Paso 1.5 Telefono y email" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
-              <div><b>1.6 Costo (USD):</b> indica el monto pagado o acordado para esta campana.</div>
+              <div><b>1.6 Costo (USD):</b> indica el monto pagado o acordado para esta campaña.</div>
               <img src="/screenshot/1-6.webp" alt="Paso 1.6 Costo en USD" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
@@ -146,7 +146,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
             </li>
           </ol>
           <div className="text-sm text-muted-foreground">
-            Medidas recomendadas: HERO1/HERO2 800x400, MEDIO1/MEDIO2 Desktop 970x90, MEDIO1/MEDIO2 Mobile 640x200, POP 1200x600.
+            Medidas recomendadas: HERO1/HERO2 800x400, MEDIO1/MEDIO2 (Desktop) 970x90, MEDIO1/MEDIO2 (Mobile) 640x200, POP 1200x600.
           </div>
         </>
       ),
