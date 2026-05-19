@@ -15,6 +15,11 @@ type Reservation = {
   endDate: string;
   nights: number;
   status?: string;
+  PackageSeat?: {
+    zone?: string;
+    row?: number;
+    column?: string;
+  } | null;
 };
 type AmenityCategory = {
   id: string;
@@ -62,7 +67,6 @@ async function getProperty(id: string) {
         orderBy: {
           createdAt: "desc",
         },
-        take: 5,
         include: {
           User: {
             select: {
@@ -71,6 +75,13 @@ async function getProperty(id: string) {
             },
           },
           Payment: true,
+          PackageSeat: {
+            select: {
+              zone: true,
+              row: true,
+              column: true,
+            },
+          },
         },
       },
     },
@@ -123,9 +134,38 @@ export default async function PropertyDetailPage({
     return details.homeId === property.id;
   });
 
-  // Obtener asientos
-  // PackageSeat no existe en el schema actual
-  const seats: any[] = [];
+  // Obtener asientos del paquete con ocupante (si aplica)
+  const rawSeats = await prismaAny.packageSeat.findMany({
+    where: { homeId: property.id },
+    orderBy: [{ zone: "asc" }, { row: "asc" }, { column: "asc" }],
+    include: {
+      Reservation: {
+        include: {
+          User: {
+            select: {
+              firstName: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const seats = rawSeats.map((seat: any) => ({
+    id: seat.id,
+    zone: seat.zone,
+    row: seat.row,
+    column: seat.column,
+    status: seat.Reservation ? "OCCUPIED" : seat.status,
+    occupant: seat.Reservation?.User
+      ? {
+          firstName: seat.Reservation.User.firstName,
+          lastName: seat.Reservation.User.lastName,
+          email: seat.Reservation.User.email,
+        }
+      : null,
+  }));
   const amenityCategories = await prismaAny.amenityCategory.findMany({
     where: { isActive: true },
     orderBy: [{ order: "asc" }, { name: "asc" }],
@@ -311,7 +351,7 @@ export default async function PropertyDetailPage({
         </Card>
 
 
-        {/* Tabs: Reservas Confirmadas, Usuarios Ahorrando, Asientos y Reservar */}
+        {/* Tabs: Reservas Confirmadas, Usuarios Ahorrando, Asientos, Reservar y PDF */}
         <Card className="p-6 col-span-2">
           <PropertyDetailTabs
             propertyId={property.id}
@@ -320,6 +360,15 @@ export default async function PropertyDetailPage({
             confirmedReservations={confirmedReservations}
             savings={savings}
             seats={seats}
+            packageInfo={{
+              title: property.title || "Sin título",
+              category: currentCategoryLabel,
+              location: state ? state.label : "Sin ubicacion",
+              municipality: municipality ? municipality.label : "Sin municipio",
+              hostName: property.User?.firstName || "Sin anfitrión",
+              price: property.price ?? 0,
+              priceVip: property.priceVip ?? null,
+            }}
           />
         </Card>
       </div>

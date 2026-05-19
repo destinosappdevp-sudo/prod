@@ -10,6 +10,11 @@ type ReservationItem = {
   startDate: string | Date;
   endDate: string | Date;
   nights: number;
+  PackageSeat?: {
+    zone?: string | null;
+    row?: number | null;
+    column?: string | null;
+  } | null;
   User?: {
     firstName?: string | null;
     lastName?: string | null;
@@ -62,10 +67,32 @@ type PropertyDetailTabsProps = {
   confirmedReservations: ReservationItem[];
   savings: SavingItem[];
   seats: SeatItem[];
+  packageInfo: {
+    title: string;
+    category: string;
+    location: string;
+    municipality: string;
+    hostName: string;
+    price: number;
+    priceVip: number | null;
+  };
 };
 
 function normalizeCedulaValue(cedula?: string | null) {
   return (cedula || "").trim().toUpperCase();
+}
+
+function getSeatLabelFromReservation(reservation: ReservationItem) {
+  const seat = reservation.PackageSeat;
+  if (!seat) return "Sin asiento";
+
+  const zone = seat.zone === "VIP" ? "VIP" : seat.zone === "STANDARD" ? "ESTANDAR" : "";
+  const row = typeof seat.row === "number" ? String(seat.row) : "";
+  const column = seat.column || "";
+  const baseSeat = `${row}${column}`.trim();
+
+  if (zone && baseSeat) return `${zone} ${baseSeat}`;
+  return baseSeat || zone || "Sin asiento";
 }
 
 export default function PropertyDetailTabs({
@@ -75,9 +102,11 @@ export default function PropertyDetailTabs({
   confirmedReservations,
   savings,
   seats,
+  packageInfo,
 }: PropertyDetailTabsProps) {
   const router = useRouter();
-  const [tab, setTab] = useState<"reservas" | "ahorrando" | "asientos" | "reservar">("reservas");
+  const [tab, setTab] = useState<"reservas" | "ahorrando" | "asientos" | "reservar" | "pdf">("reservas");
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const [cedulaInput, setCedulaInput] = useState("");
   const [selectedUser, setSelectedUser] = useState<LookupUser | null>(null);
@@ -194,6 +223,103 @@ export default function PropertyDetailTabs({
     }
   };
 
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      const [{ default: JsPDF }, autoTableModule] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+
+      const autoTable = (autoTableModule as { default: Function }).default;
+      const doc = new JsPDF({ unit: "pt", format: "a4" });
+
+      doc.setFontSize(17);
+      doc.text("Reporte de viaje/paquete", 40, 40);
+
+      doc.setFontSize(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`Generado: ${new Date().toLocaleString("es-ES")}`, 40, 58);
+
+      doc.setTextColor(20, 20, 20);
+      doc.setFontSize(11);
+      const packageLines = [
+        `Paquete: ${packageInfo.title}`,
+        `Categoria: ${packageInfo.category}`,
+        `Ubicacion: ${packageInfo.location} / ${packageInfo.municipality}`,
+        `Anfitrion: ${packageInfo.hostName}`,
+        `Precio estandar: $${packageInfo.price.toFixed(2)}`,
+        `Precio VIP: ${packageInfo.priceVip && packageInfo.priceVip > 0 ? `$${packageInfo.priceVip.toFixed(2)}` : "No configurado"}`,
+      ];
+
+      let currentY = 78;
+      packageLines.forEach((line) => {
+        doc.text(line, 40, currentY);
+        currentY += 14;
+      });
+
+      currentY += 10;
+      doc.setFontSize(12);
+      doc.text("Usuarios Ahorrando", 40, currentY);
+
+      autoTable(doc, {
+        startY: currentY + 8,
+        head: [["Usuario", "Email", "Monto USD", "Fecha"]],
+        body:
+          savings.length > 0
+            ? savings.map((saving) => [
+                `${saving.User?.firstName || ""} ${saving.User?.lastName || ""}`.trim() || "Sin nombre",
+                saving.User?.email || "-",
+                `$${saving.amountUsd.toFixed(2)}`,
+                new Date(saving.createdAt).toLocaleDateString("es-ES"),
+              ])
+            : [["Sin registros", "-", "-", "-"]],
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 5 },
+        headStyles: { fillColor: [37, 99, 235] },
+      });
+
+      const lastY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY || 0;
+      const paidTableStartY = lastY + 24;
+
+      doc.setFontSize(12);
+      doc.text("Usuarios que Pagaron (asiento asignado)", 40, paidTableStartY);
+
+      autoTable(doc, {
+        startY: paidTableStartY + 8,
+        head: [["Usuario", "Email", "Asiento", "Metodo", "Monto USD", "Referencia"]],
+        body:
+          confirmedReservations.length > 0
+            ? confirmedReservations.map((reservation) => {
+                const payment = reservation.Payment;
+                return [
+                  `${reservation.User?.firstName || ""} ${reservation.User?.lastName || ""}`.trim() || "Sin nombre",
+                  reservation.User?.email || "-",
+                  getSeatLabelFromReservation(reservation),
+                  payment ? getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails) : "-",
+                  payment ? `$${payment.amount.toFixed(2)}` : "-",
+                  payment?.referenceNumber || "-",
+                ];
+              })
+            : [["Sin registros", "-", "-", "-", "-", "-"]],
+        theme: "grid",
+        styles: { fontSize: 9, cellPadding: 5 },
+        headStyles: { fillColor: [22, 163, 74] },
+      });
+
+      const safeTitle = packageInfo.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "paquete";
+      doc.save(`reporte-${safeTitle}.pdf`);
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+      alert("No se pudo generar el PDF. Intenta nuevamente.");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap gap-2">
@@ -228,6 +354,14 @@ export default function PropertyDetailTabs({
           onClick={() => setTab("reservar")}
         >
           Reservar
+        </button>
+        <button
+          className={`rounded-t-lg px-4 py-2 font-semibold ${
+            tab === "pdf" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+          }`}
+          onClick={() => setTab("pdf")}
+        >
+          Descargar PDF
         </button>
       </div>
 
@@ -482,6 +616,42 @@ export default function PropertyDetailTabs({
             {submittingSale ? "Registrando reserva..." : "Registrar Reserva Manual"}
           </button>
         </form>
+      )}
+
+      {tab === "pdf" && (
+        <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <div>
+            <h4 className="text-base font-semibold text-gray-900">Exportar reporte PDF del paquete</h4>
+            <p className="mt-1 text-sm text-gray-600">
+              El PDF incluye informacion de la ficha, tabla de usuarios ahorrando y tabla de
+              usuarios con pago confirmado y su asiento asignado.
+            </p>
+          </div>
+
+          <div className="grid gap-3 text-sm text-gray-700 sm:grid-cols-3">
+            <div className="rounded-md border border-gray-200 bg-white p-3">
+              <p className="text-xs text-gray-500">Reservas Confirmadas</p>
+              <p className="text-lg font-semibold text-gray-900">{confirmedReservations.length}</p>
+            </div>
+            <div className="rounded-md border border-gray-200 bg-white p-3">
+              <p className="text-xs text-gray-500">Usuarios Ahorrando</p>
+              <p className="text-lg font-semibold text-gray-900">{savings.length}</p>
+            </div>
+            <div className="rounded-md border border-gray-200 bg-white p-3">
+              <p className="text-xs text-gray-500">Asientos Registrados</p>
+              <p className="text-lg font-semibold text-gray-900">{seats.length}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+          >
+            {downloadingPdf ? "Generando PDF..." : "Descargar PDF"}
+          </button>
+        </div>
       )}
     </div>
   );
