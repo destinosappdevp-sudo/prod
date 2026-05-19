@@ -19,7 +19,7 @@ const manuales: {
     titulo: "Administrador",
     secciones: [
       { id: "usuarios", titulo: "Gestión de Usuarios" },
-      { id: "propiedades", titulo: "Propiedades" },
+      { id: "propiedades", titulo: "Paquetes" },
       { id: "pagos", titulo: "Pagos y Reservas" },
       { id: "banners", titulo: "Publicidad (Banners)" },
     ],
@@ -51,18 +51,18 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="text-sm text-muted-foreground">Tip: Usa la barra de búsqueda para encontrar usuarios rápidamente.</div>
         </>
       ),
-      img: "/screenshot/manual-admin-usuarios.png",
+      img: "/screenshot/usuarios.webp",
     },
     propiedades: {
-      titulo: "Propiedades",
+      titulo: "Paquetes",
       texto: (
         <>
           <ul className="list-disc ml-6 mb-2 space-y-2 text-gray-800 leading-relaxed">
-            <li>Agrega nuevas propiedades desde el botón <b>"Añadir Propiedad"</b>.</li>
+            <li>Agrega nuevos paquetes desde el botón <b>"Añadir Paquete"</b>.</li>
             <li>Edita información, fotos, precios y disponibilidad.</li>
-            <li>Elimina propiedades obsoletas o con problemas.</li>
+            <li>Elimina paquetes obsoletos o con problemas.</li>
             <li>Gestiona servicios y comodidades desde la pestaña correspondiente.</li>
-            <li>Para editar, selecciona la propiedad y haz clic en <b>"Editar"</b>.</li>
+            <li>Para editar, selecciona el paquete y haz clic en <b>"Editar"</b>.</li>
           </ul>
           <div className="mt-3 text-sm text-gray-400">Recomendación: Mantén la información siempre actualizada para mejor experiencia de usuario.</div>
         </>
@@ -82,7 +82,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="text-sm text-muted-foreground">Importante: Revisa pagos pendientes diariamente para evitar retrasos.</div>
         </>
       ),
-      img: "/screenshot/mlogo.png",
+      img: "/screenshot/logo.png",
     },
     banners: {
       titulo: "Publicidad (Banners)",
