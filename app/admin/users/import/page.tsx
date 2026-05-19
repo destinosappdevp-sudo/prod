@@ -51,12 +51,21 @@ export default function ImportUsersPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Importar Usuarios desde CSV</h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          Sube un archivo <b>.csv</b> con los datos de los usuarios. El sistema detecta
-          automáticamente el separador (<code>,</code> o <code>;</code>).
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Importar Usuarios desde CSV</h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            Sube un archivo <b>.csv</b> con los datos de los usuarios. El sistema detecta
+            automáticamente el separador (<code>,</code> o <code>;</code>).
+          </p>
+        </div>
+        <a
+          href="/screenshot/importar_usuarios_clean.csv"
+          download
+          className="px-3 py-2 rounded-md bg-white border text-sm text-gray-700 hover:bg-gray-50"
+        >
+          Descargar plantilla
+        </a>
       </div>
 
       {/* Guía de columnas */}
