@@ -102,6 +102,8 @@ model Home {
   paymentMethod           PaymentMethod?
   paymentReference        String?
   priceVip                Int?
+  vipSeats                Int?           // <--- restaurado para compatibilidad
+  standardSeats           Int?           // <--- restaurado para compatibilidad
   BlockedDate             BlockedDate[]
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
