@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import { createAdminClient } from "@/app/lib/supabase/admin";
 import Papa from "papaparse";
 
 const prismaAny = prisma as any;
@@ -33,6 +34,11 @@ export async function POST(req: NextRequest) {
   const dbUser = await prismaAny.user.findUnique({ where: { id: user.id } });
   if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "SUPERADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  const adminClient = createAdminClient();
+  if (!adminClient) {
+    return NextResponse.json({ error: "Server misconfigured: missing SUPABASE_SERVICE_ROLE_KEY" }, { status: 500 });
   }
 
   const formData = await req.formData();
@@ -130,9 +136,9 @@ export async function POST(req: NextRequest) {
         });
         results.updated++;
       } else {
-        // Crear en Supabase Auth primero con contraseña temporal
+        // Crear en Supabase Auth primero con contraseña temporal usando admin client
         const tempPassword = `Destinos${Math.random().toString(36).slice(2, 10)}!`;
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
           email,
           password: tempPassword,
           email_confirm: true,
