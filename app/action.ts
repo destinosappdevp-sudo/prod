@@ -49,15 +49,15 @@ function validateRegistrationProfile(profile: RegistrationProfile) {
   }
 
   if (!normalizedProfile.phoneNumber) {
-    return { error: "Debes ingresar tu tel�fono" };
+    return { error: "Debes ingresar tu teléfono" };
   }
 
   if (normalizedProfile.phoneNumber.length < 7) {
-    return { error: "Ingresa un n�mero de tel�fono v�lido" };
+    return { error: "Ingresa un número de teléfono válido" };
   }
 
   if (!normalizedProfile.cedula) {
-    return { error: "Debes ingresar tu c�dula" };
+    return { error: "Debes ingresar tu cédula" };
   }
 
   if (!normalizedProfile.stateCode || !getStateByValue(normalizedProfile.stateCode)) {
@@ -120,7 +120,7 @@ async function sendWelcomeEmail(email: string) {
     });
 
     if (result.error) {
-      console.error(`Resend rechaz� el email de bienvenida a ${email}:`, result.error);
+      console.error(`Resend rechazó el email de bienvenida a ${email}:`, result.error);
     }
   } catch (error) {
     console.error("Error enviando email de bienvenida:", error);
@@ -165,11 +165,11 @@ export async function signIn() {
     },
   });
 
-  if (error) {
-    console.error("Error en login:", error);
-    // Si Google no est� configurado, mostrar mensaje
-    return redirect("/?error=configure-google-oauth");
-  }
+    if (error) {
+      console.error("Error en login:", error);
+      // Si Google no está configurado, mostrar mensaje
+      return redirect("/?error=configure-google-oauth");
+    }
 
   return redirect(data.url);
 }
@@ -253,10 +253,10 @@ export async function signUpWithRole(
         });
 
         if (cedulaInUse) {
-          return { error: "La c�dula ya est� registrada por otro usuario" };
+          return { error: "La cédula ya está registrada por otro usuario" };
         }
       } catch (cedulaCheckError) {
-        console.error("Error verificando c�dula:", cedulaCheckError);
+        console.error("Error verificando cédula:", cedulaCheckError);
         return { error: "Error al verificar la c�dula. Por favor intenta de nuevo." };
       }
     }
@@ -397,7 +397,7 @@ export async function AddToFavorite(formData: FormData) {
 
   if (!homeId || !userId) return;
 
-  // Generar ID �nico sin dependencia de uuid tipado
+  // Generar ID único sin dependencia de uuid tipado
   const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
   await prisma.favorite.upsert({
@@ -520,11 +520,11 @@ export async function addCategory(formData: FormData) {
 export async function createDescription(formData: FormData) {
   const supabaseServer = await createClient();
   
-  // Verificar que el usuario est� autenticado
+  // Verificar que el usuario está autenticado
   const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
   
   if (userError || !user) {
-    throw new Error("Debes iniciar sesi�n antes de subir im�genes");
+    throw new Error("Debes iniciar sesión antes de subir imágenes");
   }
 
   const title = formData.get("title") as string;
@@ -545,7 +545,7 @@ export async function createDescription(formData: FormData) {
     quality: 82,
   });
 
-  // Generar nombre de archivo �nico y v�lido
+  // Generar nombre de archivo único y válido
   const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${optimizedImage.extension}`;
   const filePath = `user-${user.id}/${uniqueFileName}`;
 
@@ -570,7 +570,7 @@ export async function createDescription(formData: FormData) {
     throw new Error(`No se pudo subir la imagen: ${error.message}`);
   }
 
-  // Guardar en la base de datos con la URL p�blica completa
+  // Guardar en la base de datos con la URL pública completa
   const data = await (prisma as any).home.update({
     where: { id: homeId },
     data: {
@@ -595,7 +595,7 @@ export async function createLocation(formData: FormData) {
   const exactAddress = formData.get("exactAddress") as string;
   const checkInTime = formData.get("checkInTime") as string;
   const contactNumberRaw = (formData.get("contactNumber") as string) || "";
-  // Si parece una fecha ISO (YYYY-MM-DD) la guardamos tal cual; si no, normalizamos como tel�fono
+  // Si parece una fecha ISO (YYYY-MM-DD) la guardamos tal cual; si no, normalizamos como teléfono
   const isDateLike = /^\d{4}-\d{2}-\d{2}$/.test(contactNumberRaw.trim());
   const normalizedContactNumber = isDateLike
     ? contactNumberRaw.trim()

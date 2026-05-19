@@ -360,11 +360,11 @@ export default function DashboardClient(props: DashboardClientProps) {
     ? buildHomeUrl(selectedSavingPackage.slug, selectedSavingPackage.id, selectedSavingPackage.categoryName)
     : null;
 
-  const menuItems = [
+    const menuItems = [
     { key: "reservations", label: "Mis Reservas",  icon: CalendarCheck },
     { key: "favorites",    label: "Favoritos",      icon: Heart },
     { key: "movimientos",  label: "Mis Movimientos", icon: Smartphone },
-    { key: "mi-alcancia",  label: "Mi Alcanc�a",    icon: PiggyBank },
+    { key: "mi-alcancia",  label: "Mi Alcancía",    icon: PiggyBank },
     { key: "ahorrar",      label: "Ahorrar",        icon: PlusCircle },
     { key: "profile",      label: "Perfil",         icon: User },
   ];
@@ -386,7 +386,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       {mobileMenuOpen && (
         <button
           type="button"
-          aria-label="Cerrar men�"
+          aria-label="Cerrar menú"
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
@@ -451,7 +451,7 @@ export default function DashboardClient(props: DashboardClientProps) {
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 hover:text-primary transition"
             >
               <LogOut size={18} />
-              <span className="text-sm font-medium">Cerrar sesi�n</span>
+              <span className="text-sm font-medium">Cerrar sesión</span>
             </button>
           </form>
         </div>

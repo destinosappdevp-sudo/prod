@@ -75,13 +75,13 @@ export function UserNavClient({
             className="flex items-center gap-2 rounded-full bg-[#E1B042] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#C99A38]"
           >
             <ArrowRight size={16} />
-            Iniciar Sesi�n
+            Iniciar Sesión
           </button>
         )}
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            aria-label="Abrir men�"
+            aria-label="Abrir menú"
             className="flex items-center rounded-full bg-transparent transition-opacity hover:opacity-90 focus:outline-none"
           >
             {user ? (
@@ -131,7 +131,7 @@ export function UserNavClient({
               <DropdownMenuItem asChild className={menuItemClassName}>
                 <form action={signOut} className="w-full">
                   <button type="submit" className={menuItemContentClassName}>
-                    Cerrar Sesi�n
+                    Cerrar Sesión
                   </button>
                 </form>
               </DropdownMenuItem>
