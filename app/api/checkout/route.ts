@@ -355,7 +355,6 @@ export async function POST(request: Request) {
           nights: calculatedNights,
           totalAmount: totalAmountUsd,
           status: reservationStatus,
-          ...(seatId ? { seatId } : {}),
         },
       });
 
