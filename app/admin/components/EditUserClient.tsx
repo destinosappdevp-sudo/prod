@@ -78,7 +78,7 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
     lastTravelDestination: user.lastTravelDestination || "",
     travelsWithChildren: user.travelsWithChildren || false,
     childrenAges: user.childrenAges || "",
-    role: user.role,
+    role: roleToSelectValue(user.role),
     isVerified: user.isVerified || false,
     verificationStatus: user.verificationStatus || "NOT_SUBMITTED",
     verificationReason: user.verificationReason || "",

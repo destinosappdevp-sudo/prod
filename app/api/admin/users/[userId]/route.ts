@@ -93,6 +93,29 @@ export async function PATCH(
     const normalizedCedula = normalizeCedulaValue(cedula);
     const normalizedFullName = String(firstName ?? "").trim().replace(/\s+/g, " ");
 
+    // Obtener datos actuales del usuario objetivo
+    const targetUserCurrent = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, email: true },
+    });
+
+    if (!targetUserCurrent) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+
+    // Bloquear asignación de SUPERADMIN desde la UI
+    if (role === "SUPERADMIN" && targetUserCurrent.email !== "colombeiaweb@gmail.com") {
+      return NextResponse.json(
+        { error: "El rol SUPERADMIN solo puede asignarse a la cuenta autorizada" },
+        { status: 403 }
+      );
+    }
+
+    // Si el usuario ya es SUPERADMIN, no permitir cambiarle el rol
+    if (targetUserCurrent.role === "SUPERADMIN") {
+      body.role = "SUPERADMIN";
+    }
+
     if (normalizedCedula) {
       const cedulaInUse = await prisma.user.findFirst({
         where: {
@@ -127,7 +150,8 @@ export async function PATCH(
       lastTravelDestination: hasTraveledWithDestinos ? (lastTravelDestination || null) : null,
       travelsWithChildren: !!travelsWithChildren,
       childrenAges: travelsWithChildren ? (childrenAges || null) : null,
-      role,
+      // Solo escribir el rol si no es SUPERADMIN protegido
+      role: targetUserCurrent.role === "SUPERADMIN" ? "SUPERADMIN" : role,
       verificationStatus,
       verificationReason,
     };

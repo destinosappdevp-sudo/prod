@@ -9,6 +9,9 @@ const prismaAny = prisma as any;
 async function getUsers() {
   noStore();
   const users = await prismaAny.user.findMany({
+    where: {
+      role: { not: "SUPERADMIN" },
+    },
     include: {
       _count: {
         select: {

@@ -44,8 +44,11 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Obtener todos los usuarios con sus estadísticas
+    // Obtener todos los usuarios con sus estadísticas (excluir SUPERADMIN)
     const users = await prisma.user.findMany({
+      where: {
+        role: { not: "SUPERADMIN" },
+      },
       include: {
         _count: {
           select: {
