@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-type ManualKey = "admin";
+type ManualKey = "admin" | "banner";
 
 type ManualSectionData = {
   titulo: string;

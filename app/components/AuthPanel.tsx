@@ -206,8 +206,7 @@ export function AuthPanel({
 
       try {
         const result = await signUpWithRole(email, password, role, {
-          firstName: fullName.split(/\s+/)[0] || "",
-          lastName: fullName.split(/\s+/).slice(1).join(" ") || "",
+          firstName: fullName.trim(),
           phoneNumber,
           cedula,
           stateCode,

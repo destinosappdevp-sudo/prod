@@ -221,7 +221,6 @@ export async function POST(
       user: {
         id: targetUser.id,
         firstName: targetUser.firstName,
-        lastName: targetUser.lastName,
         email: targetUser.email,
         cedula: targetUser.cedula,
       },

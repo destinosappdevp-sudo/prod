@@ -21,7 +21,7 @@ interface User {
   id: string;
   email: string;
   firstName: string;
-  lastName: string;
+  lastName?: string | null;
   phoneNumber?: string | null;
   cedula?: string | null;
   dateOfBirth?: Date | string | null;

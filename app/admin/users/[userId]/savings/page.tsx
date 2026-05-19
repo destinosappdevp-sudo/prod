@@ -211,7 +211,7 @@ export default async function UserSavingsPage({
           Volver a Usuarios
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">
-          Ahorros de {user.firstName} {user.lastName}
+          Ahorros de {user.firstName}
         </h1>
         <p className="text-gray-600 mt-1">{user.email}</p>
       </div>

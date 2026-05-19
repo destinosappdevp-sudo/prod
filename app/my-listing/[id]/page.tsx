@@ -281,7 +281,7 @@ export default async function HostPropertyDetailPage({
             <div>
               <p className="text-sm text-gray-600">Anfitrión</p>
               <p className="font-medium">
-                {propertyDetails.User?.firstName} {propertyDetails.User?.lastName}
+                {propertyDetails.User?.firstName}
               </p>
               <p className="text-xs text-gray-500">
                 {propertyDetails.User?.email}
@@ -301,7 +301,7 @@ export default async function HostPropertyDetailPage({
                 >
                   <div>
                     <p className="font-medium">
-                      {reservation.User?.firstName} {reservation.User?.lastName}
+                      {reservation.User?.firstName}
                     </p>
                     <p className="text-sm text-gray-600">
                       {reservation.User?.email}

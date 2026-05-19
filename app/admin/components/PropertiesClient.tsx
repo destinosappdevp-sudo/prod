@@ -50,7 +50,7 @@ interface Property {
   publishStatus?: PublishStatus | null;
   User?: {
     firstName: string;
-    lastName: string;
+    lastName?: string | null;
     email: string;
   } | null;
   _count: {
