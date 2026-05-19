@@ -19,7 +19,7 @@ const manuales: {
     titulo: "Administrador",
     secciones: [
       { id: "usuarios", titulo: "Gestión de Usuarios" },
-      { id: "paquetes", titulo: "Paquetes" },
+      { id: "propiedades", titulo: "Propiedades" },
       { id: "pagos", titulo: "Pagos y Reservas" },
       { id: "banners", titulo: "Publicidad (Banners)" },
     ],
