@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const dbUser = await prismaAny.user.findUnique({ where: { id: user.id } });
-  if (!dbUser || dbUser.role !== "ADMIN") {
+  if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "SUPERADMIN")) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   }
 
