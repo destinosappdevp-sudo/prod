@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "./lib/db";
+import { Prisma } from "@prisma/client";
 import { createClient } from "@/app/lib/supabase/server";
 import { headers } from "next/headers";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
@@ -68,6 +69,25 @@ function validateRegistrationProfile(profile: RegistrationProfile) {
   }
 
   return { data: normalizedProfile };
+}
+
+async function userTableHasLastNameColumn() {
+  try {
+    const rows = (await (prisma as any).$queryRaw(
+      Prisma.sql`
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'User'
+          AND column_name = 'lastName'
+        LIMIT 1
+      `
+    )) as Array<{ "?column?": number }>;
+
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 async function sendWelcomeEmail(email: string) {
@@ -304,17 +324,33 @@ export async function signInWithEmail(email: string, password: string) {
       try {
         const initialRole = await getRoleForNewUserBootstrap();
 
-        await prisma.user.upsert({
-          where: { id: data.user.id },
-          update: {},
-          create: {
-            id: data.user.id,
-            email: data.user.email ?? email,
-            firstName: "Usuario",
-            profileImage: `https://avatar.vercel.sh/${email}`,
-            role: initialRole,
-          },
-        });
+        try {
+          await prisma.user.upsert({
+            where: { id: data.user.id },
+            update: {},
+            create: {
+              id: data.user.id,
+              email: data.user.email ?? email,
+              firstName: "Usuario",
+              profileImage: `https://avatar.vercel.sh/${email}`,
+              role: initialRole,
+            },
+          });
+        } catch (upsertError) {
+          // Compatibilidad con bases antiguas donde lastName sigue siendo obligatorio.
+          const hasLegacyLastName = await userTableHasLastNameColumn();
+          if (!hasLegacyLastName) {
+            throw upsertError;
+          }
+
+          await (prisma as any).$executeRaw(
+            Prisma.sql`
+              INSERT INTO "User" ("id", "email", "firstName", "lastName", "profileImage", "role")
+              VALUES (${data.user.id}, ${data.user.email ?? email}, ${"Usuario"}, ${"-"}, ${`https://avatar.vercel.sh/${email}`}, ${initialRole})
+              ON CONFLICT ("id") DO NOTHING
+            `
+          );
+        }
 
         await ensureAtLeastOneSuperadmin(data.user.id);
 
@@ -330,7 +366,10 @@ export async function signInWithEmail(email: string, password: string) {
         };
       } catch (dbError) {
         console.error("Error en upsert/query de usuario en Prisma:", dbError);
-        throw dbError;
+        return {
+          error:
+            "No se pudo sincronizar tu cuenta local. Intenta de nuevo en unos segundos.",
+        };
       }
     }
 
