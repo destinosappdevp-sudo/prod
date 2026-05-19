@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Facebook, Instagram, MessageCircle, AtSign } from "lucide-react";
+import { MessageCircle, AtSign } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -34,10 +34,16 @@ export default function Footer() {
 
           <div className="flex justify-center gap-4 text-[#f0c85c] lg:justify-end">
             <a href="https://www.facebook.com/manueld3/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="transition-opacity hover:opacity-80">
-              <Facebook size={28} />
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                <path d="M22 12.07C22 6.48 17.52 2 11.93 2S2 6.48 2 12.07c0 4.98 3.66 9.12 8.44 9.93v-7.03H8.08v-2.9h2.36V9.41c0-2.33 1.38-3.62 3.5-3.62. 1.01 0 2.07.18 2.07.18v2.28h-1.17c-1.15 0-1.51.72-1.51 1.46v1.75h2.57l-.41 2.9h-2.16v7.03C18.34 21.19 22 17.05 22 12.07z" fill="currentColor"/>
+              </svg>
             </a>
             <a href="https://www.instagram.com/destinosvzla_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="transition-opacity hover:opacity-80">
-              <Instagram size={28} />
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+                <path d="M8.5 11.99a3.5 3.5 0 1 0 7 0 3.5 3.5 0 0 0-7 0z" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+                <circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" />
+              </svg>
             </a>
             <a href="https://www.threads.com/@destinosvzla_" target="_blank" rel="noopener noreferrer" aria-label="Threads" className="transition-opacity hover:opacity-80">
               <AtSign size={28} />
