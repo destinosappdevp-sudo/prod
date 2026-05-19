@@ -190,7 +190,7 @@ export default function DashboardClient(props: DashboardClientProps) {
     setSaveSuccess(false);
     const usd = Number(amountUsd);
     if (!usd || usd <= 0) {
-      setSaveError("Ingresa un monto v�lido en USD.");
+      setSaveError("Ingresa un monto válido en USD.");
       return;
     }
     if (!previewBs) {
@@ -202,15 +202,15 @@ export default function DashboardClient(props: DashboardClientProps) {
       return;
     }
     if (!phoneValid) {
-      setSaveError("Ingresa un n�mero de tel�fono v�lido.");
+      setSaveError("Ingresa un número de teléfono válido.");
       return;
     }
     if (!referenceNumber.trim()) {
-      setSaveError("Ingresa el n�mero de referencia.");
+      setSaveError("Ingresa el número de referencia.");
       return;
     }
     if (!paymentProofFile) {
-      setSaveError("Adjunta la captura del pago m�vil.");
+      setSaveError("Adjunta la captura del pago móvil.");
       return;
     }
     setSaving(true);
@@ -247,7 +247,7 @@ export default function DashboardClient(props: DashboardClientProps) {
         router.refresh();
       }
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Error de conexi�n. Intenta nuevamente.");
+      setSaveError(error instanceof Error ? error.message : "Error de conexión. Intenta nuevamente.");
     } finally {
       setUploadingProof(false);
       setSaving(false);
@@ -283,7 +283,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       case "PENDING":   return "Pendiente";
       case "CANCELLED": return "Cancelada";
       case "COMPLETED": return "Completada";
-      default:          return status ?? "�";
+      default:          return status ?? "—";
     }
   }
 
@@ -298,7 +298,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   }
 
   function formatDate(d?: string | Date | null) {
-    if (!d) return "�";
+    if (!d) return "—";
     return new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
   }
 
@@ -321,7 +321,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   const savingsWallets = [
     {
       key: "general",
-      title: "Alcanc�a general",
+      title: "Alcancía general",
       totalUsd: roundMoney(generalSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0)),
       movementCount: generalSavings.length,
       targetId: null as string | null,
@@ -462,7 +462,7 @@ export default function DashboardClient(props: DashboardClientProps) {
         <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
           <button
             type="button"
-            aria-label="Abrir men�"
+            aria-label="Abrir menú"
             onClick={() => setMobileMenuOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-slate-50"
           >
@@ -490,16 +490,16 @@ export default function DashboardClient(props: DashboardClientProps) {
             {activeTab === "reservations" && "Dashboard"}
             {activeTab === "favorites" && "Mis Favoritos"}
             {activeTab === "movimientos" && "Mis Movimientos"}
-            {activeTab === "mi-alcancia" && (isPackageSavingsView ? `Ahorros de ${packageTargetLabel}` : "Mi Alcanc�a")}
+            {activeTab === "mi-alcancia" && (isPackageSavingsView ? `Ahorros de ${packageTargetLabel}` : "Mi Alcancía")}
             {activeTab === "ahorrar" && (isPackageSavingsView ? `Ahorrar para ${packageTargetLabel}` : "Ahorrar")}
             {activeTab === "profile" && "Editar Perfil"}
           </h1>
           <p className="text-sm text-slate-500">
             {activeTab === "reservations" && "Explora, reserva y gestiona tus alojamientos"}
             {activeTab === "favorites" && "Alojamientos que guardaste"}
-            {activeTab === "movimientos" && "Consulta todos tus pagos, dep�sitos y retiros con su estado y detalles."}
-            {activeTab === "mi-alcancia" && (isPackageSavingsView ? "Movimientos asociados a este paquete" : "Historial de todas tus alcanc�as")}
-            {activeTab === "ahorrar" && (isPackageSavingsView ? "Deposita saldo para este paquete espec�fico" : "Elige entre tu alcanc�a general o las alcanc�as de paquetes")}
+            {activeTab === "movimientos" && "Consulta todos tus pagos, depósitos y retiros con su estado y detalles."}
+            {activeTab === "mi-alcancia" && (isPackageSavingsView ? "Movimientos asociados a este paquete" : "Historial de todas tus alcancías")}
+            {activeTab === "ahorrar" && (isPackageSavingsView ? "Deposita saldo para este paquete específico" : "Elige entre tu alcancía general o las alcancías de paquetes")}
             {activeTab === "profile" && "Actualiza tus datos personales"}
           </p>
         </div>
@@ -513,7 +513,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             ) : movimientos.length === 0 ? (
               <div className="p-12 text-center">
                 <Smartphone className="mx-auto mb-3 text-slate-300" size={48} />
-                <p className="text-slate-500">No tienes movimientos registrados a�n.</p>
+                <p className="text-slate-500">No tienes movimientos registrados aún.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -522,7 +522,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                       <th className="px-6 py-3">Fecha</th>
                       <th className="px-6 py-3">Alojamiento</th>
-                      <th className="px-6 py-3">M�todo</th>
+                      <th className="px-6 py-3">Método</th>
                       <th className="px-6 py-3">Monto</th>
                       <th className="px-6 py-3">Estado</th>
                       <th className="px-6 py-3">Referencia</th>
@@ -533,7 +533,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     {movimientos.map((mov) => {
                       const home = mov.Reservation?.Home;
                       const paymentMethodLabel: Record<string, string> = {
-                        PAGO_MOVIL: "Pago M�vil",
+                        PAGO_MOVIL: "Pago Móvil",
                         ZELLE: "Zelle",
                         ZILLI: "Zilli",
                         TARJETA_INTERNACIONAL: "Tarjeta Internacional",
@@ -564,13 +564,13 @@ export default function DashboardClient(props: DashboardClientProps) {
                               </div>
                             ) : mov.isSaving ? (
                               <div>
-                                <div className="font-medium">Dep�sito a alcanc�a</div>
+                                <div className="font-medium">Depósito a alcancía</div>
                                 <div className="text-xs text-slate-400">Recarga de saldo</div>
                               </div>
-                            ) : "�"}
+                            ) : "—"}
                           </td>
                           <td className="px-6 py-4 text-slate-700">
-                            {paymentMethodLabel[mov.paymentMethod] ?? mov.paymentMethod ?? "�"}
+                            {paymentMethodLabel[mov.paymentMethod] ?? mov.paymentMethod ?? "—"}
                           </td>
                           <td className="px-6 py-4 font-semibold text-slate-900 font-mono">
                             {(() => {
@@ -584,14 +584,14 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${paymentStatusStyle[mov.status] ?? "bg-gray-100 text-gray-600"}`}>
-                              {paymentStatusLabel[mov.status] ?? mov.status ?? "�"}
+                              {paymentStatusLabel[mov.status] ?? mov.status ?? "—"}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-slate-500 font-mono text-xs">
-                            {mov.referenceNumber ?? "�"}
+                            {mov.referenceNumber ?? "—"}
                           </td>
                           <td className="px-6 py-4 text-red-500 text-xs">
-                            {mov.rejectionReason ?? "�"}
+                            {mov.rejectionReason ?? "—"}
                           </td>
                         </tr>
                       );
@@ -663,7 +663,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             ) : (
               <div className="p-12 text-center">
                 <CalendarCheck className="mx-auto mb-3 text-slate-300" size={48} />
-                <p className="text-slate-500">No tienes reservas a�n.</p>
+                <p className="text-slate-500">No tienes reservas aún.</p>
                 <Link href="/" className="mt-4 inline-block text-sm text-orange-600 hover:underline">Explorar paquetes</Link>
               </div>
             )}
@@ -703,7 +703,7 @@ export default function DashboardClient(props: DashboardClientProps) {
           </div>
         )}
 
-        {/* MI ALCANC�A */}
+        {/* MI ALCANCÍA */}
         {activeTab === "mi-alcancia" && (
           <div className="space-y-6">
             {isPackageSavingsView && selectedSavingPackage && (
@@ -778,7 +778,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             )}
 
             <div>
-              <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcanc�as</h3>
+              <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcancías</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {savingsWallets.map((wallet) => (
                   <button
@@ -792,7 +792,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     }`}
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {wallet.targetId ? "Paquete espec�fico" : "General"}
+                      {wallet.targetId ? "Paquete específico" : "General"}
                     </p>
                     <p className="mt-2 text-lg font-bold text-slate-900">{wallet.title}</p>
                     <p className="mt-2 text-2xl font-bold text-emerald-600">${wallet.totalUsd.toFixed(2)}</p>
@@ -851,7 +851,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </td>
                           <td className="px-6 py-4 text-slate-700">
                             <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                              {s.targetTitle || "Alcanc�a general"}
+                              {s.targetTitle || "Alcancía general"}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-slate-700 font-mono">
@@ -882,8 +882,8 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <PiggyBank className="mx-auto mb-3 text-slate-300" size={48} />
                   <p className="text-slate-500">
                     {isPackageSavingsView
-                      ? "A�n no tienes ahorros registrados para este paquete."
-                      : "A�n no tienes ahorros registrados."}
+                      ? "Aún no tienes ahorros registrados para este paquete."
+                      : "Aún no tienes ahorros registrados."}
                   </p>
                   <button
                     type="button"
@@ -902,7 +902,7 @@ export default function DashboardClient(props: DashboardClientProps) {
         {activeTab === "ahorrar" && (
           <div className="space-y-6">
             <div>
-              <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcanc�as</h3>
+              <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcancías</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {savingsWallets.map((wallet) => (
                   <button
@@ -916,7 +916,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     }`}
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {wallet.targetId ? "Paquete espec�fico" : "General"}
+                      {wallet.targetId ? "Paquete específico" : "General"}
                     </p>
                     <p className="mt-2 text-lg font-bold text-slate-900">{wallet.title}</p>
                     <p className="mt-2 text-2xl font-bold text-emerald-600">${wallet.totalUsd.toFixed(2)}</p>
@@ -937,7 +937,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     <p className="mt-1 text-sm text-slate-500">
                       {depositInstallments.length > 0
                         ? `Llevas ${depositInstallments.length} cuota${depositInstallments.length !== 1 ? "s" : ""} y te faltan $${remainingUsd.toFixed(2)}.`
-                        : "A�n no has abonado tu primera cuota."}
+                        : "Aún no has abonado tu primera cuota."}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm">
@@ -975,7 +975,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                       </p>
                       <p className="mt-1 text-sm font-semibold text-emerald-900">{packageTargetLabel}</p>
                       <p className="mt-1 text-xs text-emerald-700">
-                        Los dep�sitos que registres aqu� quedar�n asociados a este destino.
+                        Los depósitos que registres aquí quedarán asociados a este destino.
                       </p>
                     </div>
                   )}
@@ -984,7 +984,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     {/* Monto USD */}
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Monto en D�lares (USD)
+                        Monto en Dólares (USD)
                       </label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
@@ -1018,12 +1018,12 @@ export default function DashboardClient(props: DashboardClientProps) {
                     <div className="bg-blue-50 rounded-xl px-4 py-3">
                       <div className="flex items-center gap-2 mb-2">
                         <Smartphone size={14} className="text-blue-600" />
-                        <p className="text-xs font-semibold text-blue-700">Informaci�n del receptor (Pago M�vil)</p>
+                        <p className="text-xs font-semibold text-blue-700">Información del receptor (Pago Móvil)</p>
                       </div>
                       <div className="space-y-1 text-xs text-slate-600">
-                        <p><span className="font-medium">Banco:</span> 0102 � Banco de Venezuela</p>
-                        <p><span className="font-medium">Tel�fono:</span> 0414-1234567</p>
-                        <p><span className="font-medium">C�dula:</span> V-12345678</p>
+                        <p><span className="font-medium">Banco:</span> 0102 · Banco de Venezuela</p>
+                        <p><span className="font-medium">Teléfono:</span> 0414-1234567</p>
+                        <p><span className="font-medium">Cédula:</span> V-12345678</p>
                         {previewBs && (
                           <p className="font-semibold text-blue-800 mt-1">
                             Monto: Bs. {previewBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1044,16 +1044,16 @@ export default function DashboardClient(props: DashboardClientProps) {
                         <option value="">Seleccionar...</option>
                         {BANKS.map((bank) => (
                           <option key={bank.value} value={bank.value}>
-                            {bank.code} � {bank.name}
+                            {bank.code} · {bank.name}
                           </option>
                         ))}
                       </select>
                     </div>
 
-                    {/* Tel�fono */}
+                    {/* Teléfono */}
                     <div>
                       <label className={`block text-sm font-medium mb-1 ${phoneNumber && !phoneValid ? "text-red-600" : "text-slate-700"}`}>
-                        Tu Tel�fono
+                        Tu Teléfono
                       </label>
                       <input
                         type="tel"
@@ -1071,7 +1071,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
                     {/* Referencia */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">N�mero de referencia</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Número de referencia</label>
                       <input
                         type="text"
                         placeholder="123456"
@@ -1105,14 +1105,14 @@ export default function DashboardClient(props: DashboardClientProps) {
 
                     {saveSuccess && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
-                        <p className="text-sm text-yellow-800 font-semibold">�Dep�sito registrado y en revisi�n!</p>
-                        <p className="text-xs text-yellow-700 mt-1">Tu comprobante fue recibido. Nuestro equipo lo verificar� y, una vez aprobado, el saldo se abonar� a tu alcanc�a.</p>
+                        <p className="text-sm text-yellow-800 font-semibold">¡Depósito registrado y en revisión!</p>
+                        <p className="text-xs text-yellow-700 mt-1">Tu comprobante fue recibido. Nuestro equipo lo verificará y, una vez aprobado, el saldo se abonará a tu alcancía.</p>
                         <button
                           type="button"
                           onClick={() => setActiveTab("mi-alcancia")}
                           className="text-xs text-yellow-700 hover:underline mt-1"
                         >
-                          Ver Mi Alcanc�a ?
+                          Ver Mi Alcancía?
                         </button>
                       </div>
                     )}
@@ -1122,7 +1122,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                       disabled={saving || uploadingProof || !amountUsd || !previewBs}
                       className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {saving || uploadingProof ? "Procesando..." : "Registrar Dep�sito"}
+                      {saving || uploadingProof ? "Procesando..." : "Registrar Depósito"}
                     </button>
                   </form>
                 </div>
