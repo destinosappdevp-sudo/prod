@@ -67,7 +67,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="mt-3 text-sm text-gray-400">Recomendación: Mantén la información siempre actualizada para mejor experiencia de usuario.</div>
         </>
       ),
-      img: "/admin/packages-list.svg",
+      img: "/screenshot/paquetes.webp",
     },
     pagos: {
       titulo: "Pagos y Reservas",
@@ -82,7 +82,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="text-sm text-muted-foreground">Importante: Revisa pagos pendientes diariamente para evitar retrasos.</div>
         </>
       ),
-      img: "/screenshot/logo.png",
+      img: "/screenshot/paquetes.webp",
     },
     banners: {
       titulo: "Publicidad (Banners)",
@@ -106,7 +106,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="text-sm text-muted-foreground">Las imágenes fuera de medida pueden verse recortadas o deformadas.</div>
         </>
       ),
-      img: "/screenshot/logo.png",
+      img: "/screenshot/paquetes.webp",
     },
   },
   banner: {
@@ -118,31 +118,31 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <ol className="list-decimal ml-6 mb-4 space-y-6">
             <li>
               <div><b>1.1 Título:</b> escribe el nombre de la campaña para identificar el banner.</div>
-              <img src="/screenshot/1-1.webp" alt="Paso 1.1 Titulo" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.1 Titulo" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.2 Tipo de Banner:</b> selecciona dónde se mostrará (HERO1, HERO2, MEDIO1, MEDIO2 o POP).</div>
-              <img src="/screenshot/1-2.webp" alt="Paso 1.2 Tipo de Banner" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.2 Tipo de Banner" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.3 Fecha inicio / Fecha fin:</b> define desde cuándo se publica y hasta cuándo estará activo.</div>
-              <img src="/screenshot/1-3.webp" alt="Paso 1.3 Fecha inicio y fin" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.3 Fecha inicio y fin" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.4 URL destino:</b> coloca el enlace al que irá el usuario al hacer clic en el banner.</div>
-              <img src="/screenshot/1-4.webp" alt="Paso 1.4 URL destino" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.4 URL destino" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.5 Teléfono del cliente / Email del cliente:</b> registra los datos de contacto del anunciante.</div>
-              <img src="/screenshot/1-5.webp" alt="Paso 1.5 Telefono y email" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.5 Telefono y email" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.6 Costo (USD):</b> indica el monto pagado o acordado para esta campaña.</div>
-              <img src="/screenshot/1-6.webp" alt="Paso 1.6 Costo en USD" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.6 Costo en USD" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.7 Imagen:</b> sube la imagen final del banner.</div>
-              <img src="/screenshot/1-7.webp" alt="Paso 1.7 Imagen" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.7 Imagen" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
           </ol>
           <div className="text-sm text-muted-foreground">
@@ -150,7 +150,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           </div>
         </>
       ),
-      img: "/screenshot/logo",
+      img: "/screenshot/paquetes.webp",
     },
     activos: {
       titulo: "Banners Activos",
@@ -164,7 +164,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           </ul>
         </>
       ),
-      img: "/screenshot/logo.png",
+      img: "/screenshot/paquetes.webp",
     },
     inactivos: {
       titulo: "Banners Inactivos",
@@ -177,7 +177,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           </ul>
         </>
       ),
-      img: "/screenshot/logo.png",
+      img: "/screenshot/paquetes.webp",
     },
   },
 };
