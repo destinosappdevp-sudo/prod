@@ -19,7 +19,7 @@ interface User {
   id: string;
   email: string;
   firstName: string;
-  lastName: string;
+  lastName?: string | null;
   cedula?: string | null;
   profileImage?: string | null;
   role: "GUEST" | "ADMIN" | "SUPERADMIN";
@@ -118,7 +118,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
     const matchesSearch =
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.lastName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (user.cedula || "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
@@ -399,7 +399,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                         {user.profileImage && !user.profileImage.includes('avatar.vercel.sh') ? (
                           <Image
                             src={user.profileImage}
-                            alt={`${user.firstName} ${user.lastName}`}
+                            alt={`${user.firstName} ${user.lastName || ""}`.trim()}
                             width={40}
                             height={40}
                             className="w-full h-full object-cover"
@@ -407,13 +407,13 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                           />
                         ) : (
                           <span className="text-sm font-medium text-gray-700">
-                            {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                            {`${user.firstName || ""}`.charAt(0)}{`${user.lastName || ""}`.charAt(0)}
                           </span>
                         )}
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
-                          {user.firstName} {user.lastName}
+                          {`${user.firstName} ${user.lastName || ""}`.trim()}
                         </div>
                         <div className="text-xs text-gray-500">
                           Cédula: {user.cedula || "No registrada"}

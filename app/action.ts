@@ -64,6 +64,10 @@ function validateRegistrationProfile(profile: RegistrationProfile) {
     return { error: "Debes seleccionar un estado de Venezuela" };
   }
 
+  if (!normalizedProfile.municipalityCode) {
+    return { error: "Debes seleccionar un municipio" };
+  }
+
   if (!normalizedProfile.dateOfBirth) {
     return { error: "Debes seleccionar tu fecha de nacimiento" };
   }

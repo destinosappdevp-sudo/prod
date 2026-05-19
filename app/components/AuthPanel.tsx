@@ -204,6 +204,11 @@ export function AuthPanel({
         return;
       }
 
+      if (!fullName.trim() || !email.trim() || !password || !phoneNumber.trim() || !cedula.trim() || !stateCode || !municipalityCode || !dateOfBirth) {
+        setError("Debes completar todos los campos del registro.");
+        return;
+      }
+
       try {
         const result = await signUpWithRole(email, password, role, {
           firstName: fullName.trim(),
