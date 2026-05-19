@@ -24,6 +24,7 @@ function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tokenHash = searchParams.get("token_hash");
+  const code = searchParams.get("code");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -53,6 +54,34 @@ function ResetPasswordContent() {
         }
 
         if (existingSession) {
+          if (!isMounted) return;
+          setSessionInvalid(false);
+          setError("");
+          return;
+        }
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            if (!isMounted) return;
+            setSessionInvalid(true);
+            setError(invalidMessage);
+            return;
+          }
+
+          const {
+            data: { session: exchangedSession },
+            error: exchangedSessionError,
+          } = await supabase.auth.getSession();
+
+          if (exchangedSessionError || !exchangedSession) {
+            if (!isMounted) return;
+            setSessionInvalid(true);
+            setError(invalidMessage);
+            return;
+          }
+
           if (!isMounted) return;
           setSessionInvalid(false);
           setError("");
@@ -110,7 +139,7 @@ function ResetPasswordContent() {
     return () => {
       isMounted = false;
     };
-  }, [tokenHash]);
+  }, [tokenHash, code]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();

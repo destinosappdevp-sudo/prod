@@ -40,7 +40,7 @@ const faqs = [
             a: "Los precios se publican en USD. En la plataforma también verás el equivalente en Bs. calculado con la tasa BCV del día.",
           },
       {
-        q: "�Puedo retirar en efectivo el dinero de la caja de ahorro?",
+        q: "¿Puedo retirar en efectivo el dinero de la caja de ahorro?",
         a: "No. El dinero abonado en la caja de ahorro no puede retirarse en efectivo.",
       },
           {
@@ -86,12 +86,12 @@ const faqs = [
         category: "Ahorro por Destino",
         items: [
       {
-        q: "�Puedo cambiar de destino si ya inici� mi plan de ahorro?",
+        q: "¿Puedo cambiar de destino si ya inicié mi plan de ahorro?",
         a: "Para destinos como Margarita, Los Roques y Canaima, no se permite cambiar de destino una vez iniciado el plan de ahorro.",
       },
       {
-        q: "�El plan de ahorro sirve para cualquier destino?",
-        a: "No siempre. En destinos espec�ficos (Margarita, Los Roques y Canaima), el plan de ahorro es exclusivo para el destino seleccionado al inicio.",
+        q: "¿El plan de ahorro sirve para cualquier destino?",
+        a: "No siempre. En destinos específicos (Margarita, Los Roques y Canaima), el plan de ahorro es exclusivo para el destino seleccionado al inicio.",
       },
     ],
   },
@@ -103,8 +103,8 @@ const faqs = [
             a: "Ve a Configuración en tu panel y selecciona la opción de cambiar contraseña, o usa \"Olvidé mi contraseña\" en el inicio de sesión.",
           },
       {
-        q: "�C�mo elimino mi cuenta?",
-        a: "Puedes solicitar la eliminaci�n de tu cuenta desde Configuraci�n > Cuenta > Eliminar cuenta. El proceso es irreversible.",
+        q: "¿Cómo elimino mi cuenta?",
+        a: "Puedes solicitar la eliminación de tu cuenta desde Configuración > Cuenta > Eliminar cuenta. El proceso es irreversible.",
       },
     ],
   },
@@ -121,7 +121,7 @@ export default function AyudaPage() {
             </p>
           </div>
 
-      {/* Contacto r�pido */}
+      {/* Contacto rápido */}
         <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6 mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-semibold text-gray-900 text-lg mb-1">¿No encuentras lo que buscas?</h2>
@@ -135,7 +135,7 @@ export default function AyudaPage() {
         </a>
       </div>
 
-      {/* FAQs por categor�a */}
+      {/* FAQs por categoría */}
       <div className="space-y-10">
         {faqs.map((section) => (
           <section key={section.category}>

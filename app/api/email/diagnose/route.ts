@@ -27,8 +27,8 @@ export async function GET(request: Request) {
       const result = await resend.emails.send({
         from: FROM_EMAIL,
         to: testEmail,
-        subject: "Test de configuraci�n Destinos Venezuela",
-        html: "<p>Este es un email de prueba para verificar que Resend est� configurado correctamente.</p>",
+        subject: "Test de configuración Destinos Venezuela",
+        html: "<p>Este es un email de prueba para verificar que Resend está configurado correctamente.</p>",
       });
       const ok = !result.error;
       return NextResponse.json({ config, testSend: { ok, result } });

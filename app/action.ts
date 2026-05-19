@@ -257,7 +257,7 @@ export async function signUpWithRole(
         }
       } catch (cedulaCheckError) {
         console.error("Error verificando cédula:", cedulaCheckError);
-        return { error: "Error al verificar la c�dula. Por favor intenta de nuevo." };
+        return { error: "Error al verificar la cédula. Por favor intenta de nuevo." };
       }
     }
     
@@ -614,10 +614,10 @@ export async function createLocation(formData: FormData) {
   const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
 
   if (userError || !user) {
-    throw new Error("Debes iniciar sesi�n para publicar un alojamiento");
+    throw new Error("Debes iniciar sesión para publicar un alojamiento");
   }
 
-  // Obtener datos del usuario para verificar si est� verificado
+  // Obtener datos del usuario para verificar si está verificado
   const userData = await prisma.user.findUnique({
     where: { id: user.id },
     select: { isVerified: true },
@@ -625,7 +625,7 @@ export async function createLocation(formData: FormData) {
 
   const isUserVerified = userData?.isVerified ?? false;
 
-  // Determinar el estado de publicaci�n
+  // Determinar el estado de publicación
   const publishStatus = isUserVerified ? "APPROVED" : "PENDING_APPROVAL";
   const approvedAt = isUserVerified ? new Date() : null;
   const approvedById = isUserVerified ? user.id : null;
@@ -774,7 +774,7 @@ export async function updateProfile(formData: FormData) {
       });
 
       if (cedulaInUse) {
-        return { success: false, error: "La c�dula ya est� registrada por otro usuario" };
+        return { success: false, error: "La cédula ya está registrada por otro usuario" };
       }
     }
 
@@ -797,7 +797,7 @@ export async function updateProfile(formData: FormData) {
     // Usamos admin client para los uploads y evitar bloqueo por RLS del bucket
     const adminStorage = createAdminClient();
     if (!adminStorage) {
-      return { success: false, error: "Error de configuraci�n del servidor al subir im�genes" };
+      return { success: false, error: "Error de configuración del servidor al subir imágenes" };
     }
 
     // Si hay una nueva foto, subirla a Supabase Storage
@@ -1182,8 +1182,8 @@ export async function publishHome(homeId: string, userId: string) {
       return { success: false, error: "Solo los administradores pueden publicar alojamientos" };
     }
 
-    // Si el host est� verificado, publicar directamente
-    // Si no, enviar a aprobaci�n
+    // Si el host está verificado, publicar directamente
+    // Si no, enviar a aprobación
     const publishStatus = userRecord.isVerified ? "APPROVED" : "PENDING_APPROVAL";
 
     await prisma.home.update({
@@ -1207,7 +1207,7 @@ export async function publishHome(homeId: string, userId: string) {
       success: true,
       message: userRecord.isVerified
         ? "Alojamiento publicado exitosamente"
-        : "Alojamiento enviado a revisi�n. Un superadmin lo aprobar� pronto.",
+        : "Alojamiento enviado a revisión. Un superadmin lo aprobará pronto.",
       publishStatus,
     };
   } catch (error) {

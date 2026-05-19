@@ -151,7 +151,7 @@ export function UserNavClient({
                 onSelect={openLoginDialog}
                 className="rounded-lg px-4 py-3 text-sm font-medium text-gray-800 focus:bg-gray-50"
               >
-                Iniciar Sesi�n
+                Iniciar Sesión
               </DropdownMenuItem>
 
               <DropdownMenuItem

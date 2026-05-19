@@ -124,7 +124,7 @@ export const translations = {
 
     // Language
     language: {
-      spanish: "Espa�ol",
+      spanish: "Español",
       english: "English",
     },
 

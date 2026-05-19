@@ -73,7 +73,7 @@ async function sendWelcomeEmail(email: string) {
     });
 
     if (result.error) {
-      console.error("[register-mobile] Resend rechaz� el email:", result.error);
+      console.error("[register-mobile] Resend rechazó el email:", result.error);
     }
   } catch (error) {
     console.error("[register-mobile] error enviando email:", error);
@@ -112,11 +112,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!cedula) {
-      return jsonResponse({ error: "La c�dula es requerida" }, 400);
+      return jsonResponse({ error: "La cédula es requerida" }, 400);
     }
 
     if (!stateCode || !getStateByValue(stateCode)) {
-      return jsonResponse({ error: "Debes seleccionar un estado v�lido" }, 400);
+      return jsonResponse({ error: "Debes seleccionar un estado válido" }, 400);
     }
 
     const cedulaInUse = await prisma.user.findFirst({

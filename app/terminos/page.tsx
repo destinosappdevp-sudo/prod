@@ -38,7 +38,7 @@ export default function TerminosPage() {
             </li>
             <li>
               Los huéspedes deben utilizar la propiedad de manera responsable y conforme a las
-              normas establecidas por el anfitri�n.
+              normas establecidas por el anfitrión.
             </li>
           </ul>
         </section>
@@ -63,8 +63,8 @@ export default function TerminosPage() {
               publicación de la propiedad.
             </li>
             <li>
-              Destinos Venezuela C.A. actuar� como intermediario en la gesti�n de reembolsos, seg�n las
-              pol�ticas aplicables.
+              Destinos Venezuela C.A. actuará como intermediario en la gestión de reembolsos, según las
+              políticas aplicables.
             </li>
           </ul>
         </section>
@@ -114,7 +114,7 @@ export default function TerminosPage() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-gray-900 mb-3">10. Legislaci�n Aplicable</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-3">10. Legislación Aplicable</h2>
             <p>
             Estos Términos y Condiciones se rigen por las leyes de la República Bolivariana de
             Venezuela. Cualquier disputa será resuelta en los tribunales competentes de Barquisimeto, Estado Lara.

@@ -38,8 +38,9 @@ function getRequestOrigin(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { email } = (await request.json()) as ForgotPasswordRequest;
+    const normalizedEmail = (email || "").trim().toLowerCase();
 
-    if (!email) {
+    if (!normalizedEmail) {
       return NextResponse.json(
         { error: "Email es requerido" },
         { status: 400 }
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     // Generate reset link using Supabase admin API
     const { data, error: linkError } = await adminClient.auth.admin.generateLink({
       type: "recovery",
-      email,
+      email: normalizedEmail,
       options: {
         redirectTo,
       },
@@ -106,19 +107,32 @@ export async function POST(request: NextRequest) {
     // Send email with Resend using custom template
     const resend = getResendClient();
     if (!resend) {
-      console.warn("RESEND_API_KEY no configurada; se omite email de recuperación.");
-      return NextResponse.json(
-        { error: "Servicio de email no disponible" },
-        { status: 500 }
+      console.warn("RESEND_API_KEY no configurada; se usa recuperación nativa de Supabase.");
+      const { error: supabaseResetError } = await adminClient.auth.resetPasswordForEmail(
+        normalizedEmail,
+        { redirectTo }
       );
+
+      if (supabaseResetError) {
+        console.error("Supabase resetPasswordForEmail error:", supabaseResetError);
+        return NextResponse.json(
+          { error: "No se pudo enviar el email de recuperación" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Email de recuperación enviado",
+      });
     }
 
     const result = await resend.emails.send({
       from: FROM_EMAIL,
-      to: email,
+      to: normalizedEmail,
       subject: "Recuperar tu contraseña - Destinos Venezuela",
       html: generatePasswordResetEmail({
-        email,
+        email: normalizedEmail,
         resetLink,
       }),
     });
@@ -126,12 +140,12 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       console.error("Resend error:", result.error);
       return NextResponse.json(
-        { error: "Error al enviar el email de recuperaci�n" },
+        { error: "Error al enviar el email de recuperación" },
         { status: 500 }
       );
     }
 
-    console.log(`📨 Email de recuperación enviado a ${email}`);
+    console.log(`📨 Email de recuperación enviado a ${normalizedEmail}`);
 
     return NextResponse.json({
       success: true,

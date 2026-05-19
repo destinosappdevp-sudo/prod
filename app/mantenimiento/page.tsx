@@ -23,9 +23,9 @@ export default function MantenimientoPage() {
 
         {/* Divider */}
         <div className="border-t border-gray-700 pt-4 text-sm text-gray-500">
-          �Eres administrador?{" "}
+          ¿Eres administrador?{" "}
             <a href="/login" className="text-orange-500 hover:underline">
-            Inicia sesi�n aqu�
+            Inicia sesión aquí
           </a>
         </div>
       </div>
