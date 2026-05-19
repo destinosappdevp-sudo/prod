@@ -60,11 +60,11 @@ export default function ImportUsersPage() {
           </p>
         </div>
         <a
-          href="/screenshot/importar_usuarios_clean.csv"
+          href="/screenshot/importar%20usuarios.csv"
           download
           className="px-3 py-2 rounded-md bg-white border text-sm text-gray-700 hover:bg-gray-50"
         >
-          Descargar plantilla
+          Descargar usuarios
         </a>
       </div>
 
