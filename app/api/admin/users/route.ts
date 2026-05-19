@@ -2,8 +2,28 @@ import { createClient } from "@/app/lib/supabase/server";
 import { createAdminClient } from "@/app/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+async function userTableHasLastNameColumn() {
+  try {
+    const rows = (await (prisma as any).$queryRaw(
+      Prisma.sql`
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'User'
+          AND column_name = 'lastName'
+        LIMIT 1
+      `
+    )) as Array<{ "?column?": number }>;
+
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
+}
 
 export async function GET() {
   try {
@@ -185,25 +205,62 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const newUser = await prisma.user.create({
-        data: {
-          id: created.user.id,
-          email: normalizedEmail,
-          firstName: normalizedFullName,
-          role: finalRole,
-          phoneNumber: phoneNumber?.trim() || null,
-          cedula: normalizedCedula,
-        },
-        include: {
-          _count: {
-            select: {
-              Home: true,
-              Favorite: true,
-              Reservation: true,
+      let newUser;
+
+      try {
+        newUser = await prisma.user.create({
+          data: {
+            id: created.user.id,
+            email: normalizedEmail,
+            firstName: normalizedFullName,
+            role: finalRole,
+            phoneNumber: phoneNumber?.trim() || null,
+            cedula: normalizedCedula,
+          },
+          include: {
+            _count: {
+              select: {
+                Home: true,
+                Favorite: true,
+                Reservation: true,
+              },
             },
           },
-        },
-      });
+        });
+      } catch (createDbError) {
+        const hasLegacyLastName = await userTableHasLastNameColumn();
+        if (!hasLegacyLastName) {
+          throw createDbError;
+        }
+
+        await (prisma as any).$executeRaw(
+          Prisma.sql`
+            INSERT INTO "User" ("id", "email", "firstName", "lastName", "role", "phoneNumber", "cedula")
+            VALUES (
+              ${created.user.id},
+              ${normalizedEmail},
+              ${normalizedFullName},
+              ${"-"},
+              ${finalRole},
+              ${phoneNumber?.trim() || null},
+              ${normalizedCedula}
+            )
+          `
+        );
+
+        newUser = await prisma.user.findUnique({
+          where: { id: created.user.id },
+          include: {
+            _count: {
+              select: {
+                Home: true,
+                Favorite: true,
+                Reservation: true,
+              },
+            },
+          },
+        });
+      }
 
       return NextResponse.json(newUser, { status: 201 });
     } catch (dbError) {
