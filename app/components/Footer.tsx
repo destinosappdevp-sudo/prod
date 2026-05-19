@@ -28,7 +28,7 @@ export default function Footer() {
             </div>
             <div className="mx-auto h-px w-full max-w-[560px] bg-white/45" />
             <p className="text-xs text-white/80">
-              © {currentYear} Destino&apos;s - Todos los derechos reservados. Desarrollado Por FocusDev C.A
+              © {currentYear} Destinos Venezuela - Todos los derechos reservados. Desarrollado por FocusDev C.A.
             </p>
           </div>
 
