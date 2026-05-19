@@ -107,6 +107,7 @@ model Home {
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
   User                    User?          @relation(fields: [userId], references: [id])
   HomeAmenity             HomeAmenity[]
+  PackageSeat             PackageSeat[]
   Reservation             Reservation[]
   Review                  Review[]
 }
@@ -179,8 +180,10 @@ model Reservation {
   nights      Int
   status      ReservationStatus @default(PENDING)
   totalAmount Float
+  seatId      String?           @unique
   Payment     Payment?
   Home        Home?             @relation(fields: [homeId], references: [id])
+  PackageSeat PackageSeat?      @relation(fields: [seatId], references: [id])
   User        User?             @relation(fields: [userId], references: [id])
   Review      Review?
 }
@@ -330,6 +333,30 @@ model property_types {
   id   Int     @id @default(autoincrement())
   name String
   icon String? @default("home")
+}
+
+model PackageSeat {
+  id          String       @id @default(uuid())
+  homeId      String
+  zone        SeatZone
+  row         Int
+  column      String
+  status      SeatStatus   @default(AVAILABLE)
+  createdAt   DateTime     @default(now())
+  Home        Home         @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  Reservation Reservation?
+
+  @@unique([homeId, row, column])
+}
+
+enum SeatZone {
+  VIP
+  STANDARD
+}
+
+enum SeatStatus {
+  AVAILABLE
+  OCCUPIED
 }
 
 enum BannerTipo {
