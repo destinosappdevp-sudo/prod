@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 
 type ManualKey = "admin" | "banner";
 
@@ -83,7 +82,7 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <div className="text-sm text-muted-foreground">Importante: Revisa pagos pendientes diariamente para evitar retrasos.</div>
         </>
       ),
-      img: "/screenshot/paquetes.webp",
+      img: "/public/screenshot/paquetes.webp",
     },
     banners: {
       titulo: "Publicidad (Banners)",
@@ -119,31 +118,31 @@ const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
           <ol className="list-decimal ml-6 mb-4 space-y-6">
             <li>
               <div><b>1.1 Título:</b> escribe el nombre de la campaña para identificar el banner.</div>
-              <Image src="/screenshot/paquetes.webp" alt="Paso 1.1 Titulo" width={640} height={360} className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.1 Titulo" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.2 Tipo de Banner:</b> selecciona dónde se mostrará (HERO1, HERO2, MEDIO1, MEDIO2 o POP).</div>
-              <Image src="/screenshot/paquetes.webp" alt="Paso 1.2 Tipo de Banner" width={640} height={360} className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.2 Tipo de Banner" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.3 Fecha inicio / Fecha fin:</b> define desde cuándo se publica y hasta cuándo estará activo.</div>
-              <Image src="/screenshot/paquetes.webp" alt="Paso 1.3 Fecha inicio y fin" width={640} height={360} className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.3 Fecha inicio y fin" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.4 URL destino:</b> coloca el enlace al que irá el usuario al hacer clic en el banner.</div>
-              <Image src="/screenshot/paquetes.webp" alt="Paso 1.4 URL destino" width={640} height={360} className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.4 URL destino" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.5 Teléfono del cliente / Email del cliente:</b> registra los datos de contacto del anunciante.</div>
-              <Image src="/screenshot/paquetes.webp" alt="Paso 1.5 Telefono y email" width={640} height={360} className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.5 Telefono y email" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.6 Costo (USD):</b> indica el monto pagado o acordado para esta campaña.</div>
-              <Image src="/screenshot/paquetes.webp" alt="Paso 1.6 Costo en USD" width={640} height={360} className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.6 Costo en USD" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
             <li>
               <div><b>1.7 Imagen:</b> sube la imagen final del banner.</div>
-              <Image src="/screenshot/paquetes.webp" alt="Paso 1.7 Imagen" width={640} height={360} className="mt-2 rounded border shadow-sm max-w-full h-auto" />
+              <img src="/screenshot/paquetes.webp" alt="Paso 1.7 Imagen" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
             </li>
           </ol>
           <div className="text-sm text-muted-foreground">
@@ -226,14 +225,12 @@ export default function ManualesPage() {
               <h3 className={`font-bold mb-2 mt-8 ${sec.id === 'propiedades' ? 'text-2xl text-orange-500' : 'text-lg text-primary'}`}>{data.titulo}</h3>
               <div className="mb-4 text-foreground/90">{data.texto}</div>
               <div className="w-full flex justify-center mb-2">
-                <Image
+                <img
                   src={data.img}
                   alt={data.titulo}
-                  width={480}
-                  height={180}
-                  className="rounded-lg border shadow-sm object-contain bg-muted"
+                  className="rounded-lg border shadow-sm max-h-72 object-contain bg-muted"
                   style={{ minHeight: 180, maxWidth: 480 }}
-                  onError={(e: any) => (e.currentTarget.src = "/screenshot/manual-default.png")}
+                  onError={(e) => (e.currentTarget.src = "/screenshot/paquetes.webp")}
                 />
               </div>
               <a href="#" className="text-xs text-blue-500 hover:underline" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Volver al índice ↑</a>
