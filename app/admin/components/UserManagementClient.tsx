@@ -284,7 +284,6 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                   <SelectContent>
                     <SelectItem value="GUEST">Usuario</SelectItem>
                     <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -339,7 +338,6 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
               <SelectItem value="all">Todos los roles</SelectItem>
               <SelectItem value="GUEST">Usuarios</SelectItem>
               <SelectItem value="ADMIN">Admin</SelectItem>
-              <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -358,7 +356,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
         <Card className="p-4">
           <p className="text-sm text-gray-600">Admins</p>
           <p className="text-2xl font-bold">
-            {users.filter((u) => u.role === "ADMIN" || u.role === "SUPERADMIN").length}
+            {users.filter((u) => u.role === "ADMIN").length}
           </p>
         </Card>
       </div>
