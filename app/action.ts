@@ -743,6 +743,8 @@ export async function updateProfile(formData: FormData) {
     const healthConditions = (formData.get("healthConditions") as string)?.trim();
     const hasTraveledWithDestinos = formData.get("hasTraveledWithDestinos") === "true";
     const lastTravelDestination = (formData.get("lastTravelDestination") as string)?.trim();
+    const travelsWithChildren = formData.get("travelsWithChildren") === "true";
+    const childrenAges = (formData.get("childrenAges") as string)?.trim();
     const profileImageFile = formData.get("profileImage") as File | null;
     const document1File = formData.get("document1Image") as File | null;
     const document2File = formData.get("document2Image") as File | null;
@@ -877,6 +879,8 @@ export async function updateProfile(formData: FormData) {
       healthConditions: healthConditions || null,
       hasTraveledWithDestinos: hasTraveledWithDestinos,
       lastTravelDestination: hasTraveledWithDestinos && lastTravelDestination ? lastTravelDestination : null,
+      travelsWithChildren: travelsWithChildren,
+      childrenAges: travelsWithChildren && childrenAges ? childrenAges : null,
       profileImage: profileImageUrl || null,
       document1Image: document1ImageUrl,
       document2Image: document2ImageUrl,

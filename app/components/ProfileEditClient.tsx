@@ -35,6 +35,8 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
     healthConditions: userData?.healthConditions || "",
     hasTraveledWithDestinos: userData?.hasTraveledWithDestinos || false,
     lastTravelDestination: userData?.lastTravelDestination || "",
+    travelsWithChildren: userData?.travelsWithChildren || false,
+    childrenAges: userData?.childrenAges || "",
   });
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -97,6 +99,8 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
     form.append("healthConditions", formData.healthConditions);
     form.append("hasTraveledWithDestinos", String(formData.hasTraveledWithDestinos));
     form.append("lastTravelDestination", formData.lastTravelDestination);
+    form.append("travelsWithChildren", String(formData.travelsWithChildren));
+    form.append("childrenAges", formData.childrenAges);
     form.append("currentProfileImage", currentUserData?.profileImage || "");
     form.append("currentDocument1Image", currentUserData?.document1Image || "");
     form.append("currentDocument2Image", currentUserData?.document2Image || "");
@@ -122,6 +126,8 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
           healthConditions: updatedData?.healthConditions || "",
           hasTraveledWithDestinos: updatedData?.hasTraveledWithDestinos || false,
           lastTravelDestination: updatedData?.lastTravelDestination || "",
+          travelsWithChildren: updatedData?.travelsWithChildren || false,
+          childrenAges: updatedData?.childrenAges || "",
         });
         setSuccess(true);
         // Ya no volvemos al modo no-edición, mantenemos el formulario visible
@@ -360,6 +366,38 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
                   value={formData.lastTravelDestination}
                   onChange={handleInputChange}
                   placeholder="Nombre del destino visitado"
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {/* Viaja con Niños */}
+            <div>
+              <div className="flex items-center gap-3">
+                <input
+                  id="travelsWithChildren"
+                  name="travelsWithChildren"
+                  type="checkbox"
+                  checked={formData.travelsWithChildren}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 rounded"
+                />
+                <Label htmlFor="travelsWithChildren" className="text-sm font-medium cursor-pointer">
+                  Viaja con niños
+                </Label>
+              </div>
+            </div>
+
+            {/* Edades de los niños */}
+            {formData.travelsWithChildren && (
+              <div>
+                <Label htmlFor="childrenAges" className="text-sm font-medium">Edades de los niños</Label>
+                <Input
+                  id="childrenAges"
+                  name="childrenAges"
+                  value={formData.childrenAges}
+                  onChange={handleInputChange}
+                  placeholder="Ej: 5, 8, 12"
                   className="mt-1"
                 />
               </div>

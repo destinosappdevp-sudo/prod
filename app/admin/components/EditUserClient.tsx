@@ -30,6 +30,8 @@ interface User {
   healthConditions?: string | null;
   hasTraveledWithDestinos?: boolean;
   lastTravelDestination?: string | null;
+  travelsWithChildren?: boolean;
+  childrenAges?: string | null;
   role: "GUEST" | "ADMIN" | "SUPERADMIN";
   isVerified?: boolean;
   verificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
@@ -73,6 +75,8 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
     healthConditions: user.healthConditions || "",
     hasTraveledWithDestinos: user.hasTraveledWithDestinos || false,
     lastTravelDestination: user.lastTravelDestination || "",
+    travelsWithChildren: user.travelsWithChildren || false,
+    childrenAges: user.childrenAges || "",
     role: user.role,
     isVerified: user.isVerified || false,
     verificationStatus: user.verificationStatus || "NOT_SUBMITTED",
@@ -295,6 +299,36 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
                   setFormData({ ...formData, lastTravelDestination: e.target.value })
                 }
                 placeholder="Ej: Merida, Mochima, Los Roques"
+              />
+            </div>
+          )}
+          <div className="md:col-span-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={formData.travelsWithChildren}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    travelsWithChildren: e.target.checked,
+                    childrenAges: e.target.checked ? formData.childrenAges : "",
+                  })
+                }
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Viaja con niños
+            </label>
+          </div>
+          {formData.travelsWithChildren && (
+            <div className="md:col-span-2">
+              <Label htmlFor="childrenAges">Edades de los niños</Label>
+              <Input
+                id="childrenAges"
+                value={formData.childrenAges}
+                onChange={(e) =>
+                  setFormData({ ...formData, childrenAges: e.target.value })
+                }
+                placeholder="Ej: 5, 8, 12"
               />
             </div>
           )}
