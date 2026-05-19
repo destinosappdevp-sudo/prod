@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, KeyRound, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Save, KeyRound, Eye, EyeOff, Trash2, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import DocumentsSection, { UserDocumentItem } from "@/app/components/DocumentsSection";
@@ -49,6 +49,7 @@ interface User {
 interface EditUserClientProps {
   user: User;
   documents?: UserDocumentItem[];
+  currentUserRole?: string;
 }
 
 /** Rol mostrado en el selector: solo Usuario / Admin (GUEST / ADMIN). */
@@ -57,7 +58,7 @@ function roleToSelectValue(role: User["role"]): "GUEST" | "ADMIN" {
   return "GUEST";
 }
 
-export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
+export function EditUserClient({ user, documents = [], currentUserRole }: EditUserClientProps) {
   const router = useRouter();
   const initialFullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
   const dateOfBirthValue = user.dateOfBirth
@@ -83,6 +84,9 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
     verificationReason: user.verificationReason || "",
   });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [passwordData, setPasswordData] = useState({ password: "", confirm: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -118,6 +122,22 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
       setPasswordMsg({ type: "error", text: err.message || "Error al cambiar la contraseña." });
     } finally {
       setChangingPassword(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (deleteConfirmText !== user.email) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al eliminar");
+      router.push("/admin/users");
+      router.refresh();
+    } catch (err: any) {
+      alert(err.message || "Error al eliminar el usuario");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -460,6 +480,63 @@ export function EditUserClient({ user, documents = [] }: EditUserClientProps) {
           {saving ? "Guardando..." : "Guardar Cambios"}
         </Button>
       </div>
+
+      {/* Zona de Peligro — solo SUPERADMIN */}
+      {currentUserRole === "SUPERADMIN" && (
+        <Card className="p-6 border-red-200 bg-red-50">
+          <h2 className="text-xl font-semibold mb-1 flex items-center gap-2 text-red-700">
+            <AlertTriangle size={20} />
+            Zona de Peligro
+          </h2>
+          <p className="text-sm text-red-600 mb-4">
+            Esta acción es permanente e irreversible. Se eliminará el usuario de la base de datos y de la autenticación.
+          </p>
+
+          {!showDeleteConfirm ? (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 size={15} className="mr-2" />
+              Eliminar usuario
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-red-700">
+                Para confirmar, escribe el email del usuario:{" "}
+                <span className="font-mono bg-red-100 px-1 rounded">{user.email}</span>
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={user.email}
+                className="w-full border border-red-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                autoComplete="off"
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={deleteConfirmText !== user.email || deleting}
+                  onClick={handleDelete}
+                >
+                  <Trash2 size={15} className="mr-2" />
+                  {deleting ? "Eliminando..." : "Confirmar eliminación"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
     </form>
   );
 }

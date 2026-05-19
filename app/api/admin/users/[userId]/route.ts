@@ -374,3 +374,96 @@ export async function PUT(
     );
   }
 }
+
+// DELETE /api/admin/users/[userId] — eliminar usuario (solo SUPERADMIN)
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  try {
+    const { userId } = await params;
+    const supabase = await createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    // Solo SUPERADMIN puede eliminar usuarios
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true },
+    });
+
+    if (!currentUser || currentUser.role !== "SUPERADMIN") {
+      return NextResponse.json(
+        { error: "Solo los superadministradores pueden eliminar usuarios" },
+        { status: 403 }
+      );
+    }
+
+    // No puede eliminarse a sí mismo
+    if (user.id === userId) {
+      return NextResponse.json(
+        { error: "No puedes eliminar tu propia cuenta" },
+        { status: 400 }
+      );
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, role: true },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    }
+
+    // No puede eliminar a otro SUPERADMIN
+    if (targetUser.role === "SUPERADMIN") {
+      return NextResponse.json(
+        { error: "No puedes eliminar a otro superadministrador" },
+        { status: 403 }
+      );
+    }
+
+    const adminClient = createAdminClient();
+    if (!adminClient) {
+      return NextResponse.json(
+        { error: "Configuración de servidor incompleta" },
+        { status: 500 }
+      );
+    }
+
+    // 1. Eliminar de Supabase Auth (con fallback por email si el ID no coincide)
+    let { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
+
+    if (deleteAuthError && targetUser.email) {
+      const { authUserId: fallbackId, error: lookupError } = await findAuthUserIdByEmail(
+        adminClient,
+        targetUser.email
+      );
+
+      if (!lookupError && fallbackId) {
+        const retry = await adminClient.auth.admin.deleteUser(fallbackId);
+        deleteAuthError = retry.error;
+      }
+    }
+
+    if (deleteAuthError) {
+      console.error("Error eliminando de Supabase Auth:", deleteAuthError);
+      // Continuar igualmente para eliminar de la BD local
+    }
+
+    // 2. Eliminar de Prisma (cascada maneja relaciones con onDelete: Cascade)
+    await prisma.user.delete({ where: { id: userId } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error eliminando usuario:", error);
+    return NextResponse.json(
+      { error: "Error al eliminar el usuario" },
+      { status: 500 }
+    );
+  }
+}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { EditUserClient } from "../../components/EditUserClient";
 import { UserDocumentItem } from "@/app/components/DocumentsSection";
 import { Prisma } from "@prisma/client";
+import { createClient } from "@/app/lib/supabase/server";
 
 async function getUser(userId: string) {
   const user = await prisma.user.findUnique({
@@ -55,6 +56,17 @@ export default async function EditUserPage({
 
   const documents = await getUserDocuments(userId);
 
+  // Obtener rol del admin actual para mostrar controles de SUPERADMIN
+  const supabase = await createClient();
+  const { data: { user: currentAuthUser } } = await supabase.auth.getUser();
+  const currentUserRecord = currentAuthUser
+    ? await prisma.user.findUnique({
+        where: { id: currentAuthUser.id },
+        select: { role: true },
+      })
+    : null;
+  const currentUserRole = currentUserRecord?.role ?? "GUEST";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -68,7 +80,7 @@ export default async function EditUserPage({
         </div>
       </div>
 
-      <EditUserClient user={user} documents={documents} />
+      <EditUserClient user={user} documents={documents} currentUserRole={currentUserRole} />
     </div>
   );
 }
