@@ -57,6 +57,14 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
   const [savingType, setSavingType] = useState<"general" | "package">("general");
   const [selectedHome, setSelectedHome] = useState("");
   const [initialAmountUsd, setInitialAmountUsd] = useState("");
+  const todayIso = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+  const [depositDate, setDepositDate] = useState<string>(todayIso);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -114,6 +122,16 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       return;
     }
 
+    if (!depositDate) {
+      setError("Debes indicar la fecha del depósito.");
+      return;
+    }
+    const parsedDate = new Date(`${depositDate}T12:00:00`);
+    if (Number.isNaN(parsedDate.getTime())) {
+      setError("La fecha del depósito no es válida.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -125,6 +143,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           type: savingType,
           homeId: savingType === "package" ? selectedHome : null,
           amountUsd: parsedAmountUsd,
+          date: parsedDate.toISOString(),
         }),
       });
 
@@ -140,6 +159,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       setSavingType("general");
       setSelectedHome("");
       setInitialAmountUsd("");
+      setDepositDate(todayIso);
       router.refresh();
     } catch {
       setError("Ocurrió un error al crear la alcancía.");
@@ -255,6 +275,18 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
               required
             />
             <p className="text-xs text-gray-500">El equivalente en Bs se calcula automáticamente con la tasa BCV vigente.</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Fecha del depósito</label>
+            <Input
+              type="date"
+              value={depositDate}
+              max={todayIso}
+              onChange={(event) => setDepositDate(event.target.value)}
+              required
+            />
+            <p className="text-xs text-gray-500">Por defecto es hoy. Puedes elegir una fecha anterior para cargar depósitos históricos.</p>
           </div>
 
           {selectedUser && (savingType === "general" || selectedHome) && (

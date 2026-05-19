@@ -38,6 +38,17 @@ export async function POST(req: NextRequest) {
     const hasAmountUsd = Number.isFinite(amountUsdInput) && amountUsdInput > 0;
     const hasAmountBsLegacy = Number.isFinite(amountBsLegacyInput) && amountBsLegacyInput > 0;
 
+    // Fecha manual opcional (para cargas históricas). Si no viene, se usa la fecha actual.
+    const rawDate = typeof body?.date === "string" ? body.date : null;
+    let depositDate: Date | null = null;
+    if (rawDate) {
+      const parsed = new Date(rawDate);
+      if (Number.isNaN(parsed.getTime())) {
+        return NextResponse.json({ error: "Fecha del depósito inválida." }, { status: 400 });
+      }
+      depositDate = parsed;
+    }
+
     if (!userId || !type) {
       return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
     }
@@ -132,6 +143,7 @@ export async function POST(req: NextRequest) {
           amountUsd: currentAmountUsd + amountUsd,
           bcvRate,
           status: "APPROVED",
+          ...(depositDate ? { date: depositDate } : {}),
           paymentDetails: {
             ...previousDetails,
             createdByAdmin: true,
@@ -139,6 +151,7 @@ export async function POST(req: NextRequest) {
             lastAdminTopUpUsd: amountUsd,
             lastAdminTopUpRate: bcvRate,
             lastAdminTopUpAt: new Date().toISOString(),
+            ...(depositDate ? { lastAdminTopUpDate: depositDate.toISOString() } : {}),
           },
         },
       });
@@ -160,6 +173,7 @@ export async function POST(req: NextRequest) {
         amountUsd,
         bcvRate,
         status: "APPROVED",
+        ...(depositDate ? { date: depositDate } : {}),
         paymentDetails: paymentDetailsWithAudit,
       },
     });
