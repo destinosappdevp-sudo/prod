@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 import prisma from "@/app/lib/db";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
 import { getResendClient, FROM_EMAIL } from "@/app/lib/resend";
@@ -186,7 +187,7 @@ export async function POST(request: NextRequest) {
       await sendWelcomeEmail(data.user.email ?? email);
     }
 
-    let session = data.session;
+    let session: Session | null = null;
 
     // Fallback para apps móviles: si signUp no devuelve sesión, intentamos login inmediato.
     if (!session) {
