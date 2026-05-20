@@ -89,6 +89,7 @@ interface DashboardClientProps {
   savingTarget?: string;
   savingTargetId?: string;
   savingTargetSeatId?: string;
+  savingTargetPlan?: "estandar" | "vip";
   savingPackage?: {
     id: string;
     title: string;
@@ -239,6 +240,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             homeId: selectedSavingId || null,
             homeTitle: selectedSavingId ? packageTargetLabel : null,
             seatId: props.savingTargetSeatId || null,
+            plan: props.savingTargetPlan || null,
           },
         }),
       });

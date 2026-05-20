@@ -50,6 +50,7 @@ export default function SeatSelector({ seats, plan, homeId, flow }: SeatSelector
       const params = new URLSearchParams({
         tab: "ahorrar",
         homeId,
+        plan,
       });
       if (seatId) {
         params.set("seatId", seatId);

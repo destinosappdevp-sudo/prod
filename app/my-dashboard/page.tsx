@@ -734,7 +734,7 @@ async function getGuestDashboardData(userId: string) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; target?: string; homeId?: string; seatId?: string }>;
+  searchParams: Promise<{ tab?: string; target?: string; homeId?: string; seatId?: string; plan?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -813,6 +813,7 @@ export default async function DashboardPage({
       savingTarget={typeof sp.target === "string" ? sp.target : undefined}
       savingTargetId={typeof sp.homeId === "string" ? sp.homeId : undefined}
       savingTargetSeatId={typeof sp.seatId === "string" ? sp.seatId : undefined}
+      savingTargetPlan={sp.plan === "vip" ? "vip" : sp.plan === "estandar" ? "estandar" : undefined}
       savingPackage={savingPackage}
       userData={{ ...userRecord, email: userRecord?.email || user.email }}
       initialDocs={initialDocs || []}

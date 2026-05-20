@@ -17,69 +17,31 @@ const prismaAny = prisma as any;
 async function getDataBySlug(slug: string) {
   noStore();
   // Los slugs tienen formato "{titulo}-{id.slice(0,6)}".
-  // Extraemos el prefijo del ID (últimos 6 chars tras el último guión)
-  // para buscar la propiedad aunque el campo slug ya no esté en el schema.
-  const idPrefix = slug.split('-').pop() || '';
+  // Extraemos el prefijo del ID para buscar la propiedad aunque no exista
+  // el campo slug en el schema actual.
+  const idPrefix = slug.split("-").pop() || "";
   if (!idPrefix || idPrefix.length < 4) return null;
   return await prismaAny.home.findFirst({
     where: { id: { startsWith: idPrefix } },
     select: {
-                  {vipDisabled ? (
-                    <>
-                      <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
-                        Ahorrar
-                      </span>
-                      <span className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
-                        Pagar de contado
-                      </span>
-                      <p className="mt-2 text-xs text-gray-500">
-                        {hasFullReservation
-                          ? "Ya completaste el pago para este paquete."
-                          : "Tienes un ahorro activo en el plan Estándar; los demás planes están bloqueados para evitar equivocaciones."}
-                      </p>
-                    </>
-                  ) : vipSavingActive ? (
-                    <>
-                      <Link
-                        href={vipSavingsHref}
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
-                      >
-                        Seguir ahorrando
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        href={vipFinishHref}
-                        className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
-                      >
-                        Terminar de pagar
-                      </Link>
-                      <p className="mt-2 text-xs text-gray-500">Estás ahorrando en este plan; tus depósitos aparecen en Mi Alcancía.</p>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href={`/seats/${data.id}?plan=vip&flow=ahorro`}
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
-                      >
-                        Ahorrar
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        href={`/seats/${data.id}?plan=vip&flow=contado`}
-                        className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
-                      >
-                        Pagar de contado
-                      </Link>
-                    </>
-                  )}
-  }));
-                {(vipDisabled || vipSavingActive) && (
-                  <div className="mt-3">
-                    {vipDisabled && !hasFullReservation && (
-                      <p className="text-xs text-gray-500">Tienes un ahorro activo en otro plan; completa o cancela ese ahorro para habilitar esta opción.</p>
-                    )}
-                  </div>
-                )}
+      id: true,
+      photo: true,
+      title: true,
+      description: true,
+      categoryName: true,
+      price: true,
+      priceVip: true,
+      country: true,
+      municipality: true,
+      exactAddress: true,
+      checkInTime: true,
+      guests: true,
+      publishStatus: true,
+      User: {
+        select: { id: true, role: true },
+      },
+    },
+  });
 }
 
 export async function generateMetadata({
@@ -148,20 +110,31 @@ async function DestinoPage({
         select: { paymentDetails: true },
       });
 
-      const savingWithSeat = savingsRows.find((row: any) => {
+      const packageSaving = savingsRows.find((row: any) => {
         const details = row?.paymentDetails && typeof row.paymentDetails === "object" ? row.paymentDetails : null;
-        return details?.homeId === data.id && typeof details?.seatId === "string" && details.seatId;
+        return details?.homeId === data.id;
       });
 
-      const activeSeatId = savingWithSeat?.paymentDetails?.seatId;
-      if (typeof activeSeatId === "string" && activeSeatId) {
-        const seat = await prismaAny.packageSeat.findUnique({
-          where: { id: activeSeatId },
-          select: { zone: true, homeId: true },
-        });
+      if (packageSaving?.paymentDetails && typeof packageSaving.paymentDetails === "object") {
+        const details = packageSaving.paymentDetails as Record<string, unknown>;
+        const detailsPlan = typeof details.plan === "string" ? details.plan : null;
 
-        if (seat?.homeId === data.id) {
-          savingPlan = seat.zone === "VIP" ? "vip" : "estandar";
+        if (detailsPlan === "estandar" || detailsPlan === "vip") {
+          savingPlan = detailsPlan;
+        }
+
+        if (!savingPlan) {
+          const activeSeatId = typeof details.seatId === "string" ? details.seatId : null;
+          if (activeSeatId) {
+            const seat = await prismaAny.packageSeat.findUnique({
+              where: { id: activeSeatId },
+              select: { zone: true, homeId: true },
+            });
+
+            if (seat?.homeId === data.id) {
+              savingPlan = seat.zone === "VIP" ? "vip" : "estandar";
+            }
+          }
         }
       }
     }
