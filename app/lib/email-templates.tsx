@@ -365,6 +365,93 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
   `;
 }
 
+// ─── Confirmación de cuenta ──────────────────────────────────────────────────
+
+interface EmailConfirmationData {
+  email: string;
+  displayName?: string;
+  confirmationUrl: string;
+}
+
+export function generateEmailConfirmationEmail(data: EmailConfirmationData): string {
+  const safeName = (data.displayName || "nuevo usuario").replace(/[<>]/g, "");
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirma tu cuenta - Destinos Venezuela</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#f59e0b 0%,#b45309 100%);padding:36px 28px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;">Confirma tu cuenta</h1>
+              <p style="margin:10px 0 0 0;color:#fef3c7;font-size:15px;">Un solo clic y ya estarás adentro</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:34px 30px;">
+              <p style="margin:0 0 14px 0;color:#1f2937;font-size:16px;line-height:1.6;">
+                Hola <strong>${safeName}</strong>,
+              </p>
+              <p style="margin:0 0 22px 0;color:#4b5563;font-size:15px;line-height:1.7;">
+                Gracias por registrarte en <strong>Destinos Venezuela</strong>. Para activar tu cuenta haz clic en el botón de abajo:
+              </p>
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <a href="${data.confirmationUrl}"
+                       style="display:inline-block;background:linear-gradient(135deg,#f59e0b 0%,#b45309 100%);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:8px;font-weight:700;font-size:16px;letter-spacing:0.01em;">
+                      Confirmar mi cuenta
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 10px 0;color:#6b7280;font-size:13px;line-height:1.6;">
+                Si el botón no funciona, copia y pega este enlace en tu navegador:
+              </p>
+              <p style="margin:0 0 22px 0;word-break:break-all;">
+                <a href="${data.confirmationUrl}" style="color:#b45309;font-size:12px;">${data.confirmationUrl}</a>
+              </p>
+              <!-- Info -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:14px 16px;">
+                <tr>
+                  <td>
+                    <p style="margin:0;color:#92400e;font-size:13px;line-height:1.6;">
+                      Este enlace expira en <strong>24 horas</strong>. Si no creaste esta cuenta, ignora este correo.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 30px;background:#f8fafc;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;color:#6b7280;font-size:12px;text-align:center;">
+                © ${new Date().getFullYear()} Destinos Venezuela. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+}
+
+// ─── Restablecimiento de contraseña ─────────────────────────────────────────
+
 interface PasswordResetEmailData {
   email: string;
   resetLink: string;
