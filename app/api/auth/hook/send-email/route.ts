@@ -72,9 +72,11 @@ export async function POST(request: NextRequest) {
 
   const resend = getResendClient();
   if (!resend) {
-    // Sin Resend configurado devolvemos 200 vacío → Supabase enviará su propio email.
-    console.warn("[hook/send-email] RESEND_API_KEY no configurado; Supabase enviará el email.");
-    return NextResponse.json({});
+    console.error("[hook/send-email] RESEND_API_KEY no configurado; se rechaza el envío para evitar fallback de Supabase.");
+    return NextResponse.json(
+      { error: "Configuración de correo incompleta" },
+      { status: 500 }
+    );
   }
 
   const displayName =
@@ -109,10 +111,6 @@ export async function POST(request: NextRequest) {
 
     case "recovery":
       subject = "Restablece tu contraseña en Destinos Venezuela";
-      // Reutiliza el template existente de recuperación
-      html = generateWelcomeEmail({ email: toEmail, displayName });
-      // Reemplazamos con el template de contraseña cuando esté disponible.
-      // Por ahora enviamos un email simple.
       html = `
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#fff;border-radius:10px;">
           <h2 style="color:#1f2937;">Restablecer contraseña</h2>

@@ -90,41 +90,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tokenHash = data.properties.hashed_token;
-    if (!tokenHash) {
-      console.error("Supabase link generation returned no token_hash");
+    const customResetUrl = new URL("/auth/reset-password", getRequestOrigin(request));
+    const resetLink =
+      data.properties.action_link ||
+      data.properties.action_link_with_otp ||
+      (data.properties.hashed_token
+        ? (() => {
+            customResetUrl.searchParams.set("token_hash", data.properties.hashed_token);
+            customResetUrl.searchParams.set("type", "recovery");
+            return customResetUrl.toString();
+          })()
+        : null);
+
+    if (!resetLink) {
+      console.error("Supabase link generation returned no usable recovery URL");
       return NextResponse.json(
         { error: "No se pudo generar un enlace válido de recuperación" },
         { status: 500 }
       );
     }
 
-    const customResetUrl = new URL("/auth/reset-password", getRequestOrigin(request));
-    customResetUrl.searchParams.set("token_hash", tokenHash);
-    customResetUrl.searchParams.set("type", "recovery");
-    const resetLink = customResetUrl.toString();
-
     // Send email with Resend using custom template
     const resend = getResendClient();
     if (!resend) {
-      console.warn("RESEND_API_KEY no configurada; se usa recuperación nativa de Supabase.");
-      const { error: supabaseResetError } = await adminClient.auth.resetPasswordForEmail(
-        normalizedEmail,
-        { redirectTo }
+      console.error("RESEND_API_KEY no configurada; se rechaza el envío para evitar fallback de Supabase.");
+      return NextResponse.json(
+        { error: "Configuración de correo incompleta" },
+        { status: 500 }
       );
-
-      if (supabaseResetError) {
-        console.error("Supabase resetPasswordForEmail error:", supabaseResetError);
-        return NextResponse.json(
-          { error: "No se pudo enviar el email de recuperación" },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "Email de recuperación enviado",
-      });
     }
 
     const result = await resend.emails.send({
