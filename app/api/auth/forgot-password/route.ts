@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
     const customResetUrl = new URL("/auth/reset-password", getRequestOrigin(request));
     const resetLink =
       data.properties.action_link ||
-      data.properties.action_link_with_otp ||
       (data.properties.hashed_token
         ? (() => {
             customResetUrl.searchParams.set("token_hash", data.properties.hashed_token);
