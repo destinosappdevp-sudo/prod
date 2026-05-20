@@ -77,30 +77,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const data = await getDataBySlug(slug);
   if (!data) return { title: "Paquete no encontrado" };
-  // Generar keywords básicas a partir del contenido disponible
-  const kwSet = new Set<string>();
-  const pushWords = (text?: string | null) => {
-    if (!text) return;
-    text
-      .split(/\s+/)
-      .slice(0, 12)
-      .map((w) => w.replace(/[.,;:()"'¡!¿?]/g, ""))
-      .filter(Boolean)
-      .forEach((w) => kwSet.add(w.toLowerCase()));
-  };
-  pushWords(data.title);
-  pushWords(data.description?.slice(0, 120));
-  if (data.categoryName) kwSet.add(data.categoryName.toLowerCase());
-  if (data.municipality) kwSet.add(String(data.municipality).toLowerCase());
-  if (data.country) kwSet.add(String(data.country).toLowerCase());
-  kwSet.add("paquete");
-  kwSet.add("viaje");
 
-  const keywords = Array.from(kwSet).slice(0, 20);
+  const baseKeywords = ["paquete turístico", "viaje Venezuela", "destinos Venezuela"];
+  const titleWords = (data.title ?? "").split(/\s+/).filter((w: string) => w.length > 3);
+  const categoryWord = data.categoryName ? [String(data.categoryName)] : [];
+  const keywords = [...baseKeywords, ...titleWords, ...categoryWord].slice(0, 15);
 
   return {
     title: `${data.title} | Destinos Venezuela`,
-    description: data.description?.slice(0, 160) || "Reserva tu cupo",
+    description: data.description?.slice(0, 160) || "Reserva tu cupo en nuestros paquetes turísticos.",
     keywords,
   };
 }
