@@ -279,7 +279,7 @@ export default function CheckoutForm({
           {selectedMode !== "SAVINGS" && (
             <div className="space-y-4 rounded-2xl bg-gray-50 p-4">
               <div className="rounded-lg bg-blue-50 p-3">
-                <h3 className="mb-2 text-sm font-semibold">Información del receptor</h3>
+                <h3 className="mb-2 text-sm font-semibold">Información del receptor (ACTUALIZADO)</h3>
                 <div className="space-y-1 text-xs">
                   <p><span className="font-medium">Banco:</span> 0169 R4</p>
                   <p><span className="font-medium">Teléfono:</span> 04120736383</p>
