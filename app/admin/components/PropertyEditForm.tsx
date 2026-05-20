@@ -750,13 +750,17 @@ export default function PropertyEditForm({
           </div>
 
           <div>
-            <Label htmlFor="image">Imagen</Label>
+            <Label htmlFor="image">Imagen del Paquete</Label>
             <Input
               id="image"
               type="file"
               accept="image/*"
               onChange={(e) => setImageFile(e.target.files?.[0] || null)}
             />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Proporción recomendada <span className="font-semibold text-foreground">3:2</span> — medida ideal{" "}
+              <span className="font-semibold text-foreground">960 × 640 px</span> (mín. 480 × 320 px). La imagen se mostrará centrada y recortada desde arriba.
+            </p>
           </div>
 
           <div className="flex justify-end gap-4 pt-4">
