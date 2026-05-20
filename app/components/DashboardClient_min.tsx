@@ -1021,9 +1021,9 @@ export default function DashboardClient(props: DashboardClientProps) {
                         <p className="text-xs font-semibold text-blue-700">Información del receptor (Pago Móvil)</p>
                       </div>
                       <div className="space-y-1 text-xs text-slate-600">
-                        <p><span className="font-medium">Banco:</span> 0102 · Banco de Venezuela</p>
-                        <p><span className="font-medium">Teléfono:</span> 0414-1234567</p>
-                        <p><span className="font-medium">Cédula:</span> V-12345678</p>
+                        <p><span className="font-medium">Banco:</span> 0169 R4</p>
+                        <p><span className="font-medium">Teléfono:</span> 04120736383</p>
+                        <p><span className="font-medium">Cédula:</span> 25570037</p>
                         {previewBs && (
                           <p className="font-semibold text-blue-800 mt-1">
                             Monto: Bs. {previewBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

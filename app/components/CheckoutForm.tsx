@@ -281,9 +281,9 @@ export default function CheckoutForm({
               <div className="rounded-lg bg-blue-50 p-3">
                 <h3 className="mb-2 text-sm font-semibold">Información del receptor</h3>
                 <div className="space-y-1 text-xs">
-                  <p><span className="font-medium">Banco:</span> 0102 - Banco de Venezuela</p>
-                  <p><span className="font-medium">Teléfono:</span> 0414-1234567</p>
-                  <p><span className="font-medium">Cédula:</span> V-12345678</p>
+                  <p><span className="font-medium">Banco:</span> 0169 R4</p>
+                  <p><span className="font-medium">Teléfono:</span> 04120736383</p>
+                  <p><span className="font-medium">Cédula:</span> 25570037</p>
                   <p>
                     <span className="font-medium">Monto a pagar:</span>{" "}
                     {hasValidBcvRate
