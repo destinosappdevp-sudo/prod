@@ -44,6 +44,31 @@ async function getDataBySlug(slug: string) {
   });
 }
 
+async function getAmenities(homeId: string) {
+  const categories = await prismaAny.amenityCategory.findMany({
+    where: { isActive: true },
+    orderBy: [{ order: "asc" }, { name: "asc" }],
+    include: {
+      Amenity: {
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        include: { HomeAmenity: { where: { homeId } } },
+      },
+    },
+  });
+
+  return categories.map((category: any) => ({
+    id: category.id,
+    name: category.name,
+    amenities: category.Amenity.map((amenity: any) => ({
+      id: amenity.id,
+      name: amenity.name,
+      iconUrl: amenity.iconUrl,
+      status: amenity.HomeAmenity[0]?.status || "UNSPECIFIED",
+    })),
+  }));
+}
+
 export async function generateMetadata({
   params,
 }: {
