@@ -77,9 +77,31 @@ export async function generateMetadata({
   const { slug } = await params;
   const data = await getDataBySlug(slug);
   if (!data) return { title: "Paquete no encontrado" };
+  // Generar keywords básicas a partir del contenido disponible
+  const kwSet = new Set<string>();
+  const pushWords = (text?: string | null) => {
+    if (!text) return;
+    text
+      .split(/\s+/)
+      .slice(0, 12)
+      .map((w) => w.replace(/[.,;:()"'¡!¿?]/g, ""))
+      .filter(Boolean)
+      .forEach((w) => kwSet.add(w.toLowerCase()));
+  };
+  pushWords(data.title);
+  pushWords(data.description?.slice(0, 120));
+  if (data.categoryName) kwSet.add(data.categoryName.toLowerCase());
+  if (data.municipality) kwSet.add(String(data.municipality).toLowerCase());
+  if (data.country) kwSet.add(String(data.country).toLowerCase());
+  kwSet.add("paquete");
+  kwSet.add("viaje");
+
+  const keywords = Array.from(kwSet).slice(0, 20);
+
   return {
     title: `${data.title} | Destinos Venezuela`,
     description: data.description?.slice(0, 160) || "Reserva tu cupo",
+    keywords,
   };
 }
 
@@ -184,9 +206,6 @@ async function DestinoPage({
 
   return (
     <div className="mx-auto mt-4 mb-8 w-full max-w-5xl px-4 sm:px-6 lg:mt-6 lg:px-0 lg:mb-10">
-      {/* Título */}
-      <h1 className="mb-3 px-4 text-[1.75rem] font-bold leading-tight sm:px-6 sm:text-[2rem] lg:px-8">{data.title}</h1>
-
       {/* Foto principal — ancho completo */}
       <div className="relative mb-6 w-full aspect-[3/2]">
         <SupabaseImage
@@ -198,6 +217,8 @@ async function DestinoPage({
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8">
+        {/* Título (ahora después de la imagen) - H1 para SEO */}
+        <h1 className="mb-3 px-0 text-[1.75rem] font-bold leading-tight sm:text-[2rem]">{data.title}</h1>
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 divide-x divide-gray-200 border border-gray-200 rounded-2xl mb-6 overflow-hidden">
