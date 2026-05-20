@@ -198,7 +198,7 @@ export function generateHostNotificationEmail(data: ReservationEmailData): strin
               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
                 <tr>
                   <td>
-                    <h2 style="margin: 0 0 15px 0; color: #333333; font-size: 20px; font-weight: 600;">?? ${data.propertyTitle}</h2>
+                    <h2 style="margin: 0 0 15px 0; color: #333333; font-size: 20px; font-weight: 600;">${data.propertyTitle}</h2>
                     <p style="margin: 0 0 10px 0; color: #666666; font-size: 14px;">
                       <strong>Check-in:</strong> ${data.checkIn}
                     </p>
@@ -323,7 +323,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
           <tr>
             <td style="background:linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%);padding:36px 28px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;">Bienvenido a Destinos Venezuela</h1>
-              <p style="margin:10px 0 0 0;color:#eaf6ff;font-size:15px;">Tu cuenta ya esta lista para empezar a reservar</p>
+              <p style="margin:10px 0 0 0;color:#eaf6ff;font-size:15px;">Tu cuenta ya est&#225; lista para empezar a reservar</p>
             </td>
           </tr>
           <tr>
@@ -342,7 +342,7 @@ export function generateWelcomeEmail(data: WelcomeEmailData): string {
                 <tr>
                   <td>
                     <p style="margin:0;color:#1e3a8a;font-size:13px;line-height:1.6;">
-                      Si no fuiste tu, responde este correo para que nuestro equipo te ayude de inmediato.
+                      Si no fuiste t&#250;, responde este correo para que nuestro equipo te ayude de inmediato.
                     </p>
                   </td>
                 </tr>
@@ -495,7 +495,7 @@ export function generatePasswordResetEmail(data: PasswordResetEmailData): string
                 <tr>
                   <td align="center">
                     <a href="${data.resetLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 6px; font-weight: 600; font-size: 16px;">
-                      Cambiar contrase�a
+                      Cambiar contrase&#241;a
                     </a>
                   </td>
                 </tr>
