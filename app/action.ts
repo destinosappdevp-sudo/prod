@@ -175,13 +175,13 @@ export async function signIn() {
 }
 
 export async function signUp(email: string, password: string) {
-  const supabase = await createClient();
-  const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const adminClient = createAdminClient();
+  if (!adminClient) return { error: "Configuración de servidor incompleta" };
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await adminClient.auth.admin.createUser({
     email,
     password,
-    options: { emailRedirectTo: `${origin}/auth/callback` },
+    email_confirm: true, // Supabase no envía email; lo gestiona Resend
   });
 
   if (error) {
@@ -263,11 +263,13 @@ export async function signUpWithRole(
       }
     }
     
-    const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
-    const { data, error } = await supabase.auth.signUp({
+    const adminClient = createAdminClient();
+    if (!adminClient) return { error: "Configuración de servidor incompleta" };
+
+    const { data, error } = await adminClient.auth.admin.createUser({
       email,
       password,
-      options: { emailRedirectTo: `${origin}/auth/callback` },
+      email_confirm: true, // Supabase no envía email; lo gestiona Resend
     });
 
     if (error) {

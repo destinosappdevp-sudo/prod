@@ -141,11 +141,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
-    const { data, error } = await supabase.auth.signUp({
+    // Usamos el cliente admin para crear el usuario ya confirmado.
+    // Así Supabase no envía ningún email; lo gestiona Resend.
+    const { createAdminClient: getAdminClient } = await import("@/app/lib/supabase/admin");
+    const adminSupabase = getAdminClient();
+    if (!adminSupabase) {
+      return jsonResponse({ error: "Configuración de servidor incompleta para autenticación" }, 500);
+    }
+
+    const { data, error } = await adminSupabase.auth.admin.createUser({
       email,
       password,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+      email_confirm: true,
     });
 
     if (error) {
