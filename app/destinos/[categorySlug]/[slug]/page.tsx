@@ -109,6 +109,51 @@ async function DestinoPage({
   const { data: { user } } = await supabase.auth.getUser();
   const isApproved = data.publishStatus === "APPROVED";
 
+  let hasFullReservation = false;
+  let savingPlan: "estandar" | "vip" | null = null;
+
+  if (user) {
+    const reservation = await prismaAny.reservation.findFirst({
+      where: {
+        userId: user.id,
+        homeId: data.id,
+        status: { in: ["PENDING", "CONFIRMED"] },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, seatId: true },
+    });
+
+    hasFullReservation = Boolean(reservation);
+
+    if (!hasFullReservation) {
+      const savingsRows = await prismaAny.saving.findMany({
+        where: {
+          userId: user.id,
+          status: { in: ["PENDING", "APPROVED"] },
+        },
+        orderBy: { createdAt: "desc" },
+        select: { paymentDetails: true },
+      });
+
+      const savingWithSeat = savingsRows.find((row: any) => {
+        const details = row?.paymentDetails && typeof row.paymentDetails === "object" ? row.paymentDetails : null;
+        return details?.homeId === data.id && typeof details?.seatId === "string" && details.seatId;
+      });
+
+      const activeSeatId = savingWithSeat?.paymentDetails?.seatId;
+      if (typeof activeSeatId === "string" && activeSeatId) {
+        const seat = await prismaAny.packageSeat.findUnique({
+          where: { id: activeSeatId },
+          select: { zone: true, homeId: true },
+        });
+
+        if (seat?.homeId === data.id) {
+          savingPlan = seat.zone === "VIP" ? "vip" : "estandar";
+        }
+      }
+    }
+  }
+
   if (!isApproved) {
     if (!user) notFound();
     const userDb = await prismaAny.user.findUnique({
@@ -168,6 +213,29 @@ async function DestinoPage({
   const vipAmenities = amenityCategories.flatMap((cat: any) =>
     cat.amenities.filter((a: any) => a.status === "NO")
   );
+
+  const standardDisabled = hasFullReservation || savingPlan === "vip";
+  const vipDisabled = hasFullReservation || savingPlan === "estandar";
+  const standardSavingActive = savingPlan === "estandar";
+  const vipSavingActive = savingPlan === "vip";
+
+  const standardSavingsPath = `/my-dashboard?tab=ahorrar&homeId=${data.id}`;
+  const standardSavingsHref = user
+    ? standardSavingsPath
+    : `/login?next=${encodeURIComponent(standardSavingsPath)}`;
+  const standardFinishPath = `/seats/${data.id}?plan=estandar&flow=contado`;
+  const standardFinishHref = user
+    ? standardFinishPath
+    : `/login?next=${encodeURIComponent(standardFinishPath)}`;
+
+  const vipSavingsPath = `/my-dashboard?tab=ahorrar&homeId=${data.id}`;
+  const vipSavingsHref = user
+    ? vipSavingsPath
+    : `/login?next=${encodeURIComponent(vipSavingsPath)}`;
+  const vipFinishPath = `/seats/${data.id}?plan=vip&flow=contado`;
+  const vipFinishHref = user
+    ? vipFinishPath
+    : `/login?next=${encodeURIComponent(vipFinishPath)}`;
 
   return (
     <div className="mx-auto mt-4 mb-8 w-full max-w-5xl px-4 sm:px-6 lg:mt-6 lg:px-0 lg:mb-10">
@@ -278,19 +346,48 @@ async function DestinoPage({
               ))}
             </ul>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Link
-                href={`/seats/${data.id}?plan=estandar&flow=ahorro`}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
-              >
-                Ahorrar
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href={`/seats/${data.id}?plan=estandar&flow=contado`}
-                className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
-              >
-                Pagar de contado
-              </Link>
+              {standardDisabled ? (
+                <>
+                  <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
+                    Ahorrar
+                  </span>
+                  <span className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
+                    Pagar de contado
+                  </span>
+                </>
+              ) : standardSavingActive ? (
+                <>
+                  <Link
+                    href={standardSavingsHref}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
+                  >
+                    Seguir ahorrando
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href={standardFinishHref}
+                    className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+                  >
+                    Terminar de pagar
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href={`/seats/${data.id}?plan=estandar&flow=ahorro`}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
+                  >
+                    Ahorrar
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href={`/seats/${data.id}?plan=estandar&flow=contado`}
+                    className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+                  >
+                    Pagar de contado
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -321,19 +418,48 @@ async function DestinoPage({
                   ))}
                 </ul>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <Link
-                    href={`/seats/${data.id}?plan=vip&flow=ahorro`}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
-                  >
-                    Ahorrar
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href={`/seats/${data.id}?plan=vip&flow=contado`}
-                    className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
-                  >
-                    Pagar de contado
-                  </Link>
+                  {vipDisabled ? (
+                    <>
+                      <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
+                        Ahorrar
+                      </span>
+                      <span className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
+                        Pagar de contado
+                      </span>
+                    </>
+                  ) : vipSavingActive ? (
+                    <>
+                      <Link
+                        href={vipSavingsHref}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
+                      >
+                        Seguir ahorrando
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        href={vipFinishHref}
+                        className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+                      >
+                        Terminar de pagar
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/seats/${data.id}?plan=vip&flow=ahorro`}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
+                      >
+                        Ahorrar
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        href={`/seats/${data.id}?plan=vip&flow=contado`}
+                        className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+                      >
+                        Pagar de contado
+                      </Link>
+                    </>
+                  )}
                 </div>
               </>
             ) : (
