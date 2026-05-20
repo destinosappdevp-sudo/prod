@@ -588,11 +588,11 @@ export default function PropertyDetailTabs({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Banco Emisor</label>
-              <input
+                <input
                 value={emisorBank}
                 onChange={(e) => setEmisorBank(e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                placeholder="Banco de Venezuela"
+                placeholder="0169 R4"
               />
             </div>
             <div>

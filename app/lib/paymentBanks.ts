@@ -1,6 +1,6 @@
 // Lista completa de bancos venezolanos con códigos
 export const BANKS = [
-  { code: "0102", name: "Banco de Venezuela", value: "banco_venezuela" },
+  { code: "0169", name: "0169 R4", value: "banco_0169_r4" },
   { code: "0104", name: "Mercantil", value: "mercantil" },
   { code: "0105", name: "Banco Agrícola", value: "banco_agricola" },
   { code: "0108", name: "Provincial", value: "provincial" },
