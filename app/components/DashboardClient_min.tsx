@@ -978,12 +978,12 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <div className="flex items-center gap-3 mb-2">
                     <PiggyBank size={28} />
                     <h2 className="text-xl font-bold">
-                      {isPackageSavingsView && depositInstallments.length > 0 ? "Registrar nueva cuota" : "Depositar a Mi Alcanc�a"}
+                      {isPackageSavingsView && depositInstallments.length > 0 ? "Registrar nueva cuota" : "Depositar a Mi Alcancía"}
                     </h2>
                   </div>
                   <p className="text-sm text-white/80">
-                    {props.bcvRate && props.bcvRate > 0
-                      ? `Tasa BCV del d�a: ${Number(props.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs/USD`
+                      {props.bcvRate && props.bcvRate > 0
+                      ? `Tasa BCV del día: ${Number(props.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs/USD`
                       : "Tasa BCV no disponible"}
                   </p>
                 </div>
