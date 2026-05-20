@@ -271,7 +271,7 @@ export default function CheckoutForm({
               )}
               <div>
                 <p className="text-xl font-semibold text-slate-900">Pago Directo</p>
-                <p className="text-sm text-slate-600">Pago Móvil, Zelle o Transferencia</p>
+                <p className="text-sm text-slate-600">Pago Móvil</p>
               </div>
             </div>
           </button>
