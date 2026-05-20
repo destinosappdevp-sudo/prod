@@ -24,49 +24,62 @@ async function getDataBySlug(slug: string) {
   return await prismaAny.home.findFirst({
     where: { id: { startsWith: idPrefix } },
     select: {
-      id: true,
-      photo: true,
-      title: true,
-      description: true,
-      categoryName: true,
-      price: true,
-      priceVip: true,
-      country: true,
-      municipality: true,
-      exactAddress: true,
-      checkInTime: true,
-      guests: true,
-      publishStatus: true,
-      User: {
-        select: { id: true, role: true },
-      },
-    },
-  });
-}
-
-async function getAmenities(homeId: string) {
-  const categories = await prismaAny.amenityCategory.findMany({
-    where: { isActive: true },
-    orderBy: [{ order: "asc" }, { name: "asc" }],
-    include: {
-      Amenity: {
-        where: { isActive: true },
-        orderBy: { name: "asc" },
-        include: { HomeAmenity: { where: { homeId } } },
-      },
-    },
-  });
-
-  return categories.map((category: any) => ({
-    id: category.id,
-    name: category.name,
-    amenities: category.Amenity.map((amenity: any) => ({
-      id: amenity.id,
-      name: amenity.name,
-      iconUrl: amenity.iconUrl,
-      status: amenity.HomeAmenity[0]?.status || "UNSPECIFIED",
-    })),
+                  {vipDisabled ? (
+                    <>
+                      <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
+                        Ahorrar
+                      </span>
+                      <span className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
+                        Pagar de contado
+                      </span>
+                      <p className="mt-2 text-xs text-gray-500">
+                        {hasFullReservation
+                          ? "Ya completaste el pago para este paquete."
+                          : "Tienes un ahorro activo en el plan Estándar; los demás planes están bloqueados para evitar equivocaciones."}
+                      </p>
+                    </>
+                  ) : vipSavingActive ? (
+                    <>
+                      <Link
+                        href={vipSavingsHref}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
+                      >
+                        Seguir ahorrando
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        href={vipFinishHref}
+                        className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+                      >
+                        Terminar de pagar
+                      </Link>
+                      <p className="mt-2 text-xs text-gray-500">Estás ahorrando en este plan; tus depósitos aparecen en Mi Alcancía.</p>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/seats/${data.id}?plan=vip&flow=ahorro`}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
+                      >
+                        Ahorrar
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      <Link
+                        href={`/seats/${data.id}?plan=vip&flow=contado`}
+                        className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+                      >
+                        Pagar de contado
+                      </Link>
+                    </>
+                  )}
   }));
+                {(vipDisabled || vipSavingActive) && (
+                  <div className="mt-3">
+                    {vipDisabled && !hasFullReservation && (
+                      <p className="text-xs text-gray-500">Tienes un ahorro activo en otro plan; completa o cancela ese ahorro para habilitar esta opción.</p>
+                    )}
+                  </div>
+                )}
 }
 
 export async function generateMetadata({
@@ -354,6 +367,11 @@ async function DestinoPage({
                   <span className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
                     Pagar de contado
                   </span>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {hasFullReservation
+                      ? "Ya completaste el pago para este paquete."
+                      : "Tienes un ahorro activo en el plan Premium; los demás planes están bloqueados para evitar equivocaciones."}
+                  </p>
                 </>
               ) : standardSavingActive ? (
                 <>
@@ -370,6 +388,7 @@ async function DestinoPage({
                   >
                     Terminar de pagar
                   </Link>
+                  <p className="mt-2 text-xs text-gray-500">Estás ahorrando en este plan; tus depósitos aparecen en Mi Alcancía.</p>
                 </>
               ) : (
                 <>
@@ -389,6 +408,13 @@ async function DestinoPage({
                 </>
               )}
             </div>
+            {(standardDisabled || standardSavingActive) && (
+              <div className="mt-3">
+                {standardDisabled && !hasFullReservation && (
+                  <p className="text-xs text-gray-500">Tienes un ahorro activo en otro plan; completa o cancela ese ahorro para habilitar esta opción.</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Plan Premium */}
