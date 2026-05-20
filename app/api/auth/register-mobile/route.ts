@@ -16,6 +16,8 @@ type RegisterMobileBody = {
   cedula?: string;
   stateCode?: string;
   state?: string;
+  municipalityCode?: string;
+  dateOfBirth?: string;
   role?: "GUEST";
 };
 
@@ -98,6 +100,9 @@ export async function POST(request: NextRequest) {
     const phoneNumber = (body.phoneNumber ?? body.phone ?? "").trim();
     const cedula = normalizeCedulaValue(body.cedula);
     const stateCode = (body.stateCode ?? body.state ?? "").trim().toUpperCase();
+    const municipalityCode = (body.municipalityCode ?? "").trim().toUpperCase();
+    const dateOfBirthRaw = (body.dateOfBirth ?? "").trim();
+    const dateOfBirth = dateOfBirthRaw ? new Date(dateOfBirthRaw) : null;
     const role = "GUEST";
 
     if (!email || !password) {
@@ -118,6 +123,10 @@ export async function POST(request: NextRequest) {
 
     if (!stateCode || !getStateByValue(stateCode)) {
       return jsonResponse({ error: "Debes seleccionar un estado válido" }, 400);
+    }
+
+    if (dateOfBirth && Number.isNaN(dateOfBirth.getTime())) {
+      return jsonResponse({ error: "Fecha de nacimiento inválida" }, 400);
     }
 
     const cedulaInUse = await prisma.user.findFirst({
@@ -157,8 +166,27 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      const statusCode = error.message.toLowerCase().includes("already") ? 409 : 400;
-      return jsonResponse({ error: error.message }, statusCode);
+      const message = String(error.message || "");
+      const lowerMessage = message.toLowerCase();
+
+      if (lowerMessage.includes("rate limit")) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (!signInError && signInData?.session) {
+          return jsonResponse({
+            success: true,
+            message: "Cuenta disponible e inicio de sesión permitido",
+            session: signInData.session,
+            recoveredFromRateLimit: true,
+          });
+        }
+      }
+
+      const statusCode = lowerMessage.includes("already") ? 409 : lowerMessage.includes("rate limit") ? 429 : 400;
+      return jsonResponse({ error: message }, statusCode);
     }
 
     if (data.user) {
@@ -170,6 +198,8 @@ export async function POST(request: NextRequest) {
           phoneNumber,
           cedula,
           stateCode,
+          municipalityCode: municipalityCode || null,
+          dateOfBirth,
           role,
         },
         create: {
@@ -180,6 +210,8 @@ export async function POST(request: NextRequest) {
           phoneNumber,
           cedula,
           stateCode,
+          municipalityCode: municipalityCode || null,
+          dateOfBirth,
           role,
         },
       });

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Eye, EyeOff, Home, UserRound } from "lucide-react";
-import { signInWithEmail, signUpWithRole } from "@/app/action";
+import { signInWithEmail } from "@/app/action";
 import { createClient } from "@/app/lib/supabase/client";
 import { getAllStates } from "@/app/lib/venezuelaStates";
 import { getMunicipalitiesByState } from "@/app/lib/venezuelaMunicipalities";
@@ -210,16 +210,32 @@ export function AuthPanel({
       }
 
       try {
-        const result = await signUpWithRole(email, password, role, {
-          firstName: fullName.trim(),
-          phoneNumber,
-          cedula,
-          stateCode,
-          municipalityCode,
-          dateOfBirth,
+        const response = await fetch("/api/auth/register-mobile", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            firstName: fullName.trim(),
+            phoneNumber,
+            cedula,
+            stateCode,
+            municipalityCode,
+            dateOfBirth,
+            role,
+          }),
         });
-        if (result && "error" in result && result.error) {
-          const errorMessage = String(result.error).toLowerCase();
+
+        const payload = await response.json().catch(() => ({}));
+        const backendError =
+          (typeof payload?.error === "string" && payload.error) ||
+          (typeof payload?.message === "string" && payload.message) ||
+          "No se pudo completar el registro.";
+
+        if (!response.ok || payload?.success === false) {
+          const errorMessage = String(backendError).toLowerCase();
 
           if (
             errorMessage.includes("rate limit") ||
@@ -237,7 +253,7 @@ export function AuthPanel({
             }
           }
 
-          setError(result.error);
+          setError(backendError);
           return;
         }
 
