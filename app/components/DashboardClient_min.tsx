@@ -188,6 +188,12 @@ export default function DashboardClient(props: DashboardClientProps) {
     e.preventDefault();
     setSaveError("");
     setSaveSuccess(false);
+
+    if (packageSavingsCompleted) {
+      setSaveError("Ya completaste el ahorro de este viaje. Ahora puedes ahorrar en tu alcancía general.");
+      return;
+    }
+
     const usd = Number(amountUsd);
     if (!usd || usd <= 0) {
       setSaveError("Ingresa un monto válido en USD.");
@@ -351,11 +357,20 @@ export default function DashboardClient(props: DashboardClientProps) {
     displayedSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0) * 100
   ) / 100;
   const packageGoalUsd = Number(selectedSavingPackage?.price ?? 0);
+  const packageApprovedDepositedUsd = roundMoney(
+    displayedSavings.reduce((sum, item) => {
+      if (item.status !== "APPROVED") return sum;
+      const usd = Number(item.amountUsd ?? 0);
+      if (usd <= 0) return sum;
+      return sum + usd;
+    }, 0)
+  );
   const depositInstallments = displayedSavings.filter((item) => Number(item.amountUsd ?? 0) > 0);
-  const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - displayedSavingsTotal));
+  const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - packageApprovedDepositedUsd));
   const progressPercent = packageGoalUsd > 0
-    ? Math.min(100, Math.round((displayedSavingsTotal / packageGoalUsd) * 100))
+    ? Math.min(100, Math.round((packageApprovedDepositedUsd / packageGoalUsd) * 100))
     : 0;
+  const packageSavingsCompleted = isPackageSavingsView && packageGoalUsd > 0 && remainingUsd <= 0;
   const packageDetailHref = selectedSavingPackage?.slug
     ? buildHomeUrl(selectedSavingPackage.slug, selectedSavingPackage.id, selectedSavingPackage.categoryName)
     : null;
@@ -737,7 +752,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                       </div>
                       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                         <p className="text-xs text-slate-500">Ahorrado</p>
-                        <p className="mt-1 text-2xl font-bold text-green-600">${displayedSavingsTotal.toFixed(2)}</p>
+                        <p className="mt-1 text-2xl font-bold text-green-600">${packageApprovedDepositedUsd.toFixed(2)}</p>
                       </div>
                       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                         <p className="text-xs text-slate-500">Te falta</p>
@@ -756,13 +771,15 @@ export default function DashboardClient(props: DashboardClientProps) {
                     </div>
 
                     <div className="mt-5 flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("ahorrar")}
-                        className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
-                      >
-                        Agregar cuota
-                      </button>
+                      {!packageSavingsCompleted && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("ahorrar")}
+                          className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+                        >
+                          Agregar cuota
+                        </button>
+                      )}
                       {packageDetailHref && (
                         <Link
                           href={packageDetailHref}
@@ -935,14 +952,16 @@ export default function DashboardClient(props: DashboardClientProps) {
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Detalle del paquete</p>
                     <h3 className="mt-1 text-lg font-bold text-slate-900">{packageTargetLabel}</h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      {depositInstallments.length > 0
+                      {packageSavingsCompleted
+                        ? "Meta completada para este viaje. Los próximos depósitos irán a la alcancía general."
+                        : depositInstallments.length > 0
                         ? `Llevas ${depositInstallments.length} cuota${depositInstallments.length !== 1 ? "s" : ""} y te faltan $${remainingUsd.toFixed(2)}.`
                         : "Aún no has abonado tu primera cuota."}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm">
                     <p className="text-slate-500">Meta: <span className="font-semibold text-slate-900">${packageGoalUsd.toFixed(2)}</span></p>
-                    <p className="text-slate-500">Ahorrado: <span className="font-semibold text-green-600">${displayedSavingsTotal.toFixed(2)}</span></p>
+                    <p className="text-slate-500">Ahorrado: <span className="font-semibold text-green-600">${packageApprovedDepositedUsd.toFixed(2)}</span></p>
                   </div>
                 </div>
               </div>
@@ -975,7 +994,18 @@ export default function DashboardClient(props: DashboardClientProps) {
                       </p>
                       <p className="mt-1 text-sm font-semibold text-emerald-900">{packageTargetLabel}</p>
                       <p className="mt-1 text-xs text-emerald-700">
-                        Los depósitos que registres aquí quedarán asociados a este destino.
+                        {packageSavingsCompleted
+                          ? "Meta completada. Esta alcancía ya no acepta más depósitos para este destino."
+                          : "Los depósitos que registres aquí quedarán asociados a este destino."}
+                      </p>
+                    </div>
+                  )}
+
+                  {packageSavingsCompleted && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                      <p className="text-sm font-semibold text-amber-800">Ahorro completado</p>
+                      <p className="mt-1 text-xs text-amber-700">
+                        Ya alcanzaste la meta de este viaje. Si haces otro depósito, debe ser en la alcancía general.
                       </p>
                     </div>
                   )}
@@ -1119,10 +1149,14 @@ export default function DashboardClient(props: DashboardClientProps) {
 
                     <button
                       type="submit"
-                      disabled={saving || uploadingProof || !amountUsd || !previewBs}
+                      disabled={saving || uploadingProof || !amountUsd || !previewBs || packageSavingsCompleted}
                       className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {saving || uploadingProof ? "Procesando..." : "Registrar Depósito"}
+                      {packageSavingsCompleted
+                        ? "Meta completada"
+                        : saving || uploadingProof
+                        ? "Procesando..."
+                        : "Registrar Depósito"}
                     </button>
                   </form>
                 </div>
