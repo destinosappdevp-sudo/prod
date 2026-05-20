@@ -219,6 +219,24 @@ export function AuthPanel({
           dateOfBirth,
         });
         if (result && "error" in result && result.error) {
+          const errorMessage = String(result.error).toLowerCase();
+
+          if (
+            errorMessage.includes("rate limit") ||
+            errorMessage.includes("already")
+          ) {
+            const loginResult = await signInWithEmail(email, password);
+
+            if (loginResult?.success) {
+              onSuccess?.();
+              router.replace("/my-dashboard?tab=profile");
+              window.setTimeout(() => {
+                void trackActiveSession(loginResult.userId);
+              }, 0);
+              return;
+            }
+          }
+
           setError(result.error);
           return;
         }
