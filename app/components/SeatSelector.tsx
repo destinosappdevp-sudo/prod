@@ -17,11 +17,12 @@ interface SeatSelectorProps {
   seats: SeatData[];
   plan: "vip" | "estandar";
   homeId: string;
+  flow: "ahorro" | "contado";
 }
 
 const COLUMNS = ["A", "B", "C", "D"] as const;
 
-export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps) {
+export default function SeatSelector({ seats, plan, homeId, flow }: SeatSelectorProps) {
   const router = useRouter();
   const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
 
@@ -45,11 +46,32 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
   };
 
   const handleContinue = () => {
+    const savingsUrl = (seatId?: string) => {
+      const params = new URLSearchParams({
+        tab: "ahorrar",
+        homeId,
+      });
+      if (seatId) {
+        params.set("seatId", seatId);
+      }
+      return `/my-dashboard?${params.toString()}`;
+    };
+
     if (seats.length === 0) {
+      if (flow === "ahorro") {
+        router.push(savingsUrl());
+        return;
+      }
       router.push(`/checkout/${homeId}?plan=${plan}`);
       return;
     }
     if (!selectedSeatId) return;
+
+    if (flow === "ahorro") {
+      router.push(savingsUrl(selectedSeatId));
+      return;
+    }
+
     router.push(`/checkout/${homeId}?plan=${plan}&seatId=${selectedSeatId}`);
   };
 
@@ -128,7 +150,7 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
           <p className="text-sm text-gray-400">Los asientos serán asignados por el organizador.</p>
         </div>
         <Button className="w-full max-w-xs" onClick={handleContinue}>
-          Continuar al pago
+          {flow === "ahorro" ? "Ir a ahorro" : "Continuar al pago"}
         </Button>
       </div>
     );
@@ -221,7 +243,7 @@ export default function SeatSelector({ seats, plan, homeId }: SeatSelectorProps)
           disabled={seats.length > 0 && !selectedSeatId}
           onClick={handleContinue}
         >
-          Continuar al pago
+          {flow === "ahorro" ? "Ir a ahorro" : "Continuar al pago"}
         </Button>
       </div>
     </div>

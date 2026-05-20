@@ -78,6 +78,11 @@ export async function POST(req: NextRequest) {
       ? paymentDetailsInput.homeId.trim()
       : null;
 
+  const seatId =
+    typeof paymentDetailsInput.seatId === "string" && paymentDetailsInput.seatId.trim()
+      ? paymentDetailsInput.seatId.trim()
+      : null;
+
   let homeTitle =
     typeof paymentDetailsInput.homeTitle === "string" && paymentDetailsInput.homeTitle.trim()
       ? paymentDetailsInput.homeTitle.trim()
@@ -132,20 +137,52 @@ export async function POST(req: NextRequest) {
     paymentProofUrl,
     homeId,
     homeTitle,
+    seatId,
     kind: homeId ? "PACKAGE_SAVING_DEPOSIT" : "GENERAL_SAVING_DEPOSIT",
   };
 
-  // El depósito se crea en PENDING hasta que el admin lo apruebe
-  const saving = await prismaAny.saving.create({
-    data: {
-      userId: user.id,
-      bcvRate,
-      amountBs,
-      amountUsd,
-      paymentDetails,
-      status: "PENDING",
-    },
-  });
+  const shouldReserveSeat = Boolean(homeId && seatId);
+
+  // El depósito se crea en PENDING hasta que el admin lo apruebe.
+  // Si viene seatId+homeId, también se ocupa el asiento para que el flujo de ahorro lo reserve.
+  let saving: any;
+  try {
+    saving = await prismaAny.$transaction(async (tx: any) => {
+      if (shouldReserveSeat) {
+        const seat = await tx.packageSeat.findUnique({
+          where: { id: seatId },
+          select: { id: true, homeId: true, status: true },
+        });
+
+        if (!seat || seat.homeId !== homeId) {
+          throw new Error("Asiento inválido para este paquete");
+        }
+
+        const updatedSeat = await tx.packageSeat.updateMany({
+          where: { id: seatId, status: "AVAILABLE" },
+          data: { status: "OCCUPIED" },
+        });
+
+        if (updatedSeat.count === 0) {
+          throw new Error("El asiento seleccionado ya fue ocupado por otro usuario");
+        }
+      }
+
+      return tx.saving.create({
+        data: {
+          userId: user.id,
+          bcvRate,
+          amountBs,
+          amountUsd,
+          paymentDetails,
+          status: "PENDING",
+        },
+      });
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Error al guardar el ahorro";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 
   return NextResponse.json(saving, { status: 201 });
 }

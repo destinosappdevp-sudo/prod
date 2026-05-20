@@ -88,6 +88,7 @@ interface DashboardClientProps {
   bcvRate?: number;
   savingTarget?: string;
   savingTargetId?: string;
+  savingTargetSeatId?: string;
   savingPackage?: {
     id: string;
     title: string;
@@ -237,6 +238,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             paymentProofUrl,
             homeId: selectedSavingId || null,
             homeTitle: selectedSavingId ? packageTargetLabel : null,
+            seatId: props.savingTargetSeatId || null,
           },
         }),
       });

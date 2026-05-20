@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 import { getStateByValue } from "@/app/lib/venezuelaStates";
 import { getMunicipalityByValue } from "@/app/lib/venezuelaMunicipalities";
 import FormattedDescription from "@/app/components/FormattedDescription";
-import { ArrowRight, Clock, MapPin, PiggyBank, Users } from "lucide-react";
+import { ArrowRight, Clock, MapPin, Users } from "lucide-react";
 import Image from "next/image";
 
 const prismaAny = prisma as any;
@@ -107,26 +107,6 @@ async function DestinoPage({
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  let hasStartedPackageSaving = false;
-
-  if (user) {
-    const userSavings = await prismaAny.saving.findMany({
-      where: { userId: user.id },
-      select: { paymentDetails: true },
-    });
-
-    hasStartedPackageSaving = userSavings.some((item: any) => item?.paymentDetails?.homeId === data.id);
-  }
-
-  const savingsParams = new URLSearchParams({
-    tab: hasStartedPackageSaving ? "mi-alcancia" : "ahorrar",
-    target: data.title || "este paquete",
-    homeId: data.id,
-  });
-  const savingsPath = `/my-dashboard?${savingsParams.toString()}`;
-  const savingsHref = user
-    ? savingsPath
-    : `/login?next=${encodeURIComponent(savingsPath)}`;
   const isApproved = data.publishStatus === "APPROVED";
 
   if (!isApproved) {
@@ -221,8 +201,8 @@ async function DestinoPage({
         </div>
       </div>
 
-      {/* Información de Salida + ahorro */}
-      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+      {/* Información de Salida */}
+      <div className="mb-6">
         <div className="border border-gray-200 rounded-2xl p-6">
           <h2 className="flex items-center gap-2 font-semibold text-base mb-4">
             <MapPin className="w-4 h-4 text-gray-500" />
@@ -261,39 +241,6 @@ async function DestinoPage({
             )}
           </div>
         </div>
-
-        <div className="border border-[#E1B042]/40 rounded-2xl p-4 bg-[#FBF9F2]">
-          <div className="rounded-xl bg-gradient-to-r from-[#8A880F] to-[#B49B1C] p-4 text-white shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="rounded-full bg-white/15 p-2">
-                <PiggyBank className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em]">Iniciar plan de ahorro</p>
-                <p className="mt-1 text-sm text-white/90">
-                  Paga cuotas mensuales y completa tu viaje hasta 30 días antes.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <p className="mt-4 text-sm font-semibold text-slate-900">Ahorra para este paquete</p>
-          <p className="mt-1 text-sm text-slate-600">
-            Haz tus abonos en la alcancía y usa ese saldo luego para reservar {data.title}.
-          </p>
-
-          <Link
-            href={savingsHref}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
-          >
-            {hasStartedPackageSaving ? "Ver ahorro del paquete" : "Iniciar ahorro"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-
-          <Link href="/terminos" className="mt-3 inline-block text-[11px] text-slate-500 underline hover:text-slate-700">
-            Términos y condiciones del plan de ahorro aplican.
-          </Link>
-        </div>
       </div>
 
       {/* Descripción */}
@@ -330,12 +277,21 @@ async function DestinoPage({
                 </li>
               ))}
             </ul>
-            <Link
-              href={`/seats/${data.id}?plan=estandar`}
-              className="block w-full text-center border border-gray-900 rounded-full py-2.5 text-sm font-semibold hover:bg-gray-900 hover:text-white transition"
-            >
-              Seleccionar Estándar
-            </Link>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Link
+                href={`/seats/${data.id}?plan=estandar&flow=ahorro`}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
+              >
+                Ahorrar
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href={`/seats/${data.id}?plan=estandar&flow=contado`}
+                className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+              >
+                Pagar de contado
+              </Link>
+            </div>
           </div>
 
           {/* Plan Premium */}
@@ -364,12 +320,21 @@ async function DestinoPage({
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={`/seats/${data.id}?plan=vip`}
-                  className="block w-full text-center border-2 border-[#E1B042] rounded-full py-2.5 text-sm font-semibold text-[#C49A28] hover:bg-[#E1B042] hover:text-white transition"
-                >
-                  Seleccionar Premium
-                </Link>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Link
+                    href={`/seats/${data.id}?plan=vip&flow=ahorro`}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
+                  >
+                    Ahorrar
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href={`/seats/${data.id}?plan=vip&flow=contado`}
+                    className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
+                  >
+                    Pagar de contado
+                  </Link>
+                </div>
               </>
             ) : (
               <p className="text-sm text-gray-400 mt-2">Próximamente</p>
