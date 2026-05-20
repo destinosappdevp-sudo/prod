@@ -176,10 +176,12 @@ export async function signIn() {
 
 export async function signUp(email: string, password: string) {
   const supabase = await createClient();
-  
+  const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: { emailRedirectTo: `${origin}/auth/callback` },
   });
 
   if (error) {
@@ -261,9 +263,11 @@ export async function signUpWithRole(
       }
     }
     
+    const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: { emailRedirectTo: `${origin}/auth/callback` },
     });
 
     if (error) {
