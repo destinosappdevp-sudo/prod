@@ -122,6 +122,9 @@ export default async function ReservationDetailPage({
         },
         Payment: true,
         Review: true,
+        PackageSeat: {
+          select: { id: true, zone: true, row: true, column: true },
+        },
       },
     });
 
@@ -135,6 +138,36 @@ export default async function ReservationDetailPage({
 
     if (!isGuest && !isHost) {
       redirect("/my-dashboard");
+    }
+
+    // Fetch seat amenities when seat is present
+    let seatAmenities: Array<{ id: string; name: string; iconUrl: string | null }> = [];
+    if (reservation.PackageSeat) {
+      const zone = reservation.PackageSeat.zone as "VIP" | "STANDARD";
+      const statusFilter = zone === "VIP" ? "NO" : "YES";
+      const cats = await (prisma as any).amenityCategory.findMany({
+        where: { isActive: true },
+        include: {
+          Amenity: {
+            where: { isActive: true },
+            include: {
+              HomeAmenity: {
+                where: {
+                  homeId: reservation.homeId,
+                  status: statusFilter,
+                },
+              },
+            },
+          },
+        },
+      });
+      seatAmenities = cats.flatMap((cat: any) =>
+        cat.Amenity.filter((a: any) => a.HomeAmenity.length > 0).map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          iconUrl: a.iconUrl ?? null,
+        }))
+      );
     }
 
     const propertyImageSrc = resolveImageSrc(reservation.Home?.photo);
@@ -285,6 +318,50 @@ export default async function ReservationDetailPage({
                     </p>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Ticket / Asiento */}
+            {reservation.PackageSeat && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4">Tu Ticket</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-slate-500 mb-1">Tipo de plan</p>
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold ${reservation.PackageSeat.zone === "VIP" ? "bg-[#FBF3DC] text-[#A67C12] border border-[#E1B042]" : "bg-slate-100 text-slate-700"}`}>
+                      {reservation.PackageSeat.zone === "VIP" ? "★ Plan Premium VIP" : "✓ Plan Estándar"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500 mb-1">Asiento</p>
+                    <p className="font-semibold text-base">
+                      Fila {reservation.PackageSeat.row} — Columna {reservation.PackageSeat.column}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500 mb-1">Zona</p>
+                    <p className="font-semibold">{reservation.PackageSeat.zone === "VIP" ? "VIP" : "Estándar"}</p>
+                  </div>
+                </div>
+                {seatAmenities.length > 0 && (
+                  <>
+                    <p className="text-sm font-semibold text-slate-600 mb-2">Incluye:</p>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {seatAmenities.map((a) => (
+                        <li key={a.id} className="flex items-center gap-2 text-sm text-slate-700">
+                          {a.iconUrl ? (
+                            <Image src={a.iconUrl} alt={a.name} width={16} height={16} className="w-4 h-4" />
+                          ) : (
+                            <span className={reservation.PackageSeat?.zone === "VIP" ? "text-[#E1B042]" : "text-emerald-500"}>
+                              {reservation.PackageSeat?.zone === "VIP" ? "★" : "✓"}
+                            </span>
+                          )}
+                          {a.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             )}
 

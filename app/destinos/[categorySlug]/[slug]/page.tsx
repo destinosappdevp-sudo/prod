@@ -110,6 +110,7 @@ async function DestinoPage({
   const isApproved = data.publishStatus === "APPROVED";
 
   let hasFullReservation = false;
+  let reservationId: string | null = null;
   let savingPlan: "estandar" | "vip" | null = null;
 
   if (user) {
@@ -124,6 +125,7 @@ async function DestinoPage({
     });
 
     hasFullReservation = Boolean(reservation);
+    reservationId = reservation?.id ?? null;
 
     if (!hasFullReservation) {
       const savingsRows = await prismaAny.saving.findMany({
@@ -338,7 +340,7 @@ async function DestinoPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
           {/* Plan Estándar */}
-          <div className="border border-gray-200 rounded-2xl p-6">
+          <div className="border-2 border-gray-300 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-1">
               <h3 className="font-bold text-lg">Plan Estándar</h3>
               <span className="font-bold text-xl">${data.price}</span>
@@ -357,7 +359,14 @@ async function DestinoPage({
               ))}
             </ul>
             <div className="flex flex-col gap-2 sm:flex-row">
-              {standardDisabled ? (
+              {standardDisabled && hasFullReservation ? (
+                <Link
+                  href={reservationId ? `/reservation/${reservationId}` : "/my-dashboard?tab=reservations"}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                >
+                  ✓ Ya completaste el pago para este paquete
+                </Link>
+              ) : standardDisabled ? (
                 <>
                   <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
                     Ahorrar
@@ -365,11 +374,6 @@ async function DestinoPage({
                   <span className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
                     Pagar de contado
                   </span>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {hasFullReservation
-                      ? "Ya completaste el pago para este paquete."
-                      : "Tienes un ahorro activo en el plan Premium; los demás planes están bloqueados para evitar equivocaciones."}
-                  </p>
                 </>
               ) : standardSavingActive ? (
                 <>
@@ -406,12 +410,8 @@ async function DestinoPage({
                 </>
               )}
             </div>
-            {(standardDisabled || standardSavingActive) && (
-              <div className="mt-3">
-                {standardDisabled && !hasFullReservation && (
-                  <p className="text-xs text-gray-500">Tienes un ahorro activo en otro plan; completa o cancela ese ahorro para habilitar esta opción.</p>
-                )}
-              </div>
+            {standardDisabled && !hasFullReservation && (
+              <p className="mt-2 text-xs text-gray-500">Tienes un ahorro activo en el plan Premium para este paquete.</p>
             )}
           </div>
 
@@ -442,7 +442,14 @@ async function DestinoPage({
                   ))}
                 </ul>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  {vipDisabled ? (
+                  {vipDisabled && hasFullReservation ? (
+                    <Link
+                      href={reservationId ? `/reservation/${reservationId}` : "/my-dashboard?tab=reservations"}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                    >
+                      ✓ Ya completaste el pago para este paquete
+                    </Link>
+                  ) : vipDisabled ? (
                     <>
                       <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-gray-300 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">
                         Ahorrar
@@ -485,6 +492,9 @@ async function DestinoPage({
                     </>
                   )}
                 </div>
+                {vipDisabled && !hasFullReservation && (
+                  <p className="mt-2 text-xs text-gray-500">Tienes un ahorro activo en el plan Estándar para este paquete.</p>
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-400 mt-2">Próximamente</p>
