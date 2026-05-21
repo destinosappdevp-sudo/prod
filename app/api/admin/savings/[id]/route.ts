@@ -13,6 +13,66 @@ function normalizeDetails(value: unknown): Record<string, any> {
   return value && typeof value === "object" ? { ...(value as Record<string, any>) } : {};
 }
 
+async function sendSavingStatusEmail(params: {
+  userEmail: string;
+  userName: string;
+  status: "APPROVED" | "REJECTED";
+  amountUsd: number;
+  amountBs: number;
+  bcvRate: number;
+  packageTitle?: string | null;
+  referenceNumber?: string | null;
+  rejectionReason?: string | null;
+  reviewedAt: Date;
+}) {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[admin/savings] Resend no configurado; se omite email de estado del depósito");
+    return;
+  }
+
+  const safeName = (params.userName || "Viajero").replace(/[<>]/g, "");
+  const safePackage = (params.packageTitle || "Alcancía general").replace(/[<>]/g, "");
+  const safeReason = (params.rejectionReason || "").replace(/[<>]/g, "");
+  const safeRef = (params.referenceNumber || "").replace(/[<>]/g, "");
+  const isApproved = params.status === "APPROVED";
+
+  const subject = isApproved
+    ? "Depósito aprobado en tu alcancía"
+    : "Depósito rechazado en tu alcancía";
+
+  const html = `
+    <div style="font-family:Segoe UI,Tahoma,sans-serif;color:#0f172a;line-height:1.6">
+      <h2 style="margin:0 0 12px 0;color:${isApproved ? "#065f46" : "#b91c1c"}">
+        ${isApproved ? "Tu depósito fue aprobado" : "Tu depósito fue rechazado"}
+      </h2>
+      <p>Hola <strong>${safeName}</strong>,</p>
+      <p>Revisamos tu depósito de ahorro y su estado es: <strong>${isApproved ? "APROBADO" : "RECHAZADO"}</strong>.</p>
+      <table cellpadding="0" cellspacing="0" style="margin:12px 0 14px 0;border-collapse:collapse;">
+        <tr><td style="padding:4px 0;min-width:160px;color:#475569;">Destino</td><td style="padding:4px 0;"><strong>${safePackage}</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#475569;">Monto USD</td><td style="padding:4px 0;"><strong>$${params.amountUsd.toFixed(2)}</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#475569;">Monto Bs.</td><td style="padding:4px 0;"><strong>Bs ${params.amountBs.toFixed(2)}</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#475569;">Tasa BCV</td><td style="padding:4px 0;"><strong>${params.bcvRate.toFixed(2)}</strong></td></tr>
+        <tr><td style="padding:4px 0;color:#475569;">Fecha de revisión</td><td style="padding:4px 0;"><strong>${params.reviewedAt.toLocaleString("es-VE")}</strong></td></tr>
+        ${safeRef ? `<tr><td style="padding:4px 0;color:#475569;">Referencia</td><td style="padding:4px 0;"><strong>${safeRef}</strong></td></tr>` : ""}
+      </table>
+      ${!isApproved && safeReason ? `<p><strong>Motivo del rechazo:</strong> ${safeReason}</p>` : ""}
+      <p style="color:#475569">Equipo Destinos Venezuela</p>
+    </div>
+  `;
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: params.userEmail,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("[admin/savings] Error enviando email de estado del depósito:", err);
+  }
+}
+
 async function sendPackageGoalCompletedEmails(params: {
   userEmail: string;
   userName: string;
@@ -154,6 +214,30 @@ export async function PATCH(
           rejectionReason,
         },
       });
+
+      if (saving.User?.email) {
+        const details = normalizeDetails(saving.paymentDetails);
+        const userName =
+          (saving.User.firstName && saving.User.firstName.trim()) ||
+          saving.User.email ||
+          "Viajero";
+        await sendSavingStatusEmail({
+          userEmail: saving.User.email,
+          userName,
+          status: "REJECTED",
+          amountUsd: Number(saving.amountUsd ?? 0),
+          amountBs: Number(saving.amountBs ?? 0),
+          bcvRate: Number(saving.bcvRate ?? 0),
+          packageTitle:
+            typeof details.homeTitle === "string" && details.homeTitle.trim()
+              ? details.homeTitle.trim()
+              : null,
+          referenceNumber:
+            typeof details.referenceNumber === "string" ? details.referenceNumber : null,
+          rejectionReason,
+          reviewedAt: new Date(),
+        });
+      }
 
       return NextResponse.json(rejected);
     }
@@ -309,6 +393,30 @@ export async function PATCH(
         userName: displayName,
         packageTitle: completedPackageTitle,
         packageGoalUsd: completedGoalUsd,
+      });
+    }
+
+    if (saving.User?.email) {
+      const details = normalizeDetails(saving.paymentDetails);
+      const userName =
+        (saving.User.firstName && saving.User.firstName.trim()) ||
+        saving.User.email ||
+        "Viajero";
+      await sendSavingStatusEmail({
+        userEmail: saving.User.email,
+        userName,
+        status: "APPROVED",
+        amountUsd: Number(saving.amountUsd ?? 0),
+        amountBs: Number(saving.amountBs ?? 0),
+        bcvRate: Number(saving.bcvRate ?? 0),
+        packageTitle:
+          typeof details.homeTitle === "string" && details.homeTitle.trim()
+            ? details.homeTitle.trim()
+            : null,
+        referenceNumber:
+          typeof details.referenceNumber === "string" ? details.referenceNumber : null,
+        rejectionReason: null,
+        reviewedAt: new Date(),
       });
     }
 

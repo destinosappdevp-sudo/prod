@@ -150,7 +150,7 @@ function ListingCard({
             imagePath={imagePath}
             alt="Image of House"
             fill
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+            className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-[1.02]"
           />
 
           {categoryLabel && (

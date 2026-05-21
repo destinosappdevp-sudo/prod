@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -36,6 +36,8 @@ interface GuestReservationItem {
   totalAmount?: number | null;
   favoriteId?: string;
   isInFavoriteList?: boolean;
+  isSavingProgress?: boolean;
+  savedAmountUsd?: number;
 }
 
 interface FavoriteItem {
@@ -293,6 +295,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       case "PENDING":   return "Pendiente";
       case "CANCELLED": return "Cancelada";
       case "COMPLETED": return "Completada";
+      case "AHORRANDO": return "Ahorrando";
       default:          return status ?? "—";
     }
   }
@@ -303,6 +306,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       case "PENDING":   return "bg-yellow-100 text-yellow-700";
       case "CANCELLED": return "bg-red-100 text-red-700";
       case "COMPLETED": return "bg-blue-100 text-blue-700";
+      case "AHORRANDO": return "bg-amber-100 text-amber-700";
       default:          return "bg-gray-100 text-gray-700";
     }
   }
@@ -313,6 +317,62 @@ export default function DashboardClient(props: DashboardClientProps) {
   }
 
   const savingsRows = props.savings ?? [];
+  const reservationsWithSavings = useMemo(() => {
+    const baseReservations: GuestReservationItem[] = (props.guestReservations ?? []).map((r) => ({
+      ...r,
+      isSavingProgress: false,
+    }));
+
+    const reservedHomeIds = new Set(
+      baseReservations
+        .map((r) => (typeof r.homeId === "string" && r.homeId ? r.homeId : null))
+        .filter(Boolean) as string[]
+    );
+
+    const packageById = new Map((props.savingPackages ?? []).map((pkg) => [pkg.id, pkg]));
+    const activeSavingsByHomeId = new Map<string, number>();
+
+    for (const s of savingsRows) {
+      if (!s.targetId) continue;
+      const usd = Number(s.amountUsd ?? 0);
+      const isPositiveContribution = usd > 0 && (s.status === "APPROVED" || s.status === "PENDING");
+      const isDebit = usd < 0;
+      if (!isPositiveContribution && !isDebit) continue;
+
+      const current = activeSavingsByHomeId.get(s.targetId) ?? 0;
+      activeSavingsByHomeId.set(s.targetId, roundMoney(current + usd));
+    }
+
+    const savingReservations: GuestReservationItem[] = [];
+    for (const [homeId, savedUsd] of activeSavingsByHomeId.entries()) {
+      if (savedUsd <= 0) continue;
+      if (reservedHomeIds.has(homeId)) continue;
+
+      const pkg = packageById.get(homeId);
+      savingReservations.push({
+        id: `saving-${homeId}`,
+        homeId,
+        title: pkg?.title || "Paquete",
+        country: pkg?.country || "Venezuela",
+        municipality: pkg?.municipality || null,
+        price: Number(pkg?.price ?? 0),
+        photo: pkg?.photo || "",
+        description: "Ahorro en progreso",
+        status: "AHORRANDO",
+        totalAmount: Number(pkg?.price ?? 0),
+        isSavingProgress: true,
+        savedAmountUsd: savedUsd,
+      });
+    }
+
+    return [...savingReservations, ...baseReservations];
+  }, [props.guestReservations, props.savingPackages, savingsRows]);
+
+  const contributesToBalance = (item: SavingItem) => {
+    const usd = Number(item.amountUsd ?? 0);
+    if (usd < 0) return true;
+    return item.status === "APPROVED" && usd > 0;
+  };
   const generalSavings = savingsRows.filter((item) => !item.targetId);
   const packageSavingsMap = new Map<string, { title: string; totalUsd: number; movementCount: number }>();
 
@@ -323,7 +383,9 @@ export default function DashboardClient(props: DashboardClientProps) {
       totalUsd: 0,
       movementCount: 0,
     };
-    current.totalUsd = roundMoney(current.totalUsd + Number(item.amountUsd ?? 0));
+    if (contributesToBalance(item)) {
+      current.totalUsd = roundMoney(current.totalUsd + Number(item.amountUsd ?? 0));
+    }
     current.movementCount += 1;
     packageSavingsMap.set(item.targetId, current);
   });
@@ -332,7 +394,12 @@ export default function DashboardClient(props: DashboardClientProps) {
     {
       key: "general",
       title: "Alcancía general",
-      totalUsd: roundMoney(generalSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0)),
+      totalUsd: roundMoney(
+        generalSavings.reduce((sum, item) => {
+          if (!contributesToBalance(item)) return sum;
+          return sum + Number(item.amountUsd ?? 0);
+        }, 0)
+      ),
       movementCount: generalSavings.length,
       targetId: null as string | null,
     },
@@ -358,7 +425,10 @@ export default function DashboardClient(props: DashboardClientProps) {
     ? savingsRows.filter((item) => item.targetId === selectedWallet.targetId)
     : savingsRows;
   const displayedSavingsTotal = Math.round(
-    displayedSavings.reduce((sum, item) => sum + Number(item.amountUsd ?? 0), 0) * 100
+    displayedSavings.reduce((sum, item) => {
+      if (!contributesToBalance(item)) return sum;
+      return sum + Number(item.amountUsd ?? 0);
+    }, 0) * 100
   ) / 100;
   const packageGoalUsd = Number(selectedSavingPackage?.price ?? 0);
   const packageApprovedDepositedUsd = roundMoney(
@@ -369,7 +439,9 @@ export default function DashboardClient(props: DashboardClientProps) {
       return sum + usd;
     }, 0)
   );
-  const depositInstallments = displayedSavings.filter((item) => Number(item.amountUsd ?? 0) > 0);
+  const depositInstallments = displayedSavings.filter(
+    (item) => Number(item.amountUsd ?? 0) > 0 && item.status === "APPROVED"
+  );
   const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - packageApprovedDepositedUsd));
   const progressPercent = packageGoalUsd > 0
     ? Math.min(100, Math.round((packageApprovedDepositedUsd / packageGoalUsd) * 100))
@@ -625,7 +697,7 @@ export default function DashboardClient(props: DashboardClientProps) {
         {/* MIS RESERVAS */}
         {activeTab === "reservations" && (
           <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
-            {props.guestReservations && props.guestReservations.length > 0 ? (
+            {reservationsWithSavings.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -638,7 +710,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {props.guestReservations.map((res) => (
+                    {reservationsWithSavings.map((res) => (
                       <tr key={res.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
@@ -659,10 +731,14 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-slate-700 whitespace-nowrap">
-                          {formatDate(res.startDate)} ? {formatDate(res.endDate)}
+                          {res.isSavingProgress ? "Ahorro activo" : `${formatDate(res.startDate)} ? ${formatDate(res.endDate)}`}
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-900">
-                          {res.totalAmount != null ? `$${Number(res.totalAmount).toFixed(2)}` : `$${res.price.toFixed(2)}`}
+                          {res.isSavingProgress
+                            ? `$${Number(res.savedAmountUsd ?? 0).toFixed(2)} / $${Number(res.totalAmount ?? res.price ?? 0).toFixed(2)}`
+                            : res.totalAmount != null
+                            ? `$${Number(res.totalAmount).toFixed(2)}`
+                            : `$${res.price.toFixed(2)}`}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle(res.status)}`}>
@@ -670,9 +746,22 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <Link href={`/reservation/${res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
-                            Ver
-                          </Link>
+                          {res.isSavingProgress ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedSavingId(res.homeId ?? null);
+                                setActiveTab("mi-alcancia");
+                              }}
+                              className="text-orange-600 hover:underline text-xs font-medium"
+                            >
+                              Ver ahorro
+                            </button>
+                          ) : (
+                            <Link href={`/reservation/${res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
+                              Ver
+                            </Link>
+                          )}
                         </td>
                       </tr>
                     ))}

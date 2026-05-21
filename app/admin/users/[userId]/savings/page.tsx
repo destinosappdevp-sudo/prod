@@ -57,9 +57,7 @@ async function getData(userId: string) {
     .filter((s) => s.status === "PENDING" && Number(s.amountUsd) >= 0)
     .reduce((sum, s) => sum + s.amountUsd, 0);
   const totalSavingsUsd = savings
-    .filter((s) =>
-      Number(s.amountUsd) > 0 && (s.status === "APPROVED" || s.status === "PENDING")
-    )
+    .filter((s) => Number(s.amountUsd) > 0 && s.status === "APPROVED")
     .reduce((sum, s) => sum + s.amountUsd, 0);
 
   const referenceRate =
