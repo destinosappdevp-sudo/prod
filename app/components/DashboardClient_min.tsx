@@ -143,16 +143,61 @@ export default function DashboardClient(props: DashboardClientProps) {
   const [movimientosLoading, setMovimientosLoading] = useState(false);
   const [movimientosError, setMovimientosError] = useState("");
 
+  const rejectedSavingsFallback = useMemo(
+    () =>
+      (props.savings ?? [])
+        .filter((s) => s.status === "REJECTED")
+        .map((s) => ({
+          id: `saving_${s.id}`,
+          kind: "SAVING",
+          createdAt: s.date,
+          amount: Number(s.amountUsd ?? 0),
+          paymentMethod: "PAGO_MOVIL",
+          status: "REJECTED",
+          referenceNumber: null,
+          rejectionReason: s.rejectionReason ?? null,
+          paymentDetails: {
+            amountUsd: Number(s.amountUsd ?? 0),
+            amountBs: Number(s.amountBs ?? 0),
+          },
+          Reservation: null,
+          isSaving: true,
+        })),
+    [props.savings]
+  );
+
   useEffect(() => {
     if (activeTab !== "movimientos") return;
     setMovimientosLoading(true);
     setMovimientosError("");
     fetch("/api/user/payments")
       .then((res) => res.ok ? res.json() : Promise.reject(res))
-      .then((data) => setMovimientos(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const rows = Array.isArray(data) ? data : [];
+        const byId = new Map<string, any>();
+
+        for (const row of rows) {
+          byId.set(String(row?.id ?? ""), row);
+        }
+
+        // Refuerzo: asegurar que depósitos rechazados de alcancía aparezcan siempre.
+        for (const rejectedRow of rejectedSavingsFallback) {
+          if (!byId.has(rejectedRow.id)) {
+            byId.set(rejectedRow.id, rejectedRow);
+          }
+        }
+
+        const merged = Array.from(byId.values()).sort((a, b) => {
+          const da = new Date(a?.createdAt ?? 0).getTime();
+          const db = new Date(b?.createdAt ?? 0).getTime();
+          return db - da;
+        });
+
+        setMovimientos(merged);
+      })
       .catch(() => setMovimientosError("No se pudieron cargar los movimientos."))
       .finally(() => setMovimientosLoading(false));
-  }, [activeTab]);
+  }, [activeTab, rejectedSavingsFallback]);
 
   const previewBs =
     amountUsd && props.bcvRate && props.bcvRate > 0
