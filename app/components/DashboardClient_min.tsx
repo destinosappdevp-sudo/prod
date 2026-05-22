@@ -340,6 +340,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       case "PENDING":   return "Pendiente";
       case "CANCELLED": return "Cancelada";
       case "COMPLETED": return "Completada";
+      case "PAGADO":    return "Pagado";
       case "AHORRANDO": return "Ahorrando";
       default:          return status ?? "—";
     }
@@ -351,6 +352,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       case "PENDING":   return "bg-yellow-100 text-yellow-700";
       case "CANCELLED": return "bg-red-100 text-red-700";
       case "COMPLETED": return "bg-blue-100 text-blue-700";
+      case "PAGADO":    return "bg-emerald-100 text-emerald-700";
       case "AHORRANDO": return "bg-amber-100 text-amber-700";
       default:          return "bg-gray-100 text-gray-700";
     }
@@ -394,6 +396,8 @@ export default function DashboardClient(props: DashboardClientProps) {
       if (reservedHomeIds.has(homeId)) continue;
 
       const pkg = packageById.get(homeId);
+      const packagePriceUsd = Number(pkg?.price ?? 0);
+      const isFullyPaidWithSavings = packagePriceUsd > 0 && savedUsd >= packagePriceUsd;
       savingReservations.push({
         id: `saving-${homeId}`,
         homeId,
@@ -402,8 +406,8 @@ export default function DashboardClient(props: DashboardClientProps) {
         municipality: pkg?.municipality || null,
         price: Number(pkg?.price ?? 0),
         photo: pkg?.photo || "",
-        description: "Ahorro en progreso",
-        status: "AHORRANDO",
+        description: isFullyPaidWithSavings ? "Paquete pagado con ahorro" : "Ahorro en progreso",
+        status: isFullyPaidWithSavings ? "PAGADO" : "AHORRANDO",
         totalAmount: Number(pkg?.price ?? 0),
         isSavingProgress: true,
         savedAmountUsd: savedUsd,
@@ -435,6 +439,16 @@ export default function DashboardClient(props: DashboardClientProps) {
     packageSavingsMap.set(item.targetId, current);
   });
 
+  const completedPackageIds = new Set(
+    Array.from(packageSavingsMap.entries())
+      .filter(([targetId, wallet]) => {
+        const pkg = (props.savingPackages ?? []).find((item) => item.id === targetId);
+        const goal = Number(pkg?.price ?? 0);
+        return goal > 0 && wallet.totalUsd >= goal;
+      })
+      .map(([targetId]) => targetId)
+  );
+
   const savingsWallets = [
     {
       key: "general",
@@ -448,13 +462,15 @@ export default function DashboardClient(props: DashboardClientProps) {
       movementCount: generalSavings.length,
       targetId: null as string | null,
     },
-    ...Array.from(packageSavingsMap.entries()).map(([targetId, wallet]) => ({
-      key: targetId,
-      title: wallet.title,
-      totalUsd: wallet.totalUsd,
-      movementCount: wallet.movementCount,
-      targetId,
-    })),
+    ...Array.from(packageSavingsMap.entries())
+      .filter(([targetId]) => !completedPackageIds.has(targetId))
+      .map(([targetId, wallet]) => ({
+        key: targetId,
+        title: wallet.title,
+        totalUsd: wallet.totalUsd,
+        movementCount: wallet.movementCount,
+        targetId,
+      })),
   ];
 
   const selectedWallet = selectedSavingId
@@ -776,7 +792,11 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-slate-700 whitespace-nowrap">
-                          {res.isSavingProgress ? "Ahorro activo" : `${formatDate(res.startDate)} ? ${formatDate(res.endDate)}`}
+                          {res.isSavingProgress
+                            ? res.status === "PAGADO"
+                              ? "Pagado con ahorro"
+                              : "Ahorro activo"
+                            : `${formatDate(res.startDate)} ? ${formatDate(res.endDate)}`}
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-900">
                           {res.isSavingProgress

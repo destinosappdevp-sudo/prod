@@ -9,6 +9,51 @@ import {
 
 export const dynamic = "force-dynamic";
 
+function normalizePaymentDetails(value: unknown): Record<string, any> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, any>;
+}
+
+async function hasApprovedPackageSavings(params: {
+  tx: any;
+  userId: string;
+  homeId: string;
+  seatId?: string | null;
+}) {
+  const rows = await params.tx.saving.findMany({
+    where: {
+      userId: params.userId,
+      status: "APPROVED",
+      amountUsd: { gt: 0 },
+    },
+    select: {
+      paymentDetails: true,
+      amountUsd: true,
+    },
+  });
+
+  return rows.some((row: any) => {
+    const details = normalizePaymentDetails(row.paymentDetails);
+    const rowHomeId =
+      typeof details.homeId === "string" && details.homeId.trim()
+        ? details.homeId.trim()
+        : null;
+    if (rowHomeId !== params.homeId) return false;
+
+    if (!params.seatId) return true;
+
+    const rowSeatId =
+      typeof details.seatId === "string" && details.seatId.trim()
+        ? details.seatId.trim()
+        : null;
+
+    // Compatibilidad con depósitos antiguos sin seatId explícito.
+    return rowSeatId === null || rowSeatId === params.seatId;
+  });
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -108,6 +153,31 @@ export async function PATCH(
           status: action === "confirm" ? "CONFIRMED" : "CANCELLED",
         },
       });
+
+      // Si se rechaza el pago, solo liberar asiento si no hay saldo previo del paquete/asiento.
+      if (action === "reject" && payment.Reservation?.seatId) {
+        const hasPriorSavings =
+          payment.Reservation?.userId && payment.Reservation?.homeId
+            ? await hasApprovedPackageSavings({
+                tx,
+                userId: payment.Reservation.userId,
+                homeId: payment.Reservation.homeId,
+                seatId: payment.Reservation.seatId,
+              })
+            : false;
+
+        if (!hasPriorSavings) {
+          await tx.packageSeat.updateMany({
+            where: {
+              id: payment.Reservation.seatId,
+              status: "OCCUPIED",
+            },
+            data: {
+              status: "AVAILABLE",
+            },
+          });
+        }
+      }
 
       return { payment: updatedPayment, reservation: updatedReservation };
     });

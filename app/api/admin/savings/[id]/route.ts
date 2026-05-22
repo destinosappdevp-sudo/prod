@@ -13,6 +13,43 @@ function normalizeDetails(value: unknown): Record<string, any> {
   return value && typeof value === "object" ? { ...(value as Record<string, any>) } : {};
 }
 
+async function hasApprovedContributionsForPackageSeat(params: {
+  tx: any;
+  userId: string;
+  homeId: string;
+  seatId?: string | null;
+  excludeSavingId?: string;
+}) {
+  const rows = await params.tx.saving.findMany({
+    where: {
+      userId: params.userId,
+      status: "APPROVED",
+      amountUsd: { gt: 0 },
+      ...(params.excludeSavingId ? { id: { not: params.excludeSavingId } } : {}),
+    },
+    select: { paymentDetails: true },
+  });
+
+  return rows.some((row: any) => {
+    const details = normalizeDetails(row.paymentDetails);
+    const rowHomeId =
+      typeof details.homeId === "string" && details.homeId.trim()
+        ? details.homeId.trim()
+        : null;
+    if (rowHomeId !== params.homeId) return false;
+
+    if (!params.seatId) return true;
+
+    const rowSeatId =
+      typeof details.seatId === "string" && details.seatId.trim()
+        ? details.seatId.trim()
+        : null;
+
+    // Compatibilidad con depósitos antiguos sin seatId explícito.
+    return rowSeatId === null || rowSeatId === params.seatId;
+  });
+}
+
 async function sendSavingStatusEmail(params: {
   userEmail: string;
   userName: string;
@@ -207,12 +244,43 @@ export async function PATCH(
     }
 
     if (action === "reject") {
-      const rejected = await (prisma as any).saving.update({
-        where: { id },
-        data: {
-          status: "REJECTED",
-          rejectionReason,
-        },
+      const details = normalizeDetails(saving.paymentDetails);
+      const homeId =
+        typeof details.homeId === "string" && details.homeId.trim()
+          ? details.homeId.trim()
+          : null;
+      const seatId =
+        typeof details.seatId === "string" && details.seatId.trim()
+          ? details.seatId.trim()
+          : null;
+
+      const rejected = await (prisma as any).$transaction(async (tx: any) => {
+        const updated = await tx.saving.update({
+          where: { id },
+          data: {
+            status: "REJECTED",
+            rejectionReason,
+          },
+        });
+
+        if (homeId && seatId) {
+          const hasPriorBalance = await hasApprovedContributionsForPackageSeat({
+            tx,
+            userId: saving.userId,
+            homeId,
+            seatId,
+            excludeSavingId: saving.id,
+          });
+
+          if (!hasPriorBalance) {
+            await tx.packageSeat.updateMany({
+              where: { id: seatId, homeId, status: "OCCUPIED" },
+              data: { status: "AVAILABLE" },
+            });
+          }
+        }
+
+        return updated;
       });
 
       if (saving.User?.email) {

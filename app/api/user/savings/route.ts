@@ -89,6 +89,26 @@ export async function POST(req: NextRequest) {
       : null;
 
   if (homeId) {
+    const paidReservation = await prismaAny.reservation.findFirst({
+      where: {
+        userId: user.id,
+        homeId,
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+
+    if (paidReservation) {
+      return NextResponse.json(
+        {
+          error: "Este viaje ya está pagado y no admite nuevos abonos",
+          reservationId: paidReservation.id,
+        },
+        { status: 409 }
+      );
+    }
+
     const home = await prismaAny.home.findUnique({
       where: { id: homeId },
       select: { id: true, title: true, price: true },

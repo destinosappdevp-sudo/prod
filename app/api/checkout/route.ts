@@ -9,6 +9,37 @@ function roundMoney(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function normalizePaymentDetails(value: unknown): Record<string, any> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, any>;
+}
+
+function sumOtherPackageApprovedSavingsUsd(
+  savingsRows: Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
+  currentHomeId: string
+) {
+  return roundMoney(
+    savingsRows.reduce((sum, row) => {
+      const amountUsd = Number(row.amountUsd ?? 0);
+      if (amountUsd <= 0 || row.status !== "APPROVED") return sum;
+
+      const details = normalizePaymentDetails(row.paymentDetails);
+      const rowHomeId =
+        typeof details.homeId === "string" && details.homeId.trim()
+          ? details.homeId.trim()
+          : null;
+
+      if (rowHomeId && rowHomeId !== currentHomeId) {
+        return sum + amountUsd;
+      }
+
+      return sum;
+    }, 0)
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -130,6 +161,33 @@ export async function POST(request: Request) {
       );
     }
 
+    // Regla de negocio: un usuario no puede reservar el mismo viaje más de una vez.
+    const existingUserReservation = await (prisma as any).reservation.findFirst({
+      where: {
+        userId,
+        homeId,
+        status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true },
+    });
+
+    if (existingUserReservation) {
+      const isPaidReservation =
+        existingUserReservation.status === "CONFIRMED" ||
+        existingUserReservation.status === "COMPLETED";
+
+      return NextResponse.json(
+        {
+          error: isPaidReservation
+            ? "Ya pagaste este viaje y no puedes comprarlo nuevamente"
+            : "Ya tienes una reserva en proceso para este viaje",
+          reservationId: existingUserReservation.id,
+        },
+        { status: 409 }
+      );
+    }
+
     // Obtener configuración actual de comisión y tasa BCV
     let commissionPercent = 10;
     let bcvRate = 0;
@@ -233,7 +291,7 @@ export async function POST(request: Request) {
     // Solo contar ahorros APROBADOS para el saldo disponible
     const savingsRows = await (prisma as any).saving.findMany({
       where: { userId },
-      select: { amountUsd: true, status: true },
+      select: { amountUsd: true, status: true, paymentDetails: true },
     });
     const availableSavingsUsd = roundMoney(
       savingsRows.reduce((sum: number, s: any) => {
@@ -242,10 +300,23 @@ export async function POST(request: Request) {
         return s.status === "APPROVED" ? sum + usd : sum;
       }, 0)
     );
+    const mixedEligibleSavingsUsd =
+      checkoutMode === "MIXED"
+        ? roundMoney(
+            Math.max(
+              0,
+              availableSavingsUsd -
+                sumOtherPackageApprovedSavingsUsd(
+                  savingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
+                  homeId
+                )
+            )
+          )
+        : availableSavingsUsd;
     const savingsAppliedUsd =
       checkoutMode === "DIRECT"
         ? 0
-        : roundMoney(Math.min(Math.max(availableSavingsUsd, 0), totalAmountUsd));
+        : roundMoney(Math.min(Math.max(mixedEligibleSavingsUsd, 0), totalAmountUsd));
     const externalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - savingsAppliedUsd));
     const savingsAppliedBs = hasValidBcvRate ? roundMoney(savingsAppliedUsd * bcvRate) : 0;
     const externalAmountBs = hasValidBcvRate ? roundMoney(externalAmountUsd * bcvRate) : 0;
@@ -259,7 +330,10 @@ export async function POST(request: Request) {
 
     if (checkoutMode === "MIXED" && savingsAppliedUsd <= 0) {
       return NextResponse.json(
-        { error: "No tienes saldo disponible para un pago mixto" },
+        {
+          error:
+            "No tienes saldo disponible en ahorros generales o en este paquete para un pago mixto",
+        },
         { status: 400 }
       );
     }
@@ -317,7 +391,7 @@ export async function POST(request: Request) {
       // Solo contar ahorros APROBADOS dentro de la transacción
       const txSavingsRows = await tx.saving.findMany({
         where: { userId },
-        select: { amountUsd: true, status: true },
+        select: { amountUsd: true, status: true, paymentDetails: true },
       });
       const txAvailableSavingsUsd = roundMoney(
         txSavingsRows.reduce((sum: number, s: any) => {
@@ -326,17 +400,32 @@ export async function POST(request: Request) {
           return s.status === "APPROVED" ? sum + usd : sum;
         }, 0)
       );
+      const txMixedEligibleSavingsUsd =
+        checkoutMode === "MIXED"
+          ? roundMoney(
+              Math.max(
+                0,
+                txAvailableSavingsUsd -
+                  sumOtherPackageApprovedSavingsUsd(
+                    txSavingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
+                    homeId
+                  )
+              )
+            )
+          : txAvailableSavingsUsd;
       const txSavingsAppliedUsd =
         checkoutMode === "DIRECT"
           ? 0
-          : roundMoney(Math.min(Math.max(txAvailableSavingsUsd, 0), totalAmountUsd));
+          : roundMoney(Math.min(Math.max(txMixedEligibleSavingsUsd, 0), totalAmountUsd));
 
       if (checkoutMode === "SAVINGS" && txSavingsAppliedUsd < totalAmountUsd) {
         throw new Error("Saldo insuficiente en ahorros para completar la reserva");
       }
 
       if (checkoutMode === "MIXED" && txSavingsAppliedUsd <= 0) {
-        throw new Error("No hay saldo disponible para aplicar a este pago mixto");
+        throw new Error(
+          "No hay saldo disponible en ahorros generales o en este paquete para aplicar a este pago mixto"
+        );
       }
 
       const txExternalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - txSavingsAppliedUsd));

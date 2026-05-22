@@ -109,7 +109,8 @@ async function DestinoPage({
   const { data: { user } } = await supabase.auth.getUser();
   const isApproved = data.publishStatus === "APPROVED";
 
-  let hasFullReservation = false;
+  let hasAnyReservation = false;
+  let hasPaidReservation = false;
   let reservationId: string | null = null;
   let savingPlan: "estandar" | "vip" | null = null;
 
@@ -118,16 +119,17 @@ async function DestinoPage({
       where: {
         userId: user.id,
         homeId: data.id,
-        status: { in: ["PENDING", "CONFIRMED"] },
+        status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
       },
       orderBy: { createdAt: "desc" },
-      select: { id: true, seatId: true },
+      select: { id: true, seatId: true, status: true },
     });
 
-    hasFullReservation = Boolean(reservation);
+    hasAnyReservation = Boolean(reservation);
+    hasPaidReservation = reservation?.status === "CONFIRMED" || reservation?.status === "COMPLETED";
     reservationId = reservation?.id ?? null;
 
-    if (!hasFullReservation) {
+    if (!hasAnyReservation) {
       const savingsRows = await prismaAny.saving.findMany({
         where: {
           userId: user.id,
@@ -227,8 +229,8 @@ async function DestinoPage({
     cat.amenities.filter((a: any) => a.status === "NO")
   );
 
-  const standardDisabled = hasFullReservation || savingPlan === "vip";
-  const vipDisabled = hasFullReservation || savingPlan === "estandar";
+  const standardDisabled = hasAnyReservation || savingPlan === "vip";
+  const vipDisabled = hasAnyReservation || savingPlan === "estandar";
   const standardSavingActive = savingPlan === "estandar";
   const vipSavingActive = savingPlan === "vip";
 
@@ -359,12 +361,19 @@ async function DestinoPage({
               ))}
             </ul>
             <div className="flex flex-col gap-2 sm:flex-row">
-              {standardDisabled && hasFullReservation ? (
+              {standardDisabled && hasPaidReservation ? (
                 <Link
                   href={reservationId ? `/reservation/${reservationId}` : "/my-dashboard?tab=reservations"}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
                 >
-                  ✓ Ya completaste el pago para este paquete
+                  Ver detalle del viaje
+                </Link>
+              ) : standardDisabled && hasAnyReservation ? (
+                <Link
+                  href={reservationId ? `/reservation/${reservationId}` : "/my-dashboard?tab=reservations"}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Ya tienes una reserva para este viaje
                 </Link>
               ) : standardDisabled ? (
                 <>
@@ -410,7 +419,7 @@ async function DestinoPage({
                 </>
               )}
             </div>
-            {standardDisabled && !hasFullReservation && (
+            {standardDisabled && !hasAnyReservation && (
               <p className="mt-2 text-xs text-gray-500">Tienes un ahorro activo en el plan Premium para este paquete.</p>
             )}
           </div>
@@ -442,12 +451,19 @@ async function DestinoPage({
                   ))}
                 </ul>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  {vipDisabled && hasFullReservation ? (
+                  {vipDisabled && hasPaidReservation ? (
                     <Link
                       href={reservationId ? `/reservation/${reservationId}` : "/my-dashboard?tab=reservations"}
                       className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
                     >
-                      ✓ Ya completaste el pago para este paquete
+                      Ver detalle del viaje
+                    </Link>
+                  ) : vipDisabled && hasAnyReservation ? (
+                    <Link
+                      href={reservationId ? `/reservation/${reservationId}` : "/my-dashboard?tab=reservations"}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                    >
+                      Ya tienes una reserva para este viaje
                     </Link>
                   ) : vipDisabled ? (
                     <>
@@ -492,7 +508,7 @@ async function DestinoPage({
                     </>
                   )}
                 </div>
-                {vipDisabled && !hasFullReservation && (
+                {vipDisabled && !hasAnyReservation && (
                   <p className="mt-2 text-xs text-gray-500">Tienes un ahorro activo en el plan Estándar para este paquete.</p>
                 )}
               </>
