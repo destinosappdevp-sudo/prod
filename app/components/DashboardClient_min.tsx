@@ -835,11 +835,11 @@ export default function DashboardClient(props: DashboardClientProps) {
                               }}
                               className="text-orange-600 hover:underline text-xs font-medium"
                             >
-                              Ver ahorro
+                              Ver reserva
                             </button>
                           ) : (
                             <Link href={`/reservation/${res.reservationId ?? res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
-                              Ver
+                              Ver reserva
                             </Link>
                           )}
                         </td>

@@ -426,38 +426,57 @@ export async function PATCH(
         },
       });
 
-      if (packageCompletedNow) {
-        const existingReservation = await tx.reservation.findFirst({
-          where: {
+      const existingReservation = await tx.reservation.findFirst({
+        where: {
+          userId: saving.userId,
+          homeId,
+          status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+        },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, status: true },
+      });
+
+      let reservationId = existingReservation?.id ?? null;
+      const createdReservation = !reservationId;
+
+      if (!reservationId) {
+        const startDate = new Date();
+        const endDate = new Date(startDate.getTime() + 86400000);
+        const reservation = await tx.reservation.create({
+          data: {
             userId: saving.userId,
             homeId,
-            status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+            startDate,
+            endDate,
+            nights: 1,
+            status: packageCompletedNow ? "CONFIRMED" : "PENDING",
+            totalAmount: packageGoalUsd,
+            ...(seatId ? { seatId } : {}),
           },
-          orderBy: { createdAt: "desc" },
           select: { id: true },
         });
 
-        let reservationId = existingReservation?.id ?? null;
+        reservationId = reservation.id;
+      } else if (packageCompletedNow && existingReservation?.status === "PENDING") {
+        await tx.reservation.update({
+          where: { id: reservationId },
+          data: { status: "CONFIRMED" },
+        });
+      }
 
-        if (!reservationId) {
-          const startDate = new Date();
-          const endDate = new Date(startDate.getTime() + 86400000);
-          const reservation = await tx.reservation.create({
-            data: {
-              userId: saving.userId,
-              homeId,
-              startDate,
-              endDate,
-              nights: 1,
-              status: "CONFIRMED",
-              totalAmount: packageGoalUsd,
-              ...(seatId ? { seatId } : {}),
-            },
-            select: { id: true },
-          });
+      updatedSaving = await tx.saving.update({
+        where: { id: updatedSaving.id },
+        data: {
+          paymentDetails: {
+            ...normalizeDetails(updatedSaving.paymentDetails),
+            reservationId,
+            packageCompleted: packageSavedAfterUsd >= packageGoalUsd,
+            autoCreatedReservation: createdReservation,
+          },
+        },
+      });
 
-          reservationId = reservation.id;
-        }
+      if (packageCompletedNow) {
 
         const approvedNegativeSavings = await tx.saving.findMany({
           where: {
@@ -501,18 +520,6 @@ export async function PATCH(
             },
           });
         }
-
-        updatedSaving = await tx.saving.update({
-          where: { id: updatedSaving.id },
-          data: {
-            paymentDetails: {
-              ...normalizeDetails(updatedSaving.paymentDetails),
-              reservationId,
-              packageCompleted: true,
-              autoCreatedReservation: true,
-            },
-          },
-        });
       }
 
       if (overflowUsd > 0) {

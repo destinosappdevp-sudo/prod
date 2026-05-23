@@ -570,7 +570,7 @@ async function getGuestDashboardData(userId: string) {
   noStore();
   const prismaAny = prisma as any;
 
-  const [favorites, reservations, favoriteIds, savings, config] = await Promise.all([
+  const [favorites, initialReservations, favoriteIds, savings, config] = await Promise.all([
     prismaAny.favorite.findMany({
       where: { userId },
       select: {
@@ -627,6 +627,103 @@ async function getGuestDashboardData(userId: string) {
     }),
     prismaAny.platformConfig.findFirst({ select: { bcvRate: true } }),
   ]);
+
+  let reservations = initialReservations;
+
+  const activeSavingByHomeId = new Map<string, { seatId: string | null }>();
+  for (const s of savings as any[]) {
+    const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};
+    const homeId = typeof details.homeId === "string" && details.homeId.trim() ? details.homeId.trim() : null;
+    if (!homeId) continue;
+
+    const status = typeof s.status === "string" ? s.status : "PENDING";
+    const usd = Number(s.amountUsd ?? 0);
+    if ((status !== "PENDING" && status !== "APPROVED") || usd <= 0) continue;
+
+    const seatId = typeof details.seatId === "string" && details.seatId.trim() ? details.seatId.trim() : null;
+    if (!activeSavingByHomeId.has(homeId)) {
+      activeSavingByHomeId.set(homeId, { seatId });
+    }
+  }
+
+  const reservedHomeIds = new Set(
+    (reservations as any[])
+      .filter((r: any) => ["PENDING", "CONFIRMED", "COMPLETED"].includes(r.status))
+      .map((r: any) => r.homeId)
+      .filter(Boolean)
+  );
+
+  const missingReservationHomeIds = Array.from(activeSavingByHomeId.keys()).filter(
+    (homeId) => !reservedHomeIds.has(homeId)
+  );
+
+  if (missingReservationHomeIds.length > 0) {
+    const homesForMissing = await prismaAny.home.findMany({
+      where: { id: { in: missingReservationHomeIds } },
+      select: { id: true, price: true },
+    });
+
+    const homePriceById = new Map(
+      homesForMissing.map((h: any) => [h.id as string, Number(h.price ?? 0)])
+    );
+
+    let createdAtLeastOne = false;
+
+    for (const homeId of missingReservationHomeIds) {
+      const price = Number(homePriceById.get(homeId) ?? 0);
+      if (price <= 0) continue;
+
+      const seatId = activeSavingByHomeId.get(homeId)?.seatId ?? null;
+      const startDate = new Date();
+      const endDate = new Date(startDate.getTime() + 86400000);
+
+      try {
+        await prismaAny.reservation.create({
+          data: {
+            userId,
+            homeId,
+            startDate,
+            endDate,
+            nights: 1,
+            status: "PENDING",
+            totalAmount: price,
+            ...(seatId ? { seatId } : {}),
+          },
+        });
+        createdAtLeastOne = true;
+      } catch {
+        // Ignorar conflictos puntuales (por ejemplo, seatId ya asociado)
+      }
+    }
+
+    if (createdAtLeastOne) {
+      reservations = await prismaAny.reservation.findMany({
+        where: { userId },
+        select: {
+          id: true,
+          homeId: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          totalAmount: true,
+          createdAt: true,
+          Home: {
+            select: {
+              id: true,
+              photo: true,
+              title: true,
+              country: true,
+              municipality: true,
+              price: true,
+              description: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      });
+    }
+  }
 
   // Create set of favorited homeIds for fast lookup
   const favoriteHomeIds = new Set(favoriteIds.map((f: any) => f.homeId));
