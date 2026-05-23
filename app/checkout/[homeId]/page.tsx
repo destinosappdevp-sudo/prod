@@ -114,17 +114,43 @@ export default async function CheckoutPage({
     },
   });
 
+  const getSavingHomeId = (paymentDetails: unknown) => {
+    if (!paymentDetails || typeof paymentDetails !== "object" || Array.isArray(paymentDetails)) {
+      return null;
+    }
+
+    const homeIdValue = (paymentDetails as { homeId?: unknown }).homeId;
+    return typeof homeIdValue === "string" && homeIdValue.trim() ? homeIdValue.trim() : null;
+  };
+
   // Solo contar ahorros APROBADOS para el saldo disponible
   const savingsApproved = await (prisma as any).saving.findMany({
     where: { userId: user.id },
-    select: { amountUsd: true, status: true },
+    select: { amountUsd: true, status: true, paymentDetails: true },
   });
-  const savingsTotalUsd = Number(
+  const savingsEligibleUsd = Number(
     savingsApproved
       .reduce((sum: number, s: any) => {
         const usd = Number(s.amountUsd ?? 0);
-        if (usd < 0) return sum + usd; // débitos siempre se restan
-        return s.status === "APPROVED" ? sum + usd : sum;
+        const savingHomeId = getSavingHomeId(s.paymentDetails);
+
+        if (usd < 0) {
+          if (!savingHomeId || savingHomeId === homeId) {
+            return sum + usd;
+          }
+
+          return sum;
+        }
+
+        if (s.status !== "APPROVED") {
+          return sum;
+        }
+
+        if (!savingHomeId || savingHomeId === homeId) {
+          return sum + usd;
+        }
+
+        return sum;
       }, 0)
       .toFixed(2)
   );
@@ -286,7 +312,7 @@ export default async function CheckoutPage({
           total={total}
           bcvRate={bcvRate}
           totalBs={totalBs}
-          savingsTotalUsd={savingsTotalUsd}
+          savingsTotalUsd={savingsEligibleUsd}
           seatId={seatId}
           plan={plan}
         />

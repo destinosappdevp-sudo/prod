@@ -219,7 +219,7 @@ export default function CheckoutForm({
                 )}
                 <div>
                   <p className="text-xl font-semibold text-slate-900">Saldo de Ahorros</p>
-                  <p className="text-sm text-slate-600">Disponible: ${availableSavingsUsd.toFixed(2)}</p>
+                  <p className="text-sm text-slate-600">Disponible para este paquete: ${availableSavingsUsd.toFixed(2)}</p>
                   {!canPayWithSavingsOnly && (
                     <p className="mt-2 text-sm text-red-500">Saldo insuficiente</p>
                   )}
@@ -373,7 +373,7 @@ export default function CheckoutForm({
 
           {selectedMode === "SAVINGS" && (
             <div className="rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-800">
-              Se debitará el total del paquete desde tu alcancía (saldo aprobado disponible). La reserva quedará pendiente de confirmación por nuestro equipo.
+              Se debitará el total del paquete usando solo tu saldo general y el ahorro asociado a este paquete. La reserva quedará pendiente de confirmación por nuestro equipo.
             </div>
           )}
         </div>

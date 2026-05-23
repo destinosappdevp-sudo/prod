@@ -16,22 +16,32 @@ function normalizePaymentDetails(value: unknown): Record<string, any> {
   return value as Record<string, any>;
 }
 
-function sumOtherPackageApprovedSavingsUsd(
+function getEligibleSavingsUsd(
   savingsRows: Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
   currentHomeId: string
 ) {
   return roundMoney(
     savingsRows.reduce((sum, row) => {
       const amountUsd = Number(row.amountUsd ?? 0);
-      if (amountUsd <= 0 || row.status !== "APPROVED") return sum;
-
       const details = normalizePaymentDetails(row.paymentDetails);
       const rowHomeId =
         typeof details.homeId === "string" && details.homeId.trim()
           ? details.homeId.trim()
           : null;
 
-      if (rowHomeId && rowHomeId !== currentHomeId) {
+      if (amountUsd < 0) {
+        if (!rowHomeId || rowHomeId === currentHomeId) {
+          return sum + amountUsd;
+        }
+
+        return sum;
+      }
+
+      if (row.status !== "APPROVED") {
+        return sum;
+      }
+
+      if (!rowHomeId || rowHomeId === currentHomeId) {
         return sum + amountUsd;
       }
 
@@ -300,23 +310,14 @@ export async function POST(request: Request) {
         return s.status === "APPROVED" ? sum + usd : sum;
       }, 0)
     );
-    const mixedEligibleSavingsUsd =
-      checkoutMode === "MIXED"
-        ? roundMoney(
-            Math.max(
-              0,
-              availableSavingsUsd -
-                sumOtherPackageApprovedSavingsUsd(
-                  savingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
-                  homeId
-                )
-            )
-          )
-        : availableSavingsUsd;
+    const eligibleSavingsUsd = getEligibleSavingsUsd(
+      savingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
+      homeId
+    );
     const savingsAppliedUsd =
       checkoutMode === "DIRECT"
         ? 0
-        : roundMoney(Math.min(Math.max(mixedEligibleSavingsUsd, 0), totalAmountUsd));
+        : roundMoney(Math.min(Math.max(eligibleSavingsUsd, 0), totalAmountUsd));
     const externalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - savingsAppliedUsd));
     const savingsAppliedBs = hasValidBcvRate ? roundMoney(savingsAppliedUsd * bcvRate) : 0;
     const externalAmountBs = hasValidBcvRate ? roundMoney(externalAmountUsd * bcvRate) : 0;
@@ -400,23 +401,14 @@ export async function POST(request: Request) {
           return s.status === "APPROVED" ? sum + usd : sum;
         }, 0)
       );
-      const txMixedEligibleSavingsUsd =
-        checkoutMode === "MIXED"
-          ? roundMoney(
-              Math.max(
-                0,
-                txAvailableSavingsUsd -
-                  sumOtherPackageApprovedSavingsUsd(
-                    txSavingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
-                    homeId
-                  )
-              )
-            )
-          : txAvailableSavingsUsd;
+      const txEligibleSavingsUsd = getEligibleSavingsUsd(
+        txSavingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
+        homeId
+      );
       const txSavingsAppliedUsd =
         checkoutMode === "DIRECT"
           ? 0
-          : roundMoney(Math.min(Math.max(txMixedEligibleSavingsUsd, 0), totalAmountUsd));
+          : roundMoney(Math.min(Math.max(txEligibleSavingsUsd, 0), totalAmountUsd));
 
       if (checkoutMode === "SAVINGS" && txSavingsAppliedUsd < totalAmountUsd) {
         throw new Error("Saldo insuficiente en ahorros para completar la reserva");
