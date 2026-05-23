@@ -24,6 +24,7 @@ import { BANKS } from "@/app/lib/paymentBanks";
 interface GuestReservationItem {
   id: string;
   homeId?: string;
+  reservationId?: string | null;
   title: string;
   country: string;
   municipality?: string | null;
@@ -59,6 +60,7 @@ interface SavingItem {
   amountUsd: number;
   targetTitle?: string | null;
   targetId?: string | null;
+  reservationId?: string | null;
   kind?: string | null;
   status?: string | null;
   rejectionReason?: string | null;
@@ -365,8 +367,15 @@ export default function DashboardClient(props: DashboardClientProps) {
 
   const savingsRows = props.savings ?? [];
   const reservationsWithSavings = useMemo(() => {
+    const paidReservationIds = new Set(
+      savingsRows
+        .filter((s) => s.kind === "CHECKOUT_DEBIT" && s.status === "APPROVED" && s.reservationId)
+        .map((s) => s.reservationId as string)
+    );
+
     const baseReservations: GuestReservationItem[] = (props.guestReservations ?? []).map((r) => ({
       ...r,
+      status: paidReservationIds.has(r.id) ? "PAGADO" : r.status,
       isSavingProgress: false,
     }));
 
@@ -378,9 +387,13 @@ export default function DashboardClient(props: DashboardClientProps) {
 
     const packageById = new Map((props.savingPackages ?? []).map((pkg) => [pkg.id, pkg]));
     const activeSavingsByHomeId = new Map<string, number>();
+    const reservationIdByHomeId = new Map<string, string>();
 
     for (const s of savingsRows) {
       if (!s.targetId) continue;
+      if (s.reservationId) {
+        reservationIdByHomeId.set(s.targetId, s.reservationId);
+      }
       const usd = Number(s.amountUsd ?? 0);
       const isPositiveContribution = usd > 0 && (s.status === "APPROVED" || s.status === "PENDING");
       const isDebit = usd < 0;
@@ -398,9 +411,11 @@ export default function DashboardClient(props: DashboardClientProps) {
       const pkg = packageById.get(homeId);
       const packagePriceUsd = Number(pkg?.price ?? 0);
       const isFullyPaidWithSavings = packagePriceUsd > 0 && savedUsd >= packagePriceUsd;
+      const reservationId = reservationIdByHomeId.get(homeId) ?? null;
       savingReservations.push({
         id: `saving-${homeId}`,
         homeId,
+        reservationId,
         title: pkg?.title || "Paquete",
         country: pkg?.country || "Venezuela",
         municipality: pkg?.municipality || null,
@@ -811,7 +826,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          {res.isSavingProgress ? (
+                          {res.isSavingProgress && !res.reservationId ? (
                             <button
                               type="button"
                               onClick={() => {
@@ -823,7 +838,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                               Ver ahorro
                             </button>
                           ) : (
-                            <Link href={`/reservation/${res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
+                            <Link href={`/reservation/${res.reservationId ?? res.id}`} className="text-orange-600 hover:underline text-xs font-medium">
                               Ver
                             </Link>
                           )}

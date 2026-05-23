@@ -711,6 +711,7 @@ async function getGuestDashboardData(userId: string) {
         amountUsd: s.amountUsd as number,
         targetTitle: typeof details.homeTitle === "string" ? details.homeTitle : null,
         targetId: typeof details.homeId === "string" ? details.homeId : null,
+        reservationId: typeof details.reservationId === "string" ? details.reservationId : null,
         kind: typeof details.kind === "string" ? details.kind : null,
         status: typeof s.status === "string" ? s.status : "PENDING",
         rejectionReason: typeof s.rejectionReason === "string" ? s.rejectionReason : null,

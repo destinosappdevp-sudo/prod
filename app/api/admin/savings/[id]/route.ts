@@ -312,6 +312,10 @@ export async function PATCH(
 
     const details = normalizeDetails(saving.paymentDetails);
     const homeId = typeof details.homeId === "string" && details.homeId.trim() ? details.homeId.trim() : null;
+    const seatId =
+      typeof details.seatId === "string" && details.seatId.trim()
+        ? details.seatId.trim()
+        : null;
 
     let completedNow = false;
     let completedGoalUsd = 0;
@@ -404,7 +408,7 @@ export async function PATCH(
         });
       }
 
-      const updatedSaving = await tx.saving.update({
+      let updatedSaving = await tx.saving.update({
         where: { id },
         data: {
           status: "APPROVED",
@@ -421,6 +425,95 @@ export async function PATCH(
           },
         },
       });
+
+      if (packageCompletedNow) {
+        const existingReservation = await tx.reservation.findFirst({
+          where: {
+            userId: saving.userId,
+            homeId,
+            status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { id: true },
+        });
+
+        let reservationId = existingReservation?.id ?? null;
+
+        if (!reservationId) {
+          const startDate = new Date();
+          const endDate = new Date(startDate.getTime() + 86400000);
+          const reservation = await tx.reservation.create({
+            data: {
+              userId: saving.userId,
+              homeId,
+              startDate,
+              endDate,
+              nights: 1,
+              status: "CONFIRMED",
+              totalAmount: packageGoalUsd,
+              ...(seatId ? { seatId } : {}),
+            },
+            select: { id: true },
+          });
+
+          reservationId = reservation.id;
+        }
+
+        const approvedNegativeSavings = await tx.saving.findMany({
+          where: {
+            userId: saving.userId,
+            status: "APPROVED",
+            amountUsd: { lt: 0 },
+          },
+          select: { id: true, paymentDetails: true },
+        });
+
+        const hasCheckoutDebit = approvedNegativeSavings.some((row: any) => {
+          const rowDetails = normalizeDetails(row.paymentDetails);
+          return (
+            rowDetails.kind === "CHECKOUT_DEBIT" &&
+            rowDetails.reservationId === reservationId
+          );
+        });
+
+        const debitAmountBs = roundMoney(packageGoalUsd * Number(saving.bcvRate ?? 0));
+
+        if (!hasCheckoutDebit) {
+          await tx.saving.create({
+            data: {
+              userId: saving.userId,
+              bcvRate: Number(saving.bcvRate ?? 0),
+              amountUsd: -packageGoalUsd,
+              amountBs: debitAmountBs > 0 ? -debitAmountBs : 0,
+              status: "APPROVED",
+              paymentDetails: {
+                kind: "CHECKOUT_DEBIT",
+                checkoutMode: "SAVINGS",
+                reservationId,
+                homeId,
+                homeTitle: home.title || details.homeTitle || "Paquete",
+                seatId,
+                amountUsd: -packageGoalUsd,
+                amountBs: debitAmountBs > 0 ? -debitAmountBs : 0,
+                autoCreatedFromSavingApproval: true,
+                sourceSavingId: saving.id,
+              },
+            },
+          });
+        }
+
+        updatedSaving = await tx.saving.update({
+          where: { id: updatedSaving.id },
+          data: {
+            paymentDetails: {
+              ...normalizeDetails(updatedSaving.paymentDetails),
+              reservationId,
+              packageCompleted: true,
+              autoCreatedReservation: true,
+            },
+          },
+        });
+      }
 
       if (overflowUsd > 0) {
         await tx.saving.create({

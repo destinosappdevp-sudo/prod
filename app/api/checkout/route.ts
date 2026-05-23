@@ -50,6 +50,44 @@ function getEligibleSavingsUsd(
   );
 }
 
+function getWalletBreakdownUsd(
+  savingsRows: Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
+  currentHomeId: string
+) {
+  return savingsRows.reduce(
+    (acc, row) => {
+      const amountUsd = Number(row.amountUsd ?? 0);
+      const details = normalizePaymentDetails(row.paymentDetails);
+      const rowHomeId =
+        typeof details.homeId === "string" && details.homeId.trim()
+          ? details.homeId.trim()
+          : null;
+
+      if (amountUsd < 0) {
+        if (!rowHomeId) {
+          acc.general = roundMoney(acc.general + amountUsd);
+        } else if (rowHomeId === currentHomeId) {
+          acc.currentPackage = roundMoney(acc.currentPackage + amountUsd);
+        }
+        return acc;
+      }
+
+      if (row.status !== "APPROVED") {
+        return acc;
+      }
+
+      if (!rowHomeId) {
+        acc.general = roundMoney(acc.general + amountUsd);
+      } else if (rowHomeId === currentHomeId) {
+        acc.currentPackage = roundMoney(acc.currentPackage + amountUsd);
+      }
+
+      return acc;
+    },
+    { general: 0, currentPackage: 0 }
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -394,14 +432,11 @@ export async function POST(request: Request) {
         where: { userId },
         select: { amountUsd: true, status: true, paymentDetails: true },
       });
-      const txAvailableSavingsUsd = roundMoney(
-        txSavingsRows.reduce((sum: number, s: any) => {
-          const usd = Number(s.amountUsd ?? 0);
-          if (usd < 0) return sum + usd;
-          return s.status === "APPROVED" ? sum + usd : sum;
-        }, 0)
-      );
       const txEligibleSavingsUsd = getEligibleSavingsUsd(
+        txSavingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
+        homeId
+      );
+      const txWallets = getWalletBreakdownUsd(
         txSavingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
         homeId
       );
@@ -423,6 +458,10 @@ export async function POST(request: Request) {
       const txExternalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - txSavingsAppliedUsd));
       const txSavingsAppliedBs = hasValidBcvRate ? roundMoney(txSavingsAppliedUsd * bcvRate) : 0;
       const txExternalAmountBs = hasValidBcvRate ? roundMoney(txExternalAmountUsd * bcvRate) : 0;
+      const packageWalletUsd = Math.max(0, roundMoney(txWallets.currentPackage));
+      const generalWalletUsd = Math.max(0, roundMoney(txWallets.general));
+      const packageDebitUsd = roundMoney(Math.min(packageWalletUsd, txSavingsAppliedUsd));
+      const generalDebitUsd = roundMoney(Math.min(generalWalletUsd, Math.max(0, txSavingsAppliedUsd - packageDebitUsd)));
 
       // Crear la reserva siempre en PENDING para revisión manual del pago.
       const reservationStatus: string = "PENDING";
@@ -483,24 +522,51 @@ export async function POST(request: Request) {
       });
 
       if (txSavingsAppliedUsd > 0) {
-        await tx.saving.create({
-          data: {
-            userId,
-            bcvRate: hasValidBcvRate ? bcvRate : 0,
-            amountUsd: -txSavingsAppliedUsd,
-            amountBs: hasValidBcvRate ? -txSavingsAppliedBs : 0,
-            paymentDetails: {
-              kind: "CHECKOUT_DEBIT",
-              checkoutMode,
-              reservationId: reservation.id,
-              paymentId: payment.id,
-              homeId,
-              homeTitle: home.title ?? null,
-              amountUsd: -txSavingsAppliedUsd,
-              amountBs: hasValidBcvRate ? -txSavingsAppliedBs : 0,
+        if (packageDebitUsd > 0) {
+          await tx.saving.create({
+            data: {
+              userId,
+              bcvRate: hasValidBcvRate ? bcvRate : 0,
+              amountUsd: -packageDebitUsd,
+              amountBs: hasValidBcvRate ? -roundMoney(packageDebitUsd * bcvRate) : 0,
+              paymentDetails: {
+                kind: "CHECKOUT_DEBIT",
+                checkoutMode,
+                reservationId: reservation.id,
+                paymentId: payment.id,
+                homeId,
+                homeTitle: home.title ?? null,
+                amountUsd: -packageDebitUsd,
+                amountBs: hasValidBcvRate ? -roundMoney(packageDebitUsd * bcvRate) : 0,
+                sourceWallet: "PACKAGE",
+              },
             },
-          },
-        });
+          });
+        }
+
+        if (generalDebitUsd > 0) {
+          await tx.saving.create({
+            data: {
+              userId,
+              bcvRate: hasValidBcvRate ? bcvRate : 0,
+              amountUsd: -generalDebitUsd,
+              amountBs: hasValidBcvRate ? -roundMoney(generalDebitUsd * bcvRate) : 0,
+              paymentDetails: {
+                kind: "CHECKOUT_DEBIT",
+                checkoutMode,
+                reservationId: reservation.id,
+                paymentId: payment.id,
+                homeId: null,
+                homeTitle: null,
+                targetHomeId: homeId,
+                targetHomeTitle: home.title ?? null,
+                amountUsd: -generalDebitUsd,
+                amountBs: hasValidBcvRate ? -roundMoney(generalDebitUsd * bcvRate) : 0,
+                sourceWallet: "GENERAL",
+              },
+            },
+          });
+        }
       }
 
       return { reservation, payment };
