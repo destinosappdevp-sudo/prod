@@ -373,9 +373,19 @@ export default function DashboardClient(props: DashboardClientProps) {
         .map((s) => s.reservationId as string)
     );
 
+    const activeSavingHomeIds = new Set(
+      savingsRows
+        .filter((s) => s.targetId && Number(s.amountUsd ?? 0) > 0 && (s.status === "PENDING" || s.status === "APPROVED"))
+        .map((s) => s.targetId as string)
+    );
+
     const baseReservations: GuestReservationItem[] = (props.guestReservations ?? []).map((r) => ({
       ...r,
-      status: paidReservationIds.has(r.id) ? "PAGADO" : r.status,
+      status: paidReservationIds.has(r.id)
+        ? "PAGADO"
+        : r.status === "PENDING" && r.homeId && activeSavingHomeIds.has(r.homeId)
+        ? "AHORRANDO"
+        : r.status,
       isSavingProgress: false,
     }));
 
