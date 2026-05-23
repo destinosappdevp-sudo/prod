@@ -54,7 +54,7 @@ export default async function CheckoutPage({
   searchParams,
 }: {
   params: Promise<{ homeId: string }>;
-  searchParams: Promise<{ startDate?: string; endDate?: string; guests?: string; plan?: string; seatId?: string }>;
+  searchParams: Promise<{ startDate?: string; endDate?: string; guests?: string; plan?: string; seatId?: string; seatIds?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -66,7 +66,17 @@ export default async function CheckoutPage({
   }
 
   const { homeId } = await params;
-  const { startDate, endDate, guests, plan, seatId } = await searchParams;
+  const { startDate, endDate, guests, plan, seatId, seatIds } = await searchParams;
+  const resolvedSeatIds = (() => {
+    const parsed = (seatIds || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (parsed.length > 0) return parsed;
+    if (seatId) return [seatId];
+    return [];
+  })();
 
   const planLabel = plan === "vip" ? "Plan Premium VIP" : "Plan Estándar";
 
@@ -238,22 +248,22 @@ export default async function CheckoutPage({
                   <p className="text-sm text-gray-600">{guests || 1} cupo{(guests && parseInt(guests) > 1) ? 's' : ''}</p>
                 </div>
                 <Link 
-                  href={`/home/${homeId}`}
+                  href={`/seats/${homeId}/passengers?plan=${plan || "estandar"}&flow=contado`}
                   className="text-sm font-semibold underline hover:text-gray-600"
                 >
                   Editar
                 </Link>
               </div>
-              {seatId && (
+              {resolvedSeatIds.length > 0 && (
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-sm font-medium mb-1">Asiento</p>
+                    <p className="text-sm font-medium mb-1">Asiento{resolvedSeatIds.length > 1 ? "s" : ""}</p>
                     <p className="text-sm text-gray-600 font-semibold text-amber-600">
-                      {planLabel}
+                      {planLabel} · {resolvedSeatIds.length} seleccionado{resolvedSeatIds.length > 1 ? "s" : ""}
                     </p>
                   </div>
                   <Link
-                    href={`/seats/${homeId}?plan=${plan || "estandar"}`}
+                    href={`/seats/${homeId}?plan=${plan || "estandar"}&flow=contado&guests=${guestsCount}`}
                     className="text-sm font-semibold underline hover:text-gray-600"
                   >
                     Cambiar
@@ -313,7 +323,8 @@ export default async function CheckoutPage({
           bcvRate={bcvRate}
           totalBs={totalBs}
           savingsTotalUsd={savingsEligibleUsd}
-          seatId={seatId}
+          seatId={resolvedSeatIds[0]}
+          seatIds={resolvedSeatIds}
           plan={plan}
         />
       </div>

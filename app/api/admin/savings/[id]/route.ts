@@ -45,8 +45,18 @@ async function hasApprovedContributionsForPackageSeat(params: {
         ? details.seatId.trim()
         : null;
 
+    const rowSeatIds = Array.isArray(details.seatIds)
+      ? details.seatIds
+          .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean)
+      : [];
+
     // Compatibilidad con depósitos antiguos sin seatId explícito.
-    return rowSeatId === null || rowSeatId === params.seatId;
+    return (
+      rowSeatId === null ||
+      rowSeatId === params.seatId ||
+      rowSeatIds.includes(params.seatId)
+    );
   });
 }
 
@@ -253,6 +263,11 @@ export async function PATCH(
         typeof details.seatId === "string" && details.seatId.trim()
           ? details.seatId.trim()
           : null;
+      const seatIds = Array.isArray(details.seatIds)
+        ? details.seatIds
+            .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+            .filter(Boolean)
+        : [];
 
       const rejected = await (prisma as any).$transaction(async (tx: any) => {
         const updated = await tx.saving.update({
@@ -263,20 +278,24 @@ export async function PATCH(
           },
         });
 
-        if (homeId && seatId) {
-          const hasPriorBalance = await hasApprovedContributionsForPackageSeat({
-            tx,
-            userId: saving.userId,
-            homeId,
-            seatId,
-            excludeSavingId: saving.id,
-          });
+        if (homeId) {
+          const allSeatIds = Array.from(new Set([...(seatId ? [seatId] : []), ...seatIds]));
 
-          if (!hasPriorBalance) {
-            await tx.packageSeat.updateMany({
-              where: { id: seatId, homeId, status: "OCCUPIED" },
-              data: { status: "AVAILABLE" },
+          for (const selectedSeatId of allSeatIds) {
+            const hasPriorBalance = await hasApprovedContributionsForPackageSeat({
+              tx,
+              userId: saving.userId,
+              homeId,
+              seatId: selectedSeatId,
+              excludeSavingId: saving.id,
             });
+
+            if (!hasPriorBalance) {
+              await tx.packageSeat.updateMany({
+                where: { id: selectedSeatId, homeId, status: "OCCUPIED" },
+                data: { status: "AVAILABLE" },
+              });
+            }
           }
         }
 
@@ -316,6 +335,11 @@ export async function PATCH(
       typeof details.seatId === "string" && details.seatId.trim()
         ? details.seatId.trim()
         : null;
+    const seatIds = Array.isArray(details.seatIds)
+      ? details.seatIds
+          .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean)
+      : [];
 
     let completedNow = false;
     let completedGoalUsd = 0;
@@ -512,6 +536,7 @@ export async function PATCH(
                 homeId,
                 homeTitle: home.title || details.homeTitle || "Paquete",
                 seatId,
+                seatIds,
                 amountUsd: -packageGoalUsd,
                 amountBs: debitAmountBs > 0 ? -debitAmountBs : 0,
                 autoCreatedFromSavingApproval: true,

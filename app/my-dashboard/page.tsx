@@ -832,7 +832,7 @@ async function getGuestDashboardData(userId: string) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; target?: string; homeId?: string; seatId?: string; plan?: string }>;
+  searchParams: Promise<{ tab?: string; target?: string; homeId?: string; seatId?: string; seatIds?: string; guests?: string; plan?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -869,6 +869,18 @@ export default async function DashboardPage({
     redirect("/admin");
   }
   const sp = await searchParams;
+  const savingTargetSeatIds = typeof sp.seatIds === "string"
+    ? sp.seatIds
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : typeof sp.seatId === "string" && sp.seatId.trim()
+    ? [sp.seatId.trim()]
+    : [];
+  const savingTargetGuestsParsed = typeof sp.guests === "string" ? Number.parseInt(sp.guests, 10) : NaN;
+  const savingTargetGuests = Number.isInteger(savingTargetGuestsParsed) && savingTargetGuestsParsed > 0
+    ? savingTargetGuestsParsed
+    : undefined;
   const initialTab = sp.tab;
 
   const [data, initialDocs, savingPackage] = await Promise.all([
@@ -911,6 +923,8 @@ export default async function DashboardPage({
       savingTarget={typeof sp.target === "string" ? sp.target : undefined}
       savingTargetId={typeof sp.homeId === "string" ? sp.homeId : undefined}
       savingTargetSeatId={typeof sp.seatId === "string" ? sp.seatId : undefined}
+      savingTargetSeatIds={savingTargetSeatIds}
+      savingTargetGuests={savingTargetGuests}
       savingTargetPlan={sp.plan === "vip" ? "vip" : sp.plan === "estandar" ? "estandar" : undefined}
       savingPackage={savingPackage}
       userData={{ ...userRecord, email: userRecord?.email || user.email }}

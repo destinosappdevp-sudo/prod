@@ -31,6 +31,7 @@ interface CheckoutFormProps {
   totalBs: number;
   savingsTotalUsd: number;
   seatId?: string;
+  seatIds?: string[];
   plan?: string;
 }
 
@@ -51,6 +52,7 @@ export default function CheckoutForm({
   totalBs,
   savingsTotalUsd,
   seatId,
+  seatIds,
   plan,
 }: CheckoutFormProps) {
   const router = useRouter();
@@ -172,6 +174,7 @@ export default function CheckoutForm({
             paymentProofUrl,
           },
           seatId: seatId || null,
+          seatIds: Array.isArray(seatIds) ? seatIds : [],
           plan: plan || null,
         }),
       });

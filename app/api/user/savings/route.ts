@@ -83,6 +83,24 @@ export async function POST(req: NextRequest) {
       ? paymentDetailsInput.seatId.trim()
       : null;
 
+  const seatIdsInput = Array.isArray(paymentDetailsInput.seatIds)
+    ? paymentDetailsInput.seatIds
+    : typeof paymentDetailsInput.seatIds === "string"
+    ? paymentDetailsInput.seatIds.split(",")
+    : [];
+
+  const seatIds = Array.from(
+    new Set(
+      seatIdsInput
+        .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+        .filter(Boolean)
+    )
+  );
+
+  if (seatIds.length === 0 && seatId) {
+    seatIds.push(seatId);
+  }
+
   let homeTitle =
     typeof paymentDetailsInput.homeTitle === "string" && paymentDetailsInput.homeTitle.trim()
       ? paymentDetailsInput.homeTitle.trim()
@@ -157,11 +175,12 @@ export async function POST(req: NextRequest) {
     paymentProofUrl,
     homeId,
     homeTitle,
-    seatId,
+    seatId: seatIds[0] || null,
+    seatIds,
     kind: homeId ? "PACKAGE_SAVING_DEPOSIT" : "GENERAL_SAVING_DEPOSIT",
   };
 
-  const shouldReserveSeat = Boolean(homeId && seatId);
+  const shouldReserveSeat = Boolean(homeId && seatIds.length > 0);
 
   // El depósito se crea en PENDING hasta que el admin lo apruebe.
   // Si viene seatId+homeId, también se ocupa el asiento para que el flujo de ahorro lo reserve.
@@ -169,22 +188,27 @@ export async function POST(req: NextRequest) {
   try {
     saving = await prismaAny.$transaction(async (tx: any) => {
       if (shouldReserveSeat) {
-        const seat = await tx.packageSeat.findUnique({
-          where: { id: seatId },
+        const selectedSeats = await tx.packageSeat.findMany({
+          where: { id: { in: seatIds } },
           select: { id: true, homeId: true, status: true },
         });
 
-        if (!seat || seat.homeId !== homeId) {
+        if (selectedSeats.length !== seatIds.length) {
+          throw new Error("Asiento inválido para este paquete");
+        }
+
+        const invalidSeat = selectedSeats.find((seat: any) => seat.homeId !== homeId);
+        if (invalidSeat) {
           throw new Error("Asiento inválido para este paquete");
         }
 
         const updatedSeat = await tx.packageSeat.updateMany({
-          where: { id: seatId, status: "AVAILABLE" },
+          where: { id: { in: seatIds }, status: "AVAILABLE" },
           data: { status: "OCCUPIED" },
         });
 
-        if (updatedSeat.count === 0) {
-          throw new Error("El asiento seleccionado ya fue ocupado por otro usuario");
+        if (updatedSeat.count !== seatIds.length) {
+          throw new Error("Uno de los asientos seleccionados ya fue ocupado por otro usuario");
         }
       }
 

@@ -18,13 +18,14 @@ interface SeatSelectorProps {
   plan: "vip" | "estandar";
   homeId: string;
   flow: "ahorro" | "contado";
+  guests: number;
 }
 
 const COLUMNS = ["A", "B", "C", "D"] as const;
 
-export default function SeatSelector({ seats, plan, homeId, flow }: SeatSelectorProps) {
+export default function SeatSelector({ seats, plan, homeId, flow, guests }: SeatSelectorProps) {
   const router = useRouter();
-  const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
+  const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
 
   // Índice rápido por row+column
   const seatMap = new Map(seats.map((s) => [`${s.row}-${s.column}`, s]));
@@ -42,38 +43,62 @@ export default function SeatSelector({ seats, plan, homeId, flow }: SeatSelector
 
   const handleSeatClick = (seat: SeatData) => {
     if (!isSelectable(seat)) return;
-    setSelectedSeatId(seat.id === selectedSeatId ? null : seat.id);
+    setSelectedSeatIds((current) => {
+      if (current.includes(seat.id)) {
+        return current.filter((id) => id !== seat.id);
+      }
+
+      if (current.length >= guests) {
+        return current;
+      }
+
+      return [...current, seat.id];
+    });
   };
 
   const handleContinue = () => {
-    const savingsUrl = (seatId?: string) => {
+    const savingsUrl = (seatIds: string[]) => {
       const params = new URLSearchParams({
         tab: "ahorrar",
         homeId,
         plan,
+        guests: String(guests),
       });
-      if (seatId) {
-        params.set("seatId", seatId);
+      if (seatIds.length > 0) {
+        params.set("seatId", seatIds[0]);
+        params.set("seatIds", seatIds.join(","));
       }
       return `/my-dashboard?${params.toString()}`;
     };
 
     if (seats.length === 0) {
       if (flow === "ahorro") {
-        router.push(savingsUrl());
+        router.push(savingsUrl([]));
         return;
       }
-      router.push(`/checkout/${homeId}?plan=${plan}`);
+      router.push(`/checkout/${homeId}?plan=${plan}&guests=${guests}`);
       return;
     }
-    if (!selectedSeatId) return;
+
+    const requiredSeatCount = guests;
+    if (selectedSeatIds.length < requiredSeatCount) return;
 
     if (flow === "ahorro") {
-      router.push(savingsUrl(selectedSeatId));
+      router.push(savingsUrl(selectedSeatIds));
       return;
     }
 
-    router.push(`/checkout/${homeId}?plan=${plan}&seatId=${selectedSeatId}`);
+    const checkoutParams = new URLSearchParams({
+      plan,
+      guests: String(guests),
+    });
+
+    if (selectedSeatIds.length > 0) {
+      checkoutParams.set("seatId", selectedSeatIds[0]);
+      checkoutParams.set("seatIds", selectedSeatIds.join(","));
+    }
+
+    router.push(`/checkout/${homeId}?${checkoutParams.toString()}`);
   };
 
   const renderSeat = (row: number, column: string) => {
@@ -84,7 +109,7 @@ export default function SeatSelector({ seats, plan, homeId, flow }: SeatSelector
     }
 
     const isOccupied = seat.status === "OCCUPIED";
-    const isSelected = seat.id === selectedSeatId;
+    const isSelected = selectedSeatIds.includes(seat.id);
     const canSelect = isSelectable(seat);
     const isVip = seat.zone === "VIP";
 
@@ -141,7 +166,7 @@ export default function SeatSelector({ seats, plan, homeId, flow }: SeatSelector
     </div>
   );
 
-  const selectedSeat = selectedSeatId ? seats.find((s) => s.id === selectedSeatId) : null;
+  const selectedSeats = seats.filter((s) => selectedSeatIds.includes(s.id));
 
   if (seats.length === 0) {
     return (
@@ -226,22 +251,26 @@ export default function SeatSelector({ seats, plan, homeId, flow }: SeatSelector
           <p className="text-center text-sm text-gray-400">
             Los asientos serán asignados por el organizador.
           </p>
-        ) : selectedSeat ? (
+        ) : selectedSeats.length > 0 ? (
           <p className="text-center text-sm font-medium text-gray-700">
-            Asiento seleccionado:{" "}
+            Asientos seleccionados ({selectedSeats.length}/{guests}):{" "}
             <span className="font-bold text-amber-600">
-              {selectedSeat.column}{selectedSeat.row} — {selectedSeat.zone === "VIP" ? "Premium" : "Estándar"}
+              {selectedSeats
+                .map((seat) => `${seat.column}${seat.row}`)
+                .join(", ")}
             </span>
           </p>
         ) : (
           <p className="text-center text-sm text-gray-400">
-            {plan === "vip" ? "Selecciona un asiento Premium" : "Selecciona un asiento Estándar"}
+            {plan === "vip"
+              ? `Selecciona ${guests} asiento${guests > 1 ? "s" : ""} Premium`
+              : `Selecciona ${guests} asiento${guests > 1 ? "s" : ""} Estándar`}
           </p>
         )}
 
         <Button
           className="w-full"
-          disabled={seats.length > 0 && !selectedSeatId}
+          disabled={seats.length > 0 && selectedSeatIds.length < guests}
           onClick={handleContinue}
         >
           {flow === "ahorro" ? "Ir a ahorro" : "Continuar al pago"}

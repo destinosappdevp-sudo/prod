@@ -38,7 +38,7 @@ export default async function SeatSelectionPage({
   searchParams,
 }: {
   params: Promise<{ homeId: string }>;
-  searchParams: Promise<{ plan?: string; flow?: string }>;
+  searchParams: Promise<{ plan?: string; flow?: string; guests?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -46,15 +46,16 @@ export default async function SeatSelectionPage({
   } = await supabase.auth.getUser();
 
   const { homeId } = await params;
-  const { plan: planParam, flow: flowParam } = await searchParams;
-
-  if (!user) {
-    redirect(`/login?next=/seats/${homeId}?plan=${planParam || "estandar"}&flow=${flowParam === "ahorro" ? "ahorro" : "contado"}`);
-  }
+  const { plan: planParam, flow: flowParam, guests: guestsParam } = await searchParams;
 
   const plan = planParam === "vip" ? "vip" : "estandar";
   const flow = flowParam === "ahorro" ? "ahorro" : "contado";
+  const parsedGuests = guestsParam ? Number.parseInt(guestsParam, 10) : 1;
+  const guests = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 1;
 
+  if (!user) {
+    redirect(`/login?next=/seats/${homeId}?plan=${plan}&flow=${flow}&guests=${guests}`);
+  }
   const home = await getPackageWithSeats(homeId);
   if (!home) notFound();
 
@@ -80,7 +81,7 @@ export default async function SeatSelectionPage({
           </p>
         </div>
 
-        <SeatSelector seats={seats} plan={plan} homeId={homeId} flow={flow} />
+        <SeatSelector seats={seats} plan={plan} homeId={homeId} flow={flow} guests={guests} />
       </div>
     </div>
   );

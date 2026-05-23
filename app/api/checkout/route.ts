@@ -107,6 +107,21 @@ export async function POST(request: Request) {
     const endDate = typeof body?.endDate === "string" ? body.endDate : "";
     const guests = Number(body?.guests ?? 1);
     const seatId = typeof body?.seatId === "string" && body.seatId ? body.seatId : null;
+    const seatIdsInput = Array.isArray(body?.seatIds)
+      ? body.seatIds
+      : typeof body?.seatIds === "string"
+      ? body.seatIds.split(",")
+      : [];
+    const selectedSeatIds = Array.from(
+      new Set(
+        seatIdsInput
+          .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+          .filter(Boolean)
+      )
+    );
+    if (selectedSeatIds.length === 0 && seatId) {
+      selectedSeatIds.push(seatId);
+    }
     const plan = typeof body?.plan === "string" ? body.plan : null;
     const paymentMethod =
       typeof body?.paymentMethod === "string" ? body.paymentMethod : "";
@@ -377,24 +392,43 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validar asiento si fue seleccionado
-    if (seatId) {
-      const seat = await (prisma as any).packageSeat.findUnique({
-        where: { id: seatId },
+    if (selectedSeatIds.length > 0 && selectedSeatIds.length !== guests) {
+      return NextResponse.json(
+        { error: "Debes seleccionar un asiento por cada pasajero." },
+        { status: 400 }
+      );
+    }
+
+    // Validar asientos seleccionados
+    if (selectedSeatIds.length > 0) {
+      const selectedSeats = await (prisma as any).packageSeat.findMany({
+        where: { id: { in: selectedSeatIds } },
         select: { id: true, homeId: true, zone: true, status: true },
       });
-      if (!seat || seat.homeId !== homeId) {
-        return NextResponse.json({ error: "Asiento no válido para este paquete" }, { status: 400 });
+
+      if (selectedSeats.length !== selectedSeatIds.length) {
+        return NextResponse.json(
+          { error: "Uno o más asientos no son válidos para este paquete" },
+          { status: 400 }
+        );
       }
-      if (seat.status === "OCCUPIED") {
-        return NextResponse.json({ error: "El asiento seleccionado ya está ocupado. Por favor elige otro." }, { status: 409 });
-      }
-      // Validar que la zona coincida con el plan
-      if (plan === "vip" && seat.zone !== "VIP") {
-        return NextResponse.json({ error: "El asiento seleccionado no pertenece a la zona VIP" }, { status: 400 });
-      }
-      if (plan === "estandar" && seat.zone !== "STANDARD") {
-        return NextResponse.json({ error: "El asiento seleccionado no pertenece a la zona Estándar" }, { status: 400 });
+
+      for (const seat of selectedSeats) {
+        if (seat.homeId !== homeId) {
+          return NextResponse.json({ error: "Asiento no válido para este paquete" }, { status: 400 });
+        }
+
+        if (seat.status === "OCCUPIED") {
+          return NextResponse.json({ error: "Uno de los asientos seleccionados ya está ocupado. Por favor elige otro." }, { status: 409 });
+        }
+
+        if (plan === "vip" && seat.zone !== "VIP") {
+          return NextResponse.json({ error: "Uno de los asientos no pertenece a la zona VIP" }, { status: 400 });
+        }
+
+        if (plan === "estandar" && seat.zone !== "STANDARD") {
+          return NextResponse.json({ error: "Uno de los asientos no pertenece a la zona Estándar" }, { status: 400 });
+        }
       }
     }
 
@@ -418,6 +452,7 @@ export async function POST(request: Request) {
       savingsAppliedBs,
       externalAmountUsd,
       externalAmountBs,
+      seatIds: selectedSeatIds,
       receiverMethod: checkoutMode === "SAVINGS" ? null : paymentMethod,
       paymentProofUrl: checkoutMode === "SAVINGS" ? null : paymentProofUrl,
       bcvRateUsed: hasValidBcvRate ? Number(bcvRate.toFixed(8)) : null,
@@ -475,23 +510,23 @@ export async function POST(request: Request) {
           nights: calculatedNights,
           totalAmount: totalAmountUsd,
           status: reservationStatus,
-          ...(seatId ? { seatId } : {}),
+          ...(selectedSeatIds[0] ? { seatId: selectedSeatIds[0] } : {}),
         },
       });
 
-      // Marcar el asiento como OCUPADO si se seleccionó uno
-      if (seatId) {
-        const seatCheck = await tx.packageSeat.findUnique({
-          where: { id: seatId },
-          select: { status: true },
-        });
-        if (!seatCheck || seatCheck.status === "OCCUPIED") {
-          throw new Error("El asiento ya fue ocupado por otro usuario. Por favor elige otro.");
-        }
-        await tx.packageSeat.update({
-          where: { id: seatId },
+      // Marcar asientos como OCUPADOS si se seleccionaron
+      if (selectedSeatIds.length > 0) {
+        const occupied = await tx.packageSeat.updateMany({
+          where: {
+            id: { in: selectedSeatIds },
+            status: "AVAILABLE",
+          },
           data: { status: "OCCUPIED" },
         });
+
+        if (occupied.count !== selectedSeatIds.length) {
+          throw new Error("Uno de los asientos ya fue ocupado por otro usuario. Por favor elige otro.");
+        }
       }
 
       // Crear el pago siempre en PENDING para evitar aprobaciones automáticas.
@@ -536,6 +571,7 @@ export async function POST(request: Request) {
                 paymentId: payment.id,
                 homeId,
                 homeTitle: home.title ?? null,
+                seatIds: selectedSeatIds,
                 amountUsd: -packageDebitUsd,
                 amountBs: hasValidBcvRate ? -roundMoney(packageDebitUsd * bcvRate) : 0,
                 sourceWallet: "PACKAGE",
@@ -560,6 +596,7 @@ export async function POST(request: Request) {
                 homeTitle: null,
                 targetHomeId: homeId,
                 targetHomeTitle: home.title ?? null,
+                seatIds: selectedSeatIds,
                 amountUsd: -generalDebitUsd,
                 amountBs: hasValidBcvRate ? -roundMoney(generalDebitUsd * bcvRate) : 0,
                 sourceWallet: "GENERAL",

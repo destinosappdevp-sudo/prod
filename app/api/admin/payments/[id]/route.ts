@@ -49,8 +49,18 @@ async function hasApprovedPackageSavings(params: {
         ? details.seatId.trim()
         : null;
 
+    const rowSeatIds = Array.isArray(details.seatIds)
+      ? details.seatIds
+          .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean)
+      : [];
+
     // Compatibilidad con depósitos antiguos sin seatId explícito.
-    return rowSeatId === null || rowSeatId === params.seatId;
+    return (
+      rowSeatId === null ||
+      rowSeatId === params.seatId ||
+      rowSeatIds.includes(params.seatId)
+    );
   });
 }
 
@@ -156,6 +166,16 @@ export async function PATCH(
 
       // Si se rechaza el pago, solo liberar asiento si no hay saldo previo del paquete/asiento.
       if (action === "reject" && payment.Reservation?.seatId) {
+        const paymentDetails = normalizePaymentDetails(payment.paymentDetails);
+        const extraSeatIds = Array.isArray(paymentDetails.seatIds)
+          ? paymentDetails.seatIds
+              .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+              .filter(Boolean)
+          : [];
+        const seatIdsToRelease = Array.from(
+          new Set([payment.Reservation.seatId, ...extraSeatIds])
+        );
+
         const hasPriorSavings =
           payment.Reservation?.userId && payment.Reservation?.homeId
             ? await hasApprovedPackageSavings({
@@ -169,7 +189,7 @@ export async function PATCH(
         if (!hasPriorSavings) {
           await tx.packageSeat.updateMany({
             where: {
-              id: payment.Reservation.seatId,
+              id: { in: seatIdsToRelease },
               status: "OCCUPIED",
             },
             data: {
