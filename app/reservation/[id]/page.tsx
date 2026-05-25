@@ -247,28 +247,31 @@ export default async function ReservationDetailPage({
         orderBy: [{ row: "asc" }, { column: "asc" }],
       });
     } else if (reservation.PackageSeat) {
-      // Reserva por ahorro: buscar el CHECKOUT_DEBIT vinculado para obtener todos los seatIds
-      const checkoutDebit = await (prisma as any).saving.findFirst({
+      // Reserva por ahorro: buscar CHECKOUT_DEBIT vinculado a esta reserva
+      // Los debits se crean con status PENDING (default), así que buscamos
+      // todos los savings negativos del usuario y filtramos en JS por reservationId
+      const userDebits = await (prisma as any).saving.findMany({
         where: {
           userId: reservation.userId,
-          status: "APPROVED",
           amountUsd: { lt: 0 },
         },
-        orderBy: { date: "desc" },
         select: { paymentDetails: true },
       });
-      const debitDetails =
-        checkoutDebit?.paymentDetails && typeof checkoutDebit.paymentDetails === "object"
-          ? (checkoutDebit.paymentDetails as Record<string, unknown>)
-          : null;
-      const debitSeatIds =
-        debitDetails?.kind === "CHECKOUT_DEBIT" &&
-        debitDetails?.reservationId === id &&
-        Array.isArray(debitDetails?.seatIds)
-          ? (debitDetails.seatIds as unknown[]).filter(
-              (s): s is string => typeof s === "string" && s.trim().length > 0
-            )
-          : [];
+      let debitSeatIds: string[] = [];
+      for (const debit of userDebits) {
+        if (!debit.paymentDetails || typeof debit.paymentDetails !== "object" || Array.isArray(debit.paymentDetails)) continue;
+        const pd = debit.paymentDetails as Record<string, unknown>;
+        if (
+          pd.kind === "CHECKOUT_DEBIT" &&
+          pd.reservationId === id &&
+          Array.isArray(pd.seatIds)
+        ) {
+          debitSeatIds = (pd.seatIds as unknown[]).filter(
+            (s): s is string => typeof s === "string" && s.trim().length > 0
+          );
+          break;
+        }
+      }
       if (debitSeatIds.length > 0) {
         allPackageSeats = await (prisma as any).packageSeat.findMany({
           where: { id: { in: debitSeatIds } },
