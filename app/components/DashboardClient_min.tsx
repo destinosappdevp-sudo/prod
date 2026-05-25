@@ -374,6 +374,54 @@ export default function DashboardClient(props: DashboardClientProps) {
   }
 
   const savingsRows = props.savings ?? [];
+  const fallbackGuestsFromQuery =
+    (typeof props.savingTargetGuests === "number" && props.savingTargetGuests > 0
+      ? props.savingTargetGuests
+      : Array.isArray(props.savingTargetSeatIds) && props.savingTargetSeatIds.length > 0
+      ? props.savingTargetSeatIds.length
+      : 1);
+
+  const getTargetGuestsCount = (targetId?: string | null) => {
+    if (!targetId) return 1;
+    const firstWithGuests = savingsRows.find(
+      (item) => item.targetId === targetId && Number(item.guests ?? 0) > 0
+    );
+    if (firstWithGuests) {
+      return Number(firstWithGuests.guests ?? 1);
+    }
+    if (props.savingTargetId === targetId) {
+      return fallbackGuestsFromQuery;
+    }
+    return 1;
+  };
+
+  const getTargetPlan = (targetId?: string | null) => {
+    if (!targetId) return null;
+    const firstWithPlan = savingsRows.find(
+      (item) => item.targetId === targetId && typeof item.plan === "string" && item.plan
+    );
+    if (firstWithPlan && typeof firstWithPlan.plan === "string") {
+      return firstWithPlan.plan;
+    }
+    if (props.savingTargetId === targetId) {
+      return props.savingTargetPlan ?? null;
+    }
+    return null;
+  };
+
+  const getTargetGoalUsd = (
+    targetId: string | null | undefined,
+    pkg?: { price?: number | null; priceVip?: number | null } | null
+  ) => {
+    const guestsCount = getTargetGuestsCount(targetId);
+    const savingPlan = getTargetPlan(targetId);
+    const unitPrice =
+      savingPlan === "vip" && Number(pkg?.priceVip ?? 0) > 0
+        ? Number(pkg?.priceVip)
+        : Number(pkg?.price ?? 0);
+    return roundMoney(unitPrice * guestsCount);
+  };
+
   const reservationsWithSavings = useMemo(() => {
     const paidReservationIds = new Set(
       savingsRows
@@ -427,7 +475,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       if (reservedHomeIds.has(homeId)) continue;
 
       const pkg = packageById.get(homeId);
-      const packagePriceUsd = Number(pkg?.price ?? 0);
+      const packagePriceUsd = getTargetGoalUsd(homeId, pkg);
       const isFullyPaidWithSavings = packagePriceUsd > 0 && savedUsd >= packagePriceUsd;
       const reservationId = reservationIdByHomeId.get(homeId) ?? null;
       savingReservations.push({
@@ -441,14 +489,21 @@ export default function DashboardClient(props: DashboardClientProps) {
         photo: pkg?.photo || "",
         description: isFullyPaidWithSavings ? "Paquete pagado con ahorro" : "Ahorro en progreso",
         status: isFullyPaidWithSavings ? "PAGADO" : "AHORRANDO",
-        totalAmount: Number(pkg?.price ?? 0),
+        totalAmount: packagePriceUsd,
         isSavingProgress: true,
         savedAmountUsd: savedUsd,
       });
     }
 
     return [...savingReservations, ...baseReservations];
-  }, [props.guestReservations, props.savingPackages, savingsRows]);
+  }, [
+    fallbackGuestsFromQuery,
+    props.guestReservations,
+    props.savingPackages,
+    props.savingTargetId,
+    props.savingTargetPlan,
+    savingsRows,
+  ]);
 
   const contributesToBalance = (item: SavingItem) => {
     const usd = Number(item.amountUsd ?? 0);
@@ -476,7 +531,7 @@ export default function DashboardClient(props: DashboardClientProps) {
     Array.from(packageSavingsMap.entries())
       .filter(([targetId, wallet]) => {
         const pkg = (props.savingPackages ?? []).find((item) => item.id === targetId);
-        const goal = Number(pkg?.price ?? 0);
+        const goal = getTargetGoalUsd(targetId, pkg);
         return goal > 0 && wallet.totalUsd >= goal;
       })
       .map(([targetId]) => targetId)
@@ -529,16 +584,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   ) / 100;
   const packageGoalUsd = (() => {
     if (!isPackageSavingsView) return Number(selectedSavingPackage?.price ?? 0);
-    const firstDeposit = displayedSavings.find(
-      (item) => Number(item.amountUsd ?? 0) > 0 && (item.guests ?? 0) > 0
-    );
-    const savingGuestsCount = firstDeposit?.guests ?? 1;
-    const savingPlan = displayedSavings.find((item) => item.plan)?.plan ?? null;
-    const unitPrice =
-      savingPlan === "vip" && Number(selectedSavingPackage?.priceVip ?? 0) > 0
-        ? Number(selectedSavingPackage!.priceVip)
-        : Number(selectedSavingPackage?.price ?? 0);
-    return roundMoney(unitPrice * savingGuestsCount);
+    return getTargetGoalUsd(activePackageTargetId, selectedSavingPackage);
   })();
   const packageApprovedDepositedUsd = roundMoney(
     displayedSavings.reduce((sum, item) => {

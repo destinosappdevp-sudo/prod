@@ -630,7 +630,10 @@ async function getGuestDashboardData(userId: string) {
 
   let reservations = initialReservations;
 
-  const activeSavingByHomeId = new Map<string, { seatId: string | null }>();
+  const activeSavingByHomeId = new Map<
+    string,
+    { seatId: string | null; guests: number; plan: "vip" | "estandar" | null }
+  >();
   for (const s of savings as any[]) {
     const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};
     const homeId = typeof details.homeId === "string" && details.homeId.trim() ? details.homeId.trim() : null;
@@ -641,8 +644,20 @@ async function getGuestDashboardData(userId: string) {
     if ((status !== "PENDING" && status !== "APPROVED") || usd <= 0) continue;
 
     const seatId = typeof details.seatId === "string" && details.seatId.trim() ? details.seatId.trim() : null;
+    const guests =
+      typeof details.guests === "number" && details.guests > 0
+        ? details.guests
+        : Array.isArray((details as any).seatIds)
+        ? (details as any).seatIds.filter(Boolean).length || 1
+        : 1;
+    const plan =
+      (details as any).plan === "vip"
+        ? "vip"
+        : (details as any).plan === "estandar"
+        ? "estandar"
+        : null;
     if (!activeSavingByHomeId.has(homeId)) {
-      activeSavingByHomeId.set(homeId, { seatId });
+      activeSavingByHomeId.set(homeId, { seatId, guests, plan });
     }
   }
 
@@ -660,20 +675,30 @@ async function getGuestDashboardData(userId: string) {
   if (missingReservationHomeIds.length > 0) {
     const homesForMissing = await prismaAny.home.findMany({
       where: { id: { in: missingReservationHomeIds } },
-      select: { id: true, price: true },
+      select: { id: true, price: true, priceVip: true },
     });
 
-    const homePriceById = new Map(
-      homesForMissing.map((h: any) => [h.id as string, Number(h.price ?? 0)])
+    const homePriceById = new Map<string, { price: number; priceVip: number }>(
+      homesForMissing.map((h: any) => [
+        h.id as string,
+        { price: Number(h.price ?? 0), priceVip: Number(h.priceVip ?? 0) },
+      ])
     );
 
     let createdAtLeastOne = false;
 
     for (const homeId of missingReservationHomeIds) {
-      const price = Number(homePriceById.get(homeId) ?? 0);
-      if (price <= 0) continue;
+      const priceRow = homePriceById.get(homeId) ?? { price: 0, priceVip: 0 };
+      const savingMeta = activeSavingByHomeId.get(homeId);
+      const guests = Number(savingMeta?.guests ?? 1);
+      const unitPrice =
+        savingMeta?.plan === "vip" && Number(priceRow.priceVip ?? 0) > 0
+          ? Number(priceRow.priceVip ?? 0)
+          : Number(priceRow.price ?? 0);
+      const totalAmount = Math.round(unitPrice * guests * 100) / 100;
+      if (totalAmount <= 0) continue;
 
-      const seatId = activeSavingByHomeId.get(homeId)?.seatId ?? null;
+      const seatId = savingMeta?.seatId ?? null;
       const startDate = new Date();
       const endDate = new Date(startDate.getTime() + 86400000);
 
@@ -686,7 +711,7 @@ async function getGuestDashboardData(userId: string) {
             endDate,
             nights: 1,
             status: "PENDING",
-            totalAmount: price,
+            totalAmount,
             ...(seatId ? { seatId } : {}),
           },
         });
@@ -903,6 +928,7 @@ export default async function DashboardPage({
             title: true,
             photo: true,
             price: true,
+            priceVip: true,
             country: true,
             municipality: true,
             categoryName: true,
