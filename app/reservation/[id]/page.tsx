@@ -233,6 +233,53 @@ export default async function ReservationDetailPage({
       COMPLETED: "bg-blue-100 text-blue-800",
     };
 
+    // --- Todos los asientos de esta reserva ---
+    let allPackageSeats: Array<{ id: string; zone: string; row: string; column: string }> = [];
+    const seatIdsFromPayment = Array.isArray(paymentDetails?.seatIds)
+      ? (paymentDetails!.seatIds as unknown[])
+          .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+      : [];
+
+    if (seatIdsFromPayment.length > 0) {
+      allPackageSeats = await (prisma as any).packageSeat.findMany({
+        where: { id: { in: seatIdsFromPayment } },
+        select: { id: true, zone: true, row: true, column: true },
+        orderBy: [{ row: "asc" }, { column: "asc" }],
+      });
+    } else if (reservation.PackageSeat) {
+      // Reserva por ahorro: buscar el CHECKOUT_DEBIT vinculado para obtener todos los seatIds
+      const checkoutDebit = await (prisma as any).saving.findFirst({
+        where: {
+          userId: reservation.userId,
+          status: "APPROVED",
+          amountUsd: { lt: 0 },
+        },
+        orderBy: { date: "desc" },
+        select: { paymentDetails: true },
+      });
+      const debitDetails =
+        checkoutDebit?.paymentDetails && typeof checkoutDebit.paymentDetails === "object"
+          ? (checkoutDebit.paymentDetails as Record<string, unknown>)
+          : null;
+      const debitSeatIds =
+        debitDetails?.kind === "CHECKOUT_DEBIT" &&
+        debitDetails?.reservationId === id &&
+        Array.isArray(debitDetails?.seatIds)
+          ? (debitDetails.seatIds as unknown[]).filter(
+              (s): s is string => typeof s === "string" && s.trim().length > 0
+            )
+          : [];
+      if (debitSeatIds.length > 0) {
+        allPackageSeats = await (prisma as any).packageSeat.findMany({
+          where: { id: { in: debitSeatIds } },
+          select: { id: true, zone: true, row: true, column: true },
+          orderBy: [{ row: "asc" }, { column: "asc" }],
+        });
+      } else {
+        allPackageSeats = [reservation.PackageSeat];
+      }
+    }
+
     return (
       <div className="min-h-screen bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -290,7 +337,7 @@ export default async function ReservationDetailPage({
             {/* Property Info */}
             {reservation.Home && (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                <h2 className="text-xl font-semibold mb-4">Propiedad</h2>
+                <h2 className="text-xl font-semibold mb-4">Paquete</h2>
                 <div className="flex gap-6">
                   {propertyImageSrc && (
                     <Image
@@ -314,34 +361,61 @@ export default async function ReservationDetailPage({
                       </p>
                     )}
                     <p className="font-semibold text-orange-600 mt-2">
-                      ${reservation.Home.price}/noche
+                      ${reservation.Home.price}/persona
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Ticket / Asiento */}
-            {reservation.PackageSeat && (
+            {/* Ticket / Asientos */}
+            {allPackageSeats.length > 0 && (
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4">Tu Ticket</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <div>
                     <p className="text-sm text-slate-500 mb-1">Tipo de plan</p>
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold ${reservation.PackageSeat.zone === "VIP" ? "bg-[#FBF3DC] text-[#A67C12] border border-[#E1B042]" : "bg-slate-100 text-slate-700"}`}>
-                      {reservation.PackageSeat.zone === "VIP" ? "★ Plan Premium VIP" : "✓ Plan Estándar"}
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold ${allPackageSeats[0].zone === "VIP" ? "bg-[#FBF3DC] text-[#A67C12] border border-[#E1B042]" : "bg-slate-100 text-slate-700"}`}>
+                      {allPackageSeats[0].zone === "VIP" ? "★ Plan Premium VIP" : "✓ Plan Estándar"}
                     </span>
                   </div>
-                  <div>
-                    <p className="text-sm text-slate-500 mb-1">Asiento</p>
-                    <p className="font-semibold text-base">
-                      Fila {reservation.PackageSeat.row} — Columna {reservation.PackageSeat.column}
+                  <div className={allPackageSeats.length > 1 ? "sm:col-span-2" : ""}>
+                    <p className="text-sm text-slate-500 mb-1">
+                      {allPackageSeats.length === 1 ? "Asiento" : `Asientos (${allPackageSeats.length})`}
                     </p>
+                    {allPackageSeats.length === 1 ? (
+                      <p className="font-semibold text-base">
+                        Fila {allPackageSeats[0].row} — Columna {allPackageSeats[0].column}
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {allPackageSeats.map((seat) => (
+                          <span
+                            key={seat.id}
+                            className={`inline-flex items-center rounded-lg px-3 py-1 text-sm font-semibold ${
+                              seat.zone === "VIP"
+                                ? "bg-[#FBF3DC] text-[#A67C12] border border-[#E1B042]"
+                                : "bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            Fila {seat.row} — Col. {seat.column}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-sm text-slate-500 mb-1">Zona</p>
-                    <p className="font-semibold">{reservation.PackageSeat.zone === "VIP" ? "VIP" : "Estándar"}</p>
-                  </div>
+                  {allPackageSeats.length === 1 && (
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Zona</p>
+                      <p className="font-semibold">{allPackageSeats[0].zone === "VIP" ? "VIP" : "Estándar"}</p>
+                    </div>
+                  )}
+                  {allPackageSeats.length > 1 && (
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Zona</p>
+                      <p className="font-semibold">{allPackageSeats[0].zone === "VIP" ? "VIP" : "Estándar"}</p>
+                    </div>
+                  )}
                 </div>
                 {seatAmenities.length > 0 && (
                   <>
@@ -352,8 +426,8 @@ export default async function ReservationDetailPage({
                           {a.iconUrl ? (
                             <Image src={a.iconUrl} alt={a.name} width={16} height={16} className="w-4 h-4" />
                           ) : (
-                            <span className={reservation.PackageSeat?.zone === "VIP" ? "text-[#E1B042]" : "text-emerald-500"}>
-                              {reservation.PackageSeat?.zone === "VIP" ? "★" : "✓"}
+                            <span className={allPackageSeats[0]?.zone === "VIP" ? "text-[#E1B042]" : "text-emerald-500"}>
+                              {allPackageSeats[0]?.zone === "VIP" ? "★" : "✓"}
                             </span>
                           )}
                           {a.name}
