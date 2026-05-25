@@ -514,9 +514,12 @@ export default function DashboardClient(props: DashboardClientProps) {
       (props.savingPackage?.id === selectedSavingId ? props.savingPackage : null)
     : null;
   const packageTargetLabel = selectedWallet?.title || selectedSavingPackage?.title || props.savingTarget || "este paquete";
-  const isPackageSavingsView = Boolean(selectedWallet?.targetId);
+  const activePackageTargetId = selectedWallet?.targetId ?? selectedSavingPackage?.id ?? null;
+  const isPackageSavingsView = Boolean(activePackageTargetId);
   const displayedSavings = selectedWallet?.targetId
     ? savingsRows.filter((item) => item.targetId === selectedWallet.targetId)
+    : activePackageTargetId
+    ? savingsRows.filter((item) => item.targetId === activePackageTargetId)
     : savingsRows;
   const displayedSavingsTotal = Math.round(
     displayedSavings.reduce((sum, item) => {
@@ -1222,7 +1225,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                         </label>
                         {isPackageSavingsView && (
                           <span className="text-xs font-medium text-slate-500">
-                            Restante: <span className="font-semibold text-orange-600">${remainingUsd.toFixed(2)}</span>
+                            Monto maximo a pagar: <span className="font-semibold text-orange-600">${remainingUsd.toFixed(2)}</span>
                           </span>
                         )}
                       </div>

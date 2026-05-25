@@ -120,7 +120,7 @@ export default async function PassengersPage({
             <button
               type="submit"
               disabled={maxPassengers <= 0}
-              className="w-full rounded-full bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
+              className="w-full rounded-full bg-gray-900 px-4 py-2.5 text-sm font-semibold !text-white transition hover:bg-black hover:!text-white disabled:bg-gray-900/70 disabled:!text-white"
             >
               Continuar
             </button>

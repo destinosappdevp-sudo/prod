@@ -282,7 +282,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
         )}
 
         <Button
-          className="w-full bg-gray-900 text-white hover:bg-gray-800 hover:text-white"
+          className="w-full bg-gray-900 !text-white hover:bg-gray-800 hover:!text-white disabled:bg-gray-900/70 disabled:!text-white"
           disabled={seats.length > 0 && selectedSeatIds.length < guests}
           onClick={handleContinue}
         >
