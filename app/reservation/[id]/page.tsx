@@ -71,6 +71,21 @@ function parseDateFromUnknown(value: unknown): Date | null {
   return null;
 }
 
+function parseDepartureFromCheckInTime(value: unknown): Date | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  // checkInTime puede venir como datetime-local (YYYY-MM-DDTHH:mm) o solo fecha.
+  const parsed = new Date(trimmed.includes("T") ? trimmed : `${trimmed}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 function formatCurrencyValue(amount: number, currency: "USD" | "VES"): string {
   return currency === "USD" ? `$${amount.toFixed(2)}` : `Bs ${amount.toFixed(2)}`;
 }
@@ -111,6 +126,7 @@ export default async function ReservationDetailPage({
             title: true,
             description: true,
             price: true,
+            checkInTime: true,
             photo: true,
             municipality: true,
             country: true,
@@ -218,18 +234,20 @@ export default async function ReservationDetailPage({
     const nights = Math.ceil(
       (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    const departureDateLabel = endDate.toLocaleDateString("es-ES", {
+    const departureDateSource =
+      parseDepartureFromCheckInTime(reservation.Home?.checkInTime) ?? endDate;
+    const departureDateLabel = departureDateSource.toLocaleDateString("es-ES", {
       day: "numeric",
       month: "short",
       year: "numeric",
     });
     const hasDepartureTime =
-      endDate.getHours() !== 0 ||
-      endDate.getMinutes() !== 0 ||
-      endDate.getSeconds() !== 0 ||
-      endDate.getMilliseconds() !== 0;
+      departureDateSource.getHours() !== 0 ||
+      departureDateSource.getMinutes() !== 0 ||
+      departureDateSource.getSeconds() !== 0 ||
+      departureDateSource.getMilliseconds() !== 0;
     const departureTimeLabel = hasDepartureTime
-      ? endDate.toLocaleTimeString("es-ES", {
+      ? departureDateSource.toLocaleTimeString("es-ES", {
           hour: "2-digit",
           minute: "2-digit",
         })
