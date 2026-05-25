@@ -6,6 +6,7 @@ import {
   revalidateHomeVisibilityPaths,
   syncHomeVisibilityFlags,
 } from "@/app/lib/home-visibility";
+import { syncPackageSeats } from "@/app/lib/syncPackageSeats";
 
 const prismaAny = prisma as any;
 
@@ -16,6 +17,14 @@ function getPropertyTypesDelegate() {
     return delegate;
   }
   return null;
+}
+
+function parseSeatInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (Number.isNaN(parsed) || parsed < 0) return null;
+  return parsed;
 }
 
 function buildReservationDatesFromCheckInTime(checkInTimeRaw: string | null) {
@@ -99,7 +108,6 @@ export async function PATCH(
     const formData = (await request.formData()) as unknown as globalThis.FormData;
     const title = (formData.get("title") as string) || "";
     const description = (formData.get("description") as string) || "";
-    const guests = (formData.get("guests") as string) || "";
     const bedrooms = (formData.get("bedrooms") as string) || "";
     const bathrooms = (formData.get("bathrooms") as string) || "";
     const country = (formData.get("country") as string) || "";
@@ -116,6 +124,14 @@ export async function PATCH(
     const longitude = lngRaw ? parseFloat(lngRaw) : null;
     const price = (formData.get("price") as string) || "";
     const priceVipRaw = (formData.get("priceVip") as string) || "";
+    const vipSeatsRaw = (formData.get("vipSeats") as string) || "";
+    const standardSeatsRaw = (formData.get("standardSeats") as string) || "";
+    const vipSeats = parseSeatInput(vipSeatsRaw);
+    const standardSeats = parseSeatInput(standardSeatsRaw);
+    const bedroomsInt = parseSeatInput(bedrooms);
+    const bathroomsInt = parseSeatInput(bathrooms);
+    const effectiveVipSeats = vipSeats ?? bedroomsInt ?? 0;
+    const effectiveStandardSeats = standardSeats ?? bathroomsInt ?? 0;
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
     const propertyTypeIdRaw = formData.get("propertyTypeId") as string;
     const propertyTypeIdsRaw = formData
@@ -188,6 +204,40 @@ export async function PATCH(
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;
 
+    if (effectiveVipSeats <= 0 && effectiveStandardSeats <= 0) {
+      return NextResponse.json(
+        { error: "Debes configurar cupos en VIP, Estándar o ambos" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      effectiveStandardSeats > 0 &&
+      (isNaN(Number(price)) || Number(price) <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Si configuras cupos Estándar debes indicar un precio Estándar mayor a 0" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      effectiveVipSeats > 0 &&
+      (isNaN(Number(priceVipRaw)) || Number(priceVipRaw) <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Si configuras cupos VIP debes indicar un precio VIP mayor a 0" },
+        { status: 400 }
+      );
+    }
+
+    if (effectiveVipSeats % 2 !== 0 || effectiveStandardSeats % 2 !== 0) {
+      return NextResponse.json(
+        { error: "Los cupos VIP y Estándar deben ser números pares" },
+        { status: 400 }
+      );
+    }
+
     let photoPath: string | undefined;
     if (imageFile && imageFile.size > 0) {
       const optimizedImage = await optimizeImageForUpload(imageFile, {
@@ -222,9 +272,9 @@ export async function PATCH(
     const baseUpdateData = {
       title: title || null,
       description: description || null,
-      guests: guests || null,
-      bedrooms: bedrooms || null,
-      bathrooms: bathrooms || null,
+      guests: (effectiveVipSeats + effectiveStandardSeats).toString(),
+      bedrooms: effectiveVipSeats.toString(),
+      bathrooms: effectiveStandardSeats.toString(),
       country: country || null,
       municipality: municipality || null,
       exactAddress: exactAddress || null,
@@ -232,8 +282,10 @@ export async function PATCH(
       longitude: longitude,
       checkInTime: checkInTime || null,
       contactNumber: normalizedContactNumber,
-      price: price ? parseInt(price) : null,
-      priceVip: priceVipRaw ? parseInt(priceVipRaw) : null,
+      price: effectiveStandardSeats > 0 ? parseInt(price) : null,
+      priceVip: effectiveVipSeats > 0 ? parseInt(priceVipRaw) : null,
+      vipSeats: effectiveVipSeats,
+      standardSeats: effectiveStandardSeats,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
@@ -277,6 +329,11 @@ export async function PATCH(
     }
 
     await applyAmenityUpdates(id, amenitiesPayload);
+
+    await prismaAny.$transaction(async (tx: any) => {
+      await syncPackageSeats(tx, id, effectiveVipSeats, effectiveStandardSeats);
+    });
+
     await syncHomeVisibilityFlags(id);
     revalidateHomeVisibilityPaths(id);
 

@@ -365,6 +365,8 @@ export default async function PropertyDetailPage({
               category: currentCategoryLabel,
               location: state ? state.label : "Sin ubicacion",
               municipality: municipality ? municipality.label : "Sin municipio",
+              departureDateTime: property.checkInTime ?? null,
+              meetingPoint: property.exactAddress ?? null,
               hostName: property.User?.firstName || "Sin anfitrión",
               price: property.price ?? 0,
               priceVip: property.priceVip ?? null,

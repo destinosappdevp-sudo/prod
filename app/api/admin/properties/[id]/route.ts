@@ -195,11 +195,35 @@ export async function PATCH(
     const imageFile = formData.get("image") as File | null;
 
     // Validaciones básicas
-    if (!title || !country || !municipality || !price) {
-      return NextResponse.json({ error: "Faltan campos obligatorios: título, país, municipio o precio" }, { status: 400 });
+    if (!title || !country || !municipality) {
+      return NextResponse.json({ error: "Faltan campos obligatorios: título, país o municipio" }, { status: 400 });
     }
-    if (isNaN(Number(price)) || Number(price) <= 0) {
-      return NextResponse.json({ error: "El precio debe ser un número mayor a 0" }, { status: 400 });
+
+    if (effectiveVipSeats <= 0 && effectiveStandardSeats <= 0) {
+      return NextResponse.json(
+        { error: "Debes configurar cupos en VIP, Estándar o ambos" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      effectiveStandardSeats > 0 &&
+      (isNaN(Number(price)) || Number(price) <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Si configuras cupos Estándar debes indicar un precio Estándar mayor a 0" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      effectiveVipSeats > 0 &&
+      (isNaN(Number(priceVipRaw)) || Number(priceVipRaw) <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Si configuras cupos VIP debes indicar un precio VIP mayor a 0" },
+        { status: 400 }
+      );
     }
     if (effectiveVipSeats % 2 !== 0 || effectiveStandardSeats % 2 !== 0) {
       return NextResponse.json(
@@ -260,8 +284,10 @@ export async function PATCH(
       contactNumber: normalizedContactNumber,
       latitude: latitude,
       longitude: longitude,
-      price: price ? parseInt(price) : null,
-      priceVip: priceVipRaw ? parseInt(priceVipRaw) : null,
+      price: effectiveStandardSeats > 0 ? parseInt(price) : null,
+      priceVip: effectiveVipSeats > 0 ? parseInt(priceVipRaw) : null,
+      vipSeats: effectiveVipSeats,
+      standardSeats: effectiveStandardSeats,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),

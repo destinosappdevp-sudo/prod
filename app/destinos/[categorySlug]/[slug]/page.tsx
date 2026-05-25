@@ -31,6 +31,10 @@ async function getDataBySlug(slug: string) {
       categoryName: true,
       price: true,
       priceVip: true,
+      vipSeats: true,
+      standardSeats: true,
+      bedrooms: true,
+      bathrooms: true,
       country: true,
       municipality: true,
       exactAddress: true,
@@ -229,6 +233,23 @@ async function DestinoPage({
     cat.amenities.filter((a: any) => a.status === "NO")
   );
 
+  const parseCapacity = (value: unknown) => {
+    const parsed = Number.parseInt(String(value ?? "0"), 10);
+    return Number.isNaN(parsed) ? 0 : Math.max(0, parsed);
+  };
+
+  const vipCapacity =
+    parseCapacity(data.vipSeats) > 0
+      ? parseCapacity(data.vipSeats)
+      : parseCapacity(data.bedrooms);
+  const standardCapacity =
+    parseCapacity(data.standardSeats) > 0
+      ? parseCapacity(data.standardSeats)
+      : parseCapacity(data.bathrooms);
+
+  const hasStandardPlan = standardCapacity > 0 && Number(data.price ?? 0) > 0;
+  const hasVipPlan = vipCapacity > 0 && Number(data.priceVip ?? 0) > 0;
+
   const standardDisabled = hasAnyReservation || savingPlan === "vip";
   const vipDisabled = hasAnyReservation || savingPlan === "estandar";
   const standardSavingActive = savingPlan === "estandar";
@@ -339,9 +360,10 @@ async function DestinoPage({
       {/* Elige tu Experiencia */}
       <div className="mb-8">
         <h2 className="font-bold text-2xl mb-6">Elige tu Experiencia</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${hasStandardPlan && hasVipPlan ? "sm:grid-cols-2" : "sm:grid-cols-1"} gap-4`}>
 
           {/* Plan Estándar */}
+          {hasStandardPlan && (
           <div className="border-2 border-gray-300 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-1">
               <h3 className="font-bold text-lg">Plan Estándar</h3>
@@ -423,21 +445,21 @@ async function DestinoPage({
               <p className="mt-2 text-xs text-gray-500">Tienes un ahorro activo en el plan Premium para este paquete.</p>
             )}
           </div>
+          )}
 
           {/* Plan Premium */}
+          {hasVipPlan && (
           <div className="border-2 border-[#E1B042] rounded-2xl p-6 relative">
             <div className="absolute top-0 right-0 bg-[#E1B042] text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl tracking-wide">
               PREMIUM VIP
             </div>
             <div className="flex items-start justify-between mt-2 mb-1">
               <h3 className="font-bold text-lg">Plan Premium</h3>
-              {data.priceVip ? (
-                <span className="font-bold text-xl text-[#C49A28]">${data.priceVip}</span>
-              ) : null}
+              <span className="font-bold text-xl text-[#C49A28]">${data.priceVip}</span>
             </div>
-            {vipAmenities.length > 0 ? (
-              <>
-                <p className="text-sm text-gray-500 mb-4">Experiencia exclusiva VIP</p>
+            <>
+              <p className="text-sm text-gray-500 mb-4">Experiencia exclusiva VIP</p>
+              {vipAmenities.length > 0 ? (
                 <ul className="space-y-2 mb-6">
                   {vipAmenities.slice(0, 6).map((a: any) => (
                     <li key={a.id} className="flex items-center gap-2 text-sm text-gray-700">
@@ -450,6 +472,9 @@ async function DestinoPage({
                     </li>
                   ))}
                 </ul>
+              ) : (
+                <p className="text-sm text-gray-400 mb-6">Beneficios VIP por anunciar.</p>
+              )}
                 <div className="flex flex-col gap-2 sm:flex-row">
                   {vipDisabled && hasPaidReservation ? (
                     <Link
@@ -511,11 +536,15 @@ async function DestinoPage({
                 {vipDisabled && !hasAnyReservation && (
                   <p className="mt-2 text-xs text-gray-500">Tienes un ahorro activo en el plan Estándar para este paquete.</p>
                 )}
-              </>
-            ) : (
-              <p className="text-sm text-gray-400 mt-2">Próximamente</p>
-            )}
+            </>
           </div>
+          )}
+
+          {!hasStandardPlan && !hasVipPlan && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+              Este paquete aún no tiene cupos y precios configurados para Estándar o VIP.
+            </div>
+          )}
 
         </div>
       </div>

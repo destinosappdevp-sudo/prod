@@ -86,14 +86,21 @@ export default async function CheckoutPage({
 
   const home = await getHomeData(homeId);
 
-  if (!home || !home.price) {
+  if (!home) {
     return redirect("/");
   }
 
+  if (plan === "vip" && (!home.priceVip || home.priceVip <= 0)) {
+    return redirect(`/home/${homeId}`);
+  }
+
+  if (plan !== "vip" && (!home.price || home.price <= 0)) {
+    return redirect(`/home/${homeId}`);
+  }
+
   // Seleccionar precio según plan
-  const selectedPrice = plan === "vip" && (home as any).priceVip
-    ? (home as any).priceVip as number
-    : home.price;
+  const selectedPrice =
+    plan === "vip" ? (home.priceVip as number) : (home.price as number);
 
   // Calcular cantidad de noches
   const start = new Date(resolvedStartDate);

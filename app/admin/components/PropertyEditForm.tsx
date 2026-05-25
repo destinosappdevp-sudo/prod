@@ -136,6 +136,15 @@ export default function PropertyEditForm({
     return `${hasLeadingPlus ? "+" : ""}${digitsOnly}`.slice(0, 14);
   };
 
+  const parseSeatValue = (value: string) => {
+    if (!value.trim()) return 0;
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? 0 : Math.max(0, parsed);
+  };
+
+  const currentVipSeats = parseSeatValue(formData.vipSeats || formData.bedrooms);
+  const currentStandardSeats = parseSeatValue(formData.standardSeats || formData.bathrooms);
+
   const requiredMissingClass =
     "border-red-300 placeholder:text-red-500 focus-visible:ring-red-400 focus-visible:border-red-400";
   const missingTitle = formData.title.trim().length === 0;
@@ -145,9 +154,16 @@ export default function PropertyEditForm({
   const missingMunicipality = formData.municipality.trim().length === 0;
   const parsedPrice = Number(formData.price);
   const missingPrice =
-    formData.price.trim().length === 0 ||
-    Number.isNaN(parsedPrice) ||
-    parsedPrice <= 0;
+    currentStandardSeats > 0 &&
+    (formData.price.trim().length === 0 ||
+      Number.isNaN(parsedPrice) ||
+      parsedPrice <= 0);
+  const parsedPriceVip = Number(formData.priceVip);
+  const missingPriceVip =
+    currentVipSeats > 0 &&
+    (formData.priceVip.trim().length === 0 ||
+      Number.isNaN(parsedPriceVip) ||
+      parsedPriceVip <= 0);
   const missingContactNumber = !/^\+?\d{7,14}$/.test(
     normalizeContactNumber(formData.contactNumber)
   );
@@ -158,12 +174,6 @@ export default function PropertyEditForm({
   const municipalities = useMemo(() => {
     return getMunicipalitiesByState(formData.country);
   }, [formData.country, getMunicipalitiesByState]);
-
-  const parseSeatValue = (value: string) => {
-    if (!value.trim()) return 0;
-    const parsed = Number.parseInt(value, 10);
-    return Number.isNaN(parsed) ? 0 : Math.max(0, parsed);
-  };
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => {
@@ -252,6 +262,26 @@ export default function PropertyEditForm({
       const vipSeats = parseSeatValue(formData.vipSeats || formData.bedrooms);
       const standardSeats = parseSeatValue(formData.standardSeats || formData.bathrooms);
 
+      if (vipSeats <= 0 && standardSeats <= 0) {
+        throw new Error("Debes configurar cupos en VIP, Estándar o ambos");
+      }
+
+      const standardPrice = Number(formData.price);
+      if (
+        standardSeats > 0 &&
+        (formData.price.trim().length === 0 || Number.isNaN(standardPrice) || standardPrice <= 0)
+      ) {
+        throw new Error("Si configuras cupos Estándar debes indicar un precio Estándar mayor a 0");
+      }
+
+      const vipPrice = Number(formData.priceVip);
+      if (
+        vipSeats > 0 &&
+        (formData.priceVip.trim().length === 0 || Number.isNaN(vipPrice) || vipPrice <= 0)
+      ) {
+        throw new Error("Si configuras cupos VIP debes indicar un precio VIP mayor a 0");
+      }
+
       if (vipSeats % 2 !== 0 || standardSeats % 2 !== 0) {
         throw new Error("Los cupos VIP y Estándar deben ser números pares");
       }
@@ -269,8 +299,8 @@ export default function PropertyEditForm({
       payload.append("contactNumber", formData.contactNumber);
       if (formData.latitude) payload.append("latitude", formData.latitude);
       if (formData.longitude) payload.append("longitude", formData.longitude);
-      payload.append("price", formData.price);
-      if (formData.priceVip) payload.append("priceVip", formData.priceVip);
+      payload.append("price", standardSeats > 0 ? formData.price : "");
+      payload.append("priceVip", vipSeats > 0 ? formData.priceVip : "");
       payload.append("vipSeats", vipSeats.toString());
       payload.append("standardSeats", standardSeats.toString());
 
@@ -632,43 +662,32 @@ export default function PropertyEditForm({
                 />
               </div>
               <div>
-                <Label htmlFor="priceVip">Precio del Paquete VIP</Label>
+                <Label
+                  htmlFor="priceVip"
+                  className={missingPriceVip ? "text-red-600" : undefined}
+                >
+                  Precio del Paquete VIP
+                </Label>
                 <Input
                   id="priceVip"
                   type="number"
                   value={formData.priceVip}
                   onChange={(e) => handleChange("priceVip", e.target.value)}
                   min={1}
-                  placeholder="Precio del Paquete VIP (opcional)"
+                  placeholder={
+                    missingPriceVip
+                      ? "Falta completar precio VIP"
+                      : "Precio del Paquete VIP (obligatorio si hay cupos VIP)"
+                  }
+                  className={missingPriceVip ? requiredMissingClass : undefined}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
-              <div>
-                <Label htmlFor="vipSeats">Cupos Premium (VIP)</Label>
-                <Input
-                  id="vipSeats"
-                  type="number"
-                  value={formData.vipSeats}
-                  onChange={(e) => handleChange("vipSeats", e.target.value)}
-                  min={0}
-                  step={2}
-                  placeholder="Ej: 12"
-                />
-                <p className="text-xs text-gray-400 mt-1">Se generan asientos VIP automáticamente (filas de 4)</p>
-              </div>
-              <div>
-                <Label htmlFor="standardSeats">Cupos Estándar</Label>
-                <Input
-                  id="standardSeats"
-                  type="number"
-                  value={formData.standardSeats}
-                  onChange={(e) => handleChange("standardSeats", e.target.value)}
-                  min={0}
-                  step={2}
-                  placeholder="Ej: 28"
-                />
-                <p className="text-xs text-gray-400 mt-1">Se generan asientos Estándar automáticamente (filas de 4)</p>
+              <div className="col-span-2">
+                <p className="text-xs text-gray-400">
+                  Los cupos VIP y Estándar se configuran en la sección "Características".
+                </p>
               </div>
             </div>
           </div>

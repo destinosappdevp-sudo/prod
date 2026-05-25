@@ -122,7 +122,8 @@ export async function POST(request: Request) {
     if (selectedSeatIds.length === 0 && seatId) {
       selectedSeatIds.push(seatId);
     }
-    const plan = typeof body?.plan === "string" ? body.plan : null;
+    const planParam = typeof body?.plan === "string" ? body.plan : "estandar";
+    const plan: "vip" | "estandar" = planParam === "vip" ? "vip" : "estandar";
     const paymentMethod =
       typeof body?.paymentMethod === "string" ? body.paymentMethod : "";
     const checkoutModeRaw =
@@ -197,7 +198,7 @@ export async function POST(request: Request) {
     // Verificar que la propiedad existe
     const home = await prisma.home.findUnique({
       where: { id: homeId },
-      select: { id: true, title: true, price: true, guests: true },
+      select: { id: true, title: true, price: true, priceVip: true, guests: true },
     });
 
     if (!home) {
@@ -217,9 +218,16 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!home.price || home.price <= 0) {
+    if (plan === "vip") {
+      if (!home.priceVip || home.priceVip <= 0) {
+        return NextResponse.json(
+          { error: "Este paquete no tiene precio VIP configurado" },
+          { status: 400 }
+        );
+      }
+    } else if (!home.price || home.price <= 0) {
       return NextResponse.json(
-        { error: "La propiedad no tiene un precio válido" },
+        { error: "Este paquete no tiene precio Estándar configurado" },
         { status: 400 }
       );
     }
@@ -286,7 +294,8 @@ export async function POST(request: Request) {
 
     const paymentCurrency = checkoutMode === "SAVINGS" ? "USD" : currencyForPaymentMethod(paymentMethod);
 
-    const subtotalUsd = home.price * calculatedNights * guests;
+    const selectedUnitPrice = plan === "vip" ? Number(home.priceVip) : Number(home.price);
+    const subtotalUsd = selectedUnitPrice * calculatedNights * guests;
     const serviceFeeUsd = subtotalUsd * (commissionPercent / 100);
     const totalAmountUsd = subtotalUsd; // El huésped paga solo el subtotal
 

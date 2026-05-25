@@ -72,6 +72,8 @@ type PropertyDetailTabsProps = {
     category: string;
     location: string;
     municipality: string;
+    departureDateTime?: string | null;
+    meetingPoint?: string | null;
     hostName: string;
     price: number;
     priceVip: number | null;
@@ -95,6 +97,21 @@ function getSeatLabelFromReservation(reservation: ReservationItem) {
 
   if (zone && baseSeat) return `${zone} ${baseSeat}`;
   return baseSeat || zone || "Sin asiento";
+}
+
+function formatDepartureDateTime(value?: string | null) {
+  if (!value) return "No configurada";
+
+  const date = new Date(value.includes("T") ? value : `${value}T00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function PropertyDetailTabs({
@@ -249,6 +266,8 @@ export default function PropertyDetailTabs({
         `Paquete: ${packageInfo.title}`,
         `Categoria: ${packageInfo.category}`,
         `Ubicacion: ${packageInfo.location} / ${packageInfo.municipality}`,
+        `Fecha y hora de salida: ${formatDepartureDateTime(packageInfo.departureDateTime)}`,
+        `Punto de encuentro: ${packageInfo.meetingPoint || "No configurado"}`,
         `Anfitrion: ${packageInfo.hostName}`,
         `Precio estandar: $${packageInfo.price.toFixed(2)}`,
         `Precio VIP: ${packageInfo.priceVip && packageInfo.priceVip > 0 ? `$${packageInfo.priceVip.toFixed(2)}` : "No configurado"}`,

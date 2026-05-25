@@ -70,6 +70,7 @@ export async function POST(request: Request) {
     const latitude = latRaw ? parseFloat(latRaw) : null;
     const longitude = lngRaw ? parseFloat(lngRaw) : null;
     const price = (formData.get("price") as string) || "";
+    const priceVipRaw = (formData.get("priceVip") as string) || "";
     const vipSeatsRaw = (formData.get("vipSeats") as string) || "";
     const standardSeatsRaw = (formData.get("standardSeats") as string) || "";
     // Zona VIP = bedrooms, Zona Estándar = bathrooms; se usa el valor explícito de cupos cuando viene en payload
@@ -129,11 +130,35 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!title || !country || !municipality || !price) {
-      return NextResponse.json({ error: "Faltan campos obligatorios: título, estado, municipio o precio" }, { status: 400 });
+    if (!title || !country || !municipality) {
+      return NextResponse.json({ error: "Faltan campos obligatorios: título, estado o municipio" }, { status: 400 });
     }
-    if (isNaN(Number(price)) || Number(price) <= 0) {
-      return NextResponse.json({ error: "El precio debe ser un número mayor a 0" }, { status: 400 });
+
+    if (effectiveVipSeats <= 0 && effectiveStandardSeats <= 0) {
+      return NextResponse.json(
+        { error: "Debes configurar cupos en VIP, Estándar o ambos" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      effectiveStandardSeats > 0 &&
+      (isNaN(Number(price)) || Number(price) <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Si configuras cupos Estándar debes indicar un precio Estándar mayor a 0" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      effectiveVipSeats > 0 &&
+      (isNaN(Number(priceVipRaw)) || Number(priceVipRaw) <= 0)
+    ) {
+      return NextResponse.json(
+        { error: "Si configuras cupos VIP debes indicar un precio VIP mayor a 0" },
+        { status: 400 }
+      );
     }
     if (effectiveVipSeats % 2 !== 0 || effectiveStandardSeats % 2 !== 0) {
       return NextResponse.json(
@@ -196,7 +221,10 @@ export async function POST(request: Request) {
         contactNumber: normalizedContactNumber || null,
         latitude,
         longitude,
-        price: price ? parseInt(price) : null,
+        price: effectiveStandardSeats > 0 ? parseInt(price) : null,
+        priceVip: effectiveVipSeats > 0 ? parseInt(priceVipRaw) : null,
+        vipSeats: effectiveVipSeats,
+        standardSeats: effectiveStandardSeats,
         photo: photoPath,
         categoryName: selectedCategoryNames,
         propertyTypeId: selectedPropertyTypeIds,
