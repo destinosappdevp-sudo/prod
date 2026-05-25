@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -26,13 +26,23 @@ const COLUMNS = ["A", "B", "C", "D"] as const;
 export default function SeatSelector({ seats, plan, homeId, flow, guests }: SeatSelectorProps) {
   const router = useRouter();
   const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
+  const selectedSeatIdSet = useMemo(() => new Set(selectedSeatIds), [selectedSeatIds]);
 
   // Índice rápido por row+column
-  const seatMap = new Map(seats.map((s) => [`${s.row}-${s.column}`, s]));
+  const seatMap = useMemo(() => new Map(seats.map((s) => [`${s.row}-${s.column}`, s])), [seats]);
 
   // Obtener filas únicas por zona
-  const vipRows = Array.from(new Set(seats.filter((s) => s.zone === "VIP").map((s) => s.row))).sort((a, b) => a - b);
-  const stdRows = Array.from(new Set(seats.filter((s) => s.zone === "STANDARD").map((s) => s.row))).sort((a, b) => a - b);
+  const vipRows = useMemo(
+    () => Array.from(new Set(seats.filter((s) => s.zone === "VIP").map((s) => s.row))).sort((a, b) => a - b),
+    [seats]
+  );
+  const stdRows = useMemo(
+    () =>
+      Array.from(new Set(seats.filter((s) => s.zone === "STANDARD").map((s) => s.row))).sort(
+        (a, b) => a - b
+      ),
+    [seats]
+  );
 
   const isSelectable = (seat: SeatData) => {
     if (seat.status === "OCCUPIED") return false;
@@ -109,7 +119,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
     }
 
     const isOccupied = seat.status === "OCCUPIED";
-    const isSelected = selectedSeatIds.includes(seat.id);
+    const isSelected = selectedSeatIdSet.has(seat.id);
     const canSelect = isSelectable(seat);
     const isVip = seat.zone === "VIP";
 
@@ -166,7 +176,10 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
     </div>
   );
 
-  const selectedSeats = seats.filter((s) => selectedSeatIds.includes(s.id));
+  const selectedSeats = useMemo(
+    () => seats.filter((s) => selectedSeatIdSet.has(s.id)),
+    [seats, selectedSeatIdSet]
+  );
 
   if (seats.length === 0) {
     return (
@@ -269,7 +282,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
         )}
 
         <Button
-          className="w-full"
+          className="w-full bg-gray-900 text-white hover:bg-gray-800 hover:text-white"
           disabled={seats.length > 0 && selectedSeatIds.length < guests}
           onClick={handleContinue}
         >

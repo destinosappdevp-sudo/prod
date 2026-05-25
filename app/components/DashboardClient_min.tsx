@@ -1216,9 +1216,16 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <form onSubmit={handleSave} className="space-y-5">
                     {/* Monto USD */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Monto en Dólares (USD)
-                      </label>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <label className="block text-sm font-medium text-slate-700">
+                          Monto en Dólares (USD)
+                        </label>
+                        {isPackageSavingsView && (
+                          <span className="text-xs font-medium text-slate-500">
+                            Restante: <span className="font-semibold text-orange-600">${remainingUsd.toFixed(2)}</span>
+                          </span>
+                        )}
+                      </div>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
                         <input
