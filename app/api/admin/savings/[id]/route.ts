@@ -358,11 +358,22 @@ export async function PATCH(
 
       const home = await tx.home.findUnique({
         where: { id: homeId },
-        select: { id: true, title: true, price: true },
+        select: { id: true, title: true, price: true, priceVip: true },
       });
 
-      const packageGoalUsd = Number(home?.price ?? 0);
-      if (!home || packageGoalUsd <= 0) {
+      const savingGuestsCount =
+        seatIds.length > 0
+          ? seatIds.length
+          : typeof details.guests === "number" && details.guests > 0
+          ? details.guests
+          : 1;
+      const savingPlan = typeof details.plan === "string" ? details.plan : null;
+      const unitPrice =
+        savingPlan === "vip" && Number(home?.priceVip ?? 0) > 0
+          ? Number(home!.priceVip)
+          : Number(home?.price ?? 0);
+      const packageGoalUsd = roundMoney(unitPrice * savingGuestsCount);
+      if (!home || unitPrice <= 0) {
         return tx.saving.update({
           where: { id },
           data: {

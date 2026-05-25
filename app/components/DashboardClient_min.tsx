@@ -64,6 +64,8 @@ interface SavingItem {
   kind?: string | null;
   status?: string | null;
   rejectionReason?: string | null;
+  guests?: number;
+  plan?: string | null;
 }
 
 function roundMoney(value: number) {
@@ -101,6 +103,7 @@ interface DashboardClientProps {
     title: string;
     photo?: string | null;
     price?: number | null;
+    priceVip?: number | null;
     country?: string | null;
     municipality?: string | null;
     slug?: string | null;
@@ -111,6 +114,7 @@ interface DashboardClientProps {
     title: string;
     photo?: string | null;
     price?: number | null;
+    priceVip?: number | null;
     country?: string | null;
     municipality?: string | null;
     slug?: string | null;
@@ -520,7 +524,19 @@ export default function DashboardClient(props: DashboardClientProps) {
       return sum + Number(item.amountUsd ?? 0);
     }, 0) * 100
   ) / 100;
-  const packageGoalUsd = Number(selectedSavingPackage?.price ?? 0);
+  const packageGoalUsd = (() => {
+    if (!isPackageSavingsView) return Number(selectedSavingPackage?.price ?? 0);
+    const firstDeposit = displayedSavings.find(
+      (item) => Number(item.amountUsd ?? 0) > 0 && (item.guests ?? 0) > 0
+    );
+    const savingGuestsCount = firstDeposit?.guests ?? 1;
+    const savingPlan = displayedSavings.find((item) => item.plan)?.plan ?? null;
+    const unitPrice =
+      savingPlan === "vip" && Number(selectedSavingPackage?.priceVip ?? 0) > 0
+        ? Number(selectedSavingPackage!.priceVip)
+        : Number(selectedSavingPackage?.price ?? 0);
+    return roundMoney(unitPrice * savingGuestsCount);
+  })();
   const packageApprovedDepositedUsd = roundMoney(
     displayedSavings.reduce((sum, item) => {
       if (item.status !== "APPROVED") return sum;

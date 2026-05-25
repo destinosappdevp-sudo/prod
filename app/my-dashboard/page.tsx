@@ -762,6 +762,7 @@ async function getGuestDashboardData(userId: string) {
           title: true,
           photo: true,
           price: true,
+          priceVip: true,
           country: true,
           municipality: true,
           categoryName: true,
@@ -812,6 +813,13 @@ async function getGuestDashboardData(userId: string) {
         kind: typeof details.kind === "string" ? details.kind : null,
         status: typeof s.status === "string" ? s.status : "PENDING",
         rejectionReason: typeof s.rejectionReason === "string" ? s.rejectionReason : null,
+        guests:
+          typeof details.guests === "number" && details.guests > 0
+            ? details.guests
+            : Array.isArray(details.seatIds)
+            ? details.seatIds.filter(Boolean).length || 1
+            : 1,
+        plan: typeof details.plan === "string" ? details.plan : null,
       };
     }),
     savingPackages: (savingPackages as any[]).map((pkg: any) => ({
@@ -819,6 +827,7 @@ async function getGuestDashboardData(userId: string) {
       title: pkg.title || "Paquete",
       photo: pkg.photo || null,
       price: pkg.price ?? 0,
+      priceVip: pkg.priceVip ? Number(pkg.priceVip) : null,
       country: pkg.country || null,
       municipality: pkg.municipality || null,
       slug: null,

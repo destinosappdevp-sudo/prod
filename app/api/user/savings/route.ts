@@ -129,14 +129,26 @@ export async function POST(req: NextRequest) {
 
     const home = await prismaAny.home.findUnique({
       where: { id: homeId },
-      select: { id: true, title: true, price: true },
+      select: { id: true, title: true, price: true, priceVip: true },
     });
 
     if (!home) {
       return NextResponse.json({ error: "Paquete no válido" }, { status: 400 });
     }
 
-    const packageGoalUsd = Number(home.price ?? 0);
+    const savingGuestsCount =
+      seatIds.length > 0
+        ? seatIds.length
+        : typeof paymentDetailsInput.guests === "number" && paymentDetailsInput.guests > 0
+        ? paymentDetailsInput.guests
+        : 1;
+    const savingPlan =
+      typeof paymentDetailsInput.plan === "string" ? paymentDetailsInput.plan : null;
+    const unitPrice =
+      savingPlan === "vip" && Number(home.priceVip ?? 0) > 0
+        ? Number(home.priceVip)
+        : Number(home.price ?? 0);
+    const packageGoalUsd = roundMoney(unitPrice * savingGuestsCount);
     if (packageGoalUsd > 0) {
       const approvedDeposits = await prismaAny.saving.findMany({
         where: {
