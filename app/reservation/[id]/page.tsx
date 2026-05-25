@@ -218,13 +218,22 @@ export default async function ReservationDetailPage({
     const nights = Math.ceil(
       (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    const dateRange = `${startDate.toLocaleDateString("es-ES", {
-      month: "short",
+    const departureDateLabel = endDate.toLocaleDateString("es-ES", {
       day: "numeric",
-    })} - ${endDate.toLocaleDateString("es-ES", {
       month: "short",
-      day: "numeric",
-    })}`;
+      year: "numeric",
+    });
+    const hasDepartureTime =
+      endDate.getHours() !== 0 ||
+      endDate.getMinutes() !== 0 ||
+      endDate.getSeconds() !== 0 ||
+      endDate.getMilliseconds() !== 0;
+    const departureTimeLabel = hasDepartureTime
+      ? endDate.toLocaleTimeString("es-ES", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : null;
 
     const statusColors: { [key: string]: string } = {
       PENDING: "bg-yellow-100 text-yellow-800",
@@ -246,39 +255,52 @@ export default async function ReservationDetailPage({
         select: { id: true, zone: true, row: true, column: true },
         orderBy: [{ row: "asc" }, { column: "asc" }],
       });
-    } else if (reservation.PackageSeat) {
-      // Reserva por ahorro: buscar CHECKOUT_DEBIT vinculado a esta reserva
-      // Los debits se crean con status PENDING (default), así que buscamos
-      // todos los savings negativos del usuario y filtramos en JS por reservationId
-      const userDebits = await (prisma as any).saving.findMany({
+    } else {
+      // Reserva por ahorro: tomar seatIds tanto de depósitos de ahorro como de débito checkout.
+      const userSavings = await (prisma as any).saving.findMany({
         where: {
           userId: reservation.userId,
-          amountUsd: { lt: 0 },
         },
         select: { paymentDetails: true },
       });
-      let debitSeatIds: string[] = [];
-      for (const debit of userDebits) {
-        if (!debit.paymentDetails || typeof debit.paymentDetails !== "object" || Array.isArray(debit.paymentDetails)) continue;
-        const pd = debit.paymentDetails as Record<string, unknown>;
-        if (
-          pd.kind === "CHECKOUT_DEBIT" &&
-          pd.reservationId === id &&
-          Array.isArray(pd.seatIds)
-        ) {
-          debitSeatIds = (pd.seatIds as unknown[]).filter(
-            (s): s is string => typeof s === "string" && s.trim().length > 0
-          );
-          break;
+
+      const seatIdsFromSavings = new Set<string>();
+      for (const row of userSavings) {
+        if (!row.paymentDetails || typeof row.paymentDetails !== "object" || Array.isArray(row.paymentDetails)) {
+          continue;
+        }
+
+        const pd = row.paymentDetails as Record<string, unknown>;
+        const kind = typeof pd.kind === "string" ? pd.kind : null;
+        const pdHomeId = typeof pd.homeId === "string" ? pd.homeId : null;
+        const pdReservationId = typeof pd.reservationId === "string" ? pd.reservationId : null;
+
+        const matchesCheckoutDebit = kind === "CHECKOUT_DEBIT" && pdReservationId === id;
+        const matchesSavingDeposit =
+          kind === "PACKAGE_SAVING_DEPOSIT" && pdHomeId === reservation.homeId;
+
+        if (!matchesCheckoutDebit && !matchesSavingDeposit) {
+          continue;
+        }
+
+        if (!Array.isArray(pd.seatIds)) {
+          continue;
+        }
+
+        for (const seatId of pd.seatIds) {
+          if (typeof seatId === "string" && seatId.trim().length > 0) {
+            seatIdsFromSavings.add(seatId);
+          }
         }
       }
-      if (debitSeatIds.length > 0) {
+
+      if (seatIdsFromSavings.size > 0) {
         allPackageSeats = await (prisma as any).packageSeat.findMany({
-          where: { id: { in: debitSeatIds } },
+          where: { id: { in: Array.from(seatIdsFromSavings) } },
           select: { id: true, zone: true, row: true, column: true },
           orderBy: [{ row: "asc" }, { column: "asc" }],
         });
-      } else {
+      } else if (reservation.PackageSeat) {
         allPackageSeats = [reservation.PackageSeat];
       }
     }
@@ -327,8 +349,11 @@ export default async function ReservationDetailPage({
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">Fechas</p>
-                  <p className="font-semibold">{dateRange}</p>
+                  <p className="text-sm text-slate-500 mb-1">Fecha de salida</p>
+                  <p className="font-semibold">{departureDateLabel}</p>
+                  {departureTimeLabel && (
+                    <p className="text-xs text-slate-500 mt-0.5">Hora: {departureTimeLabel}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-slate-500 mb-1">Noches</p>
