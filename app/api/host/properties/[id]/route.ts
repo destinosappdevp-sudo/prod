@@ -18,6 +18,25 @@ function getPropertyTypesDelegate() {
   return null;
 }
 
+function buildReservationDatesFromCheckInTime(checkInTimeRaw: string | null) {
+  if (!checkInTimeRaw || typeof checkInTimeRaw !== "string") return null;
+  const trimmed = checkInTimeRaw.trim();
+  if (!trimmed) return null;
+
+  // checkInTime llega como datetime-local (YYYY-MM-DDTHH:mm) o fecha (YYYY-MM-DD).
+  // Para reservas de paquetes normalizamos a rango de 1 dia por fecha calendario.
+  const datePart = trimmed.includes("T") ? trimmed.split("T")[0] : trimmed;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return null;
+
+  const startDate = new Date(`${datePart}T00:00:00.000Z`);
+  if (Number.isNaN(startDate.getTime())) return null;
+
+  const endDate = new Date(startDate);
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+
+  return { startDate, endDate };
+}
+
 async function applyAmenityUpdates(homeId: string, payload?: string | null) {
   if (!payload) return;
 
@@ -220,6 +239,11 @@ export async function PATCH(
       addedLocation: !!(country && municipality),
     };
 
+    const previousHome = await prisma.home.findUnique({
+      where: { id },
+      select: { checkInTime: true },
+    });
+
     const updated = await prisma.home.update({
       where: { id },
       data: {
@@ -229,6 +253,28 @@ export async function PATCH(
         addedCategory: selectedCategoryNames.length > 0,
       },
     });
+
+    // Si cambia la fecha de salida del paquete, sincronizamos las reservas activas
+    // para evitar inconsistencias entre checkout/dashboard/detalle de reserva.
+    const previousCheckInTime = previousHome?.checkInTime ?? null;
+    const nextCheckInTime = checkInTime || null;
+    if (previousCheckInTime !== nextCheckInTime) {
+      const normalizedDates = buildReservationDatesFromCheckInTime(nextCheckInTime);
+
+      if (normalizedDates) {
+        await prisma.reservation.updateMany({
+          where: {
+            homeId: id,
+            status: { in: ["PENDING", "CONFIRMED"] },
+          },
+          data: {
+            startDate: normalizedDates.startDate,
+            endDate: normalizedDates.endDate,
+            nights: 1,
+          },
+        });
+      }
+    }
 
     await applyAmenityUpdates(id, amenitiesPayload);
     await syncHomeVisibilityFlags(id);

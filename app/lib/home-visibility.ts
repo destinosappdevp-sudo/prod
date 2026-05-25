@@ -71,8 +71,13 @@ export async function syncHomeVisibilityFlags(
 
 export function revalidateHomeVisibilityPaths(homeId: string) {
   revalidatePath("/");
+  revalidatePath("/destinos");
   revalidatePath(`/home/${homeId}`);
   revalidatePath(`/checkout/${homeId}`);
+  revalidatePath(`/seats/${homeId}`);
+  revalidatePath(`/seats/${homeId}/passengers`);
+  revalidatePath(`/my-listing/${homeId}`);
+  revalidatePath("/reservation");
   revalidatePath("/my-dashboard");
   revalidatePath("/admin/properties");
   revalidatePath(`/admin/properties/${homeId}`);
