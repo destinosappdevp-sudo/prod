@@ -352,13 +352,12 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
               <ArrowLeft size={16} />
               Volver a mis alcancias
             </Link>
-            <span className="text-xs text-slate-500">Pago de ahorro en vista separada</span>
+            <span className="text-xs text-slate-500">Pago de ahorro</span>
           </div>
         </div>
 
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Registrar deposito de ahorro</h1>
-          <p className="text-sm text-slate-500">Esta pantalla usa una alcancia fija y no permite cambios de destino.</p>
         </div>
 
         {!hasFixedTarget && (

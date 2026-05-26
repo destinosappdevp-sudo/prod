@@ -69,8 +69,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
   const handleContinue = () => {
     const savingsUrl = (seatIds: string[]) => {
       const params = new URLSearchParams({
-        tab: "ahorrar",
-        homeId,
+        flow: "ahorro",
         plan,
         guests: String(guests),
       });
@@ -78,7 +77,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
         params.set("seatId", seatIds[0]);
         params.set("seatIds", seatIds.join(","));
       }
-      return `/my-dashboard?${params.toString()}`;
+      return `/checkout/${homeId}?${params.toString()}`;
     };
 
     if (seats.length === 0) {
@@ -189,7 +188,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
           <p className="text-sm text-gray-400">Los asientos serán asignados por el organizador.</p>
         </div>
         <Button className="w-full max-w-xs" onClick={handleContinue}>
-          {flow === "ahorro" ? "Ir a ahorro" : "Continuar al pago"}
+          Continuar al pago
         </Button>
       </div>
     );
@@ -286,7 +285,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
           disabled={seats.length > 0 && selectedSeatIds.length < guests}
           onClick={handleContinue}
         >
-          {flow === "ahorro" ? "Ir a ahorro" : "Continuar al pago"}
+          Continuar al pago
         </Button>
       </div>
     </div>

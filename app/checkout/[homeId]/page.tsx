@@ -3,9 +3,11 @@ import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 import CheckoutForm from "@/app/components/CheckoutForm";
+import SavingsPaymentClient from "@/app/components/SavingsPaymentClient";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
 import Link from "next/link";
 import { getPrimaryCategoryName } from "@/app/lib/property-categories";
+import { getGuestDashboardData } from "@/app/my-dashboard/page";
 
 function formatBsAmount(value: number) {
   return new Intl.NumberFormat("es-VE", {
@@ -54,7 +56,7 @@ export default async function CheckoutPage({
   searchParams,
 }: {
   params: Promise<{ homeId: string }>;
-  searchParams: Promise<{ startDate?: string; endDate?: string; guests?: string; plan?: string; seatId?: string; seatIds?: string }>;
+  searchParams: Promise<{ startDate?: string; endDate?: string; guests?: string; plan?: string; seatId?: string; seatIds?: string; flow?: string; target?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -66,7 +68,9 @@ export default async function CheckoutPage({
   }
 
   const { homeId } = await params;
-  const { startDate, endDate, guests, plan, seatId, seatIds } = await searchParams;
+  const { startDate, endDate, guests, plan, seatId, seatIds, flow, target } = await searchParams;
+  const isSavingsFlow = flow === "ahorro";
+  const isGeneralSavings = isSavingsFlow && (target === "general" || homeId === "general");
   const resolvedSeatIds = (() => {
     const parsed = (seatIds || "")
       .split(",")
@@ -86,9 +90,42 @@ export default async function CheckoutPage({
 
   const home = await getHomeData(homeId);
 
-  if (!home) {
+  if (!home && !isGeneralSavings) {
     return redirect("/");
   }
+
+  // ── Flujo de ahorro: renderizar formulario de cuota ──────────────────────────
+  if (isSavingsFlow) {
+    const parsedGuestsCount = guests ? parseInt(guests, 10) : 1;
+    const savingsGuestsCount = Number.isInteger(parsedGuestsCount) && parsedGuestsCount > 0 ? parsedGuestsCount : 1;
+    const [platformCfg, dashData] = await Promise.all([
+      (prisma as any).platformConfig.findFirst({ select: { bcvRate: true } }),
+      getGuestDashboardData(user.id),
+    ]);
+    const bcvRateSavings = platformCfg?.bcvRate ? Number(platformCfg.bcvRate) : 0;
+    return (
+      <SavingsPaymentClient
+        savings={dashData.savings}
+        savingPackages={dashData.savingPackages}
+        bcvRate={bcvRateSavings}
+        savingTarget={isGeneralSavings ? "general" : undefined}
+        savingTargetId={!isGeneralSavings ? homeId : undefined}
+        savingTargetSeatId={resolvedSeatIds[0] ?? undefined}
+        savingTargetSeatIds={resolvedSeatIds}
+        savingTargetGuests={savingsGuestsCount}
+        savingTargetPlan={plan === "vip" ? "vip" : "estandar"}
+        savingPackage={home ? {
+          id: home.id,
+          title: home.title,
+          price: typeof home.price === "number" ? home.price : 0,
+          priceVip: typeof home.priceVip === "number" ? home.priceVip : null,
+          country: home.country ?? null,
+          municipality: home.municipality ?? null,
+        } : null}
+      />
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
 
   if (plan === "vip" && (!home.priceVip || home.priceVip <= 0)) {
     return redirect(`/home/${homeId}`);

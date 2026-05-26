@@ -64,6 +64,8 @@ interface SavingItem {
   rejectionReason?: string | null;
   guests?: number;
   plan?: string | null;
+  seatId?: string | null;
+  seatIds?: string[];
 }
 
 function roundMoney(value: number) {
@@ -426,8 +428,32 @@ export default function DashboardClient(props: DashboardClientProps) {
     return null;
   };
 
+  const getTargetSeatIds = (targetId?: string | null): string[] => {
+    if (!targetId) return [];
+    const firstWithSeats = savingsRows.find(
+      (item) => item.targetId === targetId && Array.isArray(item.seatIds) && (item.seatIds?.length ?? 0) > 0
+    );
+    if (firstWithSeats && Array.isArray(firstWithSeats.seatIds)) return firstWithSeats.seatIds;
+    if (props.savingTargetId === targetId && props.savingTargetSeatIds && props.savingTargetSeatIds.length > 0) {
+      return props.savingTargetSeatIds;
+    }
+    return [];
+  };
+
+  const buildSavingsCheckoutUrl = (targetId: string | null): string => {
+    if (!targetId) return "/checkout/general?flow=ahorro&target=general";
+    const savPlan = getTargetPlan(targetId) ?? "estandar";
+    const savGuests = getTargetGuestsCount(targetId);
+    const savSeatIds = getTargetSeatIds(targetId);
+    const urlParams = new URLSearchParams({ flow: "ahorro", plan: savPlan, guests: String(savGuests) });
+    if (savSeatIds.length > 0) {
+      urlParams.set("seatId", savSeatIds[0]);
+      urlParams.set("seatIds", savSeatIds.join(","));
+    }
+    return `/checkout/${targetId}?${urlParams.toString()}`;
+  };
+
   const getTargetGoalUsd = (
-    targetId: string | null | undefined,
     pkg?: { price?: number | null; priceVip?: number | null } | null
   ) => {
     const guestsCount = getTargetGuestsCount(targetId);
@@ -1053,9 +1079,9 @@ export default function DashboardClient(props: DashboardClientProps) {
                           onClick={() => {
                             if (activePackageTargetId) {
                               setSelectedSavingId(activePackageTargetId);
-                              router.push(`/my-dashboard/ahorrar?homeId=${encodeURIComponent(activePackageTargetId)}`);
+                              router.push(buildSavingsCheckoutUrl(activePackageTargetId));
                             } else {
-                              router.push("/my-dashboard/ahorrar?target=general");
+                              router.push(buildSavingsCheckoutUrl(null));
                             }
                           }}
                           className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
@@ -1117,8 +1143,8 @@ export default function DashboardClient(props: DashboardClientProps) {
                         onClick={() => {
                           router.push(
                             wallet.targetId
-                              ? `/my-dashboard/ahorrar?homeId=${encodeURIComponent(wallet.targetId)}`
-                              : "/my-dashboard/ahorrar?target=general"
+                              ? buildSavingsCheckoutUrl(wallet.targetId)
+                              : buildSavingsCheckoutUrl(null)
                           );
                         }}
                         className="rounded-full bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-600"
@@ -1217,10 +1243,10 @@ export default function DashboardClient(props: DashboardClientProps) {
                     onClick={() => {
                       if (isPackageSavingsView && activePackageTargetId) {
                         setSelectedSavingId(activePackageTargetId);
-                        router.push(`/my-dashboard/ahorrar?homeId=${encodeURIComponent(activePackageTargetId)}`);
+                        router.push(buildSavingsCheckoutUrl(activePackageTargetId));
                       } else {
                         setSelectedSavingId(null);
-                        router.push("/my-dashboard/ahorrar?target=general");
+                        router.push(buildSavingsCheckoutUrl(null));
                       }
                     }}
                     className="mt-4 inline-block text-sm text-orange-600 hover:underline"
@@ -1238,7 +1264,7 @@ export default function DashboardClient(props: DashboardClientProps) {
           <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm text-center">
             <p className="text-sm text-slate-500">El registro de pagos de ahorro ahora esta en una vista separada.</p>
             <Link
-              href={selectedSavingId ? `/my-dashboard/ahorrar?homeId=${encodeURIComponent(selectedSavingId)}` : "/my-dashboard/ahorrar?target=general"}
+              href={buildSavingsCheckoutUrl(selectedSavingId ?? null)}
               className="mt-4 inline-block rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
             >
               Ir a pagar ahorro

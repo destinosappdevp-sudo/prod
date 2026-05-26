@@ -845,6 +845,8 @@ export async function getGuestDashboardData(userId: string) {
             ? details.seatIds.filter(Boolean).length || 1
             : 1,
         plan: typeof details.plan === "string" ? details.plan : null,
+        seatId: typeof details.seatId === "string" && details.seatId.trim() ? details.seatId.trim() : null,
+        seatIds: Array.isArray(details.seatIds) ? (details.seatIds as any[]).filter(Boolean) as string[] : [],
       };
     }),
     savingPackages: (savingPackages as any[]).map((pkg: any) => ({
