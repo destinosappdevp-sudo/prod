@@ -12,7 +12,7 @@ const items = [
   { key: "home", label: "Inicio", href: "/", icon: Home },
   { key: "favorites", label: "Favoritos", href: "/my-dashboard?tab=favorites", icon: Heart },
   { key: "wallet", label: "Mi Alcancía", href: "/my-dashboard?tab=mi-alcancia", icon: PiggyBank },
-  { key: "save", label: "Ahorrar", href: "/my-dashboard/ahorrar?target=general", icon: PlusCircle },
+  { key: "save", label: "Ahorrar", href: "/checkout/general?flow=ahorro&target=general", icon: PlusCircle },
   { key: "profile", label: "Perfil", href: "/my-dashboard?tab=profile", icon: User },
 ] as const;
 
@@ -34,7 +34,7 @@ export default function LoggedInBottomNav({ isLoggedIn }: LoggedInBottomNavProps
             (item.key === "home" && pathname === "/") ||
             (item.key === "favorites" && pathname.startsWith("/my-dashboard") && activeTab === "favorites") ||
             (item.key === "wallet" && pathname.startsWith("/my-dashboard") && activeTab === "mi-alcancia") ||
-            (item.key === "save" && pathname.startsWith("/my-dashboard/ahorrar")) ||
+            (item.key === "save" && (pathname.startsWith("/checkout/general") || pathname.startsWith("/my-dashboard/ahorrar"))) ||
             (item.key === "profile" && pathname.startsWith("/my-dashboard") && activeTab === "profile");
 
           return (

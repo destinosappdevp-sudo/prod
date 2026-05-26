@@ -3,11 +3,9 @@ import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 import CheckoutForm from "@/app/components/CheckoutForm";
-import SavingsPaymentClient from "@/app/components/SavingsPaymentClient";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
 import Link from "next/link";
 import { getPrimaryCategoryName } from "@/app/lib/property-categories";
-import { getGuestDashboardData } from "@/app/my-dashboard/page";
 
 function formatBsAmount(value: number) {
   return new Intl.NumberFormat("es-VE", {
@@ -98,31 +96,136 @@ export default async function CheckoutPage({
   if (isSavingsFlow) {
     const parsedGuestsCount = guests ? parseInt(guests, 10) : 1;
     const savingsGuestsCount = Number.isInteger(parsedGuestsCount) && parsedGuestsCount > 0 ? parsedGuestsCount : 1;
-    const [platformCfg, dashData] = await Promise.all([
-      (prisma as any).platformConfig.findFirst({ select: { bcvRate: true } }),
-      getGuestDashboardData(user.id),
+    const [platformCfg, savingsRows] = await Promise.all([
+      (prisma as any).platformConfig.findFirst({ select: { bcvRate: true, bcvRateDate: true } }),
+      (prisma as any).saving.findMany({
+        where: { userId: user.id },
+        select: { amountUsd: true, status: true, paymentDetails: true },
+      }),
     ]);
     const bcvRateSavings = platformCfg?.bcvRate ? Number(platformCfg.bcvRate) : 0;
+    const hasValidBcvRateSavings = Number.isFinite(bcvRateSavings) && bcvRateSavings > 0;
+    const bcvDateLabelSavings = platformCfg?.bcvRateDate
+      ? new Date(platformCfg.bcvRateDate).toLocaleDateString("es-VE")
+      : null;
+
+    const getSavingHomeId = (paymentDetails: unknown) => {
+      if (!paymentDetails || typeof paymentDetails !== "object" || Array.isArray(paymentDetails)) return null;
+      const v = (paymentDetails as { homeId?: unknown }).homeId;
+      return typeof v === "string" && v.trim() ? v.trim() : null;
+    };
+
+    // Saldo ya ahorrado para este paquete (APROBADO)
+    const packageSavedUsd = isGeneralSavings
+      ? 0
+      : Number(
+          savingsRows
+            .reduce((sum: number, s: any) => {
+              const usd = Number(s.amountUsd ?? 0);
+              const savingHomeId = getSavingHomeId(s.paymentDetails);
+              if (savingHomeId !== homeId) return sum;
+              if (usd < 0) return sum + usd;
+              if (s.status !== "APPROVED") return sum;
+              return sum + usd;
+            }, 0)
+            .toFixed(2)
+        );
+
+    // Meta del paquete según plan y huéspedes
+    const goalUsd = (() => {
+      if (isGeneralSavings || !home) return 0;
+      const unit = plan === "vip" && Number(home.priceVip ?? 0) > 0
+        ? Number(home.priceVip)
+        : Number(home.price ?? 0);
+      return Math.round(unit * savingsGuestsCount * 100) / 100;
+    })();
+    const remainingUsd = Math.max(0, Math.round((goalUsd - packageSavedUsd) * 100) / 100);
+
+    const packageTitle = isGeneralSavings ? "Alcancía general" : home?.title ?? "Paquete";
+    const primaryCategorySavings = home ? getPrimaryCategoryName(home.categoryName) : null;
+
     return (
-      <SavingsPaymentClient
-        savings={dashData.savings}
-        savingPackages={dashData.savingPackages}
-        bcvRate={bcvRateSavings}
-        savingTarget={isGeneralSavings ? "general" : undefined}
-        savingTargetId={!isGeneralSavings ? homeId : undefined}
-        savingTargetSeatId={resolvedSeatIds[0] ?? undefined}
-        savingTargetSeatIds={resolvedSeatIds}
-        savingTargetGuests={savingsGuestsCount}
-        savingTargetPlan={plan === "vip" ? "vip" : "estandar"}
-        savingPackage={home ? {
-          id: home.id,
-          title: home.title,
-          price: typeof home.price === "number" ? home.price : 0,
-          priceVip: typeof home.priceVip === "number" ? home.priceVip : null,
-          country: home.country ?? null,
-          municipality: home.municipality ?? null,
-        } : null}
-      />
+      <div className="container mx-auto px-4 py-10 max-w-2xl">
+        <h1 className="text-3xl font-bold mb-8">
+          {isGeneralSavings ? "Abonar a tu alcancía general" : "Registrar abono al paquete"}
+        </h1>
+
+        <div className="space-y-6">
+          {/* Tarjeta del destino del ahorro */}
+          <div className="bg-white rounded-lg border p-4">
+            <div className="flex gap-4">
+              {home?.photo ? (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                  <SupabaseImage imagePath={home.photo} alt={home.title || "Paquete"} fill className="object-cover" />
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-orange-100 to-orange-300 flex items-center justify-center text-3xl">
+                  🐷
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">
+                  {isGeneralSavings
+                    ? "Ahorro libre sin destino fijo"
+                    : primaryCategorySavings === "apartamento"
+                    ? "Apartamento entero"
+                    : primaryCategorySavings === "casa"
+                    ? "Casa entera"
+                    : primaryCategorySavings === "lujo"
+                    ? "Villa de lujo"
+                    : "Paquete"}
+                </p>
+                <h3 className="font-semibold text-lg mb-1">{packageTitle}</h3>
+                {!isGeneralSavings && goalUsd > 0 && (
+                  <p className="text-xs text-gray-500">
+                    Meta: <strong>${goalUsd.toFixed(2)}</strong> · Ahorrado:{" "}
+                    <strong>${packageSavedUsd.toFixed(2)}</strong> · Falta:{" "}
+                    <strong className="text-orange-600">${remainingUsd.toFixed(2)}</strong>
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Resumen del abono */}
+          <div className="bg-white rounded-lg border p-6">
+            <h2 className="text-xl font-semibold mb-4">Detalle del abono</h2>
+            <p className="text-sm text-gray-600">
+              Indica abajo el monto que deseas abonar. Puedes pagar la meta completa o sólo una cuota parcial. Cuando completes el monto total del paquete podrás reservar tus fechas.
+            </p>
+            <p className="text-xs text-gray-500 mt-3">
+              {hasValidBcvRateSavings
+                ? `Tasa BCV del día: Bs ${formatBcvRate(bcvRateSavings)} por USD${bcvDateLabelSavings ? ` (${bcvDateLabelSavings})` : ""}`
+                : "No hay tasa BCV configurada para calcular el monto en bolívares."}
+            </p>
+          </div>
+
+          {/* Formulario unificado en modo ahorro */}
+          <CheckoutForm
+            homeId={isGeneralSavings ? "general" : homeId}
+            userId={user.id}
+            startDate=""
+            endDate=""
+            guests={savingsGuestsCount}
+            nights={0}
+            subtotal={0}
+            total={0}
+            bcvRate={bcvRateSavings}
+            totalBs={0}
+            savingsTotalUsd={0}
+            seatId={resolvedSeatIds[0]}
+            seatIds={resolvedSeatIds}
+            plan={plan}
+            savingsFlow={{
+              kind: isGeneralSavings ? "general" : "package",
+              goalUsd,
+              alreadySavedUsd: packageSavedUsd,
+              remainingUsd,
+              packageTitle,
+            }}
+          />
+        </div>
+      </div>
     );
   }
   // ─────────────────────────────────────────────────────────────────────────────
