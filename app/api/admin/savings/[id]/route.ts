@@ -2,6 +2,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { FROM_EMAIL, getResendClient } from "@/app/lib/resend";
+import { generateGuestConfirmationEmail } from "@/app/lib/email-templates";
 
 export const dynamic = "force-dynamic";
 
@@ -186,6 +187,145 @@ async function sendPackageGoalCompletedEmails(params: {
   }
 }
 
+async function sendReservationConfirmationToGuest(params: {
+  reservationId: string;
+  fallbackBcvRate?: number;
+}) {
+  const resend = getResendClient();
+  if (!resend) {
+    console.warn("[admin/savings] Resend no configurado; se omite email de reserva confirmada");
+    return;
+  }
+
+  const prismaAny = prisma as any;
+  const reservation = await prismaAny.reservation.findUnique({
+    where: { id: params.reservationId },
+    include: {
+      User: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+          phoneNumber: true,
+        },
+      },
+      Home: {
+        select: {
+          title: true,
+          exactAddress: true,
+          municipality: true,
+          country: true,
+          guests: true,
+          userId: true,
+        },
+      },
+      Payment: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: {
+          paymentDetails: true,
+        },
+      },
+    },
+  });
+
+  if (!reservation?.User?.email || !reservation?.Home) {
+    console.warn("[admin/savings] Datos incompletos para enviar email de reserva confirmada");
+    return;
+  }
+
+  const host = await prismaAny.user.findUnique({
+    where: { id: reservation.Home.userId },
+    select: {
+      firstName: true,
+      lastName: true,
+      email: true,
+      phoneNumber: true,
+    },
+  });
+
+  if (!host?.email) {
+    console.warn("[admin/savings] Host no encontrado para email de reserva confirmada");
+    return;
+  }
+
+  let amountUsd: number | undefined;
+  let amountBs: number | undefined;
+  let bcvRate: number | undefined;
+  const paymentDetails = reservation.Payment?.[0]?.paymentDetails;
+
+  if (paymentDetails) {
+    try {
+      const parsed =
+        typeof paymentDetails === "string" ? JSON.parse(paymentDetails) : paymentDetails;
+      amountUsd = parsed?.amountUsd ? Number(parsed.amountUsd) : undefined;
+      amountBs = parsed?.amountBs ? Number(parsed.amountBs) : undefined;
+      bcvRate = parsed?.bcvRateUsed ? Number(parsed.bcvRateUsed) : undefined;
+    } catch {
+      // Si falla el parse, se usan fallback values.
+    }
+  }
+
+  if (amountUsd === undefined) {
+    amountUsd = Number(reservation.totalAmount ?? 0);
+  }
+
+  if (bcvRate === undefined && params.fallbackBcvRate && params.fallbackBcvRate > 0) {
+    bcvRate = params.fallbackBcvRate;
+  }
+
+  if (amountBs === undefined && amountUsd !== undefined && bcvRate && bcvRate > 0) {
+    amountBs = Number((amountUsd * bcvRate).toFixed(2));
+  }
+
+  const emailData = {
+    guestName:
+      `${reservation.User.firstName || ""} ${reservation.User.lastName || ""}`.trim() ||
+      reservation.User.email,
+    guestEmail: reservation.User.email,
+    guestPhone: reservation.User.phoneNumber || undefined,
+    hostName:
+      `${host.firstName || ""} ${host.lastName || ""}`.trim() ||
+      host.email,
+    hostEmail: host.email,
+    hostPhone: host.phoneNumber || undefined,
+    propertyTitle: reservation.Home.title || "Propiedad",
+    propertyAddress: reservation.Home.exactAddress
+      ? `${reservation.Home.exactAddress}, ${reservation.Home.municipality || ""}, ${reservation.Home.country || ""}`.trim()
+      : `${reservation.Home.municipality || ""}, ${reservation.Home.country || ""}`.trim(),
+    checkIn: new Date(reservation.startDate).toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    checkOut: new Date(reservation.endDate).toLocaleDateString("es-ES", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    nights: reservation.nights,
+    guests: reservation.Home.guests || "N/A",
+    totalAmount: reservation.totalAmount,
+    reservationId: reservation.id,
+    amountUsd,
+    amountBs,
+    bcvRate,
+  };
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: reservation.User.email,
+      subject: `🎉 Reserva Confirmada - ${reservation.Home.title || "Tu estadía"}`,
+      html: generateGuestConfirmationEmail(emailData),
+    });
+  } catch (err) {
+    console.error("[admin/savings] Error enviando email de reserva confirmada:", err);
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -344,6 +484,7 @@ export async function PATCH(
     let completedNow = false;
     let completedGoalUsd = 0;
     let completedPackageTitle = "";
+    let completedReservationId: string | null = null;
 
     const updated = await prisma.$transaction(async (tx) => {
       if (!homeId) {
@@ -512,6 +653,7 @@ export async function PATCH(
       });
 
       if (packageCompletedNow) {
+        completedReservationId = reservationId;
 
         const approvedNegativeSavings = await tx.saving.findMany({
           where: {
@@ -598,6 +740,13 @@ export async function PATCH(
         packageTitle: completedPackageTitle,
         packageGoalUsd: completedGoalUsd,
       });
+
+      if (completedReservationId) {
+        void sendReservationConfirmationToGuest({
+          reservationId: completedReservationId,
+          fallbackBcvRate: Number(saving.bcvRate ?? 0),
+        });
+      }
     }
 
     if (saving.User?.email) {
