@@ -621,7 +621,7 @@ export default function DashboardClient(props: DashboardClientProps) {
     setActiveTab(nextTab);
     setMobileMenuOpen(false);
 
-    if (nextTab === "mi-alcancia" || nextTab === "ahorrar") {
+    if (nextTab !== "mi-alcancia" && nextTab !== "ahorrar") {
       setSelectedSavingId(null);
     }
 
@@ -1027,7 +1027,15 @@ export default function DashboardClient(props: DashboardClientProps) {
                       {!packageSavingsCompleted && (
                         <button
                           type="button"
-                          onClick={() => setActiveTab("ahorrar")}
+                          onClick={() => {
+                            if (activePackageTargetId) {
+                              setSelectedSavingId(activePackageTargetId);
+                              router.replace(`/my-dashboard?tab=ahorrar&homeId=${encodeURIComponent(activePackageTargetId)}`);
+                            } else {
+                              router.replace("/my-dashboard?tab=ahorrar");
+                            }
+                            setActiveTab("ahorrar");
+                          }}
                           className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
                         >
                           Agregar cuota
@@ -1157,7 +1165,16 @@ export default function DashboardClient(props: DashboardClientProps) {
                   </p>
                   <button
                     type="button"
-                    onClick={() => setActiveTab("ahorrar")}
+                    onClick={() => {
+                      if (isPackageSavingsView && activePackageTargetId) {
+                        setSelectedSavingId(activePackageTargetId);
+                        router.replace(`/my-dashboard?tab=ahorrar&homeId=${encodeURIComponent(activePackageTargetId)}`);
+                      } else {
+                        setSelectedSavingId(null);
+                        router.replace("/my-dashboard?tab=ahorrar");
+                      }
+                      setActiveTab("ahorrar");
+                    }}
                     className="mt-4 inline-block text-sm text-orange-600 hover:underline"
                   >
                     {isPackageSavingsView ? "Ahorrar para este paquete" : "Comenzar a ahorrar"}
