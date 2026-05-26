@@ -72,9 +72,7 @@ export default function CheckoutForm({
   const [loading, setLoading] = useState(false);
   const [uploadingProof, setUploadingProof] = useState(false);
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
-  const [depositAmountUsd, setDepositAmountUsd] = useState<string>(
-    isPackageSavings && remainingUsd > 0 ? remainingUsd.toFixed(2) : ""
-  );
+  const [depositAmountUsd, setDepositAmountUsd] = useState<string>("");
   const [formData, setFormData] = useState({
     phoneNumber: "",
     cedula: "",

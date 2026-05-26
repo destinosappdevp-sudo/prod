@@ -259,13 +259,52 @@ export async function POST(req: NextRequest) {
           throw new Error("Asiento inválido para este paquete");
         }
 
-        const updatedSeat = await tx.packageSeat.updateMany({
-          where: { id: { in: seatIds }, status: "AVAILABLE" },
-          data: { status: "OCCUPIED" },
-        });
+        const availableSeatIds = selectedSeats
+          .filter((s: any) => s.status === "AVAILABLE")
+          .map((s: any) => s.id);
+        const occupiedSeatIds = selectedSeats
+          .filter((s: any) => s.status !== "AVAILABLE")
+          .map((s: any) => s.id);
 
-        if (updatedSeat.count !== seatIds.length) {
-          throw new Error("Uno de los asientos seleccionados ya fue ocupado por otro usuario");
+        // Si hay asientos ocupados, verificar que sean del propio usuario
+        // (porque ya los reservó en un abono previo de este paquete).
+        if (occupiedSeatIds.length > 0) {
+          const ownedRows = await tx.saving.findMany({
+            where: { userId: user.id },
+            select: { paymentDetails: true },
+          });
+          const ownedSeatIds = new Set<string>();
+          for (const row of ownedRows) {
+            const details = row.paymentDetails && typeof row.paymentDetails === "object" ? row.paymentDetails : {};
+            const rowHomeId = typeof (details as any).homeId === "string" ? (details as any).homeId : null;
+            if (rowHomeId !== homeId) continue;
+            const rowSeatIds = Array.isArray((details as any).seatIds)
+              ? (details as any).seatIds
+              : typeof (details as any).seatIds === "string"
+              ? (details as any).seatIds.split(",")
+              : [];
+            for (const s of rowSeatIds) {
+              if (typeof s === "string" && s.trim()) ownedSeatIds.add(s.trim());
+            }
+            const singleSeat = (details as any).seatId;
+            if (typeof singleSeat === "string" && singleSeat.trim()) ownedSeatIds.add(singleSeat.trim());
+          }
+
+          const foreignSeat = occupiedSeatIds.find((id: string) => !ownedSeatIds.has(id));
+          if (foreignSeat) {
+            throw new Error("Uno de los asientos seleccionados ya fue ocupado por otro usuario");
+          }
+        }
+
+        if (availableSeatIds.length > 0) {
+          const updatedSeat = await tx.packageSeat.updateMany({
+            where: { id: { in: availableSeatIds }, status: "AVAILABLE" },
+            data: { status: "OCCUPIED" },
+          });
+
+          if (updatedSeat.count !== availableSeatIds.length) {
+            throw new Error("Uno de los asientos seleccionados ya fue ocupado por otro usuario");
+          }
         }
       }
 
