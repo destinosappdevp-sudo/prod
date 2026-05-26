@@ -285,12 +285,17 @@ export default function DashboardClient(props: DashboardClientProps) {
       setSaveError("Adjunta la captura del pago móvil.");
       return;
     }
+    const effectiveHomeId = selectedSavingId || activePackageTargetId || urlHomeId || props.savingTargetId || null;
+    if (isPackageSavingsView && !effectiveHomeId) {
+      setSaveError("No pudimos identificar la alcancía del paquete. Selecciona el paquete nuevamente antes de guardar.");
+      return;
+    }
+
     setSaving(true);
     try {
       setUploadingProof(true);
       const paymentProofUrl = await uploadPaymentProof();
       setUploadingProof(false);
-      const effectiveHomeId = selectedSavingId || urlHomeId || props.savingTargetId || null;
 
       const res = await fetch("/api/user/savings", {
         method: "POST",
@@ -928,6 +933,9 @@ export default function DashboardClient(props: DashboardClientProps) {
                               type="button"
                               onClick={() => {
                                 setSelectedSavingId(res.homeId ?? null);
+                                if (res.homeId) {
+                                  router.replace(`/my-dashboard?tab=mi-alcancia&homeId=${encodeURIComponent(res.homeId)}`);
+                                }
                                 setActiveTab("mi-alcancia");
                               }}
                               className="text-orange-600 hover:underline text-xs font-medium"
@@ -1079,7 +1087,14 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <button
                     key={wallet.key}
                     type="button"
-                    onClick={() => setSelectedSavingId(wallet.targetId)}
+                    onClick={() => {
+                      setSelectedSavingId(wallet.targetId);
+                      router.replace(
+                        wallet.targetId
+                          ? `/my-dashboard?tab=mi-alcancia&homeId=${encodeURIComponent(wallet.targetId)}`
+                          : "/my-dashboard?tab=mi-alcancia"
+                      );
+                    }}
                     className={`rounded-2xl border p-5 text-left shadow-sm transition ${
                       wallet.targetId === selectedSavingId
                         ? "border-orange-300 bg-orange-50"
@@ -1212,7 +1227,14 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <button
                     key={wallet.key}
                     type="button"
-                    onClick={() => setSelectedSavingId(wallet.targetId)}
+                    onClick={() => {
+                      setSelectedSavingId(wallet.targetId);
+                      router.replace(
+                        wallet.targetId
+                          ? `/my-dashboard?tab=ahorrar&homeId=${encodeURIComponent(wallet.targetId)}`
+                          : "/my-dashboard?tab=ahorrar"
+                      );
+                    }}
                     className={`rounded-2xl border p-5 text-left shadow-sm transition ${
                       wallet.targetId === selectedSavingId
                         ? "border-orange-300 bg-orange-50"
