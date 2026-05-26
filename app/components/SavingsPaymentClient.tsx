@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, PiggyBank, Smartphone } from "lucide-react";
@@ -53,8 +53,11 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlHomeId = searchParams.get("homeId");
+  const urlTarget = searchParams.get("target");
 
-  const [selectedSavingId, setSelectedSavingId] = useState<string | null>(props.savingTargetId ?? null);
+  const selectedSavingId = urlHomeId || props.savingTargetId || null;
+  const isGeneralSavingsView = !selectedSavingId && urlTarget === "general";
+  const hasFixedTarget = Boolean(selectedSavingId) || isGeneralSavingsView;
   const [amountUsd, setAmountUsd] = useState("");
   const [emisorBank, setEmisorBank] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -64,12 +67,6 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
   const [uploadingProof, setUploadingProof] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
-
-  useEffect(() => {
-    if (urlHomeId && urlHomeId !== selectedSavingId) {
-      setSelectedSavingId(urlHomeId);
-    }
-  }, [urlHomeId, selectedSavingId]);
 
   const savingsRows = props.savings ?? [];
 
@@ -179,17 +176,18 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
       (props.savingPackage?.id === selectedSavingId ? props.savingPackage : null)
     : null;
 
-  const packageTargetLabel =
-    selectedWallet?.title || selectedSavingPackage?.title || props.savingTarget || "este paquete";
+  const packageTargetLabel = isGeneralSavingsView
+    ? "Alcancia general"
+    : selectedWallet?.title || selectedSavingPackage?.title || props.savingTarget || "este paquete";
 
-  const activePackageTargetId = selectedWallet?.targetId ?? selectedSavingPackage?.id ?? null;
+  const activePackageTargetId = selectedSavingId;
   const isPackageSavingsView = Boolean(activePackageTargetId);
 
   const displayedSavings = useMemo(
     () =>
       isPackageSavingsView && activePackageTargetId
         ? savingsRows.filter((item) => item.targetId === activePackageTargetId)
-        : savingsRows,
+        : savingsRows.filter((item) => !item.targetId),
     [activePackageTargetId, isPackageSavingsView, savingsRows]
   );
 
@@ -253,6 +251,11 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
     setSaveError("");
     setSaveSuccess(false);
 
+    if (!hasFixedTarget) {
+      setSaveError("Esta vista requiere una alcancia fija. Entra desde Mi Alcancia y usa Pagar.");
+      return;
+    }
+
     if (packageSavingsCompleted) {
       setSaveError("Ya completaste el ahorro de este viaje. Ahora puedes ahorrar en tu alcancia general.");
       return;
@@ -284,7 +287,7 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
       return;
     }
 
-    const effectiveHomeId = selectedSavingId || urlHomeId || props.savingTargetId || null;
+    const effectiveHomeId = isPackageSavingsView ? activePackageTargetId : null;
     if (isPackageSavingsView && !effectiveHomeId) {
       setSaveError("No pudimos identificar la alcancia del paquete. Selecciona el paquete nuevamente antes de guardar.");
       return;
@@ -355,42 +358,21 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
 
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Registrar deposito de ahorro</h1>
-          <p className="text-sm text-slate-500">Selecciona una alcancia y registra tu comprobante en esta vista dedicada.</p>
+          <p className="text-sm text-slate-500">Esta pantalla usa una alcancia fija y no permite cambios de destino.</p>
         </div>
 
-        <div>
-          <h2 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcancias</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {savingsWallets.map((wallet) => (
-              <button
-                key={wallet.key}
-                type="button"
-                onClick={() => {
-                  setSelectedSavingId(wallet.targetId);
-                  router.replace(
-                    wallet.targetId
-                      ? `/my-dashboard/ahorrar?homeId=${encodeURIComponent(wallet.targetId)}`
-                      : "/my-dashboard/ahorrar"
-                  );
-                }}
-                className={`rounded-2xl border p-5 text-left shadow-sm transition ${
-                  wallet.targetId === selectedSavingId
-                    ? "border-orange-300 bg-orange-50"
-                    : "border-slate-100 bg-white hover:border-slate-200"
-                }`}
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  {wallet.targetId ? "Paquete especifico" : "General"}
-                </p>
-                <p className="mt-2 text-lg font-bold text-slate-900">{wallet.title}</p>
-                <p className="mt-2 text-2xl font-bold text-emerald-600">${wallet.totalUsd.toFixed(2)}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {wallet.movementCount} movimiento{wallet.movementCount !== 1 ? "s" : ""}
-                </p>
-              </button>
-            ))}
+        {!hasFixedTarget && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <p className="text-sm font-semibold text-amber-800">Falta seleccionar una alcancia</p>
+            <p className="mt-1 text-xs text-amber-700">Vuelve a Mi Alcancia, elige una y presiona Pagar para abrir esta vista con destino fijo.</p>
+            <Link
+              href="/my-dashboard?tab=mi-alcancia"
+              className="mt-3 inline-block rounded-full bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-700"
+            >
+              Ir a Mi Alcancia
+            </Link>
           </div>
-        </div>
+        )}
 
         {isPackageSavingsView && selectedSavingPackage && (
           <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
@@ -423,6 +405,9 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
                   {isPackageSavingsView && depositInstallments.length > 0 ? "Registrar nueva cuota" : "Depositar a mi alcancia"}
                 </h2>
               </div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/90">
+                Destino fijo: {packageTargetLabel}
+              </p>
               <p className="text-sm text-white/80">
                 {props.bcvRate && props.bcvRate > 0
                   ? `Tasa BCV del dia: ${Number(props.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs/USD`
@@ -592,7 +577,7 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
 
                 <button
                   type="submit"
-                  disabled={saving || uploadingProof || !amountUsd || !previewBs || packageSavingsCompleted}
+                  disabled={!hasFixedTarget || saving || uploadingProof || !amountUsd || !previewBs || packageSavingsCompleted}
                   className="w-full rounded-xl bg-orange-500 py-3.5 font-bold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {packageSavingsCompleted

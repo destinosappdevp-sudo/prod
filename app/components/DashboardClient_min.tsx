@@ -1055,7 +1055,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                               setSelectedSavingId(activePackageTargetId);
                               router.push(`/my-dashboard/ahorrar?homeId=${encodeURIComponent(activePackageTargetId)}`);
                             } else {
-                              router.push("/my-dashboard/ahorrar");
+                              router.push("/my-dashboard/ahorrar?target=general");
                             }
                           }}
                           className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
@@ -1081,17 +1081,8 @@ export default function DashboardClient(props: DashboardClientProps) {
               <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcancías</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {savingsWallets.map((wallet) => (
-                  <button
+                  <div
                     key={wallet.key}
-                    type="button"
-                    onClick={() => {
-                      setSelectedSavingId(wallet.targetId);
-                      router.replace(
-                        wallet.targetId
-                          ? `/my-dashboard?tab=mi-alcancia&homeId=${encodeURIComponent(wallet.targetId)}`
-                          : "/my-dashboard?tab=mi-alcancia"
-                      );
-                    }}
                     className={`rounded-2xl border p-5 text-left shadow-sm transition ${
                       wallet.targetId === selectedSavingId
                         ? "border-orange-300 bg-orange-50"
@@ -1106,7 +1097,36 @@ export default function DashboardClient(props: DashboardClientProps) {
                     <p className="mt-1 text-xs text-slate-500">
                       {wallet.movementCount} movimiento{wallet.movementCount !== 1 ? "s" : ""}
                     </p>
-                  </button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSavingId(wallet.targetId);
+                          router.replace(
+                            wallet.targetId
+                              ? `/my-dashboard?tab=mi-alcancia&homeId=${encodeURIComponent(wallet.targetId)}`
+                              : "/my-dashboard?tab=mi-alcancia"
+                          );
+                        }}
+                        className="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Ver movimientos
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          router.push(
+                            wallet.targetId
+                              ? `/my-dashboard/ahorrar?homeId=${encodeURIComponent(wallet.targetId)}`
+                              : "/my-dashboard/ahorrar?target=general"
+                          );
+                        }}
+                        className="rounded-full bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-600"
+                      >
+                        Ahorrar para esta alcancía
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -1200,7 +1220,7 @@ export default function DashboardClient(props: DashboardClientProps) {
                         router.push(`/my-dashboard/ahorrar?homeId=${encodeURIComponent(activePackageTargetId)}`);
                       } else {
                         setSelectedSavingId(null);
-                        router.push("/my-dashboard/ahorrar");
+                        router.push("/my-dashboard/ahorrar?target=general");
                       }
                     }}
                     className="mt-4 inline-block text-sm text-orange-600 hover:underline"
@@ -1218,7 +1238,7 @@ export default function DashboardClient(props: DashboardClientProps) {
           <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm text-center">
             <p className="text-sm text-slate-500">El registro de pagos de ahorro ahora esta en una vista separada.</p>
             <Link
-              href={selectedSavingId ? `/my-dashboard/ahorrar?homeId=${encodeURIComponent(selectedSavingId)}` : "/my-dashboard/ahorrar"}
+              href={selectedSavingId ? `/my-dashboard/ahorrar?homeId=${encodeURIComponent(selectedSavingId)}` : "/my-dashboard/ahorrar?target=general"}
               className="mt-4 inline-block rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
             >
               Ir a pagar ahorro
