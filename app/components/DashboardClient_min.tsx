@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { buildHomeUrl } from "@/app/lib/slug";
@@ -126,8 +126,10 @@ interface DashboardClientProps {
 
 export default function DashboardClient(props: DashboardClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
   const [selectedSavingId, setSelectedSavingId] = useState<string | null>(props.savingTargetId ?? null);
+  const urlHomeId = searchParams.get("homeId");
 
   useEffect(() => {
     if (props.initialTab && props.initialTab !== activeTab) {
@@ -135,6 +137,13 @@ export default function DashboardClient(props: DashboardClientProps) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.initialTab]);
+
+  useEffect(() => {
+    if (urlHomeId && urlHomeId !== selectedSavingId) {
+      setSelectedSavingId(urlHomeId);
+    }
+  }, [urlHomeId, selectedSavingId]);
+
   const [amountUsd, setAmountUsd] = useState("");
   const [emisorBank, setEmisorBank] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -281,6 +290,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       setUploadingProof(true);
       const paymentProofUrl = await uploadPaymentProof();
       setUploadingProof(false);
+      const effectiveHomeId = selectedSavingId || urlHomeId || props.savingTargetId || null;
 
       const res = await fetch("/api/user/savings", {
         method: "POST",
@@ -293,8 +303,8 @@ export default function DashboardClient(props: DashboardClientProps) {
             phoneNumber,
             referenceNumber: referenceNumber.trim(),
             paymentProofUrl,
-            homeId: selectedSavingId || null,
-            homeTitle: selectedSavingId ? packageTargetLabel : null,
+            homeId: effectiveHomeId,
+            homeTitle: effectiveHomeId ? packageTargetLabel : null,
             seatId: props.savingTargetSeatId || null,
             seatIds: props.savingTargetSeatIds || [],
             guests: props.savingTargetGuests || 1,
@@ -623,9 +633,16 @@ export default function DashboardClient(props: DashboardClientProps) {
 
     if (nextTab !== "mi-alcancia" && nextTab !== "ahorrar") {
       setSelectedSavingId(null);
+      router.replace(`/my-dashboard?tab=${nextTab}`);
+      return;
     }
 
-    router.replace(`/my-dashboard?tab=${nextTab}`);
+    const effectiveHomeId = selectedSavingId || urlHomeId || props.savingTargetId || null;
+    router.replace(
+      effectiveHomeId
+        ? `/my-dashboard?tab=${nextTab}&homeId=${encodeURIComponent(effectiveHomeId)}`
+        : `/my-dashboard?tab=${nextTab}`
+    );
   }
 
   return (
