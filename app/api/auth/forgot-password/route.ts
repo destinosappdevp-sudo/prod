@@ -91,15 +91,15 @@ export async function POST(request: NextRequest) {
     }
 
     const customResetUrl = new URL("/auth/reset-password", getRequestOrigin(request));
-    const resetLink =
-      data.properties.action_link ||
-      (data.properties.hashed_token
-        ? (() => {
-            customResetUrl.searchParams.set("token_hash", data.properties.hashed_token);
-            customResetUrl.searchParams.set("type", "recovery");
-            return customResetUrl.toString();
-          })()
-        : null);
+    const resetLink = data.properties.hashed_token
+      ? (() => {
+          // Use token_hash in our own URL to avoid consuming one-time tokens via
+          // email provider link scanners that pre-open /auth/v1/verify links.
+          customResetUrl.searchParams.set("token_hash", data.properties.hashed_token);
+          customResetUrl.searchParams.set("type", "recovery");
+          return customResetUrl.toString();
+        })()
+      : null;
 
     if (!resetLink) {
       console.error("Supabase link generation returned no usable recovery URL");

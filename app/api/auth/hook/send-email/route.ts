@@ -87,13 +87,19 @@ export async function POST(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
-  // URL de confirmación apuntando al endpoint de verificación de Supabase Auth.
+  // URL de confirmación para signup/invite apuntando al endpoint de verificación.
   const finalRedirect = redirect_to || site_url || "/";
   const confirmationUrl =
     `${supabaseUrl}/auth/v1/verify` +
     `?token=${encodeURIComponent(token_hash)}` +
     `&type=${encodeURIComponent(email_action_type)}` +
     `&redirect_to=${encodeURIComponent(finalRedirect)}`;
+
+  // URL de recuperación pasando token_hash a nuestra pantalla de reset.
+  const recoveryBase = new URL("/auth/reset-password", finalRedirect || site_url || supabaseUrl);
+  recoveryBase.searchParams.set("token_hash", token_hash);
+  recoveryBase.searchParams.set("type", "recovery");
+  const recoveryUrl = recoveryBase.toString();
 
   let subject: string;
   let html: string;
@@ -115,7 +121,7 @@ export async function POST(request: NextRequest) {
         <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;background:#fff;border-radius:10px;">
           <h2 style="color:#1f2937;">Restablecer contraseña</h2>
           <p style="color:#4b5563;">Hola <strong>${displayName}</strong>, haz clic abajo para crear una nueva contraseña:</p>
-          <a href="${confirmationUrl}"
+          <a href="${recoveryUrl}"
              style="display:inline-block;margin:20px 0;padding:12px 28px;background:#b45309;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;">
             Cambiar contraseña
           </a>
