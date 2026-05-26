@@ -11,7 +11,6 @@ import {
   LogOut,
   Heart,
   PiggyBank,
-  PlusCircle,
   Smartphone,
   Menu,
   X,
@@ -19,7 +18,6 @@ import {
 import { signOut } from "@/app/action";
 import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
-import { BANKS } from "@/app/lib/paymentBanks";
 
 interface GuestReservationItem {
   id: string;
@@ -127,13 +125,16 @@ interface DashboardClientProps {
 export default function DashboardClient(props: DashboardClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState(props.initialTab || "reservations");
+  const [activeTab, setActiveTab] = useState(() =>
+    props.initialTab === "ahorrar" ? "mi-alcancia" : props.initialTab || "reservations"
+  );
   const [selectedSavingId, setSelectedSavingId] = useState<string | null>(props.savingTargetId ?? null);
   const urlHomeId = searchParams.get("homeId");
 
   useEffect(() => {
-    if (props.initialTab && props.initialTab !== activeTab) {
-      setActiveTab(props.initialTab);
+    const nextTab = props.initialTab === "ahorrar" ? "mi-alcancia" : props.initialTab;
+    if (nextTab && nextTab !== activeTab) {
+      setActiveTab(nextTab);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.initialTab]);
@@ -627,7 +628,6 @@ export default function DashboardClient(props: DashboardClientProps) {
     { key: "favorites",    label: "Favoritos",      icon: Heart },
     { key: "movimientos",  label: "Mis Movimientos", icon: Smartphone },
     { key: "mi-alcancia",  label: "Mi Alcancía",    icon: PiggyBank },
-    { key: "ahorrar",      label: "Ahorrar",        icon: PlusCircle },
     { key: "profile",      label: "Perfil",         icon: User },
   ];
   const activeMenuLabel = menuItems.find((item) => item.key === activeTab)?.label || "Mi Escritorio";
@@ -636,7 +636,7 @@ export default function DashboardClient(props: DashboardClientProps) {
     setActiveTab(nextTab);
     setMobileMenuOpen(false);
 
-    if (nextTab !== "mi-alcancia" && nextTab !== "ahorrar") {
+    if (nextTab !== "mi-alcancia") {
       setSelectedSavingId(null);
       router.replace(`/my-dashboard?tab=${nextTab}`);
       return;
@@ -760,7 +760,6 @@ export default function DashboardClient(props: DashboardClientProps) {
             {activeTab === "favorites" && "Mis Favoritos"}
             {activeTab === "movimientos" && "Mis Movimientos"}
             {activeTab === "mi-alcancia" && (isPackageSavingsView ? `Ahorros de ${packageTargetLabel}` : "Mi Alcancía")}
-            {activeTab === "ahorrar" && (isPackageSavingsView ? `Ahorrar para ${packageTargetLabel}` : "Ahorrar")}
             {activeTab === "profile" && "Editar Perfil"}
           </h1>
           <p className="text-sm text-slate-500">
@@ -768,7 +767,6 @@ export default function DashboardClient(props: DashboardClientProps) {
             {activeTab === "favorites" && "Alojamientos que guardaste"}
             {activeTab === "movimientos" && "Consulta todos tus pagos, depósitos y retiros con su estado y detalles."}
             {activeTab === "mi-alcancia" && (isPackageSavingsView ? "Movimientos asociados a este paquete" : "Historial de todas tus alcancías")}
-            {activeTab === "ahorrar" && (isPackageSavingsView ? "Deposita saldo para este paquete específico" : "Elige entre tu alcancía general o las alcancías de paquetes")}
             {activeTab === "profile" && "Actualiza tus datos personales"}
           </p>
         </div>
@@ -1055,11 +1053,10 @@ export default function DashboardClient(props: DashboardClientProps) {
                           onClick={() => {
                             if (activePackageTargetId) {
                               setSelectedSavingId(activePackageTargetId);
-                              router.replace(`/my-dashboard?tab=ahorrar&homeId=${encodeURIComponent(activePackageTargetId)}`);
+                              router.push(`/my-dashboard/ahorrar?homeId=${encodeURIComponent(activePackageTargetId)}`);
                             } else {
-                              router.replace("/my-dashboard?tab=ahorrar");
+                              router.push("/my-dashboard/ahorrar");
                             }
-                            setActiveTab("ahorrar");
                           }}
                           className="rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
                         >
@@ -1200,12 +1197,11 @@ export default function DashboardClient(props: DashboardClientProps) {
                     onClick={() => {
                       if (isPackageSavingsView && activePackageTargetId) {
                         setSelectedSavingId(activePackageTargetId);
-                        router.replace(`/my-dashboard?tab=ahorrar&homeId=${encodeURIComponent(activePackageTargetId)}`);
+                        router.push(`/my-dashboard/ahorrar?homeId=${encodeURIComponent(activePackageTargetId)}`);
                       } else {
                         setSelectedSavingId(null);
-                        router.replace("/my-dashboard?tab=ahorrar");
+                        router.push("/my-dashboard/ahorrar");
                       }
-                      setActiveTab("ahorrar");
                     }}
                     className="mt-4 inline-block text-sm text-orange-600 hover:underline"
                   >
@@ -1219,267 +1215,15 @@ export default function DashboardClient(props: DashboardClientProps) {
 
         {/* AHORRAR */}
         {activeTab === "ahorrar" && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="mb-3 text-base font-semibold text-slate-900">Todas tus alcancías</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {savingsWallets.map((wallet) => (
-                  <button
-                    key={wallet.key}
-                    type="button"
-                    onClick={() => {
-                      setSelectedSavingId(wallet.targetId);
-                      router.replace(
-                        wallet.targetId
-                          ? `/my-dashboard?tab=ahorrar&homeId=${encodeURIComponent(wallet.targetId)}`
-                          : "/my-dashboard?tab=ahorrar"
-                      );
-                    }}
-                    className={`rounded-2xl border p-5 text-left shadow-sm transition ${
-                      wallet.targetId === selectedSavingId
-                        ? "border-orange-300 bg-orange-50"
-                        : "border-slate-100 bg-white hover:border-slate-200"
-                    }`}
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      {wallet.targetId ? "Paquete específico" : "General"}
-                    </p>
-                    <p className="mt-2 text-lg font-bold text-slate-900">{wallet.title}</p>
-                    <p className="mt-2 text-2xl font-bold text-emerald-600">${wallet.totalUsd.toFixed(2)}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {wallet.movementCount} movimiento{wallet.movementCount !== 1 ? "s" : ""}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {isPackageSavingsView && selectedSavingPackage && (
-              <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-sm">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Detalle del paquete</p>
-                    <h3 className="mt-1 text-lg font-bold text-slate-900">{packageTargetLabel}</h3>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {packageSavingsCompleted
-                        ? "Meta completada para este viaje. Los próximos depósitos irán a la alcancía general."
-                        : depositInstallments.length > 0
-                        ? `Llevas ${depositInstallments.length} cuota${depositInstallments.length !== 1 ? "s" : ""} y te faltan $${remainingUsd.toFixed(2)}.`
-                        : "Aún no has abonado tu primera cuota."}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-                    <p className="text-slate-500">Meta: <span className="font-semibold text-slate-900">${packageGoalUsd.toFixed(2)}</span></p>
-                    <p className="text-slate-500">Ahorrado: <span className="font-semibold text-green-600">${packageApprovedDepositedUsd.toFixed(2)}</span></p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-center">
-              <div className="w-full max-w-md">
-              {/* Card estilo mobile */}
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-lg overflow-hidden">
-                {/* Header */}
-                <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-6 text-white">
-                  <div className="flex items-center gap-3 mb-2">
-                    <PiggyBank size={28} />
-                    <h2 className="text-xl font-bold">
-                      {isPackageSavingsView && depositInstallments.length > 0 ? "Registrar nueva cuota" : "Depositar a Mi Alcancía"}
-                    </h2>
-                  </div>
-                  <p className="text-sm text-white/80">
-                      {props.bcvRate && props.bcvRate > 0
-                      ? `Tasa BCV del día: ${Number(props.bcvRate).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs/USD`
-                      : "Tasa BCV no disponible"}
-                  </p>
-                </div>
-
-                <div className="px-6 py-6">
-                  {isPackageSavingsView && (
-                    <div className="mb-5 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                        Ahorro para este paquete
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-emerald-900">{packageTargetLabel}</p>
-                      <p className="mt-1 text-xs text-emerald-700">
-                        {packageSavingsCompleted
-                          ? "Meta completada. Esta alcancía ya no acepta más depósitos para este destino."
-                          : "Los depósitos que registres aquí quedarán asociados a este destino."}
-                      </p>
-                    </div>
-                  )}
-
-                  {packageSavingsCompleted && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                      <p className="text-sm font-semibold text-amber-800">Ahorro completado</p>
-                      <p className="mt-1 text-xs text-amber-700">
-                        Ya alcanzaste la meta de este viaje. Si haces otro depósito, debe ser en la alcancía general.
-                      </p>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleSave} className="space-y-5">
-                    {/* Monto USD */}
-                    <div>
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Monto en Dólares (USD)
-                        </label>
-                        {isPackageSavingsView && (
-                          <span className="text-xs font-medium text-slate-500">
-                            Monto maximo a pagar: <span className="font-semibold text-orange-600">${remainingUsd.toFixed(2)}</span>
-                          </span>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          value={amountUsd}
-                          onChange={(e) => {
-                            setAmountUsd(e.target.value);
-                            setSaveError("");
-                            setSaveSuccess(false);
-                          }}
-                          placeholder="0.00"
-                          className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-3 text-lg font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Preview Bs */}
-                    {previewBs && (
-                      <div className="bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
-                        <p className="text-xs text-slate-500 mb-0.5">Monto a abonar en Bs.</p>
-                        <p className="text-2xl font-bold text-orange-600">
-                          Bs. {previewBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Receptor info */}
-                    <div className="bg-blue-50 rounded-xl px-4 py-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Smartphone size={14} className="text-blue-600" />
-                        <p className="text-xs font-semibold text-blue-700">Información del receptor (Pago Móvil)</p>
-                      </div>
-                      <div className="space-y-1 text-xs text-slate-600">
-                        <p><span className="font-medium">Banco:</span> 0169 R4</p>
-                        <p><span className="font-medium">Teléfono:</span> 04120736383</p>
-                        <p><span className="font-medium">Cédula:</span> 25570037</p>
-                        {previewBs && (
-                          <p className="font-semibold text-blue-800 mt-1">
-                            Monto: Bs. {previewBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Banco emisor */}
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Tu Banco Emisor</label>
-                      <select
-                        value={emisorBank}
-                        onChange={(e) => { setEmisorBank(e.target.value); setSaveError(""); }}
-                        required
-                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
-                      >
-                        <option value="">Seleccionar...</option>
-                        {BANKS.map((bank) => (
-                          <option key={bank.value} value={bank.value}>
-                            {bank.code} · {bank.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Teléfono */}
-                    <div>
-                      <label className={`block text-sm font-medium mb-1 ${phoneNumber && !phoneValid ? "text-red-600" : "text-slate-700"}`}>
-                        Tu Teléfono
-                      </label>
-                      <input
-                        type="tel"
-                        inputMode="tel"
-                        maxLength={14}
-                        placeholder="+584141234567"
-                        value={phoneNumber}
-                        onChange={(e) => { setPhoneNumber(normalizePhone(e.target.value)); setSaveError(""); }}
-                        required
-                        className={`w-full rounded-xl border px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                          phoneNumber && !phoneValid ? "border-red-300" : "border-slate-200"
-                        }`}
-                      />
-                    </div>
-
-                    {/* Referencia */}
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Número de referencia</label>
-                      <input
-                        type="text"
-                        placeholder="123456"
-                        value={referenceNumber}
-                        onChange={(e) => { setReferenceNumber(e.target.value); setSaveError(""); }}
-                        required
-                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Adjuntar captura</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          setPaymentProofFile(e.target.files?.[0] ?? null);
-                          setSaveError("");
-                        }}
-                        required
-                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 file:mr-3 file:rounded-md file:border-0 file:bg-orange-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-orange-700"
-                      />
-                      <p className="mt-1 text-xs text-slate-500">
-                        Sube la captura del comprobante (JPG, PNG o WebP).
-                      </p>
-                    </div>
-
-                    {saveError && (
-                      <p className="text-sm text-red-600">{saveError}</p>
-                    )}
-
-                    {saveSuccess && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
-                        <p className="text-sm text-yellow-800 font-semibold">¡Depósito registrado y en revisión!</p>
-                        <p className="text-xs text-yellow-700 mt-1">Tu comprobante fue recibido. Nuestro equipo lo verificará y, una vez aprobado, el saldo se abonará a tu alcancía.</p>
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab("mi-alcancia")}
-                          className="text-xs text-yellow-700 hover:underline mt-1"
-                        >
-                          Ver Mi Alcancía?
-                        </button>
-                      </div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={saving || uploadingProof || !amountUsd || !previewBs || packageSavingsCompleted}
-                      className="w-full rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {packageSavingsCompleted
-                        ? "Meta completada"
-                        : saving || uploadingProof
-                        ? "Procesando..."
-                        : "Registrar Depósito"}
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
+          <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm text-center">
+            <p className="text-sm text-slate-500">El registro de pagos de ahorro ahora esta en una vista separada.</p>
+            <Link
+              href={selectedSavingId ? `/my-dashboard/ahorrar?homeId=${encodeURIComponent(selectedSavingId)}` : "/my-dashboard/ahorrar"}
+              className="mt-4 inline-block rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              Ir a pagar ahorro
+            </Link>
           </div>
-        </div>
         )}
 
         {/* PERFIL */}

@@ -255,7 +255,7 @@ async function DestinoPage({
   const standardSavingActive = savingPlan === "estandar";
   const vipSavingActive = savingPlan === "vip";
 
-  const standardSavingsPath = `/my-dashboard?tab=ahorrar&homeId=${data.id}`;
+  const standardSavingsPath = `/my-dashboard/ahorrar?homeId=${data.id}`;
   const standardSavingsHref = user
     ? standardSavingsPath
     : `/login?next=${encodeURIComponent(standardSavingsPath)}`;
@@ -264,7 +264,7 @@ async function DestinoPage({
     ? standardFinishPath
     : `/login?next=${encodeURIComponent(standardFinishPath)}`;
 
-  const vipSavingsPath = `/my-dashboard?tab=ahorrar&homeId=${data.id}`;
+  const vipSavingsPath = `/my-dashboard/ahorrar?homeId=${data.id}`;
   const vipSavingsHref = user
     ? vipSavingsPath
     : `/login?next=${encodeURIComponent(vipSavingsPath)}`;

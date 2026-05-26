@@ -566,7 +566,7 @@ async function getHostDashboardData(userId: string) {
   };
 }
 
-async function getGuestDashboardData(userId: string) {
+export async function getGuestDashboardData(userId: string) {
   noStore();
   const prismaAny = prisma as any;
 
