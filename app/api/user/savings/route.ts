@@ -136,47 +136,82 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Paquete no válido" }, { status: 400 });
     }
 
-    const savingGuestsCount =
+    const inputGuestsCount =
       seatIds.length > 0
         ? seatIds.length
         : typeof paymentDetailsInput.guests === "number" && paymentDetailsInput.guests > 0
         ? paymentDetailsInput.guests
         : 1;
-    const savingPlan =
-      typeof paymentDetailsInput.plan === "string" ? paymentDetailsInput.plan : null;
+    const inputPlan =
+      typeof paymentDetailsInput.plan === "string" && paymentDetailsInput.plan.trim()
+        ? paymentDetailsInput.plan.trim().toLowerCase()
+        : null;
+
+    // Reutiliza el contexto real del paquete (huéspedes/plan) desde depósitos previos
+    // para evitar falsos "meta completada" cuando el payload viene incompleto.
+    const packageRows = await prismaAny.saving.findMany({
+      where: {
+        userId: user.id,
+        amountUsd: { gt: 0 },
+      },
+      select: { amountUsd: true, status: true, paymentDetails: true },
+    });
+
+    let inferredGuestsCount = 0;
+    let inferredPlan: string | null = null;
+
+    const approvedPackageUsd = roundMoney(
+      packageRows.reduce((sum: number, row: any) => {
+        const details = row.paymentDetails && typeof row.paymentDetails === "object" ? row.paymentDetails : {};
+        const rowHomeId = typeof details.homeId === "string" ? details.homeId : null;
+        if (rowHomeId !== homeId) return sum;
+
+        const rowSeatIdsInput = Array.isArray(details.seatIds)
+          ? details.seatIds
+          : typeof details.seatIds === "string"
+          ? details.seatIds.split(",")
+          : [];
+        const rowSeatIds = Array.from(
+          new Set(
+            rowSeatIdsInput
+              .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+              .filter(Boolean)
+          )
+        );
+        const rowGuests =
+          typeof details.guests === "number" && details.guests > 0
+            ? details.guests
+            : 0;
+        inferredGuestsCount = Math.max(
+          inferredGuestsCount,
+          rowSeatIds.length > 0 ? rowSeatIds.length : rowGuests
+        );
+
+        if (!inferredPlan && typeof details.plan === "string" && details.plan.trim()) {
+          inferredPlan = details.plan.trim().toLowerCase();
+        }
+
+        if (row.status !== "APPROVED") return sum;
+        return sum + Number(row.amountUsd ?? 0);
+      }, 0)
+    );
+
+    const effectiveGuestsCount = Math.max(inputGuestsCount, inferredGuestsCount, 1);
+    const effectivePlan = inputPlan || inferredPlan;
     const unitPrice =
-      savingPlan === "vip" && Number(home.priceVip ?? 0) > 0
+      effectivePlan === "vip" && Number(home.priceVip ?? 0) > 0
         ? Number(home.priceVip)
         : Number(home.price ?? 0);
-    const packageGoalUsd = roundMoney(unitPrice * savingGuestsCount);
-    if (packageGoalUsd > 0) {
-      const approvedDeposits = await prismaAny.saving.findMany({
-        where: {
-          userId: user.id,
-          status: "APPROVED",
-          amountUsd: { gt: 0 },
+    const packageGoalUsd = roundMoney(unitPrice * effectiveGuestsCount);
+
+    if (packageGoalUsd > 0 && approvedPackageUsd >= packageGoalUsd) {
+      return NextResponse.json(
+        {
+          error:
+            "Ya completaste el ahorro de este viaje. Los próximos depósitos deben ir a tu alcancía general.",
         },
-        select: { amountUsd: true, paymentDetails: true },
-      });
-
-      const approvedPackageUsd = roundMoney(
-        approvedDeposits.reduce((sum: number, row: any) => {
-          const details = row.paymentDetails && typeof row.paymentDetails === "object" ? row.paymentDetails : {};
-          const rowHomeId = typeof details.homeId === "string" ? details.homeId : null;
-          if (rowHomeId !== homeId) return sum;
-          return sum + Number(row.amountUsd ?? 0);
-        }, 0)
+        { status: 400 }
       );
-
-      if (approvedPackageUsd >= packageGoalUsd) {
-        return NextResponse.json(
-          {
-            error:
-              "Ya completaste el ahorro de este viaje. Los próximos depósitos deben ir a tu alcancía general.",
-          },
-          { status: 400 }
-        );
-      }
     }
 
     homeTitle = homeTitle || home.title || "Paquete";
