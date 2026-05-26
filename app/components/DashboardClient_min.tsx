@@ -286,6 +286,7 @@ export default function DashboardClient(props: DashboardClientProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          amountUsd: usd,
           amountBs: previewBs,
           paymentDetails: {
             emisorBank,

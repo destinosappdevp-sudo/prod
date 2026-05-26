@@ -44,10 +44,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Cuerpo de solicitud inválido" }, { status: 400 });
   }
 
-  const amountBs = Number((body as any)?.amountBs);
-  if (!amountBs || amountBs <= 0) {
-    return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
-  }
+  const amountBsInput = Number((body as any)?.amountBs);
+  const amountUsdInput = Number((body as any)?.amountUsd);
 
   const config = await prismaAny.platformConfig.findFirst({
     select: { bcvRate: true },
@@ -57,7 +55,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Tasa BCV no disponible" }, { status: 400 });
   }
 
-  const amountUsd = Math.round((amountBs / bcvRate) * 100) / 100;
+  const hasValidUsdInput = Number.isFinite(amountUsdInput) && amountUsdInput > 0;
+  const hasValidBsInput = Number.isFinite(amountBsInput) && amountBsInput > 0;
+
+  if (!hasValidUsdInput && !hasValidBsInput) {
+    return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
+  }
+
+  const amountUsd = hasValidUsdInput
+    ? roundMoney(amountUsdInput)
+    : roundMoney(amountBsInput / bcvRate);
+  const amountBs = hasValidUsdInput
+    ? roundMoney(amountUsd * bcvRate)
+    : roundMoney(amountBsInput);
 
   const paymentDetailsInput =
     (body as any)?.paymentDetails && typeof (body as any).paymentDetails === "object"
