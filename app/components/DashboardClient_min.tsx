@@ -454,6 +454,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   };
 
   const getTargetGoalUsd = (
+    targetId: string | null | undefined,
     pkg?: { price?: number | null; priceVip?: number | null } | null
   ) => {
     const guestsCount = getTargetGuestsCount(targetId);
