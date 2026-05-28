@@ -557,8 +557,22 @@ export default function DashboardClient(props: DashboardClientProps) {
   const generalSavings = savingsRows.filter((item) => !item.targetId);
   const packageSavingsMap = new Map<string, { title: string; totalUsd: number; movementCount: number }>();
 
+  // Paquetes con al menos un abono activo (PENDING o APPROVED con monto > 0)
+  const activePackageIds = new Set(
+    savingsRows
+      .filter(
+        (item) =>
+          item.targetId &&
+          (item.status === "PENDING" || item.status === "APPROVED") &&
+          Number(item.amountUsd ?? 0) > 0
+      )
+      .map((item) => item.targetId as string)
+  );
+
   savingsRows.forEach((item) => {
     if (!item.targetId) return;
+    // Solo construir el mapa para paquetes que tienen abonos activos
+    if (!activePackageIds.has(item.targetId)) return;
     const current = packageSavingsMap.get(item.targetId) ?? {
       title: item.targetTitle || "Paquete",
       totalUsd: 0,
@@ -567,7 +581,10 @@ export default function DashboardClient(props: DashboardClientProps) {
     if (contributesToBalance(item)) {
       current.totalUsd = roundMoney(current.totalUsd + Number(item.amountUsd ?? 0));
     }
-    current.movementCount += 1;
+    // Solo contar movimientos no rechazados para el conteo visible
+    if (item.status !== "REJECTED") {
+      current.movementCount += 1;
+    }
     packageSavingsMap.set(item.targetId, current);
   });
 
@@ -591,7 +608,7 @@ export default function DashboardClient(props: DashboardClientProps) {
           return sum + Number(item.amountUsd ?? 0);
         }, 0)
       ),
-      movementCount: generalSavings.length,
+      movementCount: generalSavings.filter((item) => item.status !== "REJECTED").length,
       targetId: null as string | null,
     },
     ...Array.from(packageSavingsMap.entries())
