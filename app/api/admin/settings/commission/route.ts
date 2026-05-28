@@ -1,5 +1,25 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
+import { createClient } from "@/app/lib/supabase/server";
+
+async function requireSuperAdmin() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return false;
+  }
+
+  const record = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+
+  return record?.role === "SUPERADMIN";
+}
 
 // GET: Obtener el porcentaje de comisión actual
 export async function GET() {
@@ -9,6 +29,11 @@ export async function GET() {
 
 // POST: Actualizar el porcentaje de comisión
 export async function POST(request: Request) {
+  const canEdit = await requireSuperAdmin();
+  if (!canEdit) {
+    return NextResponse.json({ error: "Solo superadmin puede actualizar comisión" }, { status: 403 });
+  }
+
   const data = await request.json();
   const percent = Number(data.commissionPercent ?? data.commission ?? 10);
   if (isNaN(percent) || percent < 0 || percent > 100) {

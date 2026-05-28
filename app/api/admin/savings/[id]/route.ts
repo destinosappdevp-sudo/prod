@@ -399,6 +399,10 @@ export async function PATCH(
         typeof details.homeId === "string" && details.homeId.trim()
           ? details.homeId.trim()
           : null;
+      const reservationId =
+        typeof details.reservationId === "string" && details.reservationId.trim()
+          ? details.reservationId.trim()
+          : null;
       const seatId =
         typeof details.seatId === "string" && details.seatId.trim()
           ? details.seatId.trim()
@@ -436,6 +440,76 @@ export async function PATCH(
                 data: { status: "AVAILABLE" },
               });
             }
+          }
+
+          const approvedRows = await tx.saving.findMany({
+            where: {
+              userId: saving.userId,
+              status: "APPROVED",
+              amountUsd: { gt: 0 },
+              id: { not: saving.id },
+            },
+            select: { paymentDetails: true },
+          });
+
+          const hasApprovedBalanceForPackage = approvedRows.some((row: any) => {
+            const rowDetails = normalizeDetails(row.paymentDetails);
+            const rowHomeId =
+              typeof rowDetails.homeId === "string" && rowDetails.homeId.trim()
+                ? rowDetails.homeId.trim()
+                : null;
+            return rowHomeId === homeId;
+          });
+
+          // Si este rechazo deja el ahorro del paquete en 0 aprobado,
+          // cancelar reserva pendiente sin pago (flujo de ahorro) y liberar su bloqueo lógico.
+          if (!hasApprovedBalanceForPackage) {
+            const reservationIdsFromSavings = approvedRows
+              .map((row: any) => {
+                const rowDetails = normalizeDetails(row.paymentDetails);
+                const rowHomeId =
+                  typeof rowDetails.homeId === "string" && rowDetails.homeId.trim()
+                    ? rowDetails.homeId.trim()
+                    : null;
+                const rowReservationId =
+                  typeof rowDetails.reservationId === "string" && rowDetails.reservationId.trim()
+                    ? rowDetails.reservationId.trim()
+                    : null;
+
+                if (rowHomeId !== homeId || !rowReservationId) {
+                  return null;
+                }
+
+                return rowReservationId;
+              })
+              .filter(Boolean);
+
+            const targetReservationIds = Array.from(
+              new Set([...(reservationId ? [reservationId] : []), ...reservationIdsFromSavings])
+            );
+
+            if (targetReservationIds.length > 0) {
+              await tx.reservation.updateMany({
+                where: {
+                  id: { in: targetReservationIds },
+                  userId: saving.userId,
+                  homeId,
+                  status: "PENDING",
+                  Payment: { is: null },
+                },
+                data: { status: "CANCELLED" },
+              });
+            }
+
+            await tx.reservation.updateMany({
+              where: {
+                userId: saving.userId,
+                homeId,
+                status: "PENDING",
+                Payment: { is: null },
+              },
+              data: { status: "CANCELLED" },
+            });
           }
         }
 

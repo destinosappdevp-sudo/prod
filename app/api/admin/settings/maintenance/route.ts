@@ -11,6 +11,15 @@ async function requireAdmin() {
   return user;
 }
 
+async function requireSuperAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const record = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } });
+  if (record?.role !== "SUPERADMIN") return null;
+  return user;
+}
+
 export async function GET() {
   try {
     const prismaAny = prisma as any;
@@ -27,8 +36,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const admin = await requireAdmin();
-  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  const superAdmin = await requireSuperAdmin();
+  if (!superAdmin) return NextResponse.json({ error: "Solo superadmin puede cambiar mantenimiento" }, { status: 403 });
 
   const { maintenanceMode } = await req.json();
   if (typeof maintenanceMode !== "boolean") {

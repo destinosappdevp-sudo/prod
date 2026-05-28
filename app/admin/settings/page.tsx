@@ -9,6 +9,8 @@ type RateHistoryItem = {
   tasa: string;
 };
 
+type AdminRole = "ADMIN" | "SUPERADMIN";
+
 function formatRateForInput(value: unknown): string {
   return formatBcvRateInput(value);
 }
@@ -32,6 +34,9 @@ function formatHistoryDate(value: string | null): string {
 }
 
 export default function SettingsPage() {
+  const [currentRole, setCurrentRole] = useState<AdminRole | null>(null);
+  const [roleLoading, setRoleLoading] = useState<boolean>(true);
+
   // Comisión
   const [commission, setCommission] = useState<number>(10);
   const [loading, setLoading] = useState<boolean>(true);
@@ -66,25 +71,57 @@ export default function SettingsPage() {
   const [syncMsg, setSyncMsg] = useState<string>("");
 
   useEffect(() => {
-    fetch("/api/admin/settings/commission").then(async (res) => {
-      try {
-        const data = await res.json();
-        setCommission(data.commissionPercent ?? 10);
-      } catch {
-        setCommission(10);
-      }
-      setLoading(false);
-    });
+    fetch("/api/admin/settings/my-role")
+      .then(async (res) => {
+        if (!res.ok) {
+          setCurrentRole(null);
+          return;
+        }
 
-    fetch("/api/admin/settings/maintenance").then(async (res) => {
-      try {
         const data = await res.json();
-        setMaintenance(data.maintenanceMode ?? false);
-      } catch {
-        setMaintenance(false);
-      }
+        if (data?.role === "SUPERADMIN" || data?.role === "ADMIN") {
+          setCurrentRole(data.role);
+        } else {
+          setCurrentRole(null);
+        }
+      })
+      .catch(() => {
+        setCurrentRole(null);
+      })
+      .finally(() => {
+        setRoleLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!currentRole) {
+      return;
+    }
+
+    if (currentRole === "SUPERADMIN") {
+      fetch("/api/admin/settings/commission").then(async (res) => {
+        try {
+          const data = await res.json();
+          setCommission(data.commissionPercent ?? 10);
+        } catch {
+          setCommission(10);
+        }
+        setLoading(false);
+      });
+
+      fetch("/api/admin/settings/maintenance").then(async (res) => {
+        try {
+          const data = await res.json();
+          setMaintenance(data.maintenanceMode ?? false);
+        } catch {
+          setMaintenance(false);
+        }
+        setMaintenanceLoading(false);
+      });
+    } else {
+      setLoading(false);
       setMaintenanceLoading(false);
-    });
+    }
 
     fetch("/api/admin/settings/bcv-rate").then(async (res) => {
       try {
@@ -117,7 +154,7 @@ export default function SettingsPage() {
       }
       setBcvLoading(false);
     });
-  }, []);
+  }, [currentRole]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -268,6 +305,129 @@ export default function SettingsPage() {
     setTimeout(() => setSyncMsg(""), 5000);
   };
 
+  const bcvSettingsCard = (
+    <Card className="p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-emerald-100 rounded-lg">
+          <Landmark className="text-emerald-600" size={20} />
+        </div>
+        <h3 className="text-lg font-semibold">Tasa BCV del día y próxima tasa</h3>
+      </div>
+      <form className="space-y-4" onSubmit={handleBcvSubmit}>
+        <p className="text-sm text-gray-600">
+          Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La próxima tasa se guarda con la fecha que selecciones.
+        </p>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tasa BCV del día (Bs/USD)</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="448,36860000"
+              value={bcvRate}
+              onChange={(e) => setBcvRate(e.target.value)}
+              className="w-full p-2 border rounded-lg bg-white"
+              disabled={bcvLoading || bcvSaving}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de referencia del día</label>
+            <input
+              type="date"
+              value={bcvRateDate}
+              onChange={(e) => setBcvRateDate(e.target.value)}
+              className="w-full p-2 border rounded-lg bg-white"
+              disabled={bcvLoading || bcvSaving}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Próxima tasa (Bs/USD)</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="448,36860000"
+              value={proximaTasa}
+              onChange={(e) => setProximaTasa(e.target.value)}
+              className="w-full p-2 border rounded-lg bg-white"
+              disabled={bcvLoading || bcvSaving}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de la próxima tasa</label>
+            <input
+              type="date"
+              value={proximaTasaDate}
+              onChange={(e) => setProximaTasaDate(e.target.value)}
+              className="w-full p-2 border rounded-lg bg-white"
+              disabled={bcvLoading || bcvSaving}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60"
+            disabled={bcvLoading || bcvSaving}
+            type="submit"
+          >
+            {bcvSaving ? "Guardando..." : "Guardar tasa BCV"}
+          </button>
+
+          {bcvSuccess && <span className="text-green-600 text-sm">¡Guardado!</span>}
+          {bcvError && <span className="text-red-600 text-sm">{bcvError}</span>}
+        </div>
+
+        <p className="text-xs text-gray-500">
+          Fechas seleccionadas: día {bcvRateDate || "Sin fecha"} y próxima tasa {proximaTasaDate || "Sin fecha"}
+        </p>
+
+        <div className="rounded-lg border bg-gray-50 p-3">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">Tasas anteriores</h4>
+          {tasasAnteriores.length === 0 ? (
+            <p className="text-xs text-gray-600">Aún no hay historial registrado.</p>
+          ) : (
+            <div className="space-y-2 max-h-56 overflow-auto pr-1">
+              {tasasAnteriores.map((item, index) => (
+                <div
+                  key={`${item.fecha ?? "sin-fecha"}-${index}`}
+                  className="flex items-center justify-between rounded-md bg-white px-3 py-2 border"
+                >
+                  <span className="text-sm text-gray-700">{formatHistoryDate(item.fecha)}</span>
+                  <span className="text-sm font-medium text-gray-900">{item.tasa || "0,00000000"}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </form>
+    </Card>
+  );
+
+  if (roleLoading) {
+    return (
+      <div className="space-y-3">
+        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
+        <p className="text-gray-600">Cargando permisos...</p>
+      </div>
+    );
+  }
+
+  if (currentRole === "ADMIN") {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
+          <p className="text-gray-600 mt-1">Acceso limitado: solo tasas BCV</p>
+        </div>
+        <div className="grid gap-6">{bcvSettingsCard}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -396,105 +556,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Tasa BCV del día */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <Landmark className="text-emerald-600" size={20} />
-            </div>
-            <h3 className="text-lg font-semibold">Tasa BCV del día y próxima tasa</h3>
-          </div>
-          <form className="space-y-4" onSubmit={handleBcvSubmit}>
-            <p className="text-sm text-gray-600">
-              Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La próxima tasa se guarda con la fecha que selecciones.
-            </p>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tasa BCV del día (Bs/USD)</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="448,36860000"
-                  value={bcvRate}
-                  onChange={(e) => setBcvRate(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-white"
-                  disabled={bcvLoading || bcvSaving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de referencia del día</label>
-                <input
-                  type="date"
-                  value={bcvRateDate}
-                  onChange={(e) => setBcvRateDate(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-white"
-                  disabled={bcvLoading || bcvSaving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Próxima tasa (Bs/USD)</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="448,36860000"
-                  value={proximaTasa}
-                  onChange={(e) => setProximaTasa(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-white"
-                  disabled={bcvLoading || bcvSaving}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de la próxima tasa</label>
-                <input
-                  type="date"
-                  value={proximaTasaDate}
-                  onChange={(e) => setProximaTasaDate(e.target.value)}
-                  className="w-full p-2 border rounded-lg bg-white"
-                  disabled={bcvLoading || bcvSaving}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-60"
-                disabled={bcvLoading || bcvSaving}
-                type="submit"
-              >
-                {bcvSaving ? "Guardando..." : "Guardar tasa BCV"}
-              </button>
-
-              {bcvSuccess && <span className="text-green-600 text-sm">¡Guardado!</span>}
-              {bcvError && <span className="text-red-600 text-sm">{bcvError}</span>}
-            </div>
-
-            <p className="text-xs text-gray-500">
-              Fechas seleccionadas: día {bcvRateDate || "Sin fecha"} y próxima tasa {proximaTasaDate || "Sin fecha"}
-            </p>
-
-            <div className="rounded-lg border bg-gray-50 p-3">
-              <h4 className="text-sm font-semibold text-gray-900 mb-2">Tasas anteriores</h4>
-              {tasasAnteriores.length === 0 ? (
-                <p className="text-xs text-gray-600">Aún no hay historial registrado.</p>
-              ) : (
-                <div className="space-y-2 max-h-56 overflow-auto pr-1">
-                  {tasasAnteriores.map((item, index) => (
-                    <div
-                      key={`${item.fecha ?? "sin-fecha"}-${index}`}
-                      className="flex items-center justify-between rounded-md bg-white px-3 py-2 border"
-                    >
-                      <span className="text-sm text-gray-700">{formatHistoryDate(item.fecha)}</span>
-                      <span className="text-sm font-medium text-gray-900">{item.tasa || "0,00000000"}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </form>
-        </Card>
+        {bcvSettingsCard}
 
         {/* Security */}
         <Card className="p-6">

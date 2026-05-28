@@ -41,6 +41,9 @@ const getMenuItems = (role?: string) => {
     items.push({ href: "/admin/settings", icon: Settings, label: "Configuración" });
     items.push({ href: "/admin/manual", icon: BookOpen, label: "Manual" });
   }
+  if (role === "ADMIN") {
+    items.push({ href: "/admin/settings", icon: Settings, label: "Configuración" });
+  }
   // Mostrar la opción Manual solo para SUPERADMIN y ADMIN
   if (role === "SUPERADMIN" || role === "ADMIN") {
     if (!items.find((i) => i.href === "/admin/manual")) {

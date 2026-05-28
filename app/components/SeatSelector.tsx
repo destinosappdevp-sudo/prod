@@ -126,18 +126,19 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
       "w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold border-2 transition-all select-none ";
 
     if (isSelected) {
-      className += "bg-amber-400 border-amber-500 text-white cursor-pointer scale-105 shadow-md";
+      className +=
+        "bg-amber-400 border-amber-500 text-white cursor-pointer scale-105 shadow-md hover:bg-amber-400 hover:border-amber-500 hover:text-white";
     } else if (isOccupied) {
       className += "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed";
     } else if (isVip) {
       className +=
         canSelect
-          ? "bg-gray-900 border-gray-700 text-white cursor-pointer hover:bg-gray-700"
+          ? "bg-gray-900 border-gray-700 text-white cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
           : "bg-gray-700 border-gray-600 text-gray-300 cursor-not-allowed opacity-50";
     } else {
       className +=
         canSelect
-          ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:border-amber-400 hover:bg-amber-50"
+          ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
           : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
     }
 

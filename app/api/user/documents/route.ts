@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       maxHeight: 2200,
       quality: 88,
     });
-    const storagePath = `verification-docs/${user.id}-${Date.now()}.${optimizedFile.extension}`;
+    const storagePath = `verification-docs/${user.id}/${Date.now()}.${optimizedFile.extension}`;
 
     const { data: storageData, error: storageError } = await supabase.storage
       .from("images")
