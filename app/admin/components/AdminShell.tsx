@@ -19,7 +19,7 @@ export function AdminShell({ children, userName, role, headerRight }: AdminShell
   const firstDisplayName = (userName || "usuario").trim().split(" ")[0] || "usuario";
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-gray-50">
+    <div className="fixed inset-0 z-50 flex bg-gray-50 overflow-x-hidden">
       {mobileOpen && (
         <button
           type="button"
