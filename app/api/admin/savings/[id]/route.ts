@@ -495,7 +495,10 @@ export async function PATCH(
                   userId: saving.userId,
                   homeId,
                   status: "PENDING",
-                  Payment: { is: null },
+                  OR: [
+                    { Payment: { is: null } },
+                    { Payment: { some: { amount: 0 } } },
+                  ],
                 },
                 data: { status: "CANCELLED" },
               });
@@ -506,7 +509,10 @@ export async function PATCH(
                 userId: saving.userId,
                 homeId,
                 status: "PENDING",
-                Payment: { is: null },
+                OR: [
+                  { Payment: { is: null } },
+                  { Payment: { some: { amount: 0 } } },
+                ],
               },
               data: { status: "CANCELLED" },
             });
