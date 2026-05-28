@@ -697,7 +697,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex overflow-x-hidden">
       {mobileMenuOpen && (
         <button
           type="button"
@@ -773,7 +773,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-8 lg:pt-8">
+      <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-8 lg:pt-8 overflow-x-hidden">
         <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
           <button
             type="button"
