@@ -692,8 +692,8 @@ export default function HostDashboardClient({
                   Ver todas
                 </button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="min-w-[700px] w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-400">
                       <th className="py-2">Cliente</th>
@@ -1231,8 +1231,8 @@ export default function HostDashboardClient({
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <table className="min-w-[700px] w-full text-sm">
                 <thead>
                   <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                     <th className="px-6 py-3">ID RESERVA</th>

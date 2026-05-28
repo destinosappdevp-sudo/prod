@@ -132,11 +132,11 @@ export default async function AdminSavingsPage() {
       </div>
 
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           {savings.length === 0 ? (
             <div className="p-10 text-center text-gray-500">No hay depósitos registrados.</div>
           ) : (
-            <table className="w-full">
+            <table className="min-w-[700px] w-full">
               <thead className="border-b bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Fecha</th>

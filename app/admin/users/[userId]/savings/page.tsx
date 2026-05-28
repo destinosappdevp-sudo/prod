@@ -287,7 +287,7 @@ export default async function UserSavingsPage({
             </p>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           {activeTab === "historial" && savings.length === 0 ? (
             <div className="p-10 text-center text-gray-500">Este usuario no tiene ahorros registrados.</div>
           ) : activeTab === "detalle" ? (
@@ -295,8 +295,8 @@ export default async function UserSavingsPage({
               {walletsWithBalance.length === 0 ? (
                 <div className="p-10 text-center text-gray-500">Este usuario no tiene alcancías con movimientos.</div>
               ) : (
-                <div className="overflow-x-auto rounded-xl border border-gray-200">
-                  <table className="w-full">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 rounded-xl border border-gray-200">
+                  <table className="min-w-[700px] w-full">
                     <thead className="bg-gray-50 border-b">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alcancía</th>
@@ -329,8 +329,8 @@ export default async function UserSavingsPage({
                 </div>
               )}
             </div>
-          ) : (
-            <table className="w-full">
+            ) : (
+            <table className="min-w-[700px] w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
