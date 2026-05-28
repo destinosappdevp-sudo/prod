@@ -111,12 +111,15 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
   };
 
   const contributesToBalance = (item: SavingItem) => {
+    // No contribuyen los abonos rechazados
+    if (item.status === "REJECTED") return false;
     const usd = Number(item.amountUsd ?? 0);
     if (usd < 0) return true;
     return item.status === "APPROVED" && usd > 0;
   };
 
-  const generalSavings = savingsRows.filter((item) => !item.targetId);
+  // Excluir abonos rechazados de los cálculos y conteos
+  const generalSavings = savingsRows.filter((item) => !item.targetId && item.status !== "REJECTED");
   const packageSavingsMap = new Map<string, { title: string; totalUsd: number; movementCount: number }>();
 
   savingsRows.forEach((item) => {
@@ -129,7 +132,10 @@ export default function SavingsPaymentClient(props: SavingsPaymentClientProps) {
     if (contributesToBalance(item)) {
       current.totalUsd = roundMoney(current.totalUsd + Number(item.amountUsd ?? 0));
     }
-    current.movementCount += 1;
+    // Contar solo movimientos no rechazados
+    if (item.status !== "REJECTED") {
+      current.movementCount += 1;
+    }
     packageSavingsMap.set(item.targetId, current);
   });
 

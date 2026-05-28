@@ -550,11 +550,13 @@ export default function DashboardClient(props: DashboardClientProps) {
   ]);
 
   const contributesToBalance = (item: SavingItem) => {
+    // Excluir abonos rechazados de cualquier cálculo
+    if (item.status === "REJECTED") return false;
     const usd = Number(item.amountUsd ?? 0);
     if (usd < 0) return true;
     return item.status === "APPROVED" && usd > 0;
   };
-  const generalSavings = savingsRows.filter((item) => !item.targetId);
+  const generalSavings = savingsRows.filter((item) => !item.targetId && item.status !== "REJECTED");
   const packageSavingsMap = new Map<string, { title: string; totalUsd: number; movementCount: number }>();
 
   // Paquetes con al menos un abono activo (PENDING o APPROVED con monto > 0)

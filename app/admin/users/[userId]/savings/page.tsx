@@ -44,19 +44,22 @@ async function getData(userId: string) {
     orderBy: { date: "desc" },
   });
 
-  const approvedUsd = savings
+  // Excluir explícitamente los abonos rechazados de todos los cálculos
+  const validSavings = savings.filter((s) => s.status !== "REJECTED");
+
+  const approvedUsd = validSavings
     .filter((s) => s.status === "APPROVED" || Number(s.amountUsd) < 0)
     .reduce((sum, s) => sum + s.amountUsd, 0);
-  const totalDepositedApprovedUsd = savings
+  const totalDepositedApprovedUsd = validSavings
     .filter((s) => s.status === "APPROVED" && Number(s.amountUsd) > 0)
     .reduce((sum, s) => sum + s.amountUsd, 0);
-  const totalBs = savings
+  const totalBs = validSavings
     .filter((s) => s.status === "APPROVED" || Number(s.amountBs) < 0)
     .reduce((sum, s) => sum + s.amountBs, 0);
-  const pendingUsd = savings
+  const pendingUsd = validSavings
     .filter((s) => s.status === "PENDING" && Number(s.amountUsd) >= 0)
     .reduce((sum, s) => sum + s.amountUsd, 0);
-  const totalSavingsUsd = savings
+  const totalSavingsUsd = validSavings
     .filter((s) => Number(s.amountUsd) > 0 && s.status === "APPROVED")
     .reduce((sum, s) => sum + s.amountUsd, 0);
 
@@ -66,7 +69,7 @@ async function getData(userId: string) {
   const packageIds = new Set<string>();
   const packageTitlesById = new Map<string, string>();
 
-  for (const s of savings) {
+  for (const s of validSavings) {
     const details =
       s.paymentDetails && typeof s.paymentDetails === "object"
         ? (s.paymentDetails as Record<string, any>)
@@ -136,6 +139,7 @@ async function getData(userId: string) {
       wallet.amountUsd += Number(s.amountUsd);
       wallet.amountBs += Number(s.amountBs);
     }
+    // movementCount solo para abonos no rechazados (estamos iterando validSavings)
     wallet.movementCount += 1;
   }
 
