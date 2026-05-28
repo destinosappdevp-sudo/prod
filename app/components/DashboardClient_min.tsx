@@ -827,8 +827,8 @@ export default function DashboardClient(props: DashboardClientProps) {
                 <p className="text-slate-500">No tienes movimientos registrados aún.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="min-w-[700px] w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                       <th className="px-6 py-3">Fecha</th>
@@ -918,8 +918,8 @@ export default function DashboardClient(props: DashboardClientProps) {
         {activeTab === "reservations" && (
           <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
             {reservationsWithSavings.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="min-w-[700px] w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                       <th className="px-6 py-3">Alojamiento</th>
@@ -1194,8 +1194,8 @@ export default function DashboardClient(props: DashboardClientProps) {
             {/* Savings table */}
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
               {displayedSavings.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                  <table className="min-w-[700px] w-full text-sm">
                     <thead>
                       <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                         <th className="px-6 py-3">#</th>
