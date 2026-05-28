@@ -497,7 +497,7 @@ export async function PATCH(
                   status: "PENDING",
                   OR: [
                     { Payment: { is: null } },
-                    { Payment: { some: { amount: 0 } } },
+                    { Payment: { is: { amount: 0 } } },
                   ],
                 },
                 data: { status: "CANCELLED" },
@@ -511,7 +511,7 @@ export async function PATCH(
                 status: "PENDING",
                 OR: [
                   { Payment: { is: null } },
-                  { Payment: { some: { amount: 0 } } },
+                  { Payment: { is: { amount: 0 } } },
                 ],
               },
               data: { status: "CANCELLED" },
