@@ -16,6 +16,7 @@ type Reservation = {
   nights: number;
   status?: string;
   PackageSeat?: {
+    id?: string;
     zone?: string;
     row?: number;
     column?: string;
@@ -78,6 +79,7 @@ async function getProperty(id: string) {
           Payment: true,
           PackageSeat: {
             select: {
+              id: true,
               zone: true,
               row: true,
               column: true,

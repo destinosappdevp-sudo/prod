@@ -3,8 +3,8 @@ import prisma from "@/app/lib/db";
 import { redirect } from "next/navigation";
 
 /**
- * Configuración del sistema: solo SUPERADMIN.
- * ADMIN u otros roles redirigen al dashboard de admin.
+ * Configuración del sistema: accesible para ADMIN y SUPERADMIN.
+ * La página de settings limita qué bloques se muestran según el rol.
  */
 export default async function AdminSettingsLayout({
   children,
@@ -25,7 +25,7 @@ export default async function AdminSettingsLayout({
     select: { role: true },
   });
 
-  if (record?.role !== "SUPERADMIN") {
+  if (record?.role !== "SUPERADMIN" && record?.role !== "ADMIN") {
     redirect("/admin");
   }
 

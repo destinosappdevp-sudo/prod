@@ -54,8 +54,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
   const [selectedUser, setSelectedUser] = useState("");
   const [userQuery, setUserQuery] = useState("");
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [savingType, setSavingType] = useState<"general" | "package">("general");
-  const [selectedHome, setSelectedHome] = useState("");
+  const [selectedWalletKey, setSelectedWalletKey] = useState("");
   const [initialAmountUsd, setInitialAmountUsd] = useState("");
   const todayIso = useMemo(() => {
     const now = new Date();
@@ -92,40 +91,41 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
     }).slice(0, 50);
   }, [userQuery, sortedUsers]);
 
-  const existingWallet = useMemo(() => {
-    if (!selectedUser) return null;
-
-    return walletBalances.find((wallet) => {
-      if (wallet.userId !== selectedUser) return false;
-      if (savingType === "general") return wallet.type === "general";
-      return wallet.type === "package" && wallet.homeId === selectedHome;
-    }) || null;
-  }, [walletBalances, selectedUser, savingType, selectedHome]);
-
-  const packageWalletOptions = useMemo(() => {
+  const walletOptions = useMemo(() => {
     if (!selectedUser) return [] as Array<{ id: string; title: string; amountUsd: number }>;
 
     const homeTitleById = new Map(homes.map((home) => [home.id, home.title || "Paquete sin título"]));
     const seen = new Set<string>();
-    const options: Array<{ id: string; title: string; amountUsd: number }> = [];
+    const options: Array<{ id: string; title: string; amountUsd: number; type: "general" | "package"; homeId: string | null }> = [];
 
     for (const wallet of walletBalances) {
       if (wallet.userId !== selectedUser) continue;
-      if (wallet.type !== "package") continue;
-      if (!wallet.homeId) continue;
-      if (Number(wallet.amountUsd ?? 0) <= 0) continue;
-      if (seen.has(wallet.homeId)) continue;
+      const key = `${wallet.type}:${wallet.homeId ?? "general"}`;
+      if (seen.has(key)) continue;
 
-      seen.add(wallet.homeId);
+      seen.add(key);
       options.push({
-        id: wallet.homeId,
-        title: wallet.homeTitle || homeTitleById.get(wallet.homeId) || "Paquete sin título",
+        id: key,
+        title:
+          wallet.type === "general"
+            ? "Alcancía general"
+            : wallet.homeTitle || (wallet.homeId ? homeTitleById.get(wallet.homeId) || "Paquete sin título" : "Paquete sin título"),
         amountUsd: Number(wallet.amountUsd ?? 0),
+        type: wallet.type,
+        homeId: wallet.homeId,
       });
     }
 
     return options.sort((a, b) => a.title.localeCompare(b.title, "es"));
   }, [homes, selectedUser, walletBalances]);
+
+  const selectedWallet = useMemo(() => {
+    if (!selectedUser || !selectedWalletKey) return null;
+
+    return (
+      walletOptions.find((wallet) => wallet.id === selectedWalletKey) || null
+    );
+  }, [selectedUser, selectedWalletKey, walletOptions]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -136,13 +136,8 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       return;
     }
 
-    if (savingType === "package" && !selectedHome) {
-      setError("Debes seleccionar un paquete.");
-      return;
-    }
-
-    if (savingType === "package" && !existingWallet) {
-      setError("Solo puedes abonar a alcancías específicas existentes (activas).");
+    if (!selectedWallet) {
+      setError("Debes seleccionar una alcancía existente.");
       return;
     }
 
@@ -170,8 +165,8 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: selectedUser,
-          type: savingType,
-          homeId: savingType === "package" ? selectedHome : null,
+          type: selectedWallet.type,
+          homeId: selectedWallet.homeId,
           amountUsd: parsedAmountUsd,
           date: parsedDate.toISOString(),
         }),
@@ -186,8 +181,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
 
       setOpen(false);
       setSelectedUser("");
-      setSavingType("general");
-      setSelectedHome("");
+      setSelectedWalletKey("");
       setInitialAmountUsd("");
       setDepositDate(todayIso);
       router.refresh();
@@ -240,7 +234,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                         onClick={() => {
                           setSelectedUser(user.id);
                           setUserQuery(`${user.cedula ? user.cedula + ' — ' : ''}${user.firstName}`);
-                          setSelectedHome("");
+                          setSelectedWalletKey("");
                           setShowUserDropdown(false);
                         }}
                         className="w-full text-left px-3 py-2 hover:bg-gray-100"
@@ -255,43 +249,20 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Tipo de alcancía</label>
-            <Select
-              value={savingType}
-              onValueChange={(value: "general" | "package") => {
-                setSavingType(value);
-                if (value === "general") {
-                  setSelectedHome("");
-                }
-              }}
-            >
+            <label className="block text-sm font-medium text-gray-700">Alcancía existente</label>
+            <Select value={selectedWalletKey} onValueChange={setSelectedWalletKey}>
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecciona una alcancía existente" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="general">General</SelectItem>
-                <SelectItem value="package">Por paquete</SelectItem>
+                {walletOptions.map((wallet) => (
+                  <SelectItem key={wallet.id} value={wallet.id}>
+                    {wallet.title} · USD ${wallet.amountUsd.toFixed(2)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-
-          {savingType === "package" && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Paquete</label>
-              <Select value={selectedHome} onValueChange={setSelectedHome}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una alcancía específica activa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {packageWalletOptions.map((wallet) => (
-                    <SelectItem key={wallet.id} value={wallet.id}>
-                      {wallet.title} · USD ${wallet.amountUsd.toFixed(2)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">Monto a agregar (USD)</label>
@@ -320,29 +291,23 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
             <p className="text-xs text-gray-500">Por defecto es hoy. Puedes elegir una fecha anterior para cargar depósitos históricos.</p>
           </div>
 
-          {selectedUser && (savingType === "general" || selectedHome) && (
+          {selectedUser && selectedWallet && (
             <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-              {existingWallet ? (
-                <>
-                  <p className="font-medium">Saldo actual de la alcancía:</p>
-                  <p>
-                    Bs. {Number(existingWallet.amountBs).toLocaleString("es-VE", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                    {" "}
-                    | USD ${Number(existingWallet.amountUsd).toFixed(2)}
-                  </p>
-                </>
-              ) : (
-                <p className="font-medium">No existe alcancía específica activa para esta selección. Solo puedes abonar a la general o a una específica existente.</p>
-              )}
+              <p className="font-medium">Saldo actual de la alcancía:</p>
+              <p>
+                Bs. {Number(selectedWallet.amountBs).toLocaleString("es-VE", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+                {" "}
+                | USD ${Number(selectedWallet.amountUsd).toFixed(2)}
+              </p>
             </div>
           )}
 
-          {savingType === "package" && selectedUser && packageWalletOptions.length === 0 && (
+          {selectedUser && walletOptions.length === 0 && (
             <p className="text-xs text-amber-700">
-              Este usuario no tiene alcancías específicas activas para abonar. Puedes abonar únicamente a la alcancía general.
+              Este usuario no tiene alcancías existentes para abonar.
             </p>
           )}
 

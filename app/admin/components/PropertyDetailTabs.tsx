@@ -11,6 +11,7 @@ type ReservationItem = {
   endDate: string | Date;
   nights: number;
   PackageSeat?: {
+    id?: string | null;
     zone?: string | null;
     row?: number | null;
     column?: string | null;
@@ -50,6 +51,7 @@ type SeatItem = {
   row: number;
   column: string;
   status: string;
+  occupancySource?: "reservation" | "saving" | null;
   occupant?: {
     firstName?: string | null;
     lastName?: string | null;
@@ -104,6 +106,31 @@ function getSeatLabelFromReservation(reservation: ReservationItem) {
   return baseSeat || zone || "Sin asiento";
 }
 
+function getPlanLabelFromReservation(reservation: ReservationItem) {
+  const rawPlan = (reservation as any).plan;
+  if (rawPlan) {
+    const p = String(rawPlan).toLowerCase();
+    return p === "vip" || p === "v" ? "VIP" : "Estándar";
+  }
+
+  if (reservation.PackageSeat?.zone) {
+    return reservation.PackageSeat.zone.toUpperCase() === "VIP" ? "VIP" : "Estándar";
+  }
+
+  return "Sin plan";
+}
+
+function getSeatLabelFromSeat(seat: SeatItem) {
+  const zone = seat.zone === "VIP" ? "VIP" : seat.zone === "STANDARD" ? "ESTANDAR" : "";
+  const baseSeat = `${seat.row}${seat.column}`.trim();
+  if (zone && baseSeat) return `${zone} ${baseSeat}`;
+  return baseSeat || zone || "Sin asiento";
+}
+
+function getPlanLabelFromSeat(seat: SeatItem) {
+  return seat.zone === "VIP" ? "VIP" : "Estándar";
+}
+
 function formatDepartureDateTime(value?: string | null) {
   if (!value) return "No configurada";
 
@@ -135,10 +162,20 @@ export default function PropertyDetailTabs({
   const [cedulaInput, setCedulaInput] = useState("");
   const [selectedUser, setSelectedUser] = useState<LookupUser | null>(null);
   const [findingUser, setFindingUser] = useState(false);
+  const [reservationMode, setReservationMode] = useState<"cash" | "saving">("cash");
 
   const [plan, setPlan] = useState<"vip" | "estandar">("estandar");
   const [selectedSeatId, setSelectedSeatId] = useState<string>("");
   const [guests, setGuests] = useState("1");
+  const todayIso = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }, []);
+  const [savingStartedAt, setSavingStartedAt] = useState(todayIso);
+  const [savingDepositUsd, setSavingDepositUsd] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [emisorBank, setEmisorBank] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -150,6 +187,19 @@ export default function PropertyDetailTabs({
   const parsedGuests = Number.parseInt(guests, 10);
   const guestsCount = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 1;
   const totalAmount = selectedPlanPrice * guestsCount;
+  const parsedSavingDepositUsd = Number(savingDepositUsd);
+  const hasValidSavingInput =
+    reservationMode !== "saving" ||
+    (Number.isFinite(parsedSavingDepositUsd) &&
+      parsedSavingDepositUsd > 0 &&
+      parsedSavingDepositUsd < totalAmount &&
+      Boolean(savingStartedAt));
+  const seatSelectionLockedReason = !selectedUser
+    ? "Busca y selecciona un usuario por cédula antes de elegir asiento."
+    : !hasValidSavingInput
+    ? "Completa primero el monto y la fecha de abono para iniciar el ahorro."
+    : "";
+  const canSelectSeat = !seatSelectionLockedReason;
 
   const selectableSeats = useMemo(
     () =>
@@ -210,6 +260,23 @@ export default function PropertyDetailTabs({
       return;
     }
 
+    if (reservationMode === "saving") {
+      if (!Number.isFinite(parsedSavingDepositUsd) || parsedSavingDepositUsd <= 0) {
+        alert("Debes indicar un monto de abono válido en USD");
+        return;
+      }
+
+      if (parsedSavingDepositUsd >= totalAmount) {
+        alert("El abono inicial debe ser menor al monto total. Si ya está completo, usa Pagar de contado.");
+        return;
+      }
+
+      if (!savingStartedAt) {
+        alert("Debes indicar la fecha de inicio del ahorro");
+        return;
+      }
+    }
+
     setSubmittingSale(true);
     try {
       const response = await fetch(`/api/admin/properties/${propertyId}/manual-reservation`, {
@@ -220,6 +287,9 @@ export default function PropertyDetailTabs({
           seatId: selectedSeatId,
           plan,
           guests: guestsCount,
+          reservationMode,
+          savingDepositUsd: reservationMode === "saving" ? parsedSavingDepositUsd : null,
+          savingStartedAt: reservationMode === "saving" ? savingStartedAt : null,
           phoneNumber,
           emisorBank,
           referenceNumber,
@@ -234,10 +304,16 @@ export default function PropertyDetailTabs({
         throw new Error(data?.error || "No se pudo crear la reserva manual");
       }
 
-      alert("Reserva manual creada correctamente");
+      alert(
+        reservationMode === "saving"
+          ? "Ahorro específico creado y abono acreditado correctamente"
+          : "Reserva manual creada correctamente"
+      );
       setSelectedSeatId("");
       setObservations("");
       setReferenceNumber("");
+      setSavingDepositUsd("");
+      setSavingStartedAt(todayIso);
       router.refresh();
     } catch (error) {
       console.error("Error creando reserva manual:", error);
@@ -318,36 +394,38 @@ export default function PropertyDetailTabs({
       const lastY = (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY || 0;
       const paidTableStartY = lastY + 24;
 
+      const confirmedReservationBySeatId = new Map<string, ReservationItem>();
+      for (const reservation of confirmedReservations) {
+        const seatId = reservation.PackageSeat?.id;
+        if (seatId) confirmedReservationBySeatId.set(seatId, reservation);
+      }
+
+      const assignedSeats = seats.filter((seat) => seat.status === "OCCUPIED" && Boolean(seat.occupant));
+
       doc.setFontSize(12);
-      doc.text("Usuarios que Pagaron (asiento asignado)", 40, paidTableStartY);
+      doc.text("Asientos Asignados (pagados o en ahorro)", 40, paidTableStartY);
 
       autoTable(doc, {
         startY: paidTableStartY + 8,
-        head: [["Usuario", "Email", "Asiento", "Metodo", "Monto USD", "Plan"]],
+        head: [["Usuario", "Email", "Asiento", "Estado", "Metodo", "Monto USD", "Plan"]],
         body:
-          confirmedReservations.length > 0
-            ? confirmedReservations.map((reservation) => {
-                const payment = reservation.Payment;
-                // Determinar etiqueta del plan: prioridad a reservation.plan, luego zona del asiento
-                const rawPlan = (reservation as any).plan;
-                let planLabel = "-";
-                if (rawPlan) {
-                  const p = String(rawPlan).toLowerCase();
-                  planLabel = p === "vip" || p === "v" ? "VIP" : "Estándar";
-                } else if (reservation.PackageSeat?.zone) {
-                  planLabel = reservation.PackageSeat.zone.toUpperCase() === "VIP" ? "VIP" : "Estándar";
-                }
+          assignedSeats.length > 0
+            ? assignedSeats.map((seat) => {
+                const matchedReservation = confirmedReservationBySeatId.get(seat.id);
+                const payment = matchedReservation?.Payment;
+                const isPaid = seat.occupancySource === "reservation";
 
                 return [
-                  `${reservation.User?.firstName || ""} ${reservation.User?.lastName || ""}`.trim() || "Sin nombre",
-                  reservation.User?.email || "-",
-                  getSeatLabelFromReservation(reservation),
+                  `${seat.occupant?.firstName || ""} ${seat.occupant?.lastName || ""}`.trim() || "Sin nombre",
+                  seat.occupant?.email || "-",
+                  getSeatLabelFromSeat(seat),
+                  isPaid ? "Pagado / Confirmado" : "Apartado en ahorro",
                   payment ? getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails) : "-",
                   payment ? `$${payment.amount.toFixed(2)}` : "-",
-                  planLabel,
+                  matchedReservation ? getPlanLabelFromReservation(matchedReservation) : getPlanLabelFromSeat(seat),
                 ];
               })
-            : [["Sin registros", "-", "-", "-", "-", "-"]],
+            : [["Sin registros", "-", "-", "-", "-", "-", "-"]],
         theme: "grid",
         styles: { fontSize: 9, cellPadding: 5 },
         headStyles: { fillColor: [22, 163, 74] },
@@ -432,7 +510,7 @@ export default function PropertyDetailTabs({
                           {new Date(reservation.endDate).toLocaleDateString("es-ES")}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {reservation.nights} {reservation.nights === 1 ? "noche" : "noches"}
+                          Asiento: {getSeatLabelFromReservation(reservation)} · Plan: {getPlanLabelFromReservation(reservation)}
                         </p>
                       </div>
                     </div>
@@ -541,6 +619,26 @@ export default function PropertyDetailTabs({
             )}
           </div>
 
+          <div className="rounded-lg border border-gray-200 p-4">
+            <h4 className="mb-3 text-sm font-semibold text-gray-900">Tipo de operación</h4>
+            <div className="rounded-md border border-gray-200 bg-white p-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={reservationMode === "saving"}
+                  onChange={(e) => {
+                    setReservationMode(e.target.checked ? "saving" : "cash");
+                    setSelectedSeatId("");
+                  }}
+                />
+                Ahorrar
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Estado actual: <span className="font-medium">{reservationMode === "saving" ? "Ahorrar" : "Pagar de contado"}</span>. Por defecto es pagar de contado.
+            </p>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">Tipo de Cupo</label>
@@ -568,6 +666,45 @@ export default function PropertyDetailTabs({
             </div>
           </div>
 
+          <div className="grid gap-3 rounded-md bg-gray-50 p-3 text-sm text-gray-700 md:grid-cols-2 md:items-end">
+            <div>
+              Monto estimado: <span className="font-semibold">${totalAmount.toFixed(2)}</span>
+            </div>
+            {reservationMode === "saving" && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Monto del abono (USD)</label>
+                  <input
+                    type="number"
+                    min={0.01}
+                    max={Math.max(totalAmount - 0.01, 0.01)}
+                    step="0.01"
+                    value={savingDepositUsd}
+                    onChange={(e) => {
+                      setSavingDepositUsd(e.target.value);
+                      setSelectedSeatId("");
+                    }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Ej: 25.00"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">Fecha de inicio / abono</label>
+                  <input
+                    type="date"
+                    value={savingStartedAt}
+                    max={todayIso}
+                    onChange={(e) => {
+                      setSavingStartedAt(e.target.value);
+                      setSelectedSeatId("");
+                    }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="rounded-lg border border-gray-200 p-4">
             <div className="mb-3 flex items-center justify-between">
               <h4 className="text-sm font-semibold text-gray-900">Selecciona Asiento</h4>
@@ -575,24 +712,35 @@ export default function PropertyDetailTabs({
                 Disponibles para {plan === "vip" ? "Premium" : "Estandar"}: {selectableSeats.length}
               </p>
             </div>
+            {!canSelectSeat && (
+              <p className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                {seatSelectionLockedReason}
+              </p>
+            )}
             {seats.length > 0 ? (
               <>
-                <SeatMap
-                  seats={seatMapForReserve as Seat[]}
-                  selectedSeatId={selectedSeatId}
-                  onSelectSeat={(seat) => {
-                    if (seat.status !== "AVAILABLE") return;
-                    if (plan === "vip" && seat.zone !== "VIP") {
-                      alert("Selecciona un asiento de zona Premium");
-                      return;
-                    }
-                    if (plan === "estandar" && seat.zone !== "STANDARD") {
-                      alert("Selecciona un asiento de zona Estandar");
-                      return;
-                    }
-                    setSelectedSeatId(seat.id);
-                  }}
-                />
+                <div className={!canSelectSeat ? "pointer-events-none opacity-60" : ""}>
+                  <SeatMap
+                    seats={seatMapForReserve as Seat[]}
+                    selectedSeatId={selectedSeatId}
+                    onSelectSeat={(seat) => {
+                      if (!canSelectSeat) {
+                        alert(seatSelectionLockedReason);
+                        return;
+                      }
+                      if (seat.status !== "AVAILABLE") return;
+                      if (plan === "vip" && seat.zone !== "VIP") {
+                        alert("Selecciona un asiento de zona Premium");
+                        return;
+                      }
+                      if (plan === "estandar" && seat.zone !== "STANDARD") {
+                        alert("Selecciona un asiento de zona Estandar");
+                        return;
+                      }
+                      setSelectedSeatId(seat.id);
+                    }}
+                  />
+                </div>
                 {selectedSeatId && (
                   <p className="mt-3 text-sm text-green-700">Asiento seleccionado correctamente.</p>
                 )}
@@ -651,16 +799,18 @@ export default function PropertyDetailTabs({
             />
           </div>
 
-          <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
-            Monto estimado: <span className="font-semibold">${totalAmount.toFixed(2)}</span>
-          </div>
-
           <button
             type="submit"
-            disabled={submittingSale || !selectedUser || !selectedSeatId}
+            disabled={submittingSale || !selectedUser || !selectedSeatId || !canSelectSeat}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
           >
-            {submittingSale ? "Registrando reserva..." : "Registrar Reserva Manual"}
+            {submittingSale
+              ? reservationMode === "saving"
+                ? "Registrando ahorro..."
+                : "Registrando reserva..."
+              : reservationMode === "saving"
+              ? "Registrar ahorro específico"
+              : "Registrar Reserva Manual"}
           </button>
         </form>
       )}

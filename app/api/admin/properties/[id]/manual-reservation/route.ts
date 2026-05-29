@@ -4,6 +4,10 @@ import prisma from "@/app/lib/db";
 
 export const dynamic = "force-dynamic";
 
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 function normalizeCedulaValue(cedula?: string | null) {
   return (cedula || "").trim().toUpperCase();
 }
@@ -49,6 +53,10 @@ export async function POST(
     const seatId = typeof body?.seatId === "string" ? body.seatId.trim() : "";
     const plan = body?.plan === "vip" ? "vip" : "estandar";
     const guests = Number(body?.guests ?? 1);
+    const reservationMode = body?.reservationMode === "saving" ? "saving" : "cash";
+    const savingDepositUsd = Number(body?.savingDepositUsd ?? 0);
+    const savingStartedAtRaw =
+      typeof body?.savingStartedAt === "string" ? body.savingStartedAt.trim() : "";
 
     const phoneNumber = typeof body?.phoneNumber === "string" ? body.phoneNumber.trim() : "";
     const emisorBank = typeof body?.emisorBank === "string" ? body.emisorBank.trim() : "";
@@ -68,6 +76,22 @@ export async function POST(
 
     if (!Number.isInteger(guests) || guests <= 0) {
       return NextResponse.json({ error: "Cantidad de cupos inválida" }, { status: 400 });
+    }
+
+    if (reservationMode === "saving") {
+      if (!Number.isFinite(savingDepositUsd) || savingDepositUsd <= 0) {
+        return NextResponse.json(
+          { error: "Debes indicar un monto de abono válido" },
+          { status: 400 }
+        );
+      }
+
+      if (!savingStartedAtRaw) {
+        return NextResponse.json(
+          { error: "Debes indicar la fecha de inicio del ahorro" },
+          { status: 400 }
+        );
+      }
     }
 
     if (!phoneNumber || !emisorBank || !referenceNumber || !payerCedula) {
@@ -155,6 +179,162 @@ export async function POST(
     endDate.setDate(endDate.getDate() + 1);
 
     const totalAmount = Number((unitPrice * guests).toFixed(2));
+
+    if (reservationMode === "saving") {
+      if (savingDepositUsd >= totalAmount) {
+        return NextResponse.json(
+          {
+            error:
+              "El abono inicial debe ser menor al monto total. Si ya tienes el total, usa Pagar de contado.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const savingDate = safeDate(`${savingStartedAtRaw}T12:00:00`);
+      if (!savingDate) {
+        return NextResponse.json({ error: "Fecha de abono inválida" }, { status: 400 });
+      }
+
+      const existingPaidReservation = await (prisma as any).reservation.findFirst({
+        where: {
+          userId: targetUser.id,
+          homeId,
+          status: { in: ["CONFIRMED", "COMPLETED"] },
+        },
+        select: { id: true },
+      });
+
+      if (existingPaidReservation) {
+        return NextResponse.json(
+          { error: "Este usuario ya tiene una reserva confirmada para este paquete" },
+          { status: 409 }
+        );
+      }
+
+      const config = await (prisma as any).platformConfig.findFirst({
+        select: { bcvRate: true },
+      });
+      const bcvRate = Number(config?.bcvRate ?? 0);
+      if (!bcvRate || bcvRate <= 0) {
+        return NextResponse.json({ error: "Tasa BCV no disponible" }, { status: 400 });
+      }
+
+      const approvedDeposits = await (prisma as any).saving.findMany({
+        where: {
+          userId: targetUser.id,
+          status: "APPROVED",
+          amountUsd: { gt: 0 },
+        },
+        select: { amountUsd: true, paymentDetails: true },
+      });
+
+      const approvedPackageUsd = roundMoney(
+        approvedDeposits.reduce((sum: number, row: any) => {
+          const details = row.paymentDetails && typeof row.paymentDetails === "object"
+            ? (row.paymentDetails as Record<string, any>)
+            : {};
+          const rowHomeId = typeof details.homeId === "string" ? details.homeId : null;
+          if (rowHomeId !== homeId) return sum;
+          return sum + Number(row.amountUsd ?? 0);
+        }, 0)
+      );
+
+      const remainingUsd = roundMoney(Math.max(totalAmount - approvedPackageUsd, 0));
+      if (remainingUsd <= 0) {
+        return NextResponse.json(
+          {
+            error:
+              "Este usuario ya completó el ahorro para este paquete. Usa pago de contado o revisa su reserva.",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (savingDepositUsd > remainingUsd) {
+        return NextResponse.json(
+          {
+            error: `El abono supera el saldo pendiente (${remainingUsd.toFixed(2)} USD).`,
+          },
+          { status: 400 }
+        );
+      }
+
+      const depositUsd = roundMoney(savingDepositUsd);
+      const depositBs = roundMoney(depositUsd * bcvRate);
+
+      const result = await (prisma as any).$transaction(async (tx: any) => {
+        const seatCheck = await tx.packageSeat.findUnique({
+          where: { id: seatId },
+          select: { status: true, homeId: true },
+        });
+
+        if (!seatCheck || seatCheck.homeId !== homeId) {
+          throw new Error("Asiento no válido para este paquete");
+        }
+
+        if (seatCheck.status === "OCCUPIED") {
+          throw new Error("El asiento fue ocupado por otro usuario");
+        }
+
+        const updatedSeat = await tx.packageSeat.updateMany({
+          where: { id: seatId, homeId, status: "AVAILABLE" },
+          data: { status: "OCCUPIED" },
+        });
+
+        if (updatedSeat.count !== 1) {
+          throw new Error("El asiento fue ocupado por otro usuario");
+        }
+
+        const saving = await tx.saving.create({
+          data: {
+            userId: targetUser.id,
+            amountUsd: depositUsd,
+            amountBs: depositBs,
+            bcvRate,
+            status: "APPROVED",
+            date: savingDate,
+            paymentDetails: {
+              kind: "PACKAGE_SAVING_DEPOSIT",
+              createdByAdmin: true,
+              approvedBySystem: true,
+              approvedAt: new Date().toISOString(),
+              soldByAdminId: user.id,
+              soldAt: new Date().toISOString(),
+              homeId,
+              homeTitle: home.title,
+              plan,
+              guests,
+              seatId,
+              seatIds: [seatId],
+              amountUsd: depositUsd,
+              amountBs: depositBs,
+              phoneNumber,
+              emisorBank,
+              referenceNumber,
+              payerCedula,
+              adminObservations: observations || null,
+              startedSavingAt: savingDate.toISOString(),
+              startedFromAdminReserveTab: true,
+            },
+          },
+        });
+
+        return { saving };
+      });
+
+      return NextResponse.json({
+        success: true,
+        mode: "saving",
+        savingId: result.saving.id,
+        user: {
+          id: targetUser.id,
+          firstName: targetUser.firstName,
+          email: targetUser.email,
+          cedula: targetUser.cedula,
+        },
+      });
+    }
 
     const result = await (prisma as any).$transaction(async (tx: any) => {
       const seatCheck = await tx.packageSeat.findUnique({
