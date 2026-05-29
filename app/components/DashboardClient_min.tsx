@@ -614,7 +614,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       targetId: null as string | null,
     },
     ...Array.from(packageSavingsMap.entries())
-      .filter(([targetId]) => !completedPackageIds.has(targetId))
+      .filter(([targetId, wallet]) => !completedPackageIds.has(targetId) && roundMoney(wallet.totalUsd) > 0)
       .map(([targetId, wallet]) => ({
         key: targetId,
         title: wallet.title,
