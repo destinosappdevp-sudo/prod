@@ -72,7 +72,6 @@ async function getProperty(id: string) {
             select: {
               id: true,
               firstName: true,
-              lastName: true,
               email: true,
             },
           },
@@ -129,7 +128,6 @@ export default async function PropertyDetailPage({
       User: {
         select: {
           firstName: true,
-          lastName: true,
           email: true,
         },
       },
@@ -270,7 +268,6 @@ export default async function PropertyDetailPage({
         createdAt: new Date(saving.createdAt),
         User: {
           firstName: saving.User?.firstName,
-          lastName: saving.User?.lastName,
           email: saving.User?.email,
         },
       });
@@ -304,7 +301,6 @@ export default async function PropertyDetailPage({
       User: {
         select: {
           firstName: true,
-          lastName: true,
           email: true,
         },
       },
@@ -342,7 +338,6 @@ export default async function PropertyDetailPage({
         seatOwnerBySeatId.set(seatId, {
           createdAt: new Date(saving.createdAt),
           firstName: saving.User?.firstName,
-          lastName: saving.User?.lastName,
           email: saving.User?.email,
         });
       }
@@ -359,7 +354,6 @@ export default async function PropertyDetailPage({
           User: {
             select: {
               firstName: true,
-              lastName: true,
               email: true,
             },
           },
@@ -372,7 +366,6 @@ export default async function PropertyDetailPage({
     const reservationOccupant = seat.Reservation?.User
       ? {
           firstName: seat.Reservation.User.firstName,
-          lastName: seat.Reservation.User.lastName,
           email: seat.Reservation.User.email,
         }
       : null;
@@ -380,7 +373,6 @@ export default async function PropertyDetailPage({
     const savingOccupant = savingOwner
       ? {
           firstName: savingOwner.firstName,
-          lastName: savingOwner.lastName,
           email: savingOwner.email,
         }
       : null;
