@@ -31,6 +31,11 @@ type ReservationItem = {
 type SavingItem = {
   id: string;
   amountUsd: number;
+  remainingUsd: number;
+  targetUsd?: number;
+  guestsCount?: number;
+  plan?: "vip" | "estandar" | null;
+  planInferred?: boolean;
   createdAt: string | Date;
   User?: {
     firstName?: string | null;
@@ -294,16 +299,17 @@ export default function PropertyDetailTabs({
 
       autoTable(doc, {
         startY: currentY + 8,
-        head: [["Usuario", "Email", "Monto USD", "Fecha"]],
+        head: [["Usuario", "Email", "Plan", "Ahorrado USD", "Saldo Restante USD"]],
         body:
           savings.length > 0
             ? savings.map((saving) => [
                 `${saving.User?.firstName || ""} ${saving.User?.lastName || ""}`.trim() || "Sin nombre",
                 saving.User?.email || "-",
+                `${saving.plan === "vip" ? "VIP" : "Estándar"}${saving.planInferred ? " (inferido)" : ""}`,
                 `$${saving.amountUsd.toFixed(2)}`,
-                new Date(saving.createdAt).toLocaleDateString("es-ES"),
+                `$${saving.remainingUsd.toFixed(2)}`,
               ])
-            : [["Sin registros", "-", "-", "-"]],
+            : [["Sin registros", "-", "-", "-", "-"]],
         theme: "grid",
         styles: { fontSize: 9, cellPadding: 5 },
         headStyles: { fillColor: [37, 99, 235] },
@@ -477,11 +483,12 @@ export default function PropertyDetailTabs({
                     <p className="text-sm text-gray-600">{saving.User?.email}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-green-700">
-                      ${saving.amountUsd.toFixed(2)}
-                    </p>
+                    <p className="text-sm font-semibold text-green-700">Ahorrado: ${saving.amountUsd.toFixed(2)}</p>
+                    <p className="text-xs font-medium text-amber-700">Saldo restante: ${saving.remainingUsd.toFixed(2)}</p>
                     <p className="text-xs text-gray-500">
-                      {new Date(saving.createdAt).toLocaleDateString("es-ES")}
+                      Plan: {saving.plan === "vip" ? "VIP" : "Estándar"}
+                      {saving.guestsCount && saving.guestsCount > 1 ? ` · ${saving.guestsCount} cupos` : ""}
+                      {saving.planInferred ? " · inferido" : ""}
                     </p>
                   </div>
                 </div>

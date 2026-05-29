@@ -8,6 +8,7 @@ export type Seat = {
   column: string;
   status: "AVAILABLE" | "OCCUPIED" | string;
   occupant?: { firstName?: string; lastName?: string; email?: string } | null;
+  occupancySource?: "reservation" | "saving" | null;
   isSelected?: boolean;
 };
 
@@ -33,8 +34,17 @@ const getSeatContent = (seat: Seat) => {
 };
 
 const getSeatTitle = (seat: Seat) => {
-  if (seat.status === "OCCUPIED" && seat.occupant)
-    return `${seat.occupant.firstName || ""} ${seat.occupant.lastName || ""} (${seat.occupant.email || ""})`;
+  if (seat.status === "OCCUPIED" && seat.occupant) {
+    const owner = `${seat.occupant.firstName || ""} ${seat.occupant.lastName || ""}`.trim() || "Sin nombre";
+    const email = seat.occupant.email || "sin email";
+    const sourceLabel =
+      seat.occupancySource === "reservation"
+        ? "Reserva confirmada"
+        : seat.occupancySource === "saving"
+        ? "Apartado por ahorro"
+        : "Ocupado";
+    return `${owner} (${email}) - ${sourceLabel}`;
+  }
   return undefined;
 };
 

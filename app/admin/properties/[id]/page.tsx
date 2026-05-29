@@ -70,7 +70,9 @@ async function getProperty(id: string) {
         include: {
           User: {
             select: {
+              id: true,
               firstName: true,
+              lastName: true,
               email: true,
             },
           },
@@ -102,8 +104,15 @@ export default async function PropertyDetailPage({
   const { id } = await params;
   const property = await getProperty(id);
 
-  // Obtener reservas confirmadas
-  const confirmedReservations = property.Reservation.filter((r: any) => r.Payment?.status === "CONFIRMED" && r.status === "CONFIRMED");
+  // Una reserva confirmada es un paquete pagado (pago confirmado).
+  const confirmedReservations = property.Reservation.filter(
+    (r: any) => r.Payment?.status === "CONFIRMED"
+  );
+  const confirmedReservationUserIds = new Set(
+    confirmedReservations
+      .map((r: any) => r.User?.id)
+      .filter((userId: string | undefined): userId is string => Boolean(userId))
+  );
 
   // Obtener usuarios ahorrando para este paquete
   const allSavings = await prismaAny.saving.findMany({
@@ -120,19 +129,225 @@ export default async function PropertyDetailPage({
       User: {
         select: {
           firstName: true,
+          lastName: true,
           email: true,
         },
       },
     },
   });
 
-  // Filtrar en memoria por homeId dentro de paymentDetails
-  const savings = allSavings.filter((s: any) => {
-    const details = s.paymentDetails && typeof s.paymentDetails === "object"
-      ? s.paymentDetails
-      : {};
-    return details.homeId === property.id;
+  // Agrupar por usuario para evitar duplicados por múltiples depósitos.
+  // Además, excluir usuarios con reserva pagada/confirmada y los que ya completaron el monto.
+  const savingsByUser = new Map<
+    string,
+    {
+      id: string;
+      userId: string;
+      plan: "vip" | "estandar" | null;
+      planInferred: boolean;
+      guestsCount: number;
+      targetUsd: number;
+      amountUsd: number;
+      remainingUsd: number;
+      createdAt: Date;
+      User: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+      };
+    }
+  >();
+
+  const savingsRows: Array<{
+    saving: any;
+    details: Record<string, any>;
+    detailsPlan: "vip" | "estandar" | null;
+    detailsGuests: number;
+    detailsSeatIds: string[];
+  }> = [];
+  const seatIdsToResolve = new Set<string>();
+
+  for (const saving of allSavings) {
+    const details =
+      saving.paymentDetails && typeof saving.paymentDetails === "object"
+        ? (saving.paymentDetails as Record<string, any>)
+        : {};
+
+    if (details.homeId !== property.id) continue;
+    if (!saving.userId) continue;
+    if (confirmedReservationUserIds.has(saving.userId)) continue;
+
+    const detailsPlanRaw = typeof details.plan === "string" ? details.plan.trim().toLowerCase() : null;
+    const detailsPlan: "vip" | "estandar" | null =
+      detailsPlanRaw === "vip" ? "vip" : detailsPlanRaw === "estandar" ? "estandar" : null;
+    const detailsSeatIds = Array.isArray(details.seatIds)
+      ? details.seatIds
+          .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+          .filter(Boolean)
+      : typeof details.seatId === "string" && details.seatId.trim()
+      ? [details.seatId.trim()]
+      : [];
+    for (const seatId of detailsSeatIds) {
+      seatIdsToResolve.add(seatId);
+    }
+    const detailsGuests =
+      typeof details.guests === "number" && details.guests > 0
+        ? details.guests
+        : detailsSeatIds.length > 0
+        ? detailsSeatIds.length
+        : 1;
+
+    savingsRows.push({
+      saving,
+      details,
+      detailsPlan,
+      detailsGuests,
+      detailsSeatIds,
+    });
+  }
+
+  const seatZoneById = new Map<string, "VIP" | "STANDARD">();
+  if (seatIdsToResolve.size > 0) {
+    const seatRows = await prismaAny.packageSeat.findMany({
+      where: {
+        homeId: property.id,
+        id: { in: Array.from(seatIdsToResolve) },
+      },
+      select: {
+        id: true,
+        zone: true,
+      },
+    });
+    for (const seat of seatRows) {
+      if (seat.zone === "VIP" || seat.zone === "STANDARD") {
+        seatZoneById.set(seat.id, seat.zone);
+      }
+    }
+  }
+
+  for (const row of savingsRows) {
+    const { saving, detailsPlan, detailsGuests, detailsSeatIds } = row;
+
+    const resolvedPlanFromSeats = detailsSeatIds
+      .map((seatId) => seatZoneById.get(seatId))
+      .find((zone) => zone === "VIP" || zone === "STANDARD");
+    const inferredPlan: "vip" | "estandar" | null =
+      resolvedPlanFromSeats === "VIP"
+        ? "vip"
+        : resolvedPlanFromSeats === "STANDARD"
+        ? "estandar"
+        : null;
+    const resolvedPlan = detailsPlan || inferredPlan;
+    const planInferred = !detailsPlan && Boolean(inferredPlan);
+
+    const existing = savingsByUser.get(saving.userId);
+    if (existing) {
+      existing.amountUsd += Number(saving.amountUsd || 0);
+      existing.guestsCount = Math.max(existing.guestsCount, detailsGuests);
+      if (resolvedPlan === "vip") {
+        existing.plan = "vip";
+        existing.planInferred = planInferred;
+      } else if (!existing.plan && resolvedPlan === "estandar") {
+        existing.plan = "estandar";
+        existing.planInferred = planInferred;
+      } else if (existing.plan === resolvedPlan && existing.planInferred && !planInferred) {
+        // Si luego llega un depósito con plan explícito, quitar la marca de inferido.
+        existing.planInferred = false;
+      }
+      if (new Date(saving.createdAt) > existing.createdAt) {
+        existing.createdAt = new Date(saving.createdAt);
+      }
+    } else {
+      savingsByUser.set(saving.userId, {
+        id: saving.userId,
+        userId: saving.userId,
+        plan: resolvedPlan,
+        planInferred,
+        guestsCount: detailsGuests,
+        targetUsd: 0,
+        amountUsd: Number(saving.amountUsd || 0),
+        remainingUsd: 0,
+        createdAt: new Date(saving.createdAt),
+        User: {
+          firstName: saving.User?.firstName,
+          lastName: saving.User?.lastName,
+          email: saving.User?.email,
+        },
+      });
+    }
+  }
+
+  const packageStandardPrice = Number(property.price || 0);
+  const packageVipPrice = Number(property.priceVip || 0);
+  const savings = Array.from(savingsByUser.values())
+    .map((entry) => {
+      const unitPrice =
+        entry.plan === "vip" && packageVipPrice > 0 ? packageVipPrice : packageStandardPrice;
+      const guestsCount = Math.max(entry.guestsCount || 1, 1);
+      const targetUsd = Number((unitPrice * guestsCount).toFixed(2));
+      const remainingUsd = Math.max(targetUsd - entry.amountUsd, 0);
+      return { ...entry, guestsCount, targetUsd, remainingUsd };
+    })
+    .filter((entry) => entry.remainingUsd > 0)
+    .sort((a, b) => b.amountUsd - a.amountUsd);
+
+  // Obtener dueños de asientos apartados por ahorros activos (pendientes o aprobados).
+  const activeSeatSavings = await prismaAny.saving.findMany({
+    where: {
+      status: { in: ["PENDING", "APPROVED"] },
+      amountUsd: { gt: 0 },
+    },
+    select: {
+      id: true,
+      createdAt: true,
+      paymentDetails: true,
+      User: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+    },
   });
+
+  const seatOwnerBySeatId = new Map<
+    string,
+    {
+      createdAt: Date;
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+    }
+  >();
+
+  for (const saving of activeSeatSavings) {
+    const details =
+      saving.paymentDetails && typeof saving.paymentDetails === "object"
+        ? (saving.paymentDetails as Record<string, any>)
+        : {};
+    if (details.homeId !== property.id) continue;
+
+    const savingSeatIds = Array.isArray(details.seatIds)
+      ? details.seatIds
+          .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+          .filter(Boolean)
+      : typeof details.seatId === "string" && details.seatId.trim()
+      ? [details.seatId.trim()]
+      : [];
+
+    for (const seatId of savingSeatIds) {
+      const existing = seatOwnerBySeatId.get(seatId);
+      if (!existing || new Date(saving.createdAt) > existing.createdAt) {
+        seatOwnerBySeatId.set(seatId, {
+          createdAt: new Date(saving.createdAt),
+          firstName: saving.User?.firstName,
+          lastName: saving.User?.lastName,
+          email: saving.User?.email,
+        });
+      }
+    }
+  }
 
   // Obtener asientos del paquete con ocupante (si aplica)
   const rawSeats = await prismaAny.packageSeat.findMany({
@@ -144,6 +359,7 @@ export default async function PropertyDetailPage({
           User: {
             select: {
               firstName: true,
+              lastName: true,
               email: true,
             },
           },
@@ -152,20 +368,40 @@ export default async function PropertyDetailPage({
     },
   });
 
-  const seats = rawSeats.map((seat: any) => ({
-    id: seat.id,
-    zone: seat.zone,
-    row: seat.row,
-    column: seat.column,
-    status: seat.Reservation ? "OCCUPIED" : seat.status,
-    occupant: seat.Reservation?.User
+  const seats = rawSeats.map((seat: any) => {
+    const reservationOccupant = seat.Reservation?.User
       ? {
           firstName: seat.Reservation.User.firstName,
           lastName: seat.Reservation.User.lastName,
           email: seat.Reservation.User.email,
         }
-      : null,
-  }));
+      : null;
+    const savingOwner = seatOwnerBySeatId.get(seat.id);
+    const savingOccupant = savingOwner
+      ? {
+          firstName: savingOwner.firstName,
+          lastName: savingOwner.lastName,
+          email: savingOwner.email,
+        }
+      : null;
+    const occupant = reservationOccupant || savingOccupant;
+    const occupancySource = reservationOccupant
+      ? "reservation"
+      : savingOccupant
+      ? "saving"
+      : null;
+    const isOccupied = Boolean(seat.Reservation || savingOccupant || seat.status === "OCCUPIED");
+
+    return {
+      id: seat.id,
+      zone: seat.zone,
+      row: seat.row,
+      column: seat.column,
+      status: isOccupied ? "OCCUPIED" : "AVAILABLE",
+      occupant,
+      occupancySource,
+    };
+  });
   const amenityCategories = await prismaAny.amenityCategory.findMany({
     where: { isActive: true },
     orderBy: [{ order: "asc" }, { name: "asc" }],
