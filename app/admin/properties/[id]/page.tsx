@@ -103,9 +103,12 @@ export default async function PropertyDetailPage({
   const { id } = await params;
   const property = await getProperty(id);
 
-  // Una reserva confirmada es un paquete pagado (pago confirmado).
+  // Una reserva confirmada es un paquete pagado (pago confirmado) o con estatus final confirmado/completado.
   const confirmedReservations = property.Reservation.filter(
-    (r: any) => r.Payment?.status === "CONFIRMED"
+    (r: any) =>
+      r.Payment?.status === "CONFIRMED" ||
+      r.status === "CONFIRMED" ||
+      r.status === "COMPLETED"
   );
   const confirmedReservationUserIds = new Set(
     confirmedReservations
@@ -296,6 +299,7 @@ export default async function PropertyDetailPage({
     },
     select: {
       id: true,
+      userId: true,
       createdAt: true,
       paymentDetails: true,
       User: {
@@ -310,6 +314,7 @@ export default async function PropertyDetailPage({
   const seatOwnerBySeatId = new Map<
     string,
     {
+      userId: string;
       createdAt: Date;
       firstName?: string;
       lastName?: string;
@@ -336,6 +341,7 @@ export default async function PropertyDetailPage({
       const existing = seatOwnerBySeatId.get(seatId);
       if (!existing || new Date(saving.createdAt) > existing.createdAt) {
         seatOwnerBySeatId.set(seatId, {
+          userId: saving.userId,
           createdAt: new Date(saving.createdAt),
           firstName: saving.User?.firstName,
           email: saving.User?.email,
@@ -363,6 +369,11 @@ export default async function PropertyDetailPage({
   });
 
   const seats = rawSeats.map((seat: any) => {
+    const reservationIsConfirmed =
+      seat.Reservation?.Payment?.status === "CONFIRMED" ||
+      seat.Reservation?.status === "CONFIRMED" ||
+      seat.Reservation?.status === "COMPLETED";
+
     const reservationOccupant = seat.Reservation?.User
       ? {
           firstName: seat.Reservation.User.firstName,
@@ -376,10 +387,15 @@ export default async function PropertyDetailPage({
           email: savingOwner.email,
         }
       : null;
+
+    const savingOwnerHasConfirmedReservation = Boolean(
+      savingOwner?.userId && confirmedReservationUserIds.has(savingOwner.userId)
+    );
+
     const occupant = reservationOccupant || savingOccupant;
-    const occupancySource = reservationOccupant
+    const occupancySource = reservationIsConfirmed || savingOwnerHasConfirmedReservation
       ? "reservation"
-      : savingOccupant
+      : occupant
       ? "saving"
       : null;
     const isOccupied = Boolean(seat.Reservation || savingOccupant || seat.status === "OCCUPIED");
