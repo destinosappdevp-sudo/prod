@@ -42,6 +42,15 @@ type WalletBalance = {
   amountUsd: number;
 };
 
+type WalletOption = {
+  id: string;
+  title: string;
+  amountUsd: number;
+  amountBs: number;
+  type: "general" | "package";
+  homeId: string | null;
+};
+
 type AddSavingDialogProps = {
   users: UserOption[];
   homes: HomeOption[];
@@ -92,11 +101,11 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
   }, [userQuery, sortedUsers]);
 
   const walletOptions = useMemo(() => {
-    if (!selectedUser) return [] as Array<{ id: string; title: string; amountUsd: number }>;
+    if (!selectedUser) return [] as WalletOption[];
 
     const homeTitleById = new Map(homes.map((home) => [home.id, home.title || "Paquete sin título"]));
     const seen = new Set<string>();
-    const options: Array<{ id: string; title: string; amountUsd: number; type: "general" | "package"; homeId: string | null }> = [];
+    const options: WalletOption[] = [];
 
     for (const wallet of walletBalances) {
       if (wallet.userId !== selectedUser) continue;
@@ -111,6 +120,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
             ? "Alcancía general"
             : wallet.homeTitle || (wallet.homeId ? homeTitleById.get(wallet.homeId) || "Paquete sin título" : "Paquete sin título"),
         amountUsd: Number(wallet.amountUsd ?? 0),
+        amountBs: Number(wallet.amountBs ?? 0),
         type: wallet.type,
         homeId: wallet.homeId,
       });
