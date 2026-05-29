@@ -102,6 +102,31 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
     }) || null;
   }, [walletBalances, selectedUser, savingType, selectedHome]);
 
+  const packageWalletOptions = useMemo(() => {
+    if (!selectedUser) return [] as Array<{ id: string; title: string; amountUsd: number }>;
+
+    const homeTitleById = new Map(homes.map((home) => [home.id, home.title || "Paquete sin título"]));
+    const seen = new Set<string>();
+    const options: Array<{ id: string; title: string; amountUsd: number }> = [];
+
+    for (const wallet of walletBalances) {
+      if (wallet.userId !== selectedUser) continue;
+      if (wallet.type !== "package") continue;
+      if (!wallet.homeId) continue;
+      if (Number(wallet.amountUsd ?? 0) <= 0) continue;
+      if (seen.has(wallet.homeId)) continue;
+
+      seen.add(wallet.homeId);
+      options.push({
+        id: wallet.homeId,
+        title: wallet.homeTitle || homeTitleById.get(wallet.homeId) || "Paquete sin título",
+        amountUsd: Number(wallet.amountUsd ?? 0),
+      });
+    }
+
+    return options.sort((a, b) => a.title.localeCompare(b.title, "es"));
+  }, [homes, selectedUser, walletBalances]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -113,6 +138,11 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
 
     if (savingType === "package" && !selectedHome) {
       setError("Debes seleccionar un paquete.");
+      return;
+    }
+
+    if (savingType === "package" && !existingWallet) {
+      setError("Solo puedes abonar a alcancías específicas existentes (activas).");
       return;
     }
 
@@ -150,7 +180,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "No se pudo crear la alcancía.");
+        setError(data.error || "No se pudo registrar el abono.");
         return;
       }
 
@@ -162,7 +192,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
       setDepositDate(todayIso);
       router.refresh();
     } catch {
-      setError("Ocurrió un error al crear la alcancía.");
+      setError("Ocurrió un error al registrar el abono.");
     } finally {
       setSubmitting(false);
     }
@@ -172,12 +202,12 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="bg-emerald-600 text-white hover:bg-emerald-700">
-          Crear/Editar Alcancía
+          Abonar a Alcancía
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Crear/Editar Alcancía</DialogTitle>
+          <DialogTitle>Abonar a Alcancía</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -210,6 +240,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                         onClick={() => {
                           setSelectedUser(user.id);
                           setUserQuery(`${user.cedula ? user.cedula + ' — ' : ''}${user.firstName}`);
+                          setSelectedHome("");
                           setShowUserDropdown(false);
                         }}
                         className="w-full text-left px-3 py-2 hover:bg-gray-100"
@@ -249,12 +280,12 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
               <label className="block text-sm font-medium text-gray-700">Paquete</label>
               <Select value={selectedHome} onValueChange={setSelectedHome}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un paquete" />
+                  <SelectValue placeholder="Selecciona una alcancía específica activa" />
                 </SelectTrigger>
                 <SelectContent>
-                  {homes.map((home) => (
-                    <SelectItem key={home.id} value={home.id}>
-                      {home.title || "Paquete sin título"}
+                  {packageWalletOptions.map((wallet) => (
+                    <SelectItem key={wallet.id} value={wallet.id}>
+                      {wallet.title} · USD ${wallet.amountUsd.toFixed(2)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -271,7 +302,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
               inputMode="decimal"
               value={initialAmountUsd}
               onChange={(event) => setInitialAmountUsd(event.target.value)}
-              placeholder="Ej: 50.00 (si ya existe, se suma)"
+              placeholder="Ej: 50.00"
               required
             />
             <p className="text-xs text-gray-500">El equivalente en Bs se calcula automáticamente con la tasa BCV vigente.</p>
@@ -304,9 +335,15 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                   </p>
                 </>
               ) : (
-                <p className="font-medium">No existe alcancía para esta selección. Se creará una nueva.</p>
+                <p className="font-medium">No existe alcancía específica activa para esta selección. Solo puedes abonar a la general o a una específica existente.</p>
               )}
             </div>
+          )}
+
+          {savingType === "package" && selectedUser && packageWalletOptions.length === 0 && (
+            <p className="text-xs text-amber-700">
+              Este usuario no tiene alcancías específicas activas para abonar. Puedes abonar únicamente a la alcancía general.
+            </p>
           )}
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}
@@ -322,11 +359,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
               disabled={submitting}
               className="bg-emerald-600 text-white hover:bg-emerald-700"
             >
-              {submitting
-                ? "Guardando..."
-                : existingWallet
-                ? "Agregar saldo"
-                : "Crear alcancía"}
+              {submitting ? "Abonando..." : "Abonar a alcancía"}
             </Button>
           </DialogFooter>
         </form>

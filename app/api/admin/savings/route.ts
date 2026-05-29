@@ -89,6 +89,13 @@ export async function POST(req: NextRequest) {
       return targetHomeId === homeId;
     });
 
+    if (type === "package" && !existingSaving) {
+      return NextResponse.json(
+        { error: "Solo puedes abonar a alcancías específicas existentes para este usuario." },
+        { status: 400 }
+      );
+    }
+
     let paymentDetails: Prisma.InputJsonValue = {
       createdByAdmin: true,
     };
@@ -180,8 +187,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ saving, mode: "created" });
   } catch (error) {
-    console.error("Error al crear alcancía desde admin:", error);
-    return NextResponse.json({ error: "Error al crear alcancía" }, { status: 500 });
+    console.error("Error al registrar abono desde admin:", error);
+    return NextResponse.json({ error: "Error al registrar el abono" }, { status: 500 });
   }
 }
 

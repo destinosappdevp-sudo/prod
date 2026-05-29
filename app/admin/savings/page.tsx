@@ -110,7 +110,7 @@ export default async function AdminSavingsPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Ahorros / Alcancía</h1>
-          <p className="mt-1 text-gray-600">Aprueba, rechaza o crea alcancías para usuarios registrados</p>
+          <p className="mt-1 text-gray-600">Aprueba, rechaza o registra abonos en alcancías de usuarios registrados</p>
         </div>
         <AddSavingDialog users={users} homes={homes} walletBalances={walletBalances} />
       </div>
