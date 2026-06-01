@@ -483,9 +483,29 @@ export default function DashboardClient(props: DashboardClientProps) {
         .map((s) => s.targetId as string)
     );
 
+    // homeIds donde los depósitos APROBADOS positivos ya cubren la meta del paquete,
+    // aunque no exista aún el registro CHECKOUT_DEBIT.
+    const positiveDepositsByHomeId = new Map<string, number>();
+    for (const s of savingsRows) {
+      if (!s.targetId) continue;
+      const usd = Number(s.amountUsd ?? 0);
+      if (usd > 0 && s.status === "APPROVED") {
+        const current = positiveDepositsByHomeId.get(s.targetId) ?? 0;
+        positiveDepositsByHomeId.set(s.targetId, roundMoney(current + usd));
+      }
+    }
+    const fullyFundedHomeIds = new Set<string>();
+    for (const [homeId, depositedUsd] of positiveDepositsByHomeId.entries()) {
+      const pkg = (props.savingPackages ?? []).find((p) => p.id === homeId) ?? null;
+      const goalUsd = getTargetGoalUsd(homeId, pkg);
+      if (goalUsd > 0 && depositedUsd >= goalUsd) {
+        fullyFundedHomeIds.add(homeId);
+      }
+    }
+
     const baseReservations: GuestReservationItem[] = (props.guestReservations ?? []).map((r) => ({
       ...r,
-      status: paidReservationIds.has(r.id)
+      status: paidReservationIds.has(r.id) || (r.homeId != null && fullyFundedHomeIds.has(r.homeId))
         ? "PAGADO"
         : r.status === "PENDING" && r.homeId && activeSavingHomeIds.has(r.homeId)
         ? "AHORRANDO"
@@ -1048,7 +1068,9 @@ export default function DashboardClient(props: DashboardClientProps) {
                   <div className="p-5 md:p-6">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Ahorro activo</p>
+                        <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${packageSavingsCompleted ? "text-blue-700" : "text-emerald-700"}`}>
+                          {packageSavingsCompleted ? "Meta alcanzada" : "Ahorro activo"}
+                        </p>
                         <h3 className="mt-1 text-xl font-bold text-slate-900">{packageTargetLabel}</h3>
                         <p className="mt-1 text-sm text-slate-500">
                           {selectedSavingPackage.country || "Venezuela"}
@@ -1087,6 +1109,21 @@ export default function DashboardClient(props: DashboardClientProps) {
                     </div>
 
                     <div className="mt-5 flex flex-wrap gap-3">
+                      {packageSavingsCompleted && (
+                        <div className="w-full rounded-2xl bg-blue-50 border border-blue-200 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-blue-800">¡Lograste tu meta!</p>
+                            <p className="text-xs text-blue-600 mt-0.5">Tu ahorro cubre el 100% del paquete. Revisa tu reserva en Mis Reservas.</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setActiveTab("reservations"); router.replace("/my-dashboard?tab=reservations"); }}
+                            className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 whitespace-nowrap"
+                          >
+                            Ver mis reservas
+                          </button>
+                        </div>
+                      )}
                       {!packageSavingsCompleted && (
                         <button
                           type="button"
