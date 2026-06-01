@@ -93,7 +93,31 @@ function normalizeCedulaValue(cedula?: string | null) {
   return (cedula || "").trim().toUpperCase();
 }
 
-function getSeatLabelFromReservation(reservation: ReservationItem) {
+function getSeatLabelFromReservation(reservation: ReservationItem, allSeats: SeatItem[] = []) {
+  // Primero, si el pago contiene seatIds (reserva manual multi-asiento o ahorro), mostrarlos todos
+  const paymentDetails = (reservation as any).Payment?.paymentDetails;
+  if (paymentDetails && typeof paymentDetails === "object") {
+    const seatIds = Array.isArray(paymentDetails.seatIds)
+      ? paymentDetails.seatIds
+      : typeof paymentDetails.seatId === "string" && paymentDetails.seatId
+      ? [paymentDetails.seatId]
+      : [];
+
+    if (seatIds.length > 0) {
+      const labels = seatIds
+        .map((id: string) => {
+          const s = allSeats.find((ss) => ss.id === id);
+          if (s) return getSeatLabelFromSeat(s);
+          return id;
+        })
+        .filter(Boolean);
+
+      if (labels.length === 1) return labels[0];
+      if (labels.length > 1) return labels.join(", ");
+    }
+  }
+
+  // Fallback: usar PackageSeat (reserva clásica de un solo asiento)
   const seat = reservation.PackageSeat;
   if (!seat) return "Sin asiento";
 
@@ -106,11 +130,26 @@ function getSeatLabelFromReservation(reservation: ReservationItem) {
   return baseSeat || zone || "Sin asiento";
 }
 
-function getPlanLabelFromReservation(reservation: ReservationItem) {
+function getPlanLabelFromReservation(reservation: ReservationItem, allSeats: SeatItem[] = []) {
   const rawPlan = (reservation as any).plan;
   if (rawPlan) {
     const p = String(rawPlan).toLowerCase();
     return p === "vip" || p === "v" ? "VIP" : "Estándar";
+  }
+
+  // Intentar inferir plan desde payment.paymentDetails.seatIds usando la lista de asientos
+  const paymentDetails = (reservation as any).Payment?.paymentDetails;
+  if (paymentDetails && typeof paymentDetails === "object") {
+    const seatIds = Array.isArray(paymentDetails.seatIds)
+      ? paymentDetails.seatIds
+      : typeof paymentDetails.seatId === "string" && paymentDetails.seatId
+      ? [paymentDetails.seatId]
+      : [];
+
+    if (seatIds.length > 0) {
+      const firstSeat = allSeats.find((s) => s.id === seatIds[0]);
+      if (firstSeat) return firstSeat.zone === "VIP" ? "VIP" : "Estándar";
+    }
   }
 
   if (reservation.PackageSeat?.zone) {
@@ -424,7 +463,7 @@ export default function PropertyDetailTabs({
                   isPaid ? "Pagado / Confirmado" : "Apartado en ahorro",
                   payment ? getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails) : "-",
                   payment ? `$${payment.amount.toFixed(2)}` : "-",
-                  matchedReservation ? getPlanLabelFromReservation(matchedReservation) : getPlanLabelFromSeat(seat),
+                  matchedReservation ? getPlanLabelFromReservation(matchedReservation, seats) : getPlanLabelFromSeat(seat),
                 ];
               })
             : [["Sin registros", "-", "-", "-", "-", "-", "-"]],
@@ -512,7 +551,7 @@ export default function PropertyDetailTabs({
                           {new Date(reservation.endDate).toLocaleDateString("es-ES")}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Asiento: {getSeatLabelFromReservation(reservation)} · Plan: {getPlanLabelFromReservation(reservation)}
+                          Asiento: {getSeatLabelFromReservation(reservation, seats)} · Plan: {getPlanLabelFromReservation(reservation, seats)}
                         </p>
                       </div>
                     </div>
