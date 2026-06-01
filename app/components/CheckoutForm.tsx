@@ -220,7 +220,6 @@ export default function CheckoutForm({
             },
           }),
         });
-        await delayMs(EXTRA_LOADING_MS);
         const data = await response.json();
         if (response.ok) {
           router.push(

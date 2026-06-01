@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -154,6 +154,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploadingProof, setUploadingProof] = useState(false);
+  const saveInFlightRef = useRef(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -255,6 +256,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    if (saveInFlightRef.current) return;
     setSaveError("");
     setSaveSuccess(false);
 
@@ -295,6 +297,7 @@ export default function DashboardClient(props: DashboardClientProps) {
     }
 
     setSaving(true);
+    saveInFlightRef.current = true;
     try {
       setUploadingProof(true);
       const paymentProofUrl = await uploadPaymentProof();
@@ -324,19 +327,20 @@ export default function DashboardClient(props: DashboardClientProps) {
         const data = await res.json().catch(() => ({}));
         setSaveError((data as any).error || "Error al guardar");
       } else {
-        setSaveSuccess(true);
-        setAmountUsd("");
-        setEmisorBank("");
-        setPhoneNumber("");
-        setReferenceNumber("");
-        setPaymentProofFile(null);
+        const destination =
+          effectiveHomeId
+            ? `/my-dashboard?tab=mi-alcancia&homeId=${encodeURIComponent(effectiveHomeId)}`
+            : "/my-dashboard?tab=mi-alcancia";
+        router.replace(destination);
         router.refresh();
+        return;
       }
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Error de conexión. Intenta nuevamente.");
     } finally {
       setUploadingProof(false);
       setSaving(false);
+      saveInFlightRef.current = false;
     }
   }
 

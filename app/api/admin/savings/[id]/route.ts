@@ -713,38 +713,65 @@ export async function PATCH(
               })
               .filter(Boolean);
 
+            const pendingReservations = await tx.reservation.findMany({
+              where: {
+                userId: saving.userId,
+                homeId,
+                status: "PENDING",
+              },
+              select: {
+                id: true,
+                seatId: true,
+                Payment: {
+                  select: {
+                    amount: true,
+                  },
+                },
+              },
+            });
+
+            const unpaidPendingReservations = pendingReservations.filter((row: any) => {
+              const amount = Number(row?.Payment?.amount ?? 0);
+              return !row?.Payment || amount <= 0;
+            });
+
             const targetReservationIds = Array.from(
-              new Set([...(reservationId ? [reservationId] : []), ...reservationIdsFromSavings])
+              new Set([
+                ...(reservationId ? [reservationId] : []),
+                ...reservationIdsFromSavings,
+                ...unpaidPendingReservations.map((row: any) => row.id),
+              ])
             );
 
+            const seatsFromPendingReservations = unpaidPendingReservations
+              .map((row: any) => (typeof row.seatId === "string" && row.seatId.trim() ? row.seatId.trim() : ""))
+              .filter(Boolean);
+
+            const seatsToRelease = Array.from(
+              new Set([...allSeatIds, ...seatsFromPendingReservations])
+            );
+
+            if (seatsToRelease.length > 0) {
+              await tx.packageSeat.updateMany({
+                where: {
+                  id: { in: seatsToRelease },
+                  homeId,
+                  status: "OCCUPIED",
+                },
+                data: { status: "AVAILABLE" },
+              });
+            }
+
             if (targetReservationIds.length > 0) {
-              await tx.reservation.updateMany({
+              await tx.reservation.deleteMany({
                 where: {
                   id: { in: targetReservationIds },
                   userId: saving.userId,
                   homeId,
                   status: "PENDING",
-                  OR: [
-                    { Payment: { is: null } },
-                    { Payment: { is: { amount: 0 } } },
-                  ],
                 },
-                data: { status: "CANCELLED" },
               });
             }
-
-            await tx.reservation.updateMany({
-              where: {
-                userId: saving.userId,
-                homeId,
-                status: "PENDING",
-                OR: [
-                  { Payment: { is: null } },
-                  { Payment: { is: { amount: 0 } } },
-                ],
-              },
-              data: { status: "CANCELLED" },
-            });
           }
         }
 
