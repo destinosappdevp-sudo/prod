@@ -54,4 +54,4 @@ Estas tablas son compartidas entre web y mobile:
 
 ---
 
-*Última actualización: 2 de marzo 2026*
+*Última actualización: 2 de marzo 2026*.
