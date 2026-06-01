@@ -401,6 +401,22 @@ export default async function CheckoutPage({
                   Editar
                 </Link>
               </div>
+              {resolvedSeatIds.length > 0 && (
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium mb-1">Asiento{resolvedSeatIds.length > 1 ? "s" : ""}</p>
+                    <p className="text-sm text-gray-600 font-semibold text-amber-600">
+                      {planLabel} · {resolvedSeatIds.length} seleccionado{resolvedSeatIds.length > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/seats/${homeId}?plan=${plan || "estandar"}&flow=contado&guests=${guestsCount}`}
+                    className="text-sm font-semibold underline hover:text-gray-600"
+                  >
+                    Cambiar
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
@@ -458,25 +474,6 @@ export default async function CheckoutPage({
           seatIds={resolvedSeatIds}
           plan={plan}
         />
-
-        {resolvedSeatIds.length > 0 && (
-          <div className="bg-white rounded-lg border p-6 mt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium mb-1">Asiento{resolvedSeatIds.length > 1 ? "s" : ""}</p>
-                <p className="text-sm text-gray-600 font-semibold text-amber-600">
-                  {planLabel} · {resolvedSeatIds.length} seleccionado{resolvedSeatIds.length > 1 ? "s" : ""}
-                </p>
-              </div>
-              <Link
-                href={`/seats/${homeId}?plan=${plan || "estandar"}&flow=contado&guests=${guestsCount}`}
-                className="text-sm font-semibold underline hover:text-gray-600"
-              >
-                Cambiar
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
