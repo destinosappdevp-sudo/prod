@@ -18,6 +18,13 @@ import { BANKS } from "@/app/lib/paymentBanks";
 
 type CheckoutMode = "DIRECT" | "MIXED" | "SAVINGS";
 
+const EXTRA_LOADING_MS = 2500;
+
+const delayMs = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+
 export type SavingsFlowConfig = {
   kind: "package" | "general";
   goalUsd?: number;
@@ -213,6 +220,7 @@ export default function CheckoutForm({
             },
           }),
         });
+        await delayMs(EXTRA_LOADING_MS);
         const data = await response.json();
         if (response.ok) {
           router.push(
@@ -253,6 +261,7 @@ export default function CheckoutForm({
           plan: plan || null,
         }),
       });
+      await delayMs(EXTRA_LOADING_MS);
       const data = await response.json();
       if (response.ok) {
         if (data?.reservationId) {

@@ -16,20 +16,51 @@ interface SeatMapProps {
   seats: Seat[];
   onSelectSeat?: (seat: Seat) => void;
   selectedSeatId?: string;
+  selectionPlan?: "vip" | "estandar";
 }
 
 const seatLabel = (zone: string, row: number, column: string) => `${column}`;
 
-const getSeatColor = (seat: Seat, selectedSeatId?: string) => {
-  if (seat.status === "OCCUPIED") return "bg-gray-200 text-gray-500 border-gray-300";
-  if (seat.isSelected || seat.id === selectedSeatId) return "bg-yellow-400 text-white border-yellow-400";
-  if (seat.zone === "VIP") return "bg-gray-900 text-white border-gray-900";
-  if (seat.zone === "STANDARD") return "bg-gray-50 text-gray-700 border-gray-200";
-  return "bg-white text-gray-700 border-gray-200";
+const isSeatSelectableByPlan = (seat: Seat, selectionPlan?: "vip" | "estandar") => {
+  if (!selectionPlan) return true;
+  if (selectionPlan === "vip") return seat.zone === "VIP";
+  return seat.zone === "STANDARD";
 };
 
-const getSeatContent = (seat: Seat) => {
+const getSeatColor = (
+  seat: Seat,
+  selectedSeatId?: string,
+  selectionPlan?: "vip" | "estandar"
+) => {
+  const isSelectableByPlan = isSeatSelectableByPlan(seat, selectionPlan);
+  const canSelect = seat.status === "AVAILABLE" && isSelectableByPlan;
+
+  if (seat.isSelected || seat.id === selectedSeatId) {
+    return "bg-amber-400 border-amber-500 text-white cursor-pointer scale-105 shadow-md hover:bg-amber-400 hover:border-amber-500 hover:text-white";
+  }
+
+  if (seat.status === "OCCUPIED") return "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed";
+
+  if (seat.zone === "VIP") {
+    return canSelect
+      ? "bg-gray-900 border-gray-700 text-white cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
+      : "bg-gray-700 border-gray-600 text-gray-300 cursor-not-allowed opacity-50";
+  }
+
+  if (seat.zone === "STANDARD") {
+    return canSelect
+      ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
+      : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
+  }
+
+  return canSelect
+    ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
+    : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
+};
+
+const getSeatContent = (seat: Seat, selectionPlan?: "vip" | "estandar") => {
   if (seat.status === "OCCUPIED") return "✕";
+  if (!isSeatSelectableByPlan(seat, selectionPlan)) return "⛔";
   return seatLabel(seat.zone, seat.row, seat.column);
 };
 
@@ -48,7 +79,7 @@ const getSeatTitle = (seat: Seat) => {
   return undefined;
 };
 
-export default function SeatMap({ seats, onSelectSeat, selectedSeatId }: SeatMapProps) {
+export default function SeatMap({ seats, onSelectSeat, selectedSeatId, selectionPlan }: SeatMapProps) {
   // Agrupar por zona y fila
   const vipRows = Array.from(new Set(seats.filter(s => s.zone === "VIP").map(s => s.row))).sort();
   const stdRows = Array.from(new Set(seats.filter(s => s.zone !== "VIP").map(s => s.row))).sort();
@@ -82,15 +113,23 @@ export default function SeatMap({ seats, onSelectSeat, selectedSeatId }: SeatMap
                 const seat = vipSeats.find(s => s.row === row && s.column === col);
                 return seat ? (
                   <button
+                    type="button"
                     key={seat.id}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold border transition-all duration-150 ${getSeatColor(seat, selectedSeatId)}`}
-                    title={getSeatTitle(seat)}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold border-2 transition-all duration-150 ${getSeatColor(seat, selectedSeatId, selectionPlan)}`}
+                    title={
+                      !isSeatSelectableByPlan(seat, selectionPlan)
+                        ? selectionPlan === "vip"
+                          ? "Solo puedes elegir asientos Premium"
+                          : "Solo puedes elegir asientos Estándar"
+                        : getSeatTitle(seat)
+                    }
                     onClick={() => {
+                      if (!isSeatSelectableByPlan(seat, selectionPlan)) return;
                       if (seat.status === "OCCUPIED") return;
                       if (onSelectSeat) onSelectSeat(seat);
                     }}
                   >
-                    {getSeatContent(seat)}
+                    {getSeatContent(seat, selectionPlan)}
                   </button>
                 ) : (
                   <span key={col} className="w-10 h-10" />
@@ -108,15 +147,23 @@ export default function SeatMap({ seats, onSelectSeat, selectedSeatId }: SeatMap
                 const seat = stdSeats.find(s => s.row === row && s.column === col);
                 return seat ? (
                   <button
+                    type="button"
                     key={seat.id}
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold border transition-all duration-150 ${getSeatColor(seat, selectedSeatId)}`}
-                    title={getSeatTitle(seat)}
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold border-2 transition-all duration-150 ${getSeatColor(seat, selectedSeatId, selectionPlan)}`}
+                    title={
+                      !isSeatSelectableByPlan(seat, selectionPlan)
+                        ? selectionPlan === "vip"
+                          ? "Solo puedes elegir asientos Premium"
+                          : "Solo puedes elegir asientos Estándar"
+                        : getSeatTitle(seat)
+                    }
                     onClick={() => {
+                      if (!isSeatSelectableByPlan(seat, selectionPlan)) return;
                       if (seat.status === "OCCUPIED") return;
                       if (onSelectSeat) onSelectSeat(seat);
                     }}
                   >
-                    {getSeatContent(seat)}
+                    {getSeatContent(seat, selectionPlan)}
                   </button>
                 ) : (
                   <span key={col} className="w-10 h-10" />

@@ -165,7 +165,7 @@ export default function PropertyDetailTabs({
   const [reservationMode, setReservationMode] = useState<"cash" | "saving">("cash");
 
   const [plan, setPlan] = useState<"vip" | "estandar">("estandar");
-  const [selectedSeatId, setSelectedSeatId] = useState<string>("");
+  const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
   const [guests, setGuests] = useState("1");
   const todayIso = useMemo(() => {
     const now = new Date();
@@ -200,6 +200,7 @@ export default function PropertyDetailTabs({
     ? "Completa primero el monto y la fecha de abono para iniciar el ahorro."
     : "";
   const canSelectSeat = !seatSelectionLockedReason;
+  const requiresSeatSelection = seats.length > 0;
 
   const selectableSeats = useMemo(
     () =>
@@ -212,8 +213,8 @@ export default function PropertyDetailTabs({
   );
 
   const seatMapForReserve = useMemo(
-    () => seats.map((seat) => ({ ...seat, isSelected: seat.id === selectedSeatId })),
-    [seats, selectedSeatId]
+    () => seats.map((seat) => ({ ...seat, isSelected: selectedSeatIds.includes(seat.id) })),
+    [seats, selectedSeatIds]
   );
 
   const handleFindUser = async () => {
@@ -250,13 +251,13 @@ export default function PropertyDetailTabs({
       return;
     }
 
-    if (!selectedSeatId) {
-      alert("Debes seleccionar un asiento para continuar");
+    if (requiresSeatSelection && selectedSeatIds.length === 0) {
+      alert("Debes seleccionar al menos un asiento para continuar");
       return;
     }
 
-    if (!phoneNumber.trim() || !emisorBank.trim() || !referenceNumber.trim() || !payerCedula.trim()) {
-      alert("Completa todos los datos de pago móvil");
+    if (requiresSeatSelection && selectedSeatIds.length !== guestsCount) {
+      alert(`Debes seleccionar ${guestsCount} asiento${guestsCount > 1 ? "s" : ""}.`);
       return;
     }
 
@@ -284,7 +285,8 @@ export default function PropertyDetailTabs({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cedula: selectedUser.cedula,
-          seatId: selectedSeatId,
+          seatId: selectedSeatIds[0],
+          seatIds: selectedSeatIds,
           plan,
           guests: guestsCount,
           reservationMode,
@@ -309,7 +311,7 @@ export default function PropertyDetailTabs({
           ? "Ahorro específico creado y abono acreditado correctamente"
           : "Reserva manual creada correctamente"
       );
-      setSelectedSeatId("");
+      setSelectedSeatIds([]);
       setObservations("");
       setReferenceNumber("");
       setSavingDepositUsd("");
@@ -628,7 +630,7 @@ export default function PropertyDetailTabs({
                   checked={reservationMode === "saving"}
                   onChange={(e) => {
                     setReservationMode(e.target.checked ? "saving" : "cash");
-                    setSelectedSeatId("");
+                    setSelectedSeatIds([]);
                   }}
                 />
                 Ahorrar
@@ -646,7 +648,7 @@ export default function PropertyDetailTabs({
                 value={plan}
                 onChange={(e) => {
                   setPlan(e.target.value === "vip" ? "vip" : "estandar");
-                  setSelectedSeatId("");
+                  setSelectedSeatIds([]);
                 }}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               >
@@ -660,7 +662,10 @@ export default function PropertyDetailTabs({
                 type="number"
                 min={1}
                 value={guests}
-                onChange={(e) => setGuests(e.target.value)}
+                onChange={(e) => {
+                  setGuests(e.target.value);
+                  setSelectedSeatIds([]);
+                }}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               />
             </div>
@@ -682,7 +687,7 @@ export default function PropertyDetailTabs({
                     value={savingDepositUsd}
                     onChange={(e) => {
                       setSavingDepositUsd(e.target.value);
-                      setSelectedSeatId("");
+                      setSelectedSeatIds([]);
                     }}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                     placeholder="Ej: 25.00"
@@ -696,7 +701,7 @@ export default function PropertyDetailTabs({
                     max={todayIso}
                     onChange={(e) => {
                       setSavingStartedAt(e.target.value);
-                      setSelectedSeatId("");
+                      setSelectedSeatIds([]);
                     }}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
                   />
@@ -722,27 +727,33 @@ export default function PropertyDetailTabs({
                 <div className={!canSelectSeat ? "pointer-events-none opacity-60" : ""}>
                   <SeatMap
                     seats={seatMapForReserve as Seat[]}
-                    selectedSeatId={selectedSeatId}
+                    selectedSeatId={selectedSeatIds[0]}
+                    selectionPlan={plan}
                     onSelectSeat={(seat) => {
                       if (!canSelectSeat) {
                         alert(seatSelectionLockedReason);
                         return;
                       }
                       if (seat.status !== "AVAILABLE") return;
-                      if (plan === "vip" && seat.zone !== "VIP") {
-                        alert("Selecciona un asiento de zona Premium");
-                        return;
-                      }
-                      if (plan === "estandar" && seat.zone !== "STANDARD") {
-                        alert("Selecciona un asiento de zona Estandar");
-                        return;
-                      }
-                      setSelectedSeatId(seat.id);
+
+                      setSelectedSeatIds((current) => {
+                        if (current.includes(seat.id)) {
+                          return current.filter((id) => id !== seat.id);
+                        }
+
+                        if (current.length >= guestsCount) {
+                          return current;
+                        }
+
+                        return [...current, seat.id];
+                      });
                     }}
                   />
                 </div>
-                {selectedSeatId && (
-                  <p className="mt-3 text-sm text-green-700">Asiento seleccionado correctamente.</p>
+                {selectedSeatIds.length > 0 && (
+                  <p className="mt-3 text-sm text-green-700">
+                    Asientos seleccionados: {selectedSeatIds.length}/{guestsCount}
+                  </p>
                 )}
               </>
             ) : (
@@ -801,7 +812,7 @@ export default function PropertyDetailTabs({
 
           <button
             type="submit"
-            disabled={submittingSale || !selectedUser || !selectedSeatId || !canSelectSeat}
+            disabled={submittingSale || !selectedUser || (requiresSeatSelection && selectedSeatIds.length !== guestsCount) || !canSelectSeat}
             className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
           >
             {submittingSale

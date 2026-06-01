@@ -10,6 +10,13 @@ interface PaymentActionsProps {
   reservationId: string;
 }
 
+const EXTRA_LOADING_MS = 2500;
+
+const delayMs = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+
 export default function PaymentActions({ paymentId, reservationId }: PaymentActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -46,6 +53,8 @@ export default function PaymentActions({ paymentId, reservationId }: PaymentActi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, rejectionReason: rejectionReason || null }),
       });
+
+      await delayMs(EXTRA_LOADING_MS);
 
       if (response.ok) {
         router.refresh();

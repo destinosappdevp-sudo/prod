@@ -51,6 +51,21 @@ export async function POST(
 
     const cedula = normalizeCedulaValue(body?.cedula);
     const seatId = typeof body?.seatId === "string" ? body.seatId.trim() : "";
+    const seatIdsInput = Array.isArray(body?.seatIds)
+      ? body.seatIds
+      : typeof body?.seatIds === "string"
+      ? body.seatIds.split(",")
+      : [];
+    const selectedSeatIds = Array.from(
+      new Set(
+        seatIdsInput
+          .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+          .filter(Boolean)
+      )
+    );
+    if (selectedSeatIds.length === 0 && seatId) {
+      selectedSeatIds.push(seatId);
+    }
     const plan = body?.plan === "vip" ? "vip" : "estandar";
     const guests = Number(body?.guests ?? 1);
     const reservationMode = body?.reservationMode === "saving" ? "saving" : "cash";
@@ -68,10 +83,6 @@ export async function POST(
 
     if (!cedula) {
       return NextResponse.json({ error: "La cédula del usuario es requerida" }, { status: 400 });
-    }
-
-    if (!seatId) {
-      return NextResponse.json({ error: "Debes seleccionar un asiento" }, { status: 400 });
     }
 
     if (!Number.isInteger(guests) || guests <= 0) {
@@ -92,16 +103,6 @@ export async function POST(
           { status: 400 }
         );
       }
-    }
-
-    if (!phoneNumber || !emisorBank || !referenceNumber || !payerCedula) {
-      return NextResponse.json(
-        {
-          error:
-            "Completa los datos de Pago Móvil (teléfono, banco, referencia y cédula pagador)",
-        },
-        { status: 400 }
-      );
     }
 
     const targetUser = await prisma.user.findFirst({
@@ -137,32 +138,47 @@ export async function POST(
       where: { homeId },
     });
 
-    if (seatsCount > 0 && !seatId) {
-      return NextResponse.json({ error: "Debes seleccionar un asiento" }, { status: 400 });
+    if (seatsCount > 0 && selectedSeatIds.length === 0) {
+      return NextResponse.json({ error: "Debes seleccionar al menos un asiento" }, { status: 400 });
     }
 
-    const seat = await (prisma as any).packageSeat.findUnique({
-      where: { id: seatId },
-      select: { id: true, homeId: true, zone: true, status: true },
-    });
-
-    if (!seat || seat.homeId !== homeId) {
-      return NextResponse.json({ error: "Asiento no válido para este paquete" }, { status: 400 });
-    }
-
-    if (seat.status === "OCCUPIED") {
-      return NextResponse.json({ error: "El asiento ya está ocupado" }, { status: 409 });
-    }
-
-    if (plan === "vip" && seat.zone !== "VIP") {
-      return NextResponse.json({ error: "El asiento no pertenece a la zona VIP" }, { status: 400 });
-    }
-
-    if (plan === "estandar" && seat.zone !== "STANDARD") {
+    if (seatsCount > 0 && selectedSeatIds.length !== guests) {
       return NextResponse.json(
-        { error: "El asiento no pertenece a la zona Estándar" },
+        { error: `Debes seleccionar ${guests} asiento${guests > 1 ? "s" : ""}.` },
         { status: 400 }
       );
+    }
+
+    if (selectedSeatIds.length > 0) {
+      const selectedSeats = await (prisma as any).packageSeat.findMany({
+        where: { id: { in: selectedSeatIds } },
+        select: { id: true, homeId: true, zone: true, status: true },
+      });
+
+      if (selectedSeats.length !== selectedSeatIds.length) {
+        return NextResponse.json({ error: "Uno o más asientos no son válidos" }, { status: 400 });
+      }
+
+      for (const selectedSeat of selectedSeats) {
+        if (selectedSeat.homeId !== homeId) {
+          return NextResponse.json({ error: "Asiento no válido para este paquete" }, { status: 400 });
+        }
+
+        if (selectedSeat.status === "OCCUPIED") {
+          return NextResponse.json({ error: "Uno de los asientos ya está ocupado" }, { status: 409 });
+        }
+
+        if (plan === "vip" && selectedSeat.zone !== "VIP") {
+          return NextResponse.json({ error: "Uno de los asientos no pertenece a la zona VIP" }, { status: 400 });
+        }
+
+        if (plan === "estandar" && selectedSeat.zone !== "STANDARD") {
+          return NextResponse.json(
+            { error: "Uno de los asientos no pertenece a la zona Estándar" },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     const unitPrice =
@@ -264,26 +280,32 @@ export async function POST(
       const depositBs = roundMoney(depositUsd * bcvRate);
 
       const result = await (prisma as any).$transaction(async (tx: any) => {
-        const seatCheck = await tx.packageSeat.findUnique({
-          where: { id: seatId },
-          select: { status: true, homeId: true },
+        const currentSeats = await tx.packageSeat.findMany({
+          where: { id: { in: selectedSeatIds } },
+          select: { id: true, homeId: true, status: true },
         });
 
-        if (!seatCheck || seatCheck.homeId !== homeId) {
-          throw new Error("Asiento no válido para este paquete");
+        if (currentSeats.length !== selectedSeatIds.length) {
+          throw new Error("Uno o más asientos no son válidos para este paquete");
         }
 
-        if (seatCheck.status === "OCCUPIED") {
-          throw new Error("El asiento fue ocupado por otro usuario");
+        for (const currentSeat of currentSeats) {
+          if (currentSeat.homeId !== homeId) {
+            throw new Error("Asiento no válido para este paquete");
+          }
+
+          if (currentSeat.status === "OCCUPIED") {
+            throw new Error("Uno de los asientos fue ocupado por otro usuario");
+          }
         }
 
         const updatedSeat = await tx.packageSeat.updateMany({
-          where: { id: seatId, homeId, status: "AVAILABLE" },
+          where: { id: { in: selectedSeatIds }, homeId, status: "AVAILABLE" },
           data: { status: "OCCUPIED" },
         });
 
-        if (updatedSeat.count !== 1) {
-          throw new Error("El asiento fue ocupado por otro usuario");
+        if (updatedSeat.count !== selectedSeatIds.length) {
+          throw new Error("Uno de los asientos fue ocupado por otro usuario");
         }
 
         const saving = await tx.saving.create({
@@ -305,8 +327,8 @@ export async function POST(
               homeTitle: home.title,
               plan,
               guests,
-              seatId,
-              seatIds: [seatId],
+              seatId: selectedSeatIds[0],
+              seatIds: selectedSeatIds,
               amountUsd: depositUsd,
               amountBs: depositBs,
               phoneNumber,
@@ -337,13 +359,23 @@ export async function POST(
     }
 
     const result = await (prisma as any).$transaction(async (tx: any) => {
-      const seatCheck = await tx.packageSeat.findUnique({
-        where: { id: seatId },
-        select: { status: true },
+      const currentSeats = await tx.packageSeat.findMany({
+        where: { id: { in: selectedSeatIds } },
+        select: { id: true, homeId: true, status: true },
       });
 
-      if (!seatCheck || seatCheck.status === "OCCUPIED") {
-        throw new Error("El asiento fue ocupado por otro usuario");
+      if (currentSeats.length !== selectedSeatIds.length) {
+        throw new Error("Uno o más asientos no son válidos para este paquete");
+      }
+
+      for (const currentSeat of currentSeats) {
+        if (currentSeat.homeId !== homeId) {
+          throw new Error("Asiento no válido para este paquete");
+        }
+
+        if (currentSeat.status === "OCCUPIED") {
+          throw new Error("Uno de los asientos fue ocupado por otro usuario");
+        }
       }
 
       const reservation = await tx.reservation.create({
@@ -355,14 +387,18 @@ export async function POST(
           nights: 1,
           totalAmount,
           status: "CONFIRMED",
-          seatId,
+          seatId: selectedSeatIds[0],
         },
       });
 
-      await tx.packageSeat.update({
-        where: { id: seatId },
+      const occupiedSeats = await tx.packageSeat.updateMany({
+        where: { id: { in: selectedSeatIds }, homeId, status: "AVAILABLE" },
         data: { status: "OCCUPIED" },
       });
+
+      if (occupiedSeats.count !== selectedSeatIds.length) {
+        throw new Error("Uno de los asientos fue ocupado por otro usuario");
+      }
 
       const payment = await tx.payment.create({
         data: {
@@ -384,6 +420,8 @@ export async function POST(
             homeTitle: home.title,
             plan,
             guests,
+            seatId: selectedSeatIds[0],
+            seatIds: selectedSeatIds,
             adminObservations: observations || null,
             soldByAdminId: user.id,
             soldAt: new Date().toISOString(),

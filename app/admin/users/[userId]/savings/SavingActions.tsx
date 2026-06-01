@@ -10,6 +10,13 @@ interface SavingActionsProps {
   currentStatus: string;
 }
 
+const EXTRA_LOADING_MS = 2500;
+
+const delayMs = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+
 export default function SavingActions({ savingId, currentStatus }: SavingActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -43,6 +50,8 @@ export default function SavingActions({ savingId, currentStatus }: SavingActions
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, rejectionReason: rejectionReason || null }),
       });
+
+      await delayMs(EXTRA_LOADING_MS);
 
       if (response.ok) {
         router.refresh();
