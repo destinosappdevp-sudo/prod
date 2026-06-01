@@ -5,6 +5,12 @@ import { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+const prismaAny = prisma as any;
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
@@ -63,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true },
+      select: { id: true, email: true, firstName: true },
     });
 
     if (!targetUser) {
@@ -134,6 +140,86 @@ export async function POST(req: NextRequest) {
       ? Math.round(amountUsdInput * bcvRate * 100) / 100
       : Math.round(amountBsLegacyInput * 100) / 100;
 
+    let packageGoalUsd = 0;
+    let approvedPackageUsdBefore = 0;
+    let currentPackageReservationId: string | null = null;
+    let currentPackageTitle = "";
+    let currentPackageCompleted = false;
+    let currentPackageEffectiveGuests = 1;
+    let currentPackagePlan: "vip" | "estandar" | null = null;
+
+    if (type === "package" && homeId) {
+      const home = await prisma.home.findUnique({
+        where: { id: homeId },
+        select: { id: true, title: true, price: true, priceVip: true },
+      });
+
+      if (!home) {
+        return NextResponse.json({ error: "Paquete no encontrado" }, { status: 404 });
+      }
+
+      currentPackageTitle = home.title || "Paquete";
+
+      const packageRows = allUserSavings.filter((saving: any) => {
+        const details = saving.paymentDetails && typeof saving.paymentDetails === "object"
+          ? saving.paymentDetails
+          : {};
+        const targetHomeId = typeof details.homeId === "string" ? details.homeId : null;
+        return targetHomeId === homeId && Number(saving.amountUsd ?? 0) > 0;
+      });
+
+      let inferredGuestsCount = 0;
+      let inferredPlan: "vip" | "estandar" | null = null;
+
+      for (const row of packageRows as any[]) {
+        const details = row.paymentDetails && typeof row.paymentDetails === "object"
+          ? row.paymentDetails
+          : {};
+
+        const rowSeatIdsInput = Array.isArray(details.seatIds)
+          ? details.seatIds
+          : typeof details.seatIds === "string"
+          ? details.seatIds.split(",")
+          : [];
+        const rowSeatIds = Array.from(
+          new Set(
+            rowSeatIdsInput
+              .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+              .filter(Boolean)
+          )
+        );
+
+        const rowGuests =
+          typeof details.guests === "number" && details.guests > 0
+            ? details.guests
+            : 0;
+
+        inferredGuestsCount = Math.max(
+          inferredGuestsCount,
+          rowSeatIds.length > 0 ? rowSeatIds.length : rowGuests
+        );
+
+        if (!inferredPlan && typeof details.plan === "string" && details.plan.trim()) {
+          const planValue = details.plan.trim().toLowerCase();
+          if (planValue === "vip" || planValue === "estandar") {
+            inferredPlan = planValue;
+          }
+        }
+
+        if (row.status === "APPROVED" && row.id !== existingSaving.id) {
+          approvedPackageUsdBefore += Number(row.amountUsd ?? 0);
+        }
+      }
+
+      currentPackageEffectiveGuests = Math.max(inferredGuestsCount, 1);
+      currentPackagePlan = inferredPlan;
+      const unitPrice =
+        currentPackagePlan === "vip" && Number(home.priceVip ?? 0) > 0
+          ? Number(home.priceVip)
+          : Number(home.price ?? 0);
+      packageGoalUsd = roundMoney(unitPrice * currentPackageEffectiveGuests);
+    }
+
     if (existingSaving) {
       const previousDetails =
         existingSaving.paymentDetails && typeof existingSaving.paymentDetails === "object"
@@ -162,6 +248,99 @@ export async function POST(req: NextRequest) {
           },
         },
       });
+
+      if (type === "package" && homeId && packageGoalUsd > 0) {
+        const approvedPackageUsdAfterThisDeposit = roundMoney(approvedPackageUsdBefore + amountUsd);
+        const packageCompletedNow = approvedPackageUsdAfterThisDeposit >= packageGoalUsd;
+        const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - approvedPackageUsdBefore));
+        const approvedForPackageUsd = roundMoney(Math.min(remainingUsd, amountUsd));
+        const overflowUsd = roundMoney(Math.max(0, amountUsd - approvedForPackageUsd));
+        const approvedForPackageBs =
+          amountUsd > 0 ? roundMoney((amountBs * approvedForPackageUsd) / amountUsd) : 0;
+        const overflowBs = roundMoney(amountBs - approvedForPackageBs);
+
+        const existingReservation = await prismaAny.reservation.findFirst({
+          where: {
+            userId,
+            homeId,
+            status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, status: true },
+        });
+
+        let reservationId = existingReservation?.id ?? null;
+        const createdReservation = !reservationId;
+
+        if (!reservationId) {
+          const startDate = new Date();
+          const endDate = new Date(startDate.getTime() + 86400000);
+          const reservation = await prismaAny.reservation.create({
+            data: {
+              userId,
+              homeId,
+              startDate,
+              endDate,
+              nights: 1,
+              status: packageCompletedNow ? "CONFIRMED" : "PENDING",
+              totalAmount: packageGoalUsd,
+            },
+            select: { id: true },
+          });
+          reservationId = reservation.id;
+        } else if (packageCompletedNow && existingReservation?.status === "PENDING") {
+          await prismaAny.reservation.update({
+            where: { id: reservationId },
+            data: { status: "CONFIRMED" },
+          });
+        }
+
+        await (prisma as any).saving.update({
+          where: { id: existingSaving.id },
+          data: {
+            amountUsd: approvedForPackageUsd,
+            amountBs: approvedForPackageBs,
+            paymentDetails: {
+              ...previousDetails,
+              packageGoalUsd,
+              packageSavedUsdBeforeThisDeposit: approvedPackageUsdBefore,
+              packageSavedUsdAfterThisDeposit: approvedPackageUsdAfterThisDeposit,
+              packageCompleted: packageCompletedNow,
+              reservationId,
+              autoCreatedReservation: createdReservation,
+            },
+          },
+        });
+
+        currentPackageReservationId = reservationId;
+        currentPackageCompleted = packageCompletedNow;
+
+        if (packageCompletedNow && overflowUsd > 0) {
+          await prisma.saving.create({
+            data: {
+              userId,
+              bcvRate,
+              amountUsd: overflowUsd,
+              amountBs: overflowBs,
+              status: "APPROVED",
+              paymentDetails: {
+                ...previousDetails,
+                kind: "GENERAL_SAVING_OVERFLOW_FROM_PACKAGE",
+                homeId: null,
+                homeTitle: null,
+                overflowFromHomeId: homeId,
+                overflowFromHomeTitle: currentPackageTitle,
+                overflowReason: "PACKAGE_GOAL_REACHED",
+                sourceSavingId: existingSaving.id,
+                packageGoalUsd,
+                packageSavedUsdBeforeThisDeposit: approvedPackageUsdBefore,
+                packageSavedUsdAfterThisDeposit: approvedPackageUsdAfterThisDeposit,
+              },
+            },
+          });
+        }
+
+      }
 
       return NextResponse.json({ saving: updated, mode: "updated" });
     }

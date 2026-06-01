@@ -326,6 +326,235 @@ async function sendReservationConfirmationToGuest(params: {
   }
 }
 
+async function reconcileAdminPackageTopUp(params: {
+  savingId: string;
+  userId: string;
+  homeId: string;
+  fallbackBcvRate: number;
+}) {
+  const prismaAny = prisma as any;
+
+  return prismaAny.$transaction(async (tx: any) => {
+    const currentSaving = await tx.saving.findUnique({
+      where: { id: params.savingId },
+      select: {
+        id: true,
+        amountBs: true,
+        amountUsd: true,
+        bcvRate: true,
+        paymentDetails: true,
+        userId: true,
+      },
+    });
+
+    if (!currentSaving) {
+      return { completedNow: false as const };
+    }
+
+    const currentDetails = normalizeDetails(currentSaving.paymentDetails);
+    const home = await tx.home.findUnique({
+      where: { id: params.homeId },
+      select: { id: true, title: true, price: true, priceVip: true },
+    });
+
+    if (!home) {
+      return { completedNow: false as const };
+    }
+
+    const approvedPackageRows = await tx.saving.findMany({
+      where: {
+        userId: params.userId,
+        status: "APPROVED",
+        amountUsd: { gt: 0 },
+      },
+      select: { id: true, amountUsd: true, paymentDetails: true },
+    });
+
+    let inferredGuestsCount = 0;
+    let inferredPlan: string | null = null;
+
+    const approvedPackageUsdBeforeCurrent = roundMoney(
+      approvedPackageRows.reduce((sum: number, row: any) => {
+        const details = normalizeDetails(row.paymentDetails);
+        const rowHomeId = typeof details.homeId === "string" ? details.homeId : null;
+        if (rowHomeId !== params.homeId) return sum;
+        if (row.id === params.savingId) return sum;
+
+        const rowSeatIdsInput = Array.isArray(details.seatIds)
+          ? details.seatIds
+          : typeof details.seatIds === "string"
+          ? details.seatIds.split(",")
+          : [];
+        const rowSeatIds = Array.from(
+          new Set(
+            rowSeatIdsInput
+              .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+              .filter(Boolean)
+          )
+        );
+        const rowGuests = typeof details.guests === "number" && details.guests > 0 ? details.guests : 0;
+        inferredGuestsCount = Math.max(inferredGuestsCount, rowSeatIds.length > 0 ? rowSeatIds.length : rowGuests);
+
+        if (!inferredPlan && typeof details.plan === "string" && details.plan.trim()) {
+          inferredPlan = details.plan.trim().toLowerCase();
+        }
+
+        return sum + Number(row.amountUsd ?? 0);
+      }, 0)
+    );
+
+    const currentSeatIds = Array.isArray(currentDetails.seatIds)
+      ? currentDetails.seatIds
+          .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
+          .filter(Boolean)
+      : typeof currentDetails.seatId === "string" && currentDetails.seatId.trim()
+      ? [currentDetails.seatId.trim()]
+      : [];
+
+    const currentGuestsCount =
+      typeof currentDetails.guests === "number" && currentDetails.guests > 0
+        ? currentDetails.guests
+        : currentSeatIds.length > 0
+        ? currentSeatIds.length
+        : 1;
+
+    if (!inferredPlan && typeof currentDetails.plan === "string" && currentDetails.plan.trim()) {
+      inferredPlan = currentDetails.plan.trim().toLowerCase();
+    }
+
+    const effectiveGuestsCount = Math.max(inferredGuestsCount, currentGuestsCount, 1);
+    const effectivePlan =
+      currentDetails.plan === "vip" || currentDetails.plan === "estandar"
+        ? currentDetails.plan
+        : inferredPlan === "vip" || inferredPlan === "estandar"
+        ? inferredPlan
+        : null;
+
+    const unitPrice =
+      effectivePlan === "vip" && Number(home.priceVip ?? 0) > 0
+        ? Number(home.priceVip)
+        : Number(home.price ?? 0);
+
+    const packageGoalUsd = roundMoney(unitPrice * effectiveGuestsCount);
+    const depositUsd = roundMoney(Number(currentSaving.amountUsd ?? 0));
+    const depositBs = roundMoney(Number(currentSaving.amountBs ?? 0));
+
+    if (!packageGoalUsd || packageGoalUsd <= 0) {
+      await tx.saving.update({
+        where: { id: params.savingId },
+        data: {
+          paymentDetails: {
+            ...currentDetails,
+            kind: "PACKAGE_SAVING_DEPOSIT",
+            packageGoalUsd,
+            packageCompleted: false,
+          },
+        },
+      });
+
+      return { completedNow: false as const };
+    }
+
+    const packageSavedAfterThisDeposit = roundMoney(approvedPackageUsdBeforeCurrent + depositUsd);
+    const packageCompletedNow = packageSavedAfterThisDeposit >= packageGoalUsd;
+
+    const existingReservation = await tx.reservation.findFirst({
+      where: {
+        userId: params.userId,
+        homeId: params.homeId,
+        status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true },
+    });
+
+    let reservationId = existingReservation?.id ?? null;
+    const createdReservation = !reservationId;
+
+    if (!reservationId) {
+      const startDate = new Date();
+      const endDate = new Date(startDate.getTime() + 86400000);
+      const reservation = await tx.reservation.create({
+        data: {
+          userId: params.userId,
+          homeId: params.homeId,
+          startDate,
+          endDate,
+          nights: 1,
+          status: packageCompletedNow ? "CONFIRMED" : "PENDING",
+          totalAmount: packageGoalUsd,
+          ...(currentSeatIds[0] ? { seatId: currentSeatIds[0] } : {}),
+        },
+        select: { id: true },
+      });
+      reservationId = reservation.id;
+    } else if (packageCompletedNow && existingReservation?.status === "PENDING") {
+      await tx.reservation.update({
+        where: { id: reservationId },
+        data: { status: "CONFIRMED" },
+      });
+    }
+
+    const approvedPackageUsd = roundMoney(approvedPackageUsdBeforeCurrent + depositUsd);
+    const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - approvedPackageUsdBeforeCurrent));
+    const approvedForPackageUsd = roundMoney(Math.min(remainingUsd, depositUsd));
+    const overflowUsd = roundMoney(Math.max(0, depositUsd - approvedForPackageUsd));
+    const approvedForPackageBs =
+      depositUsd > 0 ? roundMoney((depositBs * approvedForPackageUsd) / depositUsd) : 0;
+    const overflowBs = roundMoney(depositBs - approvedForPackageBs);
+
+    await tx.saving.update({
+      where: { id: params.savingId },
+      data: {
+        amountUsd: approvedForPackageUsd,
+        amountBs: approvedForPackageBs,
+        paymentDetails: {
+          ...currentDetails,
+          kind: "PACKAGE_SAVING_DEPOSIT",
+          packageGoalUsd,
+          packageSavedUsdBeforeThisDeposit: approvedPackageUsdBeforeCurrent,
+          packageSavedUsdAfterThisDeposit: approvedPackageUsd,
+          packageCompleted: packageCompletedNow,
+          reservationId,
+          autoCreatedReservation: createdReservation,
+        },
+      },
+    });
+
+    if (packageCompletedNow && overflowUsd > 0) {
+      await tx.saving.create({
+        data: {
+          userId: params.userId,
+          bcvRate: Number(currentSaving.bcvRate ?? params.fallbackBcvRate ?? 0),
+          amountUsd: overflowUsd,
+          amountBs: overflowBs,
+          status: "APPROVED",
+          paymentDetails: {
+            ...currentDetails,
+            kind: "GENERAL_SAVING_OVERFLOW_FROM_PACKAGE",
+            homeId: null,
+            homeTitle: null,
+            overflowFromHomeId: params.homeId,
+            overflowFromHomeTitle: home.title || currentDetails.homeTitle || "Paquete",
+            overflowReason: "PACKAGE_GOAL_REACHED",
+            sourceSavingId: params.savingId,
+            packageGoalUsd,
+            packageSavedUsdBeforeThisDeposit: approvedPackageUsdBeforeCurrent,
+            packageSavedUsdAfterThisDeposit: approvedPackageUsd,
+          },
+        },
+      });
+    }
+
+    return {
+      completedNow: packageCompletedNow,
+      reservationId,
+      packageGoalUsd,
+      packageTitle: home.title || currentDetails.homeTitle || "Paquete",
+    };
+  });
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
