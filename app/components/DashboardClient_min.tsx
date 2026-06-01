@@ -590,16 +590,6 @@ export default function DashboardClient(props: DashboardClientProps) {
     packageSavingsMap.set(item.targetId, current);
   });
 
-  const completedPackageIds = new Set(
-    Array.from(packageSavingsMap.entries())
-      .filter(([targetId, wallet]) => {
-        const pkg = (props.savingPackages ?? []).find((item) => item.id === targetId);
-        const goal = getTargetGoalUsd(targetId, pkg);
-        return goal > 0 && wallet.totalUsd >= goal;
-      })
-      .map(([targetId]) => targetId)
-  );
-
   const savingsWallets = [
     {
       key: "general",
@@ -614,7 +604,7 @@ export default function DashboardClient(props: DashboardClientProps) {
       targetId: null as string | null,
     },
     ...Array.from(packageSavingsMap.entries())
-      .filter(([targetId, wallet]) => !completedPackageIds.has(targetId) && roundMoney(wallet.totalUsd) > 0)
+      .filter(([, wallet]) => roundMoney(wallet.totalUsd) > 0)
       .map(([targetId, wallet]) => ({
         key: targetId,
         title: wallet.title,
