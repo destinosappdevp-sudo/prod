@@ -229,35 +229,20 @@ export async function POST(req: NextRequest) {
       const currentAmountBs = Number(existingSaving.amountBs ?? 0);
       const currentAmountUsd = Number(existingSaving.amountUsd ?? 0);
 
-      const updated = await (prisma as any).saving.update({
-        where: { id: existingSaving.id },
-        data: {
-          amountBs: currentAmountBs + amountBs,
-          amountUsd: currentAmountUsd + amountUsd,
-          bcvRate,
-          status: "APPROVED",
-          ...(depositDate ? { date: depositDate } : {}),
-          paymentDetails: {
-            ...previousDetails,
-            createdByAdmin: true,
-            lastAdminTopUpBs: amountBs,
-            lastAdminTopUpUsd: amountUsd,
-            lastAdminTopUpRate: bcvRate,
-            lastAdminTopUpAt: new Date().toISOString(),
-            ...(depositDate ? { lastAdminTopUpDate: depositDate.toISOString() } : {}),
-          },
-        },
-      });
+      // Combine el monto ya existente en el registro con el aporte manual del admin
+      const totalDepositUsd = roundMoney(currentAmountUsd + amountUsd);
+      const totalDepositBs = roundMoney(currentAmountBs + amountBs);
 
+      // Actualizar considerando el total combinado y dividir entre paquete/overflow en una sola operación
       if (type === "package" && homeId && packageGoalUsd > 0) {
-        const approvedPackageUsdAfterThisDeposit = roundMoney(approvedPackageUsdBefore + amountUsd);
+        const approvedPackageUsdAfterThisDeposit = roundMoney(approvedPackageUsdBefore + totalDepositUsd);
         const packageCompletedNow = approvedPackageUsdAfterThisDeposit >= packageGoalUsd;
         const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - approvedPackageUsdBefore));
-        const approvedForPackageUsd = roundMoney(Math.min(remainingUsd, amountUsd));
-        const overflowUsd = roundMoney(Math.max(0, amountUsd - approvedForPackageUsd));
+        const approvedForPackageUsd = roundMoney(Math.min(remainingUsd, totalDepositUsd));
+        const overflowUsd = roundMoney(Math.max(0, totalDepositUsd - approvedForPackageUsd));
         const approvedForPackageBs =
-          amountUsd > 0 ? roundMoney((amountBs * approvedForPackageUsd) / amountUsd) : 0;
-        const overflowBs = roundMoney(amountBs - approvedForPackageBs);
+          totalDepositUsd > 0 ? roundMoney((totalDepositBs * approvedForPackageUsd) / totalDepositUsd) : 0;
+        const overflowBs = roundMoney(totalDepositBs - approvedForPackageBs);
 
         const existingReservation = await prismaAny.reservation.findFirst({
           where: {
@@ -295,13 +280,22 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        await (prisma as any).saving.update({
+        const updated = await (prisma as any).saving.update({
           where: { id: existingSaving.id },
           data: {
             amountUsd: approvedForPackageUsd,
             amountBs: approvedForPackageBs,
+            bcvRate,
+            status: "APPROVED",
+            ...(depositDate ? { date: depositDate } : {}),
             paymentDetails: {
               ...previousDetails,
+              createdByAdmin: true,
+              lastAdminTopUpBs: amountBs,
+              lastAdminTopUpUsd: amountUsd,
+              lastAdminTopUpRate: bcvRate,
+              lastAdminTopUpAt: new Date().toISOString(),
+              ...(depositDate ? { lastAdminTopUpDate: depositDate.toISOString() } : {}),
               packageGoalUsd,
               packageSavedUsdBeforeThisDeposit: approvedPackageUsdBefore,
               packageSavedUsdAfterThisDeposit: approvedPackageUsdAfterThisDeposit,
@@ -340,7 +334,29 @@ export async function POST(req: NextRequest) {
           });
         }
 
+        return NextResponse.json({ saving: updated, mode: "updated" });
       }
+
+      // Si no es paquete, simplemente sumar y aprobar
+      const updated = await (prisma as any).saving.update({
+        where: { id: existingSaving.id },
+        data: {
+          amountBs: currentAmountBs + amountBs,
+          amountUsd: currentAmountUsd + amountUsd,
+          bcvRate,
+          status: "APPROVED",
+          ...(depositDate ? { date: depositDate } : {}),
+          paymentDetails: {
+            ...previousDetails,
+            createdByAdmin: true,
+            lastAdminTopUpBs: amountBs,
+            lastAdminTopUpUsd: amountUsd,
+            lastAdminTopUpRate: bcvRate,
+            lastAdminTopUpAt: new Date().toISOString(),
+            ...(depositDate ? { lastAdminTopUpDate: depositDate.toISOString() } : {}),
+          },
+        },
+      });
 
       return NextResponse.json({ saving: updated, mode: "updated" });
     }
