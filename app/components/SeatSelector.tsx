@@ -51,6 +51,11 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
     return true;
   };
 
+  const isSelectableByPlan = (seat: SeatData) => {
+    if (plan === "vip") return seat.zone === "VIP";
+    return seat.zone === "STANDARD";
+  };
+
   const handleSeatClick = (seat: SeatData) => {
     if (!isSelectable(seat)) return;
     setSelectedSeatIds((current) => {
@@ -120,6 +125,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
     const isOccupied = seat.status === "OCCUPIED";
     const isSelected = selectedSeatIdSet.has(seat.id);
     const canSelect = isSelectable(seat);
+    const selectableByPlan = isSelectableByPlan(seat);
     const isVip = seat.zone === "VIP";
 
     let className =
@@ -142,6 +148,8 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
           : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
     }
 
+    const seatContent = isOccupied ? "✕" : !selectableByPlan ? "⛔" : column;
+
     return (
       <button
         key={column}
@@ -158,7 +166,7 @@ export default function SeatSelector({ seats, plan, homeId, flow, guests }: Seat
             : `Asiento ${column}${row}`
         }
       >
-        {isOccupied ? "✕" : column}
+        {seatContent}
       </button>
     );
   };
