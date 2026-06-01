@@ -259,19 +259,11 @@ async function DestinoPage({
   const standardSavingsHref = user
     ? standardSavingsPath
     : `/login?next=${encodeURIComponent(standardSavingsPath)}`;
-  const standardFinishPath = `/seats/${data.id}/passengers?plan=estandar&flow=contado`;
-  const standardFinishHref = user
-    ? standardFinishPath
-    : `/login?next=${encodeURIComponent(standardFinishPath)}`;
 
   const vipSavingsPath = `/checkout/${data.id}?flow=ahorro&plan=vip`;
   const vipSavingsHref = user
     ? vipSavingsPath
     : `/login?next=${encodeURIComponent(vipSavingsPath)}`;
-  const vipFinishPath = `/seats/${data.id}/passengers?plan=vip&flow=contado`;
-  const vipFinishHref = user
-    ? vipFinishPath
-    : `/login?next=${encodeURIComponent(vipFinishPath)}`;
 
   return (
     <div className="mx-auto mt-4 mb-8 w-full max-w-5xl px-4 sm:px-6 lg:mt-6 lg:px-0 lg:mb-10">
@@ -415,12 +407,6 @@ async function DestinoPage({
                     Seguir ahorrando
                     <ArrowRight className="h-4 w-4" />
                   </Link>
-                  <Link
-                    href={standardFinishHref}
-                    className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
-                  >
-                    Terminar de pagar
-                  </Link>
                   <p className="mt-2 text-xs text-gray-500">Estás ahorrando en este plan; tus depósitos aparecen en Mi Alcancía.</p>
                 </>
               ) : (
@@ -507,12 +493,6 @@ async function DestinoPage({
                       >
                         Seguir ahorrando
                         <ArrowRight className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        href={vipFinishHref}
-                        className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
-                      >
-                        Terminar de pagar
                       </Link>
                     </>
                   ) : (
