@@ -93,15 +93,47 @@ function normalizeCedulaValue(cedula?: string | null) {
   return (cedula || "").trim().toUpperCase();
 }
 
+function extractSeatIdsFromPaymentDetails(paymentDetails: unknown): string[] {
+  if (!paymentDetails || typeof paymentDetails !== "object") return [];
+
+  const details = paymentDetails as Record<string, unknown>;
+
+  const fromSeatIdsArray = Array.isArray(details.seatIds)
+    ? details.seatIds
+        .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+        .filter(Boolean)
+    : [];
+
+  const fromSeatIdsString =
+    typeof details.seatIds === "string"
+      ? details.seatIds
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean)
+      : [];
+
+  const fromSeatId =
+    typeof details.seatId === "string" && details.seatId.trim()
+      ? [details.seatId.trim()]
+      : [];
+
+  const direct = Array.from(new Set([...fromSeatIdsArray, ...fromSeatIdsString, ...fromSeatId]));
+  if (direct.length > 0) return direct;
+
+  // Compatibilidad: algunos pagos guardan el payload dentro de paymentDetails.paymentDetails
+  const nested = details.paymentDetails;
+  if (nested && typeof nested === "object") {
+    return extractSeatIdsFromPaymentDetails(nested);
+  }
+
+  return [];
+}
+
 function getSeatLabelFromReservation(reservation: ReservationItem, allSeats: SeatItem[] = []) {
   // Primero, si el pago contiene seatIds (reserva manual multi-asiento o ahorro), mostrarlos todos
   const paymentDetails = (reservation as any).Payment?.paymentDetails;
   if (paymentDetails && typeof paymentDetails === "object") {
-    const seatIds = Array.isArray(paymentDetails.seatIds)
-      ? paymentDetails.seatIds
-      : typeof paymentDetails.seatId === "string" && paymentDetails.seatId
-      ? [paymentDetails.seatId]
-      : [];
+    const seatIds = extractSeatIdsFromPaymentDetails(paymentDetails);
 
     if (seatIds.length > 0) {
       const labels = seatIds
@@ -140,11 +172,7 @@ function getPlanLabelFromReservation(reservation: ReservationItem, allSeats: Sea
   // Intentar inferir plan desde payment.paymentDetails.seatIds usando la lista de asientos
   const paymentDetails = (reservation as any).Payment?.paymentDetails;
   if (paymentDetails && typeof paymentDetails === "object") {
-    const seatIds = Array.isArray(paymentDetails.seatIds)
-      ? paymentDetails.seatIds
-      : typeof paymentDetails.seatId === "string" && paymentDetails.seatId
-      ? [paymentDetails.seatId]
-      : [];
+    const seatIds = extractSeatIdsFromPaymentDetails(paymentDetails);
 
     if (seatIds.length > 0) {
       const firstSeat = allSeats.find((s) => s.id === seatIds[0]);
@@ -440,11 +468,7 @@ export default function PropertyDetailTabs({
         // Si la reserva tiene payment.paymentDetails.seatIds (manual o multi-asiento), registrar cada id
         const paymentDetails = (reservation as any).Payment?.paymentDetails;
         if (paymentDetails && typeof paymentDetails === "object") {
-          const seatIds = Array.isArray(paymentDetails.seatIds)
-            ? paymentDetails.seatIds
-            : typeof paymentDetails.seatId === "string" && paymentDetails.seatId
-            ? [paymentDetails.seatId]
-            : [];
+          const seatIds = extractSeatIdsFromPaymentDetails(paymentDetails);
 
           for (const sid of seatIds) {
             if (sid) confirmedReservationBySeatId.set(sid, reservation);
