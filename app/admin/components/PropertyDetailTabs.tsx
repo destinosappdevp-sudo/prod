@@ -437,6 +437,21 @@ export default function PropertyDetailTabs({
 
       const confirmedReservationBySeatId = new Map<string, ReservationItem>();
       for (const reservation of confirmedReservations) {
+        // Si la reserva tiene payment.paymentDetails.seatIds (manual o multi-asiento), registrar cada id
+        const paymentDetails = (reservation as any).Payment?.paymentDetails;
+        if (paymentDetails && typeof paymentDetails === "object") {
+          const seatIds = Array.isArray(paymentDetails.seatIds)
+            ? paymentDetails.seatIds
+            : typeof paymentDetails.seatId === "string" && paymentDetails.seatId
+            ? [paymentDetails.seatId]
+            : [];
+
+          for (const sid of seatIds) {
+            if (sid) confirmedReservationBySeatId.set(sid, reservation);
+          }
+        }
+
+        // Fallback: si la reserva tiene PackageSeat (reserva clásica de un solo asiento)
         const seatId = reservation.PackageSeat?.id;
         if (seatId) confirmedReservationBySeatId.set(seatId, reservation);
       }
