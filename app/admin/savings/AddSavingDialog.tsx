@@ -189,6 +189,16 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
         return;
       }
 
+      if (data?.completedToReservation) {
+        const reservationSuffix =
+          typeof data?.reservationId === "string" && data.reservationId.trim().length > 0
+            ? `\nReserva: ${data.reservationId}`
+            : "";
+        window.alert(
+          `El abono completó la meta del paquete y fue convertido automáticamente en reserva.${reservationSuffix}`
+        );
+      }
+
       setOpen(false);
       setSelectedUser("");
       setSelectedWalletKey("");

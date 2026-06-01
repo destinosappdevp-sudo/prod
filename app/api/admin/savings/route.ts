@@ -79,10 +79,10 @@ export async function POST(req: NextRequest) {
     const allUserSavings = await (prisma as any).saving.findMany({
       where: { userId },
       orderBy: { date: "desc" },
-      select: { id: true, paymentDetails: true, amountBs: true, amountUsd: true },
+      select: { id: true, paymentDetails: true, amountBs: true, amountUsd: true, status: true },
     });
 
-    const existingSaving = allUserSavings.find((saving: any) => {
+    const existingWalletSaving = allUserSavings.find((saving: any) => {
       const details = saving.paymentDetails && typeof saving.paymentDetails === "object"
         ? saving.paymentDetails
         : {};
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       return targetHomeId === homeId;
     });
 
-    if (type === "package" && !existingSaving) {
+    if (type === "package" && !existingWalletSaving) {
       return NextResponse.json(
         { error: "Solo puedes abonar a alcancías específicas existentes para este usuario." },
         { status: 400 }
@@ -142,9 +142,7 @@ export async function POST(req: NextRequest) {
 
     let packageGoalUsd = 0;
     let approvedPackageUsdBefore = 0;
-    let currentPackageReservationId: string | null = null;
     let currentPackageTitle = "";
-    let currentPackageCompleted = false;
     let currentPackageEffectiveGuests = 1;
     let currentPackagePlan: "vip" | "estandar" | null = null;
 
@@ -206,7 +204,7 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        if (row.status === "APPROVED" && row.id !== existingSaving.id) {
+        if (row.status === "APPROVED") {
           approvedPackageUsdBefore += Number(row.amountUsd ?? 0);
         }
       }
@@ -220,153 +218,213 @@ export async function POST(req: NextRequest) {
       packageGoalUsd = roundMoney(unitPrice * currentPackageEffectiveGuests);
     }
 
-    if (existingSaving) {
-      const previousDetails =
-        existingSaving.paymentDetails && typeof existingSaving.paymentDetails === "object"
-          ? (existingSaving.paymentDetails as Record<string, unknown>)
+    if (type === "package" && homeId) {
+      const existingWalletDetails =
+        existingWalletSaving?.paymentDetails && typeof existingWalletSaving.paymentDetails === "object"
+          ? (existingWalletSaving.paymentDetails as Record<string, unknown>)
           : {};
 
-      const currentAmountBs = Number(existingSaving.amountBs ?? 0);
-      const currentAmountUsd = Number(existingSaving.amountUsd ?? 0);
+      const existingSeatIdsInput = Array.isArray(existingWalletDetails.seatIds)
+        ? existingWalletDetails.seatIds
+        : typeof existingWalletDetails.seatIds === "string"
+        ? existingWalletDetails.seatIds.split(",")
+        : [];
 
-      // Combine el monto ya existente en el registro con el aporte manual del admin
-      const totalDepositUsd = roundMoney(currentAmountUsd + amountUsd);
-      const totalDepositBs = roundMoney(currentAmountBs + amountBs);
+      const existingSeatIds = Array.from(
+        new Set(
+          existingSeatIdsInput
+            .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+            .filter(Boolean)
+        )
+      );
 
-      // Actualizar considerando el total combinado y dividir entre paquete/overflow en una sola operación
-      if (type === "package" && homeId && packageGoalUsd > 0) {
-        const approvedPackageUsdAfterThisDeposit = roundMoney(approvedPackageUsdBefore + totalDepositUsd);
-        const packageCompletedNow = approvedPackageUsdAfterThisDeposit >= packageGoalUsd;
-        const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - approvedPackageUsdBefore));
-        const approvedForPackageUsd = roundMoney(Math.min(remainingUsd, totalDepositUsd));
-        const overflowUsd = roundMoney(Math.max(0, totalDepositUsd - approvedForPackageUsd));
-        const approvedForPackageBs =
-          totalDepositUsd > 0 ? roundMoney((totalDepositBs * approvedForPackageUsd) / totalDepositUsd) : 0;
-        const overflowBs = roundMoney(totalDepositBs - approvedForPackageBs);
+      const existingSeatId =
+        typeof existingWalletDetails.seatId === "string" && existingWalletDetails.seatId.trim()
+          ? existingWalletDetails.seatId.trim()
+          : existingSeatIds[0] || null;
 
-        const existingReservation = await prismaAny.reservation.findFirst({
-          where: {
-            userId,
-            homeId,
-            status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
-          },
-          orderBy: { createdAt: "desc" },
-          select: { id: true, status: true },
-        });
+      const remainingUsd = roundMoney(Math.max(0, packageGoalUsd - approvedPackageUsdBefore));
+      const approvedForPackageUsd = roundMoney(Math.min(remainingUsd, amountUsd));
+      const overflowUsd = roundMoney(Math.max(0, amountUsd - approvedForPackageUsd));
+      const approvedForPackageBs =
+        amountUsd > 0 ? roundMoney((amountBs * approvedForPackageUsd) / amountUsd) : 0;
+      const overflowBs = roundMoney(amountBs - approvedForPackageBs);
 
-        let reservationId = existingReservation?.id ?? null;
-        const createdReservation = !reservationId;
+      const packageSavedAfterUsd = roundMoney(approvedPackageUsdBefore + approvedForPackageUsd);
+      const packageCompletedNow =
+        approvedForPackageUsd > 0 &&
+        approvedPackageUsdBefore < packageGoalUsd &&
+        packageSavedAfterUsd >= packageGoalUsd;
 
-        if (!reservationId) {
-          const startDate = new Date();
-          const endDate = new Date(startDate.getTime() + 86400000);
-          const reservation = await prismaAny.reservation.create({
-            data: {
+      const result = await prisma.$transaction(async (tx) => {
+        let reservationId: string | null = null;
+        let createdReservation = false;
+
+        if (approvedForPackageUsd > 0) {
+          const existingReservation = await tx.reservation.findFirst({
+            where: {
               userId,
               homeId,
-              startDate,
-              endDate,
-              nights: 1,
-              status: packageCompletedNow ? "CONFIRMED" : "PENDING",
-              totalAmount: packageGoalUsd,
+              status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
             },
-            select: { id: true },
+            orderBy: { createdAt: "desc" },
+            select: { id: true, status: true },
           });
-          reservationId = reservation.id;
-        } else if (packageCompletedNow && existingReservation?.status === "PENDING") {
-          await prismaAny.reservation.update({
-            where: { id: reservationId },
-            data: { status: "CONFIRMED" },
+
+          reservationId = existingReservation?.id ?? null;
+          createdReservation = !reservationId;
+
+          if (!reservationId) {
+            const startDate = new Date();
+            const endDate = new Date(startDate.getTime() + 86400000);
+            const reservation = await tx.reservation.create({
+              data: {
+                userId,
+                homeId,
+                startDate,
+                endDate,
+                nights: 1,
+                status: packageCompletedNow ? "CONFIRMED" : "PENDING",
+                totalAmount: packageGoalUsd,
+                ...(existingSeatId ? { seatId: existingSeatId } : {}),
+              },
+              select: { id: true },
+            });
+            reservationId = reservation.id;
+          } else if (packageCompletedNow && existingReservation?.status === "PENDING") {
+            await tx.reservation.update({
+              where: { id: reservationId },
+              data: { status: "CONFIRMED" },
+            });
+          }
+        }
+
+        let createdSaving: any = null;
+
+        if (approvedForPackageUsd > 0) {
+          createdSaving = await tx.saving.create({
+            data: {
+              userId,
+              amountBs: approvedForPackageBs,
+              amountUsd: approvedForPackageUsd,
+              bcvRate,
+              status: "APPROVED",
+              ...(depositDate ? { date: depositDate } : {}),
+              paymentDetails: {
+                ...(paymentDetails as Record<string, unknown>),
+                createdByAdmin: true,
+                seatId: existingSeatId,
+                seatIds: existingSeatIds,
+                plan:
+                  currentPackagePlan ||
+                  (typeof existingWalletDetails.plan === "string" ? existingWalletDetails.plan : null),
+                guests:
+                  typeof existingWalletDetails.guests === "number" && existingWalletDetails.guests > 0
+                    ? existingWalletDetails.guests
+                    : currentPackageEffectiveGuests,
+                initialAmountUsd: approvedForPackageUsd,
+                initialAmountBs: approvedForPackageBs,
+                bcvRateAtCreation: bcvRate,
+                packageGoalUsd,
+                packageSavedUsdBeforeThisDeposit: approvedPackageUsdBefore,
+                packageSavedUsdAfterThisDeposit: packageSavedAfterUsd,
+                packageCompleted: packageSavedAfterUsd >= packageGoalUsd,
+                reservationId,
+                autoCreatedReservation: createdReservation,
+              },
+            },
           });
         }
 
-        const updated = await (prisma as any).saving.update({
-          where: { id: existingSaving.id },
-          data: {
-            amountUsd: approvedForPackageUsd,
-            amountBs: approvedForPackageBs,
-            bcvRate,
-            status: "APPROVED",
-            ...(depositDate ? { date: depositDate } : {}),
-            paymentDetails: {
-              ...previousDetails,
-              createdByAdmin: true,
-              lastAdminTopUpBs: amountBs,
-              lastAdminTopUpUsd: amountUsd,
-              lastAdminTopUpRate: bcvRate,
-              lastAdminTopUpAt: new Date().toISOString(),
-              ...(depositDate ? { lastAdminTopUpDate: depositDate.toISOString() } : {}),
-              packageGoalUsd,
-              packageSavedUsdBeforeThisDeposit: approvedPackageUsdBefore,
-              packageSavedUsdAfterThisDeposit: approvedPackageUsdAfterThisDeposit,
-              packageCompleted: packageCompletedNow,
-              reservationId,
-              autoCreatedReservation: createdReservation,
+        if (packageCompletedNow && reservationId) {
+          const approvedNegativeSavings = await tx.saving.findMany({
+            where: {
+              userId,
+              status: "APPROVED",
+              amountUsd: { lt: 0 },
             },
-          },
-        });
+            select: { paymentDetails: true },
+          });
 
-        currentPackageReservationId = reservationId;
-        currentPackageCompleted = packageCompletedNow;
+          const hasCheckoutDebit = approvedNegativeSavings.some((row: any) => {
+            const rowDetails = row.paymentDetails && typeof row.paymentDetails === "object" ? row.paymentDetails : {};
+            return rowDetails.kind === "CHECKOUT_DEBIT" && rowDetails.reservationId === reservationId;
+          });
 
-        if (packageCompletedNow && overflowUsd > 0) {
-          await prisma.saving.create({
+          if (!hasCheckoutDebit) {
+            const debitAmountBs = roundMoney(packageGoalUsd * bcvRate);
+            await tx.saving.create({
+              data: {
+                userId,
+                bcvRate,
+                amountUsd: -packageGoalUsd,
+                amountBs: debitAmountBs > 0 ? -debitAmountBs : 0,
+                status: "APPROVED",
+                paymentDetails: {
+                  kind: "CHECKOUT_DEBIT",
+                  checkoutMode: "SAVINGS",
+                  reservationId,
+                  homeId,
+                  homeTitle: currentPackageTitle || null,
+                  seatId: existingSeatId,
+                  seatIds: existingSeatIds,
+                  amountUsd: -packageGoalUsd,
+                  amountBs: debitAmountBs > 0 ? -debitAmountBs : 0,
+                  autoCreatedFromSavingApproval: true,
+                  sourceSavingId: createdSaving?.id || null,
+                },
+              },
+            });
+          }
+        }
+
+        if (overflowUsd > 0) {
+          await tx.saving.create({
             data: {
               userId,
               bcvRate,
               amountUsd: overflowUsd,
               amountBs: overflowBs,
               status: "APPROVED",
+              ...(depositDate ? { date: depositDate } : {}),
               paymentDetails: {
-                ...previousDetails,
+                createdByAdmin: true,
                 kind: "GENERAL_SAVING_OVERFLOW_FROM_PACKAGE",
                 homeId: null,
                 homeTitle: null,
                 overflowFromHomeId: homeId,
-                overflowFromHomeTitle: currentPackageTitle,
+                overflowFromHomeTitle: currentPackageTitle || "Paquete",
                 overflowReason: "PACKAGE_GOAL_REACHED",
-                sourceSavingId: existingSaving.id,
+                sourceSavingId: createdSaving?.id || null,
+                initialAmountUsd: overflowUsd,
+                initialAmountBs: overflowBs,
+                bcvRateAtCreation: bcvRate,
                 packageGoalUsd,
                 packageSavedUsdBeforeThisDeposit: approvedPackageUsdBefore,
-                packageSavedUsdAfterThisDeposit: approvedPackageUsdAfterThisDeposit,
+                packageSavedUsdAfterThisDeposit: packageSavedAfterUsd,
               },
             },
           });
         }
 
-        return NextResponse.json({ saving: updated, mode: "updated" });
-      }
-
-      // Si no es paquete, simplemente sumar y aprobar
-      const updated = await (prisma as any).saving.update({
-        where: { id: existingSaving.id },
-        data: {
-          amountBs: currentAmountBs + amountBs,
-          amountUsd: currentAmountUsd + amountUsd,
-          bcvRate,
-          status: "APPROVED",
-          ...(depositDate ? { date: depositDate } : {}),
-          paymentDetails: {
-            ...previousDetails,
-            createdByAdmin: true,
-            lastAdminTopUpBs: amountBs,
-            lastAdminTopUpUsd: amountUsd,
-            lastAdminTopUpRate: bcvRate,
-            lastAdminTopUpAt: new Date().toISOString(),
-            ...(depositDate ? { lastAdminTopUpDate: depositDate.toISOString() } : {}),
-          },
-        },
+        return {
+          saving: createdSaving,
+          completedToReservation: packageCompletedNow,
+          reservationId,
+          packageGoalUsd,
+          packageSavedUsdAfterThisDeposit: packageSavedAfterUsd,
+        };
       });
 
-      return NextResponse.json({ saving: updated, mode: "updated" });
+      return NextResponse.json({
+        saving: result.saving,
+        mode: "created",
+        completedToReservation: result.completedToReservation,
+        reservationId: result.reservationId,
+        packageGoalUsd: result.packageGoalUsd,
+        packageSavedUsdAfterThisDeposit: result.packageSavedUsdAfterThisDeposit,
+      });
     }
-
-    const paymentDetailsWithAudit = {
-      ...(paymentDetails as Record<string, unknown>),
-      initialAmountUsd: amountUsd,
-      initialAmountBs: amountBs,
-      bcvRateAtCreation: bcvRate,
-    };
 
     const saving = await prisma.saving.create({
       data: {
@@ -376,11 +434,22 @@ export async function POST(req: NextRequest) {
         bcvRate,
         status: "APPROVED",
         ...(depositDate ? { date: depositDate } : {}),
-        paymentDetails: paymentDetailsWithAudit,
+        paymentDetails: {
+          ...(paymentDetails as Record<string, unknown>),
+          createdByAdmin: true,
+          initialAmountUsd: amountUsd,
+          initialAmountBs: amountBs,
+          bcvRateAtCreation: bcvRate,
+        },
       },
     });
 
-    return NextResponse.json({ saving, mode: "created" });
+    return NextResponse.json({
+      saving,
+      mode: "created",
+      completedToReservation: false,
+      reservationId: null,
+    });
   } catch (error) {
     console.error("Error al registrar abono desde admin:", error);
     return NextResponse.json({ error: "Error al registrar el abono" }, { status: 500 });
