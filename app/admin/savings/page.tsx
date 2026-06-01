@@ -7,6 +7,11 @@ import AddSavingDialog from "./AddSavingDialog";
 
 const prismaAny = prisma as any;
 
+function roundMoney(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value * 100) / 100;
+}
+
 async function getData() {
   unstable_noStore();
 
@@ -22,7 +27,7 @@ async function getData() {
       orderBy: [{ cedula: "asc" }, { firstName: "asc" }],
     }),
     prisma.home.findMany({
-      select: { id: true, title: true },
+      select: { id: true, title: true, price: true, priceVip: true },
       orderBy: { title: "asc" },
     }),
   ]);
@@ -36,9 +41,60 @@ async function getData() {
     .reduce((sum: number, s: any) => sum + Number(s.amountUsd), 0);
 
   const homeTitleById = new Map<string, string>();
+  const homePricingById = new Map<string, { price: number; priceVip: number }>();
   homes.forEach((home: any) => {
     homeTitleById.set(home.id, home.title || "Paquete sin título");
+    homePricingById.set(home.id, {
+      price: Number(home.price ?? 0),
+      priceVip: Number(home.priceVip ?? 0),
+    });
   });
+
+  const packageMetaMap = new Map<string, { plan: "vip" | "estandar"; guests: number; ts: number }>();
+  const packageApprovedPositiveMap = new Map<string, number>();
+  const packageHasDebitMap = new Map<string, boolean>();
+
+  for (const s of savings as any[]) {
+    const details = s.paymentDetails && typeof s.paymentDetails === "object"
+      ? (s.paymentDetails as Record<string, any>)
+      : {};
+    const targetHomeId = typeof details.homeId === "string" ? details.homeId : null;
+    if (!targetHomeId) continue;
+
+    const key = `${s.userId}:${targetHomeId}`;
+    const amountUsd = Number(s.amountUsd ?? 0);
+
+    if (s.status === "APPROVED" && amountUsd > 0) {
+      const prev = Number(packageApprovedPositiveMap.get(key) ?? 0);
+      packageApprovedPositiveMap.set(key, roundMoney(prev + amountUsd));
+    }
+
+    const kind = typeof details.kind === "string" ? details.kind : null;
+    if (amountUsd < 0 || kind === "CHECKOUT_DEBIT") {
+      packageHasDebitMap.set(key, true);
+    }
+
+    const rawPlan = typeof details.plan === "string" ? details.plan.toLowerCase() : "";
+    const plan: "vip" | "estandar" | null = rawPlan === "vip" || rawPlan === "estandar" ? rawPlan : null;
+    const seatIdsInput = Array.isArray(details.seatIds)
+      ? details.seatIds
+      : typeof details.seatIds === "string"
+      ? details.seatIds.split(",")
+      : [];
+    const seatIds = seatIdsInput
+      .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
+      .filter(Boolean);
+    const guestsFromPayload = typeof details.guests === "number" && details.guests > 0 ? details.guests : 0;
+    const guestsCount = seatIds.length > 0 ? seatIds.length : guestsFromPayload > 0 ? guestsFromPayload : 0;
+
+    if (!plan || guestsCount <= 0) continue;
+
+    const ts = new Date(s.createdAt ?? s.date ?? 0).getTime();
+    const prevMeta = packageMetaMap.get(key);
+    if (!prevMeta || ts >= prevMeta.ts) {
+      packageMetaMap.set(key, { plan, guests: guestsCount, ts });
+    }
+  }
 
   const walletMap = new Map<
     string,
@@ -49,6 +105,8 @@ async function getData() {
       homeTitle: string | null;
       amountBs: number;
       amountUsd: number;
+      goalUsd: number | null;
+      remainingUsd: number | null;
     }
   >();
 
@@ -76,6 +134,8 @@ async function getData() {
           (targetHomeId ? homeTitleById.get(targetHomeId) || "Paquete sin título" : null),
         amountBs: 0,
         amountUsd: 0,
+        goalUsd: null,
+        remainingUsd: null,
       });
     }
 
@@ -84,7 +144,30 @@ async function getData() {
     wallet.amountUsd += Number(s.amountUsd ?? 0);
   }
 
-  const walletBalances = Array.from(walletMap.values());
+  const walletBalances = Array.from(walletMap.values()).map((wallet) => {
+    if (wallet.type !== "package" || !wallet.homeId) return wallet;
+
+    const key = `${wallet.userId}:${wallet.homeId}`;
+    const meta = packageMetaMap.get(key);
+    const pricing = homePricingById.get(wallet.homeId);
+    if (!meta || !pricing) return wallet;
+
+    const unitPrice = meta.plan === "vip" && pricing.priceVip > 0 ? pricing.priceVip : pricing.price;
+    if (!Number.isFinite(unitPrice) || unitPrice <= 0) return wallet;
+
+    const goalUsd = roundMoney(unitPrice * meta.guests);
+    const approvedPositiveUsd = roundMoney(Number(packageApprovedPositiveMap.get(key) ?? 0));
+    const hasCheckoutDebit = packageHasDebitMap.get(key) === true;
+    const remainingUsd = hasCheckoutDebit
+      ? 0
+      : roundMoney(Math.max(0, goalUsd - approvedPositiveUsd));
+
+    return {
+      ...wallet,
+      goalUsd,
+      remainingUsd,
+    };
+  });
 
   return { savings, pendingUsd, approvedUsd, users, homes, walletBalances };
 }

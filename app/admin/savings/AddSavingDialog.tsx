@@ -40,6 +40,8 @@ type WalletBalance = {
   homeTitle: string | null;
   amountBs: number;
   amountUsd: number;
+  goalUsd: number | null;
+  remainingUsd: number | null;
 };
 
 type WalletOption = {
@@ -47,6 +49,8 @@ type WalletOption = {
   title: string;
   amountUsd: number;
   amountBs: number;
+  goalUsd: number | null;
+  remainingUsd: number | null;
   type: "general" | "package";
   homeId: string | null;
 };
@@ -121,8 +125,25 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
             : wallet.homeTitle || (wallet.homeId ? homeTitleById.get(wallet.homeId) || "Paquete sin título" : "Paquete sin título"),
         amountUsd: Number(wallet.amountUsd ?? 0),
         amountBs: Number(wallet.amountBs ?? 0),
+        goalUsd: wallet.goalUsd ?? null,
+        remainingUsd: wallet.remainingUsd ?? null,
         type: wallet.type,
         homeId: wallet.homeId,
+      });
+    }
+
+    // La alcancía general siempre debe estar disponible para abonar,
+    // incluso si aún no existe movimiento previo para ese usuario.
+    if (!seen.has("general:general")) {
+      options.push({
+        id: "general:general",
+        title: "Alcancía general",
+        amountUsd: 0,
+        amountBs: 0,
+        goalUsd: null,
+        remainingUsd: null,
+        type: "general",
+        homeId: null,
       });
     }
 
@@ -277,7 +298,11 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
               <SelectContent>
                 {walletOptions.map((wallet) => (
                   <SelectItem key={wallet.id} value={wallet.id}>
-                    {wallet.title} · USD ${wallet.amountUsd.toFixed(2)}
+                    {wallet.title}
+                    {` · Actual USD $${wallet.amountUsd.toFixed(2)}`}
+                    {wallet.type === "package" && wallet.remainingUsd !== null
+                      ? ` · Restante USD $${Number(wallet.remainingUsd).toFixed(2)}`
+                      : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -322,6 +347,15 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                 {" "}
                 | USD ${Number(selectedWallet.amountUsd).toFixed(2)}
               </p>
+              {selectedWallet.type === "package" && selectedWallet.remainingUsd !== null && (
+                <p className="mt-1">
+                  <span className="font-medium">Saldo restante:</span>{" "}
+                  USD ${Number(selectedWallet.remainingUsd).toFixed(2)}
+                  {selectedWallet.goalUsd !== null
+                    ? ` (meta USD $${Number(selectedWallet.goalUsd).toFixed(2)})`
+                    : ""}
+                </p>
+              )}
             </div>
           )}
 
