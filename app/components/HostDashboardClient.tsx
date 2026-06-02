@@ -603,8 +603,8 @@ export default function HostDashboardClient({
         </div>
       </aside>
 
-      <main className="flex-1 px-4 py-4 md:px-8 md:py-8">
-        <div className="sticky top-[88px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:hidden">
+      <main className="flex-1 px-4 py-2 md:px-8 md:py-8">
+        <div className="sticky top-[28px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:hidden">
           <p className="text-center text-base font-bold text-slate-900">{activeMenuLabel}</p>
         </div>
 
