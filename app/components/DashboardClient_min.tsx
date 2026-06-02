@@ -1213,8 +1213,8 @@ export default function DashboardClient(props: DashboardClientProps) {
             {/* Savings table */}
             <div className="rounded-2xl border border-slate-100 bg-white shadow-sm">
               {displayedSavings.length > 0 ? (
-                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-                  <table className="min-w-[700px] w-full text-sm">
+                <div className="w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <table className="min-w-[900px] w-full text-sm">
                     <thead>
                       <tr className="text-left text-slate-500 font-semibold border-b border-slate-100 bg-slate-50">
                         <th className="px-6 py-3">#</th>
