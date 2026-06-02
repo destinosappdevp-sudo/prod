@@ -787,8 +787,8 @@ export default function DashboardClient(props: DashboardClientProps) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-8 lg:pt-8 overflow-x-hidden">
-        <div className="sticky top-[96px] z-20 mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
+      <main className="flex-1 px-4 pb-24 pt-3 lg:px-8 lg:pb-8 lg:pt-8 overflow-x-hidden">
+        <div className="sticky top-[88px] z-20 mb-2 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
           <button
             type="button"
             aria-label="Abrir menú"
@@ -814,8 +814,8 @@ export default function DashboardClient(props: DashboardClientProps) {
           </div>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">
+        <div className="mb-4 lg:mb-8">
+          <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">
             {activeTab === "reservations" && "Dashboard"}
             {activeTab === "favorites" && "Mis Favoritos"}
             {activeTab === "movimientos" && "Mis Movimientos"}

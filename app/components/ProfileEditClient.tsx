@@ -149,21 +149,6 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Mi Perfil</h1>
-        {!isEditing && (
-          <Button
-            onClick={() => {
-              setIsEditing(true);
-              setError(null);
-              setSuccess(false);
-            }}
-          >
-            Editar Perfil
-          </Button>
-        )}
-      </div>
-
       {success && (
         <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-6">
           <p className="text-sm text-green-800">✓ Cambios guardados exitosamente</p>
@@ -171,8 +156,8 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
       )}
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg border p-6 mb-6">
-          <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg border p-4 sm:p-6 mb-6">
+          <div className="space-y-4 sm:space-y-5">
             {/* Mensaje de error */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-3">
@@ -182,15 +167,15 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
             
             {/* Foto de perfil */}
             <div>
-              <Label className="text-base font-semibold mb-4 block">Foto de Perfil</Label>
-              <div className="flex items-end gap-6">
-                <div className="relative">
+              <Label className="text-base font-semibold mb-3 block">Foto de Perfil</Label>
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="relative flex-shrink-0">
                   <Image
                     src={displayImage}
                     alt="Foto de perfil"
-                    width={120}
-                    height={120}
-                    className="rounded-full border-4 border-gray-200"
+                    width={96}
+                    height={96}
+                    className="rounded-full border-4 border-gray-200 h-[96px] w-[96px] object-cover"
                   />
                 </div>
                 <div>
@@ -404,13 +389,14 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
             )}
 
             {/* Botones */}
-            <div className="flex gap-3 pt-4">
-              <Button type="submit" disabled={isLoading}>
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" disabled={isLoading} className="flex-1 sm:flex-none">
                 {isLoading ? "Guardando..." : "Guardar Cambios"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                className="flex-1 sm:flex-none"
                 onClick={() => {
                   router.push('/my-dashboard');
                 }}
