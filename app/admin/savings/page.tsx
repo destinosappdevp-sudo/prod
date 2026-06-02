@@ -215,7 +215,7 @@ export default async function AdminSavingsPage() {
       </div>
 
       <Card className="overflow-hidden">
-        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <div className="w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
           {savings.length === 0 ? (
             <div className="p-10 text-center text-gray-500">No hay depósitos registrados.</div>
           ) : (
