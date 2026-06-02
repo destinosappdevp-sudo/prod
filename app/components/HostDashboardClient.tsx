@@ -190,6 +190,7 @@ export default function HostDashboardClient({
     .map((part) => part[0]?.toUpperCase())
     .join("")
     .slice(0, 2) || "A";
+  const activeMenuLabel = menuItems.find((item) => item.key === activeTab)?.label || "Dashboard";
 
   // -- Modal Bloquear Fechas -------------------------------------------------
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -602,8 +603,12 @@ export default function HostDashboardClient({
         </div>
       </aside>
 
-      <main className="flex-1 px-4 py-6 md:px-8 md:py-8">
-        <div className="sticky top-3 z-20 mb-6 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+      <main className="flex-1 px-4 py-4 md:px-8 md:py-8">
+        <div className="sticky top-[88px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:hidden">
+          <p className="text-center text-base font-bold text-slate-900">{activeMenuLabel}</p>
+        </div>
+
+        <div className="sticky top-3 z-20 mb-6 hidden rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:block">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-medium text-slate-500">Bienvenido,</p>
@@ -628,7 +633,7 @@ export default function HostDashboardClient({
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="hidden mb-8 md:block">
           <h2 className="text-2xl font-bold text-slate-900">Dashboard Anfitrión</h2>
           <p className="text-sm text-slate-500">Gestiona tus propiedades y reservas</p>
         </div>
