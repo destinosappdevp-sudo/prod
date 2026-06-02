@@ -788,7 +788,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
       {/* Main */}
       <main className="flex-1 px-4 pb-24 pt-3 lg:px-8 lg:pb-8 lg:pt-8 overflow-x-hidden">
-        <div className="sticky top-[88px] z-20 mb-2 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
+        <div className="sticky top-[88px] z-20 mb-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
           <button
             type="button"
             aria-label="Abrir menú"
@@ -797,25 +797,11 @@ export default function DashboardClient(props: DashboardClientProps) {
           >
             <Menu size={20} />
           </button>
-          <span className="text-sm font-semibold text-slate-700">{activeMenuLabel}</span>
-          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-xs font-bold text-[#8A6500]">
-            {props.profileImage ? (
-              <Image
-                src={props.profileImage}
-                alt="Foto de perfil"
-                width={36}
-                height={36}
-                className="h-full w-full object-cover"
-                unoptimized
-              />
-            ) : (
-              userInitials
-            )}
-          </div>
+          <span className="flex-1 text-center text-base font-bold text-slate-900 pr-9">{activeMenuLabel}</span>
         </div>
 
-        <div className="mb-4 lg:mb-8">
-          <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">
+        <div className="hidden lg:block mb-8">
+          <h1 className="text-2xl font-bold text-slate-900">
             {activeTab === "reservations" && "Dashboard"}
             {activeTab === "favorites" && "Mis Favoritos"}
             {activeTab === "movimientos" && "Mis Movimientos"}
