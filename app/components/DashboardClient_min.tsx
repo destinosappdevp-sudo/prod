@@ -787,8 +787,8 @@ export default function DashboardClient(props: DashboardClientProps) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 px-4 pb-24 pt-1 lg:px-8 lg:pb-8 lg:pt-8 overflow-x-hidden">
-        <div className="sticky top-[28px] z-20 mb-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
+      <main className="flex-1 px-4 pb-24 pt-0 lg:px-8 lg:pb-8 lg:pt-8 overflow-x-hidden">
+        <div className="sticky top-[14px] z-20 mb-3 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur lg:hidden">
           <button
             type="button"
             aria-label="Abrir menú"
