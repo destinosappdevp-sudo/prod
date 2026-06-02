@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { NavigationLoader } from "./components/NavigationLoader";
 import LoggedInBottomNav from "./components/LoggedInBottomNav";
+import PwaInstallPrompt from "./components/PwaInstallPrompt";
 import CookieConsentBanner from "./components/CookieConsentBanner";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
@@ -14,9 +15,14 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Destinos Venezuela",
   description: "Destinos Venezuela",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/favicon.webp",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
 };
 
 export default async function RootLayout({
@@ -54,6 +60,7 @@ export default async function RootLayout({
         </main>
         <Footer />
         <LoggedInBottomNav isLoggedIn={showLoggedInBottomNav} />
+        <PwaInstallPrompt />
         <CookieConsentBanner isLoggedIn={!!user} />
       </body>
     </html>
