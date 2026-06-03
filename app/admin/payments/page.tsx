@@ -8,34 +8,117 @@ import { parsePaymentFinancials } from "@/app/lib/payment-currency";
 const formatUsd = (amount: number) => `$${amount.toFixed(2)}`;
 const formatBs = (amount: number) => `Bs ${amount.toFixed(2)}`;
 
-async function getPaymentsForFinanzas() {
+async function getMovementsForFinanzas() {
   unstable_noStore();
 
-  const payments = await prisma.payment.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: {
-      Reservation: {
-        select: {
-          id: true,
-          totalAmount: true,
-          User: {
-            select: {
-              firstName: true,
-              email: true,
+  const prismaAny = prisma as any;
+
+  const [payments, savings] = await Promise.all([
+    prisma.payment.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        Reservation: {
+          select: {
+            id: true,
+            totalAmount: true,
+            User: {
+              select: {
+                id: true,
+                firstName: true,
+                email: true,
+              },
             },
-          },
-          Home: {
-            select: {
-              title: true,
+            Home: {
+              select: {
+                title: true,
+              },
             },
           },
         },
       },
-    },
+    }),
+    prismaAny.saving.findMany({
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      include: {
+        User: {
+          select: {
+            id: true,
+            firstName: true,
+            email: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  const paymentMovements = payments.map((payment) => ({
+    id: payment.id,
+    type: "payment" as const,
+    date: payment.confirmedAt || payment.createdAt,
+    user: payment.Reservation?.User
+      ? {
+          id: payment.Reservation.User.id,
+          firstName: payment.Reservation.User.firstName,
+          email: payment.Reservation.User.email,
+        }
+      : null,
+    homeTitle: payment.Reservation?.Home?.title || "—",
+    amountUsd: payment.amount,
+    amountBs: null,
+    status: payment.status,
+    referenceNumber: payment.referenceNumber,
+    paymentMethod: payment.paymentMethod,
+    paymentDetails: payment.paymentDetails,
+    paymentProofUrl: payment.paymentProofUrl,
+    rejectionReason: payment.rejectionReason,
+    reservationId: payment.Reservation?.id ?? null,
+    raw: payment,
+  }));
+
+  const savingMovements = savings.map((saving) => {
+    const details =
+      saving.paymentDetails && typeof saving.paymentDetails === "object"
+        ? (saving.paymentDetails as Record<string, unknown>)
+        : {};
+
+    return {
+      id: saving.id,
+      type: "saving" as const,
+      date: saving.date || saving.createdAt,
+      user: saving.User
+        ? {
+            id: saving.User.id,
+            firstName: saving.User.firstName,
+            email: saving.User.email,
+          }
+        : null,
+      homeTitle:
+        typeof details.homeTitle === "string" && details.homeTitle.trim()
+          ? details.homeTitle
+          : typeof details.packageTitle === "string" && details.packageTitle.trim()
+          ? details.packageTitle
+          : "—",
+      amountUsd: saving.amountUsd,
+      amountBs: saving.amountBs,
+      status: saving.status,
+      referenceNumber: typeof details.referenceNumber === "string" ? details.referenceNumber : null,
+      paymentMethod: null,
+      paymentDetails: saving.paymentDetails,
+      paymentProofUrl:
+        typeof details.paymentProofUrl === "string" && details.paymentProofUrl.trim()
+          ? details.paymentProofUrl
+          : null,
+      rejectionReason: saving.rejectionReason,
+      reservationId: null,
+      raw: saving,
+    };
   });
 
-  return payments;
+  return [...paymentMovements, ...savingMovements].sort((a, b) => {
+    const timeA = new Date(a.date ?? 0).getTime();
+    const timeB = new Date(b.date ?? 0).getTime();
+    return timeB - timeA;
+  });
 }
 
 async function getStats() {
@@ -97,7 +180,7 @@ async function getStats() {
 }
 
 export default async function FinanzasPage() {
-  const payments = await getPaymentsForFinanzas();
+  const movements = await getMovementsForFinanzas();
   const stats = await getStats();
 
   return (
@@ -179,7 +262,7 @@ export default async function FinanzasPage() {
         </Card>
       </div>
 
-      <FinanzasClient payments={payments} />
+      <FinanzasClient movements={movements} />
     </div>
   );
 }

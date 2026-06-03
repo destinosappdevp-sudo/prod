@@ -3,13 +3,14 @@
 import { Card } from "@/components/ui/card";
 import PaymentActions from "./PaymentActions";
 import { getPaymentMethodLabel, parsePaymentFinancials } from "@/app/lib/payment-currency";
+import SavingActions from "../users/[userId]/savings/SavingActions";
 
 interface FinanzasClientProps {
-  /** Pagos con Reservation → User, Home (puede faltar Reservation). */
-  payments: any[];
+  /** Movimientos financieros unificados: pagos y abonos de alcancía. */
+  movements: any[];
 }
 
-export default function FinanzasClient({ payments }: FinanzasClientProps) {
+export default function FinanzasClient({ movements }: FinanzasClientProps) {
   const toNumber = (value: unknown): number | null => {
     if (typeof value === "number" && Number.isFinite(value)) {
       return value;
@@ -96,14 +97,22 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
     );
   };
 
-  const getPaymentProofUrl = (payment: any) => {
-    if (typeof payment?.paymentProofUrl === "string" && payment.paymentProofUrl.trim()) {
-      return payment.paymentProofUrl;
+  const getMovementBadge = (type: string) => {
+    if (type === "saving") {
+      return <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">Abono</span>;
+    }
+
+    return <span className="rounded-full bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700">Pago</span>;
+  };
+
+  const getPaymentProofUrl = (movement: any) => {
+    if (typeof movement?.paymentProofUrl === "string" && movement.paymentProofUrl.trim()) {
+      return movement.paymentProofUrl;
     }
 
     const details =
-      payment?.paymentDetails && typeof payment.paymentDetails === "object"
-        ? (payment.paymentDetails as Record<string, unknown>)
+      movement?.paymentDetails && typeof movement.paymentDetails === "object"
+        ? (movement.paymentDetails as Record<string, unknown>)
         : null;
 
     if (typeof details?.paymentProofUrl === "string" && details.paymentProofUrl.trim()) {
@@ -116,8 +125,8 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
   return (
     <Card className="overflow-hidden">
       <div className="border-b px-6 py-4">
-        <h2 className="text-lg font-semibold text-gray-900">Movimientos de pago</h2>
-        <p className="text-sm text-gray-500">Últimos pagos registrados en la plataforma</p>
+        <h2 className="text-lg font-semibold text-gray-900">Movimientos financieros</h2>
+        <p className="text-sm text-gray-500">Pagos y abonos de alcancía registrados en la plataforma</p>
       </div>
 
       <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
@@ -126,6 +135,9 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Fecha
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tipo
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Usuario
@@ -148,13 +160,22 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {payments.map((payment: any) => {
-              const res = payment.Reservation;
-              const totals = getRowTotals(payment, res);
-              const paymentProofUrl = getPaymentProofUrl(payment);
-              const dateSrc = payment.confirmedAt || payment.createdAt;
+            {movements.map((movement: any) => {
+              const isSaving = movement.type === "saving";
+              const res = isSaving ? null : movement.raw?.Reservation;
+              const totals = isSaving
+                ? {
+                    usdLabel: `$${Number(movement.amountUsd ?? 0).toFixed(2)}`,
+                    bsLabel:
+                      typeof movement.amountBs === "number" && Number.isFinite(movement.amountBs)
+                        ? `Bs ${Number(movement.amountBs).toFixed(2)}`
+                        : null,
+                  }
+                : getRowTotals(movement.raw, res);
+              const paymentProofUrl = getPaymentProofUrl(movement);
+              const dateSrc = movement.date;
               return (
-                <tr key={payment.id} className="hover:bg-gray-50">
+                <tr key={`${movement.type}-${movement.id}`} className="hover:bg-gray-50">
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                     {dateSrc
                       ? new Date(dateSrc).toLocaleString("es-VE", {
@@ -166,14 +187,17 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
                         })
                       : "—"}
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {res?.User?.firstName} {res?.User?.lastName}
-                    </div>
-                    <div className="text-sm text-gray-500">{res?.User?.email ?? "—"}</div>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {getMovementBadge(movement.type)}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900">{res?.Home?.title || "—"}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {movement.user?.firstName || "—"}
+                    </div>
+                    <div className="text-sm text-gray-500">{movement.user?.email ?? "—"}</div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="text-sm text-gray-900">{movement.homeTitle || "—"}</div>
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-center">
                     <div className="text-sm font-semibold">{totals.usdLabel}</div>
@@ -182,9 +206,11 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
                     )}
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails)}
-                    {payment.referenceNumber && (
-                      <div className="text-xs text-gray-500">Ref: {payment.referenceNumber}</div>
+                    {isSaving
+                      ? "Abono de Alcancía"
+                      : getPaymentMethodLabel(movement.paymentMethod, movement.paymentDetails)}
+                    {!isSaving && movement.referenceNumber && (
+                      <div className="text-xs text-gray-500">Ref: {movement.referenceNumber}</div>
                     )}
                     {paymentProofUrl && (
                       <div className="mt-1">
@@ -198,18 +224,20 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
                         </a>
                       </div>
                     )}
-                    {payment.status === "REJECTED" && payment.rejectionReason && (
+                    {movement.status === "REJECTED" && movement.rejectionReason && (
                       <div className="mt-1 max-w-xs text-xs text-red-600">
-                        Motivo: {payment.rejectionReason}
+                        Motivo: {movement.rejectionReason}
                       </div>
                     )}
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-center">
-                    {getStatusBadge(payment.status)}
+                    {getStatusBadge(movement.status)}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
-                    {payment.status === "PENDING" && res?.id ? (
-                      <PaymentActions paymentId={payment.id} reservationId={res.id} />
+                    {movement.type === "payment" && movement.status === "PENDING" && res?.id ? (
+                      <PaymentActions paymentId={movement.id} reservationId={res.id} />
+                    ) : movement.type === "saving" && movement.status === "PENDING" ? (
+                      <SavingActions savingId={movement.id} currentStatus={movement.status} />
                     ) : (
                       <span className="text-xs text-gray-400">—</span>
                     )}
@@ -221,9 +249,9 @@ export default function FinanzasClient({ payments }: FinanzasClientProps) {
         </table>
       </div>
 
-      {payments.length === 0 && (
+      {movements.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No hay pagos registrados</p>
+          <p className="text-gray-500">No hay movimientos registrados</p>
         </div>
       )}
     </Card>
