@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
+import { writeAuditLog } from "@/app/lib/audit-log";
 
 const prismaAny = prisma as any;
 
@@ -322,6 +323,36 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error al guardar el ahorro";
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  try {
+    const details =
+      saving?.paymentDetails && typeof saving.paymentDetails === "object"
+        ? (saving.paymentDetails as Record<string, unknown>)
+        : {};
+
+    await writeAuditLog({
+      eventType: "USER_SAVING_DEPOSIT_CREATED",
+      sourceRoute: "POST /api/user/savings",
+      actorType: "USER",
+      actorId: user.id,
+      affectedUserId: user.id,
+      transactionId: saving?.id ?? null,
+      statusBefore: null,
+      statusAfter: saving?.status ?? "PENDING",
+      amountUsd: Number(saving?.amountUsd ?? amountUsd ?? 0),
+      amountBs: Number(saving?.amountBs ?? amountBs ?? 0),
+      bcvRate: Number(saving?.bcvRate ?? bcvRate ?? 0),
+      metadata: {
+        kind: details.kind ?? null,
+        homeId: details.homeId ?? null,
+        reservationId: details.reservationId ?? null,
+        referenceNumber: details.referenceNumber ?? null,
+        paymentProofUrl: details.paymentProofUrl ?? null,
+      },
+    });
+  } catch (auditError) {
+    console.error("[audit-log] Error registrando depósito de usuario:", auditError);
   }
 
   return NextResponse.json(saving, { status: 201 });

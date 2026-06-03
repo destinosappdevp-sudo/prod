@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { FROM_EMAIL, getResendClient } from "@/app/lib/resend";
 import { generateGuestConfirmationEmail } from "@/app/lib/email-templates";
+import { writeAuditLog } from "@/app/lib/audit-log";
 
 export const dynamic = "force-dynamic";
 
@@ -802,6 +803,33 @@ export async function PATCH(
         });
       }
 
+      try {
+        const details = normalizeDetails(saving.paymentDetails);
+        await writeAuditLog({
+          eventType: "ADMIN_SAVING_DEPOSIT_REVIEWED",
+          sourceRoute: "PATCH /api/admin/savings/[id]",
+          actorType: "ADMIN",
+          actorId: user.id,
+          affectedUserId: saving.userId,
+          transactionId: saving.id,
+          statusBefore: saving.status,
+          statusAfter: "REJECTED",
+          amountUsd: Number(saving.amountUsd ?? 0),
+          amountBs: Number(saving.amountBs ?? 0),
+          bcvRate: Number(saving.bcvRate ?? 0),
+          metadata: {
+            action: "reject",
+            rejectionReason,
+            kind: details.kind ?? null,
+            homeId: details.homeId ?? null,
+            reservationId: details.reservationId ?? null,
+            referenceNumber: details.referenceNumber ?? null,
+          },
+        });
+      } catch (auditError) {
+        console.error("[audit-log] Error registrando rechazo de depósito:", auditError);
+      }
+
       return NextResponse.json(rejected);
     }
 
@@ -1107,6 +1135,36 @@ export async function PATCH(
         rejectionReason: null,
         reviewedAt: new Date(),
       });
+    }
+
+    try {
+      const details = normalizeDetails(updated?.paymentDetails ?? saving.paymentDetails);
+      await writeAuditLog({
+        eventType: "ADMIN_SAVING_DEPOSIT_REVIEWED",
+        sourceRoute: "PATCH /api/admin/savings/[id]",
+        actorType: "ADMIN",
+        actorId: user.id,
+        affectedUserId: saving.userId,
+        transactionId: saving.id,
+        statusBefore: saving.status,
+        statusAfter: "APPROVED",
+        amountUsd: Number(updated?.amountUsd ?? saving.amountUsd ?? 0),
+        amountBs: Number(updated?.amountBs ?? saving.amountBs ?? 0),
+        bcvRate: Number(updated?.bcvRate ?? saving.bcvRate ?? 0),
+        metadata: {
+          action: "approve",
+          kind: details.kind ?? null,
+          homeId: details.homeId ?? null,
+          reservationId: details.reservationId ?? null,
+          referenceNumber: details.referenceNumber ?? null,
+          completedNow,
+          completedGoalUsd,
+          completedPackageTitle,
+          completedReservationId,
+        },
+      });
+    } catch (auditError) {
+      console.error("[audit-log] Error registrando aprobación de depósito:", auditError);
     }
 
     return NextResponse.json(updated);

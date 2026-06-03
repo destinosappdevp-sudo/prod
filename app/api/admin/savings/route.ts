@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
 import { Prisma } from "@prisma/client";
+import { writeAuditLog } from "@/app/lib/audit-log";
 
 export const dynamic = "force-dynamic";
 
@@ -413,8 +414,41 @@ export async function POST(req: NextRequest) {
           reservationId,
           packageGoalUsd,
           packageSavedUsdAfterThisDeposit: packageSavedAfterUsd,
+          approvedForPackageUsd,
+          approvedForPackageBs,
+          overflowUsd,
+          overflowBs,
         };
       });
+
+      try {
+        await writeAuditLog({
+          eventType: "ADMIN_SAVING_DEPOSIT_CREATED",
+          sourceRoute: "POST /api/admin/savings",
+          actorType: "ADMIN",
+          actorId: user.id,
+          affectedUserId: userId,
+          transactionId: result?.saving?.id ?? null,
+          statusBefore: null,
+          statusAfter: "APPROVED",
+          amountUsd: Number(result?.saving?.amountUsd ?? result?.approvedForPackageUsd ?? 0),
+          amountBs: Number(result?.saving?.amountBs ?? result?.approvedForPackageBs ?? 0),
+          bcvRate: Number(bcvRate ?? 0),
+          metadata: {
+            walletType: "package",
+            homeId,
+            reservationId: result?.reservationId ?? null,
+            packageGoalUsd: result?.packageGoalUsd ?? null,
+            packageSavedUsdAfterThisDeposit: result?.packageSavedUsdAfterThisDeposit ?? null,
+            overflowUsd: result?.overflowUsd ?? 0,
+            overflowBs: result?.overflowBs ?? 0,
+            inputAmountUsd: amountUsd,
+            inputAmountBs: amountBs,
+          },
+        });
+      } catch (auditError) {
+        console.error("[audit-log] Error registrando depósito admin (package):", auditError);
+      }
 
       return NextResponse.json({
         saving: result.saving,
@@ -443,6 +477,29 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    try {
+      await writeAuditLog({
+        eventType: "ADMIN_SAVING_DEPOSIT_CREATED",
+        sourceRoute: "POST /api/admin/savings",
+        actorType: "ADMIN",
+        actorId: user.id,
+        affectedUserId: userId,
+        transactionId: saving.id,
+        statusBefore: null,
+        statusAfter: saving.status,
+        amountUsd: Number(saving.amountUsd ?? amountUsd ?? 0),
+        amountBs: Number(saving.amountBs ?? amountBs ?? 0),
+        bcvRate: Number(saving.bcvRate ?? bcvRate ?? 0),
+        metadata: {
+          walletType: "general",
+          inputAmountUsd: amountUsd,
+          inputAmountBs: amountBs,
+        },
+      });
+    } catch (auditError) {
+      console.error("[audit-log] Error registrando depósito admin (general):", auditError);
+    }
 
     return NextResponse.json({
       saving,
