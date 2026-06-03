@@ -75,7 +75,7 @@ async function getMovementsForFinanzas() {
     raw: payment,
   }));
 
-  const savingMovements = savings.map((saving) => {
+  const savingMovements = (savings as Array<any>).map((saving) => {
     const details =
       saving.paymentDetails && typeof saving.paymentDetails === "object"
         ? (saving.paymentDetails as Record<string, unknown>)
