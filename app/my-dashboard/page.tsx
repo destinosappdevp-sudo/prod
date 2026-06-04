@@ -628,7 +628,7 @@ export async function getGuestDashboardData(userId: string) {
     prismaAny.platformConfig.findFirst({ select: { bcvRate: true } }),
   ]);
 
-  let reservations = initialReservations;
+  const reservations = initialReservations;
 
   const activeSavingByHomeId = new Map<
     string,
@@ -658,95 +658,6 @@ export async function getGuestDashboardData(userId: string) {
         : null;
     if (!activeSavingByHomeId.has(homeId)) {
       activeSavingByHomeId.set(homeId, { seatId, guests, plan });
-    }
-  }
-
-  const reservedHomeIds = new Set(
-    (reservations as any[])
-      .filter((r: any) => ["PENDING", "CONFIRMED", "COMPLETED"].includes(r.status))
-      .map((r: any) => r.homeId)
-      .filter(Boolean)
-  );
-
-  const missingReservationHomeIds = Array.from(activeSavingByHomeId.keys()).filter(
-    (homeId) => !reservedHomeIds.has(homeId)
-  );
-
-  if (missingReservationHomeIds.length > 0) {
-    const homesForMissing = await prismaAny.home.findMany({
-      where: { id: { in: missingReservationHomeIds } },
-      select: { id: true, price: true, priceVip: true },
-    });
-
-    const homePriceById = new Map<string, { price: number; priceVip: number }>(
-      homesForMissing.map((h: any) => [
-        h.id as string,
-        { price: Number(h.price ?? 0), priceVip: Number(h.priceVip ?? 0) },
-      ])
-    );
-
-    let createdAtLeastOne = false;
-
-    for (const homeId of missingReservationHomeIds) {
-      const priceRow = homePriceById.get(homeId) ?? { price: 0, priceVip: 0 };
-      const savingMeta = activeSavingByHomeId.get(homeId);
-      const guests = Number(savingMeta?.guests ?? 1);
-      const unitPrice =
-        savingMeta?.plan === "vip" && Number(priceRow.priceVip ?? 0) > 0
-          ? Number(priceRow.priceVip ?? 0)
-          : Number(priceRow.price ?? 0);
-      const totalAmount = Math.round(unitPrice * guests * 100) / 100;
-      if (totalAmount <= 0) continue;
-
-      const seatId = savingMeta?.seatId ?? null;
-      const startDate = new Date();
-      const endDate = new Date(startDate.getTime() + 86400000);
-
-      try {
-        await prismaAny.reservation.create({
-          data: {
-            userId,
-            homeId,
-            startDate,
-            endDate,
-            nights: 1,
-            status: "PENDING",
-            totalAmount,
-            ...(seatId ? { seatId } : {}),
-          },
-        });
-        createdAtLeastOne = true;
-      } catch {
-        // Ignorar conflictos puntuales (por ejemplo, seatId ya asociado)
-      }
-    }
-
-    if (createdAtLeastOne) {
-      reservations = await prismaAny.reservation.findMany({
-        where: { userId },
-        select: {
-          id: true,
-          homeId: true,
-          startDate: true,
-          endDate: true,
-          status: true,
-          totalAmount: true,
-          createdAt: true,
-          Home: {
-            select: {
-              id: true,
-              photo: true,
-              title: true,
-              country: true,
-              municipality: true,
-              price: true,
-              description: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-      });
     }
   }
 

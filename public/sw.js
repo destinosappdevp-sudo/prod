@@ -1,5 +1,14 @@
-const CACHE_NAME = "destinos-v1";
+const CACHE_NAME = "destinos-v2";
 const PRECACHE_URLS = ["/", "/manifest.webmanifest", "/favicon.webp", "/media/logo-destinos.webp"];
+const PRIVATE_PATH_PREFIXES = [
+  "/my-dashboard",
+  "/reservation",
+  "/profile",
+  "/messages",
+  "/settings",
+  "/favorites",
+  "/admin",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
@@ -23,6 +32,11 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  if (PRIVATE_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
+    event.respondWith(fetch(request));
     return;
   }
 
