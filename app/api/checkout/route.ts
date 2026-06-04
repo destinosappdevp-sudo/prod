@@ -88,6 +88,53 @@ function getWalletBreakdownUsd(
   );
 }
 
+async function getOwnedSeatIdsForUser(params: {
+  db: any;
+  userId: string;
+  homeId: string;
+}) {
+  const savingsRows = await params.db.saving.findMany({
+    where: {
+      userId: params.userId,
+      status: { in: ["PENDING", "APPROVED"] },
+    },
+    select: { paymentDetails: true },
+  });
+
+  const ownedSeatIds = new Set<string>();
+
+  for (const row of savingsRows as Array<{ paymentDetails: unknown }>) {
+    const details = normalizePaymentDetails(row.paymentDetails);
+    const rowHomeId =
+      typeof details.homeId === "string" && details.homeId.trim()
+        ? details.homeId.trim()
+        : null;
+
+    if (rowHomeId !== params.homeId) {
+      continue;
+    }
+
+    const rowSeatIds = Array.isArray(details.seatIds)
+      ? details.seatIds
+      : typeof details.seatIds === "string"
+      ? details.seatIds.split(",")
+      : [];
+
+    for (const seatId of rowSeatIds) {
+      if (typeof seatId === "string" && seatId.trim()) {
+        ownedSeatIds.add(seatId.trim());
+      }
+    }
+
+    const singleSeatId = typeof details.seatId === "string" ? details.seatId.trim() : "";
+    if (singleSeatId) {
+      ownedSeatIds.add(singleSeatId);
+    }
+  }
+
+  return ownedSeatIds;
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -428,7 +475,18 @@ export async function POST(request: Request) {
         }
 
         if (seat.status === "OCCUPIED") {
-          return NextResponse.json({ error: "Uno de los asientos seleccionados ya está ocupado. Por favor elige otro." }, { status: 409 });
+          const ownedSeatIds = await getOwnedSeatIdsForUser({
+            db: prisma,
+            userId,
+            homeId,
+          });
+
+          if (!ownedSeatIds.has(seat.id)) {
+            return NextResponse.json(
+              { error: "Uno de los asientos seleccionados ya está ocupado. Por favor elige otro." },
+              { status: 409 }
+            );
+          }
         }
 
         if (plan === "vip" && seat.zone !== "VIP") {
@@ -523,17 +581,26 @@ export async function POST(request: Request) {
         },
       });
 
-      // Marcar asientos como OCUPADOS si se seleccionaron
+      // Marcar como OCUPADOS solo los asientos que aún siguen disponibles.
+      // Los que ya están ocupados por este mismo usuario se mantienen sin cambio.
       if (selectedSeatIds.length > 0) {
-        const occupied = await tx.packageSeat.updateMany({
+        const seatsToOccupy = await tx.packageSeat.findMany({
           where: {
             id: { in: selectedSeatIds },
+            status: "AVAILABLE",
+          },
+          select: { id: true },
+        });
+
+        const occupied = await tx.packageSeat.updateMany({
+          where: {
+            id: { in: seatsToOccupy.map((seat: any) => seat.id) },
             status: "AVAILABLE",
           },
           data: { status: "OCCUPIED" },
         });
 
-        if (occupied.count !== selectedSeatIds.length) {
+        if (occupied.count !== seatsToOccupy.length) {
           throw new Error("Uno de los asientos ya fue ocupado por otro usuario. Por favor elige otro.");
         }
       }
