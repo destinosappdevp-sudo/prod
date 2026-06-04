@@ -16,6 +16,13 @@ function normalizePaymentDetails(value: unknown): Record<string, any> {
   return value as Record<string, any>;
 }
 
+function getCheckoutDebitRows(rows: Array<{ id: string; amountUsd: number; amountBs: number; bcvRate: number; paymentDetails: unknown }>) {
+  return rows.filter((row) => {
+    const details = normalizePaymentDetails(row.paymentDetails);
+    return details.kind === "CHECKOUT_DEBIT";
+  });
+}
+
 async function hasApprovedPackageSavings(params: {
   tx: any;
   userId: string;
@@ -146,6 +153,10 @@ export async function PATCH(
 
     // Actualizar en transacción
     const result = await prismaAny.$transaction(async (tx: any) => {
+      if (payment.status !== "PENDING") {
+        throw new Error("Solo se pueden procesar pagos en estado pendiente");
+      }
+
       // Actualizar el pago
       const updatedPayment = await tx.payment.update({
         where: { id },
@@ -196,6 +207,96 @@ export async function PATCH(
               status: "AVAILABLE",
             },
           });
+        }
+      }
+
+      if (action === "reject") {
+        const checkoutDebits = getCheckoutDebitRows(
+          await tx.saving.findMany({
+            where: {
+              userId: payment.Reservation?.userId,
+            },
+            select: {
+              id: true,
+              amountUsd: true,
+              amountBs: true,
+              bcvRate: true,
+              paymentDetails: true,
+            },
+          })
+        ).filter((row) => {
+          const details = normalizePaymentDetails(row.paymentDetails);
+          const rowPaymentId =
+            typeof details.paymentId === "string" && details.paymentId.trim()
+              ? details.paymentId.trim()
+              : null;
+          const rowReservationId =
+            typeof details.reservationId === "string" && details.reservationId.trim()
+              ? details.reservationId.trim()
+              : null;
+
+          return rowPaymentId === payment.id || rowReservationId === payment.reservationId;
+        });
+
+        if (checkoutDebits.length > 0) {
+          const existingReversals = await tx.saving.findMany({
+            where: {
+              userId: payment.Reservation?.userId,
+              status: "APPROVED",
+              amountUsd: { gt: 0 },
+            },
+            select: {
+              paymentDetails: true,
+            },
+          });
+
+          const reversedDebitIds = new Set<string>(
+            existingReversals
+              .map((row: any) => {
+                const details = normalizePaymentDetails(row.paymentDetails);
+                if (details.kind !== "CHECKOUT_DEBIT_REVERSAL") return null;
+                return typeof details.reversedSavingId === "string" && details.reversedSavingId.trim()
+                  ? details.reversedSavingId.trim()
+                  : null;
+              })
+              .filter(Boolean)
+          );
+
+          for (const debit of checkoutDebits) {
+            if (reversedDebitIds.has(debit.id)) {
+              continue;
+            }
+
+            const debitDetails = normalizePaymentDetails(debit.paymentDetails);
+
+            await tx.saving.create({
+              data: {
+                userId: payment.Reservation.userId,
+                bcvRate: Number(debit.bcvRate ?? 0),
+                amountUsd: Math.abs(Number(debit.amountUsd ?? 0)),
+                amountBs: Math.abs(Number(debit.amountBs ?? 0)),
+                status: "APPROVED",
+                paymentDetails: {
+                  kind: "CHECKOUT_DEBIT_REVERSAL",
+                  reversedSavingId: debit.id,
+                  reservationId: payment.reservationId,
+                  paymentId: payment.id,
+                  homeId:
+                    typeof debitDetails.homeId === "string" && debitDetails.homeId.trim()
+                      ? debitDetails.homeId.trim()
+                      : null,
+                  targetHomeId:
+                    typeof debitDetails.targetHomeId === "string" && debitDetails.targetHomeId.trim()
+                      ? debitDetails.targetHomeId.trim()
+                      : null,
+                  seatIds: Array.isArray(debitDetails.seatIds) ? debitDetails.seatIds : [],
+                  sourceWallet:
+                    typeof debitDetails.sourceWallet === "string" ? debitDetails.sourceWallet : null,
+                  note: "Reintegro automático por rechazo de pago",
+                },
+              },
+            });
+          }
         }
       }
 
@@ -319,6 +420,12 @@ export async function PATCH(
     });
   } catch (error) {
     console.error("Error updating payment:", error);
+    if (error instanceof Error && error.message === "Solo se pueden procesar pagos en estado pendiente") {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
