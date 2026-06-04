@@ -16,54 +16,6 @@ function normalizePaymentDetails(value: unknown): Record<string, any> {
   return value as Record<string, any>;
 }
 
-async function hasApprovedPackageSavings(params: {
-  tx: any;
-  userId: string;
-  homeId: string;
-  seatId?: string | null;
-}) {
-  const rows = await params.tx.saving.findMany({
-    where: {
-      userId: params.userId,
-      status: "APPROVED",
-      amountUsd: { gt: 0 },
-    },
-    select: {
-      paymentDetails: true,
-      amountUsd: true,
-    },
-  });
-
-  return rows.some((row: any) => {
-    const details = normalizePaymentDetails(row.paymentDetails);
-    const rowHomeId =
-      typeof details.homeId === "string" && details.homeId.trim()
-        ? details.homeId.trim()
-        : null;
-    if (rowHomeId !== params.homeId) return false;
-
-    if (!params.seatId) return true;
-
-    const rowSeatId =
-      typeof details.seatId === "string" && details.seatId.trim()
-        ? details.seatId.trim()
-        : null;
-
-    const rowSeatIds = Array.isArray(details.seatIds)
-      ? details.seatIds
-          .map((item: unknown) => (typeof item === "string" ? item.trim() : ""))
-          .filter(Boolean)
-      : [];
-
-    // Compatibilidad con depósitos antiguos sin seatId explícito.
-    return (
-      rowSeatId === null ||
-      rowSeatId === params.seatId ||
-      rowSeatIds.includes(params.seatId)
-    );
-  });
-}
-
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -168,8 +120,7 @@ export async function PATCH(
         },
       });
 
-      // Si se rechaza el pago, solo liberar asiento si no hay saldo previo del paquete/asiento.
-      if (action === "reject" && payment.Reservation?.seatId) {
+      if (action === "reject" && payment.Reservation?.userId) {
         const paymentDetails = normalizePaymentDetails(payment.paymentDetails);
         const extraSeatIds = Array.isArray(paymentDetails.seatIds)
           ? paymentDetails.seatIds
@@ -177,33 +128,12 @@ export async function PATCH(
               .filter(Boolean)
           : [];
         const seatIdsToRelease = Array.from(
-          new Set([payment.Reservation.seatId, ...extraSeatIds])
+          new Set([
+            ...(payment.Reservation?.seatId ? [payment.Reservation.seatId] : []),
+            ...extraSeatIds,
+          ])
         );
 
-        const hasPriorSavings =
-          payment.Reservation?.userId && payment.Reservation?.homeId
-            ? await hasApprovedPackageSavings({
-                tx,
-                userId: payment.Reservation.userId,
-                homeId: payment.Reservation.homeId,
-                seatId: payment.Reservation.seatId,
-              })
-            : false;
-
-        if (!hasPriorSavings) {
-          await tx.packageSeat.updateMany({
-            where: {
-              id: { in: seatIdsToRelease },
-              status: "OCCUPIED",
-            },
-            data: {
-              status: "AVAILABLE",
-            },
-          });
-        }
-      }
-
-      if (action === "reject" && payment.Reservation?.userId) {
         const relatedSavings = await tx.saving.findMany({
           where: {
             userId: payment.Reservation.userId,
@@ -266,6 +196,111 @@ export async function PATCH(
               rejectionReason: "Reversa anulada para evitar duplicidad de saldo",
             },
           });
+        }
+
+        // Si al rechazar el pago el saldo aprobado para ese paquete queda en 0,
+        // cancelar reservas pendientes sin pago confirmado y liberar asientos.
+        if (payment.Reservation?.homeId) {
+          const approvedRows = await tx.saving.findMany({
+            where: {
+              userId: payment.Reservation.userId,
+              status: "APPROVED",
+            },
+            select: {
+              amountUsd: true,
+              paymentDetails: true,
+            },
+          });
+
+          const approvedPackageBalanceUsd = Number(
+            approvedRows
+              .reduce((sum: number, row: any) => {
+                const details = normalizePaymentDetails(row.paymentDetails);
+                if (details.kind === "CHECKOUT_DEBIT_REVERSAL") {
+                  return sum;
+                }
+
+                const rowHomeId =
+                  typeof details.homeId === "string" && details.homeId.trim()
+                    ? details.homeId.trim()
+                    : null;
+
+                if (rowHomeId !== payment.Reservation.homeId) {
+                  return sum;
+                }
+
+                return sum + Number(row.amountUsd ?? 0);
+              }, 0)
+              .toFixed(2)
+          );
+
+          if (approvedPackageBalanceUsd <= 0) {
+            const pendingReservations = await tx.reservation.findMany({
+              where: {
+                userId: payment.Reservation.userId,
+                homeId: payment.Reservation.homeId,
+                status: "PENDING",
+              },
+              select: {
+                id: true,
+                seatId: true,
+                Payment: {
+                  select: {
+                    status: true,
+                    amount: true,
+                  },
+                },
+              },
+            });
+
+            const unpaidPendingReservations = pendingReservations.filter((row: any) => {
+              const paymentStatus =
+                typeof row?.Payment?.status === "string" ? row.Payment.status : null;
+              const amount = Number(row?.Payment?.amount ?? 0);
+              if (!row?.Payment) return true;
+              if (paymentStatus === "CONFIRMED") return false;
+              return amount <= 0 || paymentStatus === "PENDING" || paymentStatus === "REJECTED" || paymentStatus === "CANCELLED";
+            });
+
+            const seatsFromPendingReservations = unpaidPendingReservations
+              .map((row: any) =>
+                typeof row.seatId === "string" && row.seatId.trim() ? row.seatId.trim() : ""
+              )
+              .filter(Boolean);
+
+            const allSeatIdsToRelease = Array.from(
+              new Set([...seatIdsToRelease, ...seatsFromPendingReservations])
+            );
+
+            if (allSeatIdsToRelease.length > 0) {
+              await tx.packageSeat.updateMany({
+                where: {
+                  id: { in: allSeatIdsToRelease },
+                  status: "OCCUPIED",
+                },
+                data: {
+                  status: "AVAILABLE",
+                },
+              });
+            }
+
+            const pendingReservationIds = unpaidPendingReservations
+              .map((row: any) => row.id)
+              .filter(Boolean);
+
+            if (pendingReservationIds.length > 0) {
+              await tx.reservation.updateMany({
+                where: {
+                  id: { in: pendingReservationIds },
+                  status: "PENDING",
+                },
+                data: {
+                  status: "CANCELLED",
+                },
+              });
+            }
+
+          }
         }
       }
 
