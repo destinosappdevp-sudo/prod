@@ -16,13 +16,6 @@ function normalizePaymentDetails(value: unknown): Record<string, any> {
   return value as Record<string, any>;
 }
 
-function getCheckoutDebitRows(rows: Array<{ id: string; amountUsd: number; amountBs: number; bcvRate: number; paymentDetails: unknown }>) {
-  return rows.filter((row) => {
-    const details = normalizePaymentDetails(row.paymentDetails);
-    return details.kind === "CHECKOUT_DEBIT";
-  });
-}
-
 async function hasApprovedPackageSavings(params: {
   tx: any;
   userId: string;
@@ -210,22 +203,23 @@ export async function PATCH(
         }
       }
 
-      if (action === "reject") {
-        const checkoutDebits = getCheckoutDebitRows(
-          await tx.saving.findMany({
-            where: {
-              userId: payment.Reservation?.userId,
-            },
-            select: {
-              id: true,
-              amountUsd: true,
-              amountBs: true,
-              bcvRate: true,
-              paymentDetails: true,
-            },
-          })
-        ).filter((row) => {
+      if (action === "reject" && payment.Reservation?.userId) {
+        const relatedSavings = await tx.saving.findMany({
+          where: {
+            userId: payment.Reservation.userId,
+          },
+          select: {
+            id: true,
+            paymentDetails: true,
+          },
+        });
+
+        const checkoutDebitIds: string[] = [];
+        const reversalIds: string[] = [];
+
+        for (const row of relatedSavings as Array<{ id: string; paymentDetails: unknown }>) {
           const details = normalizePaymentDetails(row.paymentDetails);
+          const rowKind = typeof details.kind === "string" ? details.kind : null;
           const rowPaymentId =
             typeof details.paymentId === "string" && details.paymentId.trim()
               ? details.paymentId.trim()
@@ -235,68 +229,43 @@ export async function PATCH(
               ? details.reservationId.trim()
               : null;
 
-          return rowPaymentId === payment.id || rowReservationId === payment.reservationId;
-        });
+          if (rowPaymentId !== payment.id && rowReservationId !== payment.reservationId) {
+            continue;
+          }
 
-        if (checkoutDebits.length > 0) {
-          const existingReversals = await tx.saving.findMany({
+          if (rowKind === "CHECKOUT_DEBIT") {
+            checkoutDebitIds.push(row.id);
+            continue;
+          }
+
+          // Limpia reversas antiguas creadas por la lógica previa para que no inflen saldo.
+          if (rowKind === "CHECKOUT_DEBIT_REVERSAL") {
+            reversalIds.push(row.id);
+          }
+        }
+
+        if (checkoutDebitIds.length > 0) {
+          await tx.saving.updateMany({
             where: {
-              userId: payment.Reservation?.userId,
-              status: "APPROVED",
-              amountUsd: { gt: 0 },
+              id: { in: checkoutDebitIds },
             },
-            select: {
-              paymentDetails: true,
+            data: {
+              status: "REJECTED",
+              rejectionReason: "Débito anulado por rechazo del pago mixto",
             },
           });
+        }
 
-          const reversedDebitIds = new Set<string>(
-            existingReversals
-              .map((row: any) => {
-                const details = normalizePaymentDetails(row.paymentDetails);
-                if (details.kind !== "CHECKOUT_DEBIT_REVERSAL") return null;
-                return typeof details.reversedSavingId === "string" && details.reversedSavingId.trim()
-                  ? details.reversedSavingId.trim()
-                  : null;
-              })
-              .filter(Boolean)
-          );
-
-          for (const debit of checkoutDebits) {
-            if (reversedDebitIds.has(debit.id)) {
-              continue;
-            }
-
-            const debitDetails = normalizePaymentDetails(debit.paymentDetails);
-
-            await tx.saving.create({
-              data: {
-                userId: payment.Reservation.userId,
-                bcvRate: Number(debit.bcvRate ?? 0),
-                amountUsd: Math.abs(Number(debit.amountUsd ?? 0)),
-                amountBs: Math.abs(Number(debit.amountBs ?? 0)),
-                status: "APPROVED",
-                paymentDetails: {
-                  kind: "CHECKOUT_DEBIT_REVERSAL",
-                  reversedSavingId: debit.id,
-                  reservationId: payment.reservationId,
-                  paymentId: payment.id,
-                  homeId:
-                    typeof debitDetails.homeId === "string" && debitDetails.homeId.trim()
-                      ? debitDetails.homeId.trim()
-                      : null,
-                  targetHomeId:
-                    typeof debitDetails.targetHomeId === "string" && debitDetails.targetHomeId.trim()
-                      ? debitDetails.targetHomeId.trim()
-                      : null,
-                  seatIds: Array.isArray(debitDetails.seatIds) ? debitDetails.seatIds : [],
-                  sourceWallet:
-                    typeof debitDetails.sourceWallet === "string" ? debitDetails.sourceWallet : null,
-                  note: "Reintegro automático por rechazo de pago",
-                },
-              },
-            });
-          }
+        if (reversalIds.length > 0) {
+          await tx.saving.updateMany({
+            where: {
+              id: { in: reversalIds },
+            },
+            data: {
+              status: "REJECTED",
+              rejectionReason: "Reversa anulada para evitar duplicidad de saldo",
+            },
+          });
         }
       }
 

@@ -16,6 +16,10 @@ function normalizePaymentDetails(value: unknown): Record<string, any> {
   return value as Record<string, any>;
 }
 
+function isLegacyReversal(details: Record<string, any>) {
+  return details.kind === "CHECKOUT_DEBIT_REVERSAL";
+}
+
 function getEligibleSavingsUsd(
   savingsRows: Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
   currentHomeId: string
@@ -24,12 +28,19 @@ function getEligibleSavingsUsd(
     savingsRows.reduce((sum, row) => {
       const amountUsd = Number(row.amountUsd ?? 0);
       const details = normalizePaymentDetails(row.paymentDetails);
+      if (isLegacyReversal(details)) {
+        return sum;
+      }
       const rowHomeId =
         typeof details.homeId === "string" && details.homeId.trim()
           ? details.homeId.trim()
           : null;
 
       if (amountUsd < 0) {
+        if (row.status === "REJECTED") {
+          return sum;
+        }
+
         if (!rowHomeId || rowHomeId === currentHomeId) {
           return sum + amountUsd;
         }
@@ -58,12 +69,19 @@ function getWalletBreakdownUsd(
     (acc, row) => {
       const amountUsd = Number(row.amountUsd ?? 0);
       const details = normalizePaymentDetails(row.paymentDetails);
+      if (isLegacyReversal(details)) {
+        return acc;
+      }
       const rowHomeId =
         typeof details.homeId === "string" && details.homeId.trim()
           ? details.homeId.trim()
           : null;
 
       if (amountUsd < 0) {
+        if (row.status === "REJECTED") {
+          return acc;
+        }
+
         if (!rowHomeId) {
           acc.general = roundMoney(acc.general + amountUsd);
         } else if (rowHomeId === currentHomeId) {
@@ -415,6 +433,15 @@ export async function POST(request: Request) {
     const availableSavingsUsd = roundMoney(
       savingsRows.reduce((sum: number, s: any) => {
         const usd = Number(s.amountUsd ?? 0);
+        const details = normalizePaymentDetails(s.paymentDetails);
+        if (isLegacyReversal(details)) {
+          return sum;
+        }
+
+        if (usd < 0 && s.status === "REJECTED") {
+          return sum;
+        }
+
         if (usd < 0) return sum + usd;
         return s.status === "APPROVED" ? sum + usd : sum;
       }, 0)

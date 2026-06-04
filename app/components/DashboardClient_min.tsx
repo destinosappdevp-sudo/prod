@@ -488,6 +488,7 @@ export default function DashboardClient(props: DashboardClientProps) {
     const positiveDepositsByHomeId = new Map<string, number>();
     for (const s of savingsRows) {
       if (!s.targetId) continue;
+      if (s.kind === "CHECKOUT_DEBIT_REVERSAL") continue;
       const usd = Number(s.amountUsd ?? 0);
       if (usd > 0 && s.status === "APPROVED") {
         const current = positiveDepositsByHomeId.get(s.targetId) ?? 0;
@@ -525,6 +526,7 @@ export default function DashboardClient(props: DashboardClientProps) {
 
     for (const s of savingsRows) {
       if (!s.targetId) continue;
+      if (s.kind === "CHECKOUT_DEBIT_REVERSAL") continue;
       if (s.reservationId) {
         reservationIdByHomeId.set(s.targetId, s.reservationId);
       }
@@ -574,6 +576,7 @@ export default function DashboardClient(props: DashboardClientProps) {
   ]);
 
   const contributesToBalance = (item: SavingItem) => {
+    if (item.kind === "CHECKOUT_DEBIT_REVERSAL") return false;
     // Excluir abonos rechazados de cualquier cálculo
     if (item.status === "REJECTED") return false;
     const usd = Number(item.amountUsd ?? 0);

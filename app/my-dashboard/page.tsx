@@ -636,6 +636,8 @@ export async function getGuestDashboardData(userId: string) {
   >();
   for (const s of savings as any[]) {
     const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};
+    const kind = typeof (details as any).kind === "string" ? (details as any).kind : null;
+    if (kind === "CHECKOUT_DEBIT_REVERSAL") continue;
     const homeId = typeof details.homeId === "string" && details.homeId.trim() ? details.homeId.trim() : null;
     if (!homeId) continue;
 
@@ -671,8 +673,11 @@ export async function getGuestDashboardData(userId: string) {
   const savingsTotal = Math.round(
     (savings as any[]).reduce((sum: number, s: any) => {
       const usd = s.amountUsd ?? 0;
+      const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};
+      const kind = typeof details.kind === "string" ? details.kind : null;
+      if (kind === "CHECKOUT_DEBIT_REVERSAL") return sum;
       // Los registros negativos (débitos de checkout) siempre se restan
-      if (usd < 0) return sum + usd;
+      if (usd < 0) return s.status === "REJECTED" ? sum : sum + usd;
       // Los positivos solo cuentan si están APPROVED
       return s.status === "APPROVED" ? sum + usd : sum;
     }, 0) * 100
@@ -684,6 +689,8 @@ export async function getGuestDashboardData(userId: string) {
       (savings as any[])
         .map((s: any) => {
           const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};
+          const kind = typeof details.kind === "string" ? details.kind : null;
+          if (kind === "CHECKOUT_DEBIT_REVERSAL") return null;
           return typeof details.homeId === "string" && details.homeId.trim() ? details.homeId : null;
         })
         .filter(Boolean)
