@@ -139,7 +139,7 @@ const secciones: Section[] = [
   {
     id: "alcancia",
     titulo: "Alcancía (Savings)",
-    videoUrl: "https://drive.google.com/drive/folders/1a4CWqM-uILdCo_oKsYES_vgRHu7mPGMr",
+    videoUrl: "https://drive.google.com/file/d/1d--VOwS5pZOmCOrk5rvvtpUR5IgHvHgI/view?usp=sharing",
     texto: (
       <ul className="list-disc ml-6 mb-2 space-y-1">
         <li><b>Ruta:</b> <code>/admin/savings</code></li>
