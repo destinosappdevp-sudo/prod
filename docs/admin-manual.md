@@ -117,7 +117,7 @@ Cinco pestañas:
 4. **Reservar:** formulario para crear reserva manual o abono a alcancía
 5. **Descargar PDF:** genera reporte en PDF con info del paquete, ahorradores y asientos asignados
 
-### Cómo hacer una reserva manual (paso a paso)
+### Cómo hacer una reserva manual (paso a paso) ([Ver Video](https://drive.google.com/file/d/1MA91qCGU6Fo5ogXk0imVz52XQyCpl0OR/view?usp=sharing))
 
 Desde la pestaña **Reservar** en el detalle del paquete:
 
