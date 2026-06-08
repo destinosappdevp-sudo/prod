@@ -1,126 +1,285 @@
+# Manual de Administración — Destinos Venezuela
 
-% Manual de Admin
+![Logo](../public/logo.png)
 
-![Logo provisional](../public/logo.png)
+Bienvenido al manual de administración de **Destinos Venezuela**, plataforma de paquetes turísticos. Aquí encontrarás una guía completa de cada sección del panel administrativo.
 
-Bienvenido al manual de administración. Aquí encontrarás una guía rápida de cada pestaña del panel de administración y cómo usarla.
+---
 
-## Menú
+## Índice
 
-- Dashboard
-- Publicidad
-- Usuarios
-- Paquetes
-- Categorías
-- Servicios
-- Finanzas
-- Alcancía
+1. [Dashboard](#dashboard)
+2. [Usuarios](#usuarios)
+3. [Paquetes](#paquetes)
+4. [Categorías](#categorías)
+5. [Servicios (Amenities)](#servicios-amenities)
+6. [Finanzas](#finanzas)
+7. [Alcancía (Savings)](#alcancía-savings)
+8. [Publicidad / Banners](#publicidad--banners)
+9. [Aprobación de Propiedades](#aprobación-de-propiedades)
+10. [Informes](#informes)
+11. [Configuración](#configuración)
 
 ---
 
 ## Dashboard
 
-Descripción: Vista principal de administración con métricas generales, resumen de reservas, ingresos y actividad reciente.
+**Ruta:** `/admin`
 
-Cómo usar:
-- Revisar métricas principales en la parte superior.
-- Ver actividad reciente y notificaciones.
-- Acceder a reportes y acciones rápidas.
+Vista principal con métricas generales del sistema. Muestra:
 
-Captura: colocar imagen en `public/admin/dashboard.svg` (temporal).
-
----
-
-## Publicidad
-
-Descripción: Gestión de banners y campañas publicitarias que se muestran en la web.
-
-Cómo usar:
-- Crear nuevo banner: completar título, fechas de inicio/fin, URL destino y subir la imagen.
-- Editar banner: cambiar fechas, imagen o URL.
-- Activar/Desactivar campañas sin eliminarlas.
-
-Captura: `public/admin/ads-list.svg` (temporal).
+- **Fecha y hora** del servidor en hora Venezuela (VET)
+- **Tasa BCV** del día configurada en la plataforma
+- **Tarjetas de resumen:** Total de usuarios, paquetes registrados, alcancías creadas, y monto total ahorrado en USD
+- **Alertas:** Enlaces directos a pagos pendientes y depósitos de alcancía por revisar
+- **Accesos directos** a Configuración y al Manual de Admin
 
 ---
 
 ## Usuarios
 
-Descripción: Listado y gestión de usuarios registrados, roles y verificaciones.
+**Ruta:** `/admin/users`
 
-Cómo usar:
-- Buscar usuarios por nombre o correo.
-- Ver detalles de perfil, documentos y estado de verificación.
-- Cambiar rol, suspender o eliminar usuario.
+### Listado de usuarios
+Tabla paginada (10 por página) con todos los usuarios registrados (excepto SUPERADMIN). Cada fila muestra: avatar, nombre, cédula, email, cantidad de favoritos y reservas, total ahorrado.
 
-Captura: `public/admin/users-list.svg` (temporal).
+### Acciones
+- **Crear usuario manualmente:** formulario con nombre, email, contraseña, cédula, teléfono y rol (Usuario/Admin)
+- **Importar CSV:** carga masiva desde archivo CSV con separador automático (`,` o `;`). Columnas soportadas: Nombre y Apellido, Correo electrónico, Cédula, Fecha de Nacimiento, Teléfono, Dirección, Viaja con niños, etc.
+- **Exportar usuarios:** descarga CSV de todos los usuarios
+- **Editar usuario:** abre la página de detalle con formulario completo
+- **Ver ahorros:** enlace directo a los depósitos de alcancía del usuario
+
+### Filtros
+- Búsqueda por nombre, email o cédula
+- Filtro por rol: Todos / Usuarios / Admin
+
+### Editar Usuario
+
+**Ruta:** `/admin/users/[id]`
+
+Formulario completo de edición:
+
+- **Información personal:** nombre, email, cédula, teléfono, fecha de nacimiento, teléfono de emergencia, dirección, condiciones de salud
+- **Preferencias de viaje:** checkbox "Ha viajado con Destinos", "Viaja con niños"
+- **Rol y permisos:** selector de rol (Usuario/Admin) con estadísticas del usuario
+- **Cambiar contraseña:** dos campos con toggle de visibilidad
+- **Documentos:** visualización de documentos subidos
+- **Eliminar usuario:** solo SUPERADMIN, requiere confirmación escribiendo el email
+
+### Ver Ahorros del Usuario
+
+**Ruta:** `/admin/users/[id]/savings`
+
+Dos pestañas:
+
+1. **Historial de depósitos:** tabla con fecha, referencia, comprobante, tasa BCV, monto Bs, monto USD, estado (En revisión/Aprobado/Rechazado), y botones de Aprobar/Rechazar
+2. **Detalle de ahorros:** tabla con alcancías (general o por paquete), tipo, monto USD, equivalente Bs, cantidad de movimientos
 
 ---
 
 ## Paquetes
 
-Descripción: Gestión de paquetes/propiedades (crear, editar, aprobar, publicar).
+**Ruta:** `/admin/properties`
 
-Cómo usar:
-- Listado de paquetes con filtros por estado y categorías.
-- Ver/Editar paquete para revisar información, imágenes, precios y estado de publicación.
-- Aprobar paquetes pendientes.
+### Listado de paquetes
+Tabla paginada con: título, ubicación (estado - municipio), fecha de salida, cupos, cantidad de reservas, usuarios ahorrando, estado (selector desplegable inline), y acciones.
 
-Captura: `public/admin/packages-list.svg` (temporal).
+### Pestadas
+- **Paquetes:** listado principal con búsqueda por título, email o categoría
+- **Reservas Activas:** tabla de reservas confirmadas próximas con datos del usuario, paquete, fechas, noches, total USD/BS, método de pago, estado, y botón para reenviar email de confirmación
+
+### Acciones
+- **Nuevo Paquete:** formulario completo de creación
+- **Ver/Editar:** página de detalle del paquete
+- **Eliminar:** con confirmación
+- **Cambiar estado:** selector inline (Borrador / Pendiente / Activa / Inactiva)
+
+### Crear/Editar Paquete
+
+**Ruta:** `/admin/properties/new` | `/admin/properties/[id]`
+
+Formulario con las siguientes secciones:
+
+1. **Información básica:** título, categorías (multiselección), descripción con formato básico (`**negrita**` y `[center]texto[/center]`)
+2. **Características:** cupos totales (auto-calculado), zona VIP (pares), zona estándar (pares)
+3. **Ubicación y precio:** estado, municipio, precio estándar, precio VIP
+4. **Datos del paquete:** fecha y hora de salida, número de contacto, punto de partida
+5. **Servicios:** selector de amenities con estado Sí/No/Sin especificar
+6. **Imagen:** carga de imagen del paquete (recomendado 3:2, 960x640px)
+
+### Detalle del Paquete
+Cinco pestañas:
+
+1. **Reservas Confirmadas:** lista de reservas con usuario, fechas, asiento, plan, pago
+2. **Usuarios Ahorrando:** lista con monto ahorrado, restante y plan
+3. **Asientos:** mapa visual tipo bus con zonas VIP y Estándar, asientos ocupados con tooltip del ocupante
+4. **Reservar:** formulario para crear reserva manual o abono a alcancía
+5. **Descargar PDF:** genera reporte en PDF con info del paquete, ahorradores y asientos asignados
+
+### Cómo hacer una reserva manual (paso a paso)
+
+Desde la pestaña **Reservar** en el detalle del paquete:
+
+1. **Buscar usuario por cédula:** ingresa la cédula (ej. `V-12345678`) y haz clic en "Buscar". Si el usuario existe, se mostrarán sus datos (nombre, email, cédula) en un recuadro azul.
+
+2. **Seleccionar tipo de operación:**
+   - Por defecto es **Pagar de contado** (reserva completa).
+   - Si el usuario va a abonar en partes, marca el check **"Ahorrar"**.
+
+3. **Elegir tipo de cupo:** selecciona **Estándar** o **Premium VIP** según el plan del usuario.
+
+4. **Indicar cantidad de cupos:** número de personas que viajan. El monto estimado se calcula automáticamente (precio × cupos).
+
+5. **Si es modo ahorro:** completa el **monto del abono inicial en USD** y la **fecha de inicio/abono**. El abono debe ser menor al monto total.
+
+6. **Seleccionar asientos:** el mapa de asientos se habilita solo después de tener un usuario y (en modo ahorro) un monto válido. Haz clic en los asientos disponibles (mismos que el tipo de cupo seleccionado). Debes seleccionar la misma cantidad que los cupos indicados.
+
+7. **Datos de pago:** completa teléfono Pago Móvil, banco emisor, referencia y cédula del pagador.
+
+8. **Observaciones:** notas internas (opcional).
+
+9. **Finalizar:** haz clic en "Registrar Reserva Manual" (pago completo) o "Registrar ahorro específico" (abono inicial). El sistema crea la reserva y asigna los asientos automáticamente.
 
 ---
 
 ## Categorías
 
-Descripción: Administrar categorías y subcategorías usadas para clasificar paquetes.
+**Ruta:** `/admin/categories`
 
-Cómo usar:
-- Crear categoría: nombre, ícono y orden.
-- Reordenar o desactivar categorías.
+Gestión de tipos de paquete (categorías). Cada categoría tiene un nombre y un ícono.
 
-Captura: `public/admin/categories.svg` (temporal).
+### Acciones
+- **Crear categoría:** formulario con nombre e ícono
+- **Ver/Editar:** nombre, ícono, guardar cambios
+- **Eliminar:** con confirmación
 
 ---
 
-## Servicios
+## Servicios (Amenities)
 
-Descripción: Configuración de servicios adicionales (amenities) que pueden asociarse a paquetes.
+**Ruta:** `/admin/amenities`
 
-Cómo usar:
-- Añadir/editar servicios, agrupar por categoría y marcar como activos/inactivos.
-- Vincular servicios a paquetes desde la vista de edición.
+### Grupos de servicios
+- **Crear grupo:** nombre y orden numérico
+- **Activar/Desactivar:** toggle por grupo
 
-Captura: `public/admin/services.svg` (temporal).
+### Servicios individuales
+- **Crear servicio:** nombre, icon key, icon URL, grupo asociado
+- **Activar/Desactivar:** toggle por servicio
+
+Los servicios se muestran agrupados por categoría en el formulario de edición de paquetes.
 
 ---
 
 ## Finanzas
 
-Descripción: Panel financiero con transacciones, pagos confirmados, reembolsos y reportes.
+**Ruta:** `/admin/payments`
 
-Cómo usar:
-- Revisar transacciones por rango de fechas.
-- Filtrar pagos por estado (pendiente, confirmado, fallido).
-- Exportar reportes financieros.
+### Resumen
+Cuatro tarjetas: ingresos confirmados (USD+Bs), alcancías activas, monto en alcancías (USD+Bs), pagos confirmados.
 
-Captura: `public/admin/finance.svg` (temporal).
+### Movimientos combinados
+Tabla unificada de pagos y abonos de alcancía con:
+- Fecha, tipo (Abono/Pago), usuario, paquete, total USD+Bs, método de pago, referencia, comprobante, estado
+- **Confirmar pago:** botón verde para pagos pendientes
+- **Rechazar pago:** botón rojo, requiere motivo
 
----
-
-## Alcancía
-
-Descripción: Gestión de alcancías (savings) por usuario y paquete. Crear, editar y agregar saldo.
-
-Cómo usar:
-- Ver alcancías existentes y balances actuales.
-- Crear nueva alcancía para un usuario y paquete.
-- Agregar saldo a una alcancía existente desde el diálogo de administración.
-
-Captura: `public/admin/savings.svg` (temporal).
+Alerta amarilla si hay pagos pendientes de confirmación.
 
 ---
 
-## Notas finales
+## Alcancía (Savings)
 
-- Las imágenes actuales son marcadores temporales. Las capturas de ejemplo están en `public/admin/`.
-- Mantener actualizado este manual cuando se agreguen o modifiquen pestañas.
+**Ruta:** `/admin/savings`
+
+### Resumen
+Tres tarjetas: pendientes de revisión (cantidad + USD), aprobado total (USD), total de depósitos.
+
+### Depósitos
+Tabla con fecha, usuario, referencia, comprobante, tasa BCV, monto Bs, monto USD, estado, y acciones (Aprobar/Rechazar).
+
+### Abonar a Alcancía
+Modal con:
+- **Usuario:** búsqueda autocompletada por cédula, nombre o email
+- **Alcancía existente:** selector de wallets del usuario (general o por paquete) con saldo actual y meta restante
+- **Monto USD:** con cálculo automático de Bs según tasa BCV
+- **Fecha del depósito:** permite fechas históricas
+
+---
+
+## Publicidad / Banners
+
+**Ruta:** `/admin/banners` (Solo SUPERADMIN)
+
+Tres pestañas: Añadir Banner, Banners Activos, Banners Inactivos.
+
+### Tipos de Banner
+| Tipo | Ubicación |
+|------|-----------|
+| HERO1 | Hero principal |
+| HERO2 | Hero secundario |
+| MEDIO1 | Banner mitad de página |
+| MEDIO2 | Banner mitad de página alterno |
+| POP | Popup / modal |
+
+### Crear Banner
+Campos: título, tipo, fecha inicio, fecha fin, URL destino, teléfono, email, costo (USD), imagen. La imagen se puede subir nueva o seleccionar del archivo. Recomendado 400x200px (2:1).
+
+### Listado
+Tarjetas con código de color según tipo, imagen, título, período, enlace, costo, contacto. Botones de editar y eliminar.
+
+---
+
+## Aprobación de Propiedades
+
+**Ruta:** `/admin/alojamientos` (Solo SUPERADMIN)
+
+Cola de aprobación para propiedades en estado `PENDING_APPROVAL`. Vista en tarjetas con:
+- Imagen del paquete
+- Título, ubicación, precio
+- Información del creador
+- Botones **Aprobar** (verde) y **Rechazar** (rojo, con motivo requerido)
+
+---
+
+## Informes
+
+**Ruta:** `/admin/reports` (Solo SUPERADMIN)
+
+Cuatro gráficos con ApexCharts:
+
+1. **Crecimiento de Usuarios:** gráfico de barras
+2. **Publicaciones por Mes:** gráfico de barras
+3. **Ingresos Mensuales:** gráfico de líneas
+4. **Análisis de Reservas:** gráfico de barras
+
+---
+
+## Configuración
+
+**Ruta:** `/admin/settings`
+
+### Vista ADMIN
+- Solo Tasa BCV del día
+
+### Vista SUPERADMIN
+
+1. **Configuración General:** modo mantenimiento (toggle), comisión de la plataforma (%)
+2. **Notificaciones:** configuración de email (próximamente)
+3. **Tasa BCV:** tasa actual + próxima tasa con fecha, historial de tasas anteriores
+4. **Seguridad:** 2FA (próximamente), logs de seguridad (próximamente)
+5. **Base de Datos:** sincronizar usuarios, backup automático (próximamente), reiniciar base de datos (doble confirmación)
+6. **Apariencia:** logo de la plataforma (próximamente), colores de marca (próximamente)
+
+---
+
+## Notas
+
+- Las imágenes de ejemplo en este manual serán reemplazadas por capturas reales del panel.
+- Los roles de usuario son: **GUEST** (usuario regular), **ADMIN** (administrador), **SUPERADMIN** (superadministrador).
+- Para reportar problemas o sugerir mejoras, contacta al equipo de desarrollo.
+
+---
+
+*Última actualización: junio 2026*

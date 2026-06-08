@@ -1,0 +1,2 @@
+generatedAt,totalSavings,totalPayments,totalReservations,findingsCount,severity,type,message,savingId,paymentId,userId,homeId,reservationId,beforeExpected,beforeStored,afterExpected,afterStored,amountUsd,rawFinding
+2026-06-03T19:29:35.107Z,1,0,1,0,,,Sin hallazgos de integridad,,,,,,,,,,,

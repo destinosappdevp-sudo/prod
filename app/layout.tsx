@@ -45,7 +45,7 @@ export default async function RootLayout({
   const showLoggedInBottomNav = !!user && dbUser?.role === "GUEST";
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body className={`${inter.className} flex min-h-screen flex-col overflow-x-hidden`}>
         <NavigationLoader />
         <Navbar />

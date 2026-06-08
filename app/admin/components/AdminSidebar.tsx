@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import { cn } from "@/lib/utils";
+import { SidebarThemeToggle } from "./ThemeToggle";
 
 interface AdminSidebarProps {
   userName?: string;
@@ -135,7 +136,8 @@ export function AdminSidebar({
           <Home size={20} />
           <span>Volver al sitio</span>
         </Link>
-        <form action={signOut} className="w-full">
+        <SidebarThemeToggle />
+        <form action={signOut} className="w-full mt-1">
           <button
             type="submit"
             className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-gray-300 transition-colors hover:bg-gray-800 hover:text-primary"

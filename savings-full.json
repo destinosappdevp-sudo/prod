@@ -1,0 +1,62 @@
+[
+  {
+    "id": "e2f627c2-53b2-4f48-862c-84f260be9ad4",
+    "userId": "a72ddf06-d43a-4c49-9678-3f5f27436687",
+    "date": "2026-06-03T14:40:12.293Z",
+    "bcvRate": 554.4258,
+    "amountBs": 83163.87,
+    "amountUsd": 150,
+    "paymentDetails": {
+      "kind": "PACKAGE_SAVING_DEPOSIT",
+      "plan": "estandar",
+      "cedula": "",
+      "guests": 3,
+      "homeId": "87175778-1cac-4cc4-b07e-a1d308449d42",
+      "seatId": "34317c9a-8901-46f9-9d18-193a7658a8e1",
+      "seatIds": [
+        "34317c9a-8901-46f9-9d18-193a7658a8e1",
+        "6eb6f791-9e8b-43a4-b0de-2d00662e5e2d",
+        "cca5b025-1db0-48a1-981b-c05f24c4af0f"
+      ],
+      "homeTitle": "Colonia Tovar 2D 1N",
+      "emisorBank": "banesco",
+      "phoneNumber": "4129629015",
+      "reservationId": "f58b96ee-961b-4525-a24c-84fa6f83de33",
+      "packageGoalUsd": 297,
+      "paymentProofUrl": "https://rprwpvyubukjsqlcqdde.supabase.co/storage/v1/object/public/images/payments/a72ddf06-d43a-4c49-9678-3f5f27436687/1780497609538-r1zylhvu.jpg",
+      "referenceNumber": "123456",
+      "packageCompleted": false,
+      "autoCreatedReservation": false,
+      "packageSavedUsdAfterThisDeposit": 150,
+      "packageSavedUsdBeforeThisDeposit": 0
+    },
+    "createdAt": "2026-06-03T14:40:12.293Z",
+    "status": "APPROVED",
+    "rejectionReason": null,
+    "User": {
+      "id": "a72ddf06-d43a-4c49-9678-3f5f27436687",
+      "email": "focusdevp@gmail.com",
+      "firstName": "Focusdevp",
+      "profileImage": "https://avatar.vercel.sh/focusdevp@gmail.com",
+      "role": "GUEST",
+      "phoneNumber": "4228629015",
+      "stateCode": "CC",
+      "isVerified": false,
+      "verificationReason": null,
+      "verifiedAt": null,
+      "document1Image": null,
+      "document2Image": null,
+      "verificationStatus": "NOT_SUBMITTED",
+      "municipalityCode": "LIBERTADOR",
+      "cedula": "00000000",
+      "dateOfBirth": "2001-08-10T00:00:00.000Z",
+      "emergencyPhone": null,
+      "address": null,
+      "healthConditions": null,
+      "hasTraveledWithDestinos": false,
+      "lastTravelDestination": null,
+      "travelsWithChildren": false,
+      "childrenAges": null
+    }
+  }
+]

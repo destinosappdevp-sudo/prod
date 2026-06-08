@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-06-03T19:29:35.107Z",
+  "counts": {
+    "savings": 1,
+    "payments": 0,
+    "reservations": 1,
+    "savingsByStatus": {
+      "APPROVED": 1
+    },
+    "paymentsByStatus": {}
+  },
+  "findingsCount": 0,
+  "findings": []
+}

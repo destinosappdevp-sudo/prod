@@ -1,208 +1,132 @@
 "use client";
-import { useState } from "react";
 
-type ManualKey = "admin" | "banner";
-
-type ManualSectionData = {
+type Section = {
+  id: string;
   titulo: string;
   texto: React.ReactNode;
   img: string;
 };
 
-const manuales: {
-  key: ManualKey;
-  titulo: string;
-  secciones: { id: string; titulo: string }[];
-}[] = [
+const secciones: Section[] = [
   {
-    key: "admin",
-    titulo: "Administrador",
-    secciones: [
-      { id: "usuarios", titulo: "Gestión de Usuarios" },
-      { id: "propiedades", titulo: "Paquetes" },
-      { id: "pagos", titulo: "Pagos y Reservas" },
-      { id: "banners", titulo: "Publicidad (Banners)" },
-    ],
+    id: "usuarios",
+    titulo: "Gestión de Usuarios",
+    texto: (
+      <ul className="list-disc ml-6 mb-2 space-y-1">
+        <li>Visualiza el listado completo de usuarios registrados (paginado, 10 por página).</li>
+        <li>Busca por nombre, email o cédula. Filtra por rol (Todos / Usuarios / Admin).</li>
+        <li><b>Crear usuario:</b> formulario con nombre, email, contraseña, cédula, teléfono y rol.</li>
+        <li><b>Importar CSV:</b> carga masiva con separador automático. Columnas: Nombre, Correo, Cédula, Fecha de Nacimiento, Teléfono, Dirección, Viaja con niños, etc.</li>
+        <li><b>Exportar</b> usuarios a CSV.</li>
+        <li>Edita datos personales, rol y contraseña desde la página de detalle.</li>
+        <li>Elimina usuarios (solo SUPERADMIN, requiere confirmación escribiendo el email).</li>
+      </ul>
+    ),
+    img: "/screenshot/usuarios.webp",
   },
   {
-    key: "banner",
-    titulo: "Publicidad (Banner)",
-    secciones: [
-      { id: "crear", titulo: "Crear Banner" },
-      { id: "activos", titulo: "Banners Activos" },
-      { id: "inactivos", titulo: "Banners Inactivos" },
-    ],
+    id: "paquetes",
+    titulo: "Paquetes",
+    texto: (
+      <>
+        <ul className="list-disc ml-6 mb-2 space-y-1">
+          <li>Listado paginado con búsqueda por título, email o categoría.</li>
+          <li>Cambia el estado del paquete inline: Borrador / Pendiente / Activa / Inactiva.</li>
+          <li><b>Nuevo Paquete:</b> formulario con título, categorías, descripción, cupos VIP/Estándar, ubicación, precios, fecha de salida, contacto, servicios e imagen.</li>
+          <li>Pestaña <b>Reservas Activas:</b> reservas próximas confirmadas con opción de reenviar email.</li>
+          <li>Los cupos VIP y Estándar deben ser números pares.</li>
+        </ul>
+      </>
+    ),
+    img: "/screenshot/paquetes.webp",
+  },
+  {
+    id: "reserva-manual",
+    titulo: "Cómo hacer una reserva manual",
+    texto: (
+      <ol className="list-decimal ml-6 space-y-2">
+        <li>Ve al detalle del paquete (haz clic en <b>Ver/Editar</b>).</li>
+        <li>Selecciona la pestaña <b>Reservar</b>.</li>
+        <li><b>Buscar usuario por cédula:</b> ingresa la cédula (ej. V-12345678) y haz clic en "Buscar". Se mostrarán los datos del usuario.</li>
+        <li><b>Tipo de operación:</b> por defecto es <b>Pagar de contado</b> (pago completo). Si el usuario va a abonar en partes, marca el check <b>"Ahorrar"</b>.</li>
+        <li><b>Tipo de cupo:</b> selecciona Estándar o Premium VIP.</li>
+        <li><b>Cupos:</b> indica cuántas personas viajan. El monto estimado se calcula automáticamente (precio × cupos).</li>
+        <li>Si es <b>modo ahorro:</b> completa el monto del abono inicial en USD (debe ser menor al total) y la fecha de inicio/abono.</li>
+        <li><b>Seleccionar asientos:</b> el mapa se habilita una vez elegido usuario y (si aplica) monto válido. Haz clic en los asientos disponibles. Deben coincidir con los cupos indicados.</li>
+        <li><b>Datos de pago:</b> completa teléfono Pago Móvil, banco emisor, referencia y cédula del pagador.</li>
+        <li><b>Observaciones:</b> notas internas (opcional).</li>
+        <li>Haz clic en <b>"Registrar Reserva Manual"</b> (pago completo) o <b>"Registrar ahorro específico"</b> (abono inicial). El sistema crea la reserva y asigna los asientos automáticamente.</li>
+      </ol>
+    ),
+    img: "/screenshot/manual-default.png",
+  },
+  {
+    id: "pagos",
+    titulo: "Pagos y Reservas",
+    texto: (
+      <ul className="list-disc ml-6 mb-2 space-y-1">
+        <li>Panel unificado de pagos y abonos de alcancía en <b>Finanzas</b>.</li>
+        <li>Tarjetas de resumen: ingresos confirmados, alcancías activas, monto en alcancías, pagos confirmados.</li>
+        <li>Tabla de movimientos combinados con fecha, tipo (Abono/Pago), usuario, paquete, monto, método de pago, estado.</li>
+        <li><b>Confirmar pago:</b> botón verde para pagos pendientes.</li>
+        <li><b>Rechazar pago:</b> botón rojo, requiere motivo.</li>
+        <li>También puedes ver todas las <b>Reservas Activas</b> desde la pestaña correspondiente en Paquetes.</li>
+      </ul>
+    ),
+    img: "/screenshot/ventas.png",
+  },
+  {
+    id: "banners",
+    titulo: "Publicidad (Banners)",
+    texto: (
+      <>
+        <ul className="list-disc ml-6 mb-2 space-y-1">
+          <li>Disponible solo para SUPERADMIN desde el menú <b>Publicidad</b>.</li>
+          <li>Sube imágenes en formato JPG o PNG.</li>
+          <li>Medidas recomendadas:
+            <ul className="list-disc ml-8 mt-1">
+              <li><b>HERO1/HERO2:</b> 800x400 px (2:1)</li>
+              <li><b>MEDIO1/MEDIO2 (Desktop):</b> 970x90 px</li>
+              <li><b>MEDIO1/MEDIO2 (Mobile):</b> 640x200 px</li>
+              <li><b>POP:</b> 1200x600 px (2:1)</li>
+            </ul>
+          </li>
+          <li>Define fechas de inicio y fin de la campaña.</li>
+          <li>Activa o desactiva campañas editando fechas.</li>
+        </ul>
+        <h4 className="font-semibold mt-4 mb-2">Crear Banner</h4>
+        <ol className="list-decimal ml-6 space-y-1">
+          <li><b>Título:</b> nombre de la campaña para identificar el banner.</li>
+          <li><b>Tipo de Banner:</b> HERO1, HERO2, MEDIO1, MEDIO2 o POP.</li>
+          <li><b>Fecha inicio / Fecha fin:</b> define el período de publicación.</li>
+          <li><b>URL destino:</b> enlace al que irá el usuario al hacer clic.</li>
+          <li><b>Teléfono / Email:</b> datos de contacto del anunciante (opcional).</li>
+          <li><b>Costo (USD):</b> monto acordado para la campaña (opcional).</li>
+          <li><b>Imagen:</b> sube nueva o selecciona del archivo. Recomendado 400x200px (2:1).</li>
+        </ol>
+        <h4 className="font-semibold mt-4 mb-2">Banners Activos</h4>
+        <ul className="list-disc ml-6 mb-2 space-y-1">
+          <li>Visualiza todos los banners actualmente publicados (dentro del rango de fechas).</li>
+          <li>Edita información o imagen con el ícono de lápiz.</li>
+          <li>Elimina banners que ya no sean necesarios.</li>
+        </ul>
+        <h4 className="font-semibold mt-4 mb-2">Banners Inactivos</h4>
+        <ul className="list-disc ml-6 mb-2 space-y-1">
+          <li>Consulta banners que aún no han iniciado o ya expiraron.</li>
+          <li>Reactiva campañas editando las fechas.</li>
+          <li>Elimina banners antiguos para mantener el panel ordenado.</li>
+        </ul>
+      </>
+    ),
+    img: "/screenshot/manual-default.png",
   },
 ];
 
-const contenido: Record<ManualKey, Record<string, ManualSectionData>> = {
-  admin: {
-    usuarios: {
-      titulo: "Gestión de Usuarios",
-      texto: (
-        <>
-          <ul className="list-disc ml-6 mb-2">
-            <li>Visualiza el listado completo de usuarios registrados.</li>
-            <li>Edita datos personales, roles y estado de verificación.</li>
-            <li>Elimina usuarios que incumplan normas o por solicitud.</li>
-            <li>Filtra usuarios por rol (admin, host, guest, etc).</li>
-            <li>Para editar, haz clic en el ícono de lápiz junto al usuario.</li>
-          </ul>
-          <div className="text-sm text-muted-foreground">Tip: Usa la barra de búsqueda para encontrar usuarios rápidamente.</div>
-        </>
-      ),
-      img: "/screenshot/usuarios.webp",
-    },
-    propiedades: {
-      titulo: "Paquetes",
-      texto: (
-        <>
-          <ul className="list-disc ml-6 mb-2 space-y-2 text-gray-800 leading-relaxed">
-            <li>Agrega nuevos paquetes desde el botón <b>"Añadir Paquete"</b>.</li>
-            <li>Edita información, fotos, precios y disponibilidad.</li>
-            <li>Elimina paquetes obsoletos o con problemas.</li>
-            <li>Gestiona servicios y comodidades desde la pestaña correspondiente.</li>
-            <li>Para editar, selecciona el paquete y haz clic en <b>"Editar"</b>.</li>
-          </ul>
-          <div className="mt-3 text-sm text-gray-400">Recomendación: Mantén la información siempre actualizada para mejor experiencia de usuario.</div>
-        </>
-      ),
-      img: "/screenshot/paquetes.webp",
-    },
-    pagos: {
-      titulo: "Pagos y Reservas",
-      texto: (
-        <>
-          <ul className="list-disc ml-6 mb-2">
-            <li>Consulta pagos pendientes y confirmados en la sección de pagos.</li>
-            <li>Confirma pagos manualmente si es necesario.</li>
-            <li>Accede al historial de reservas por usuario o propiedad.</li>
-            <li>Filtra por estado, fecha o usuario para encontrar información específica.</li>
-          </ul>
-          <div className="text-sm text-muted-foreground">Importante: Revisa pagos pendientes diariamente para evitar retrasos.</div>
-        </>
-      ),
-      img: "/public/screenshot/paquetes.webp",
-    },
-    banners: {
-      titulo: "Publicidad (Banners)",
-      texto: (
-        <>
-          <ul className="list-disc ml-6 mb-2">
-            <li>Crea campañas publicitarias desde la pestaña <b>Publicidad</b>.</li>
-            <li>Sube imágenes en formato <b>JPG o PNG</b>.</li>
-            <li>Medidas recomendadas:<br/>
-              <ul className="list-disc ml-8">
-                <li><b>HERO1/HERO2:</b> 800x400 px (2:1)</li>
-                <li><b>MEDIO1/MEDIO2 (Desktop):</b> 970x90 px</li>
-                <li><b>MEDIO1/MEDIO2 (mobile):</b> 640x200 px</li>
-                <li><b>POP:</b> 1200x600 px (2:1)</li>
-              </ul>
-            </li>
-            <li>Define fechas de inicio y fin de la campaña.</li>
-            <li>Activa o desactiva campañas según necesidad.</li>
-            <li>Para editar o eliminar, usa los íconos correspondientes en la lista de banners.</li>
-          </ul>
-          <div className="text-sm text-muted-foreground">Las imágenes fuera de medida pueden verse recortadas o deformadas.</div>
-        </>
-      ),
-      img: "/screenshot/paquetes.webp",
-    },
-  },
-  banner: {
-    crear: {
-      titulo: "Crear Banner",
-      texto: (
-        <>
-          <h4 className="font-semibold mb-3">1. Crear Nuevo Banner</h4>
-          <ol className="list-decimal ml-6 mb-4 space-y-6">
-            <li>
-              <div><b>1.1 Título:</b> escribe el nombre de la campaña para identificar el banner.</div>
-              <img src="/screenshot/paquetes.webp" alt="Paso 1.1 Titulo" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
-            </li>
-            <li>
-              <div><b>1.2 Tipo de Banner:</b> selecciona dónde se mostrará (HERO1, HERO2, MEDIO1, MEDIO2 o POP).</div>
-              <img src="/screenshot/paquetes.webp" alt="Paso 1.2 Tipo de Banner" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
-            </li>
-            <li>
-              <div><b>1.3 Fecha inicio / Fecha fin:</b> define desde cuándo se publica y hasta cuándo estará activo.</div>
-              <img src="/screenshot/paquetes.webp" alt="Paso 1.3 Fecha inicio y fin" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
-            </li>
-            <li>
-              <div><b>1.4 URL destino:</b> coloca el enlace al que irá el usuario al hacer clic en el banner.</div>
-              <img src="/screenshot/paquetes.webp" alt="Paso 1.4 URL destino" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
-            </li>
-            <li>
-              <div><b>1.5 Teléfono del cliente / Email del cliente:</b> registra los datos de contacto del anunciante.</div>
-              <img src="/screenshot/paquetes.webp" alt="Paso 1.5 Telefono y email" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
-            </li>
-            <li>
-              <div><b>1.6 Costo (USD):</b> indica el monto pagado o acordado para esta campaña.</div>
-              <img src="/screenshot/paquetes.webp" alt="Paso 1.6 Costo en USD" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
-            </li>
-            <li>
-              <div><b>1.7 Imagen:</b> sube la imagen final del banner.</div>
-              <img src="/screenshot/paquetes.webp" alt="Paso 1.7 Imagen" className="mt-2 rounded border shadow-sm max-w-full h-auto" />
-            </li>
-          </ol>
-          <div className="text-sm text-muted-foreground">
-            Medidas recomendadas: HERO1/HERO2 800x400, MEDIO1/MEDIO2 (Desktop) 970x90, MEDIO1/MEDIO2 (Mobile) 640x200, POP 1200x600.
-          </div>
-        </>
-      ),
-      img: "/screenshot/paquetes.webp",
-    },
-    activos: {
-      titulo: "Banners Activos",
-      texto: (
-        <>
-          <ul className="list-disc ml-6 mb-2">
-            <li>Visualiza todos los banners actualmente publicados.</li>
-            <li>Edita información o imagen haciendo clic en el ícono de lápiz.</li>
-            <li>Elimina banners que ya no sean necesarios.</li>
-            <li>Verifica fechas y estado de cada campaña.</li>
-          </ul>
-        </>
-      ),
-      img: "/screenshot/paquetes.webp",
-    },
-    inactivos: {
-      titulo: "Banners Inactivos",
-      texto: (
-        <>
-          <ul className="list-disc ml-6 mb-2">
-            <li>Consulta banners que aún no han iniciado o ya expiraron.</li>
-            <li>Puedes reactivar campañas editando fechas.</li>
-            <li>Elimina banners antiguos para mantener el panel ordenado.</li>
-          </ul>
-        </>
-      ),
-      img: "/screenshot/paquetes.webp",
-    },
-  },
-};
-
-export default function ManualesPage() {
-  const [manualActivo, setManualActivo] = useState<ManualKey>("admin");
-
-  const secciones = manuales.find((m) => m.key === manualActivo)?.secciones ?? [];
-
+export default function ManualPage() {
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-6 text-primary">Manuales de Uso</h1>
-      <div className="flex gap-4 mb-8">
-        {manuales.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => setManualActivo(m.key as ManualKey)}
-            className={`px-4 py-2 rounded-lg font-semibold border transition-colors focus:outline-none ${manualActivo === m.key ? "bg-primary text-white border-primary" : "bg-white text-primary border-primary hover:bg-primary/10"}`}
-          >
-            {m.titulo}
-          </button>
-        ))}
-      </div>
+      <h1 className="text-3xl font-bold mb-6 text-primary">Manual de Administración</h1>
 
-      {/* Índice */}
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-2 text-foreground">Índice</h2>
         <ul className="list-disc ml-6 space-y-1">
@@ -216,27 +140,34 @@ export default function ManualesPage() {
         </ul>
       </div>
 
-      {/* Contenido */}
       <div className="space-y-12">
-        {secciones.map((sec) => {
-          const data = contenido[manualActivo][sec.id];
-          return (
-            <section key={sec.id} id={sec.id} className="scroll-mt-24">
-              <h3 className={`font-bold mb-2 mt-8 ${sec.id === 'propiedades' ? 'text-2xl text-orange-500' : 'text-lg text-primary'}`}>{data.titulo}</h3>
-              <div className="mb-4 text-foreground/90">{data.texto}</div>
-              <div className="w-full flex justify-center mb-2">
-                <img
-                  src={data.img}
-                  alt={data.titulo}
-                  className="rounded-lg border shadow-sm max-h-72 object-contain bg-muted"
-                  style={{ minHeight: 180, maxWidth: 480 }}
-                  onError={(e) => (e.currentTarget.src = "/screenshot/paquetes.webp")}
-                />
-              </div>
-              <a href="#" className="text-xs text-blue-500 hover:underline" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Volver al índice ↑</a>
-            </section>
-          );
-        })}
+        {secciones.map((sec) => (
+          <section key={sec.id} id={sec.id} className="scroll-mt-24">
+            <h3 className="text-xl font-bold mb-2 text-primary">{sec.titulo}</h3>
+            <div className="mb-4 text-foreground/90">{sec.texto}</div>
+            <div className="w-full flex justify-center mb-2">
+              <img
+                src={sec.img}
+                alt={sec.titulo}
+                className="rounded-lg border shadow-sm max-h-72 object-contain bg-muted"
+                style={{ minHeight: 180, maxWidth: 480 }}
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
+            <a
+              href="#"
+              className="text-xs text-blue-500 hover:underline"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              Volver al índice ↑
+            </a>
+          </section>
+        ))}
       </div>
 
       <div className="mt-12 text-gray-500 text-sm text-center">
@@ -246,6 +177,3 @@ export default function ManualesPage() {
     </div>
   );
 }
-
-
-
