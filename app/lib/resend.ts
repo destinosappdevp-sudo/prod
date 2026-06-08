@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import type { Resend } from "resend";
 
 function normalizeFromEmail(value?: string): string | undefined {
   if (!value) {
@@ -33,7 +33,13 @@ export function getResendClient(): Resend | null {
   }
 
   if (!resendClient) {
-    resendClient = new Resend(apiKey);
+    // Use a dynamic require to avoid static ESM imports that some
+    // bundlers (or deployment environments) may fail to resolve.
+    // The `import type` above keeps type checking without forcing
+    // the runtime to statically import the package.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { Resend: ResendCtor } = require("resend");
+    resendClient = new ResendCtor(apiKey);
   }
 
   return resendClient;
