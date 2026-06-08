@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 
 type Section = {
   id: string;
@@ -125,6 +126,8 @@ const secciones: Section[] = [
 ];
 
 export default function ManualPage() {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-6 text-primary">Manual de Administración</h1>
@@ -158,15 +161,21 @@ export default function ManualPage() {
             )}
             <div className="mb-4 text-foreground/90">{sec.texto}</div>
             <div className="w-full flex justify-center mb-2">
-              <img
-                src={sec.img}
-                alt={sec.titulo}
-                className="rounded-lg border shadow-sm max-h-72 object-contain bg-muted"
-                style={{ minHeight: 180, maxWidth: 480 }}
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+              <button
+                type="button"
+                onClick={() => setLightbox(sec.img)}
+                className="cursor-pointer"
+              >
+                <img
+                  src={sec.img}
+                  alt={sec.titulo}
+                  className="rounded-lg border shadow-sm max-h-72 object-contain bg-muted"
+                  style={{ minHeight: 180, maxWidth: 480 }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </button>
             </div>
             <a
               href="#"
@@ -181,6 +190,27 @@ export default function ManualPage() {
           </section>
         ))}
       </div>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 text-white text-3xl font-bold hover:text-gray-300 z-10"
+          >
+            ✕
+          </button>
+          <img
+            src={lightbox}
+            alt="Imagen ampliada"
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <div className="mt-12 text-gray-500 text-sm text-center">
         Las imágenes serán reemplazadas por capturas reales.<br />
