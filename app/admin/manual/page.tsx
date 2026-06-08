@@ -177,7 +177,7 @@ export default function ManualPage() {
     <div className="max-w-3xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-6 text-primary">Manual de Administración</h1>
 
-      <div className="mb-8">
+      <div id="indice" className="mb-8">
         <h2 className="text-xl font-bold mb-2 text-foreground">Índice</h2>
         <ul className="list-disc ml-6 space-y-1">
           {secciones.map((sec) => (
@@ -227,7 +227,7 @@ export default function ManualPage() {
               className="text-xs text-blue-500 hover:underline"
               onClick={(e) => {
                 e.preventDefault();
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                document.getElementById("indice")?.scrollIntoView({ behavior: "smooth" });
               }}
             >
               Volver al índice ↑
