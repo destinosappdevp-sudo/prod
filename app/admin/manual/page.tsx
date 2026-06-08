@@ -27,6 +27,22 @@ const secciones: Section[] = [
     img: "/screenshot/usuarios.webp",
   },
   {
+    id: "crear-usuarios",
+    titulo: "Crear Usuarios",
+    texto: (
+      <ol className="list-decimal ml-6 space-y-2">
+        <li>Desde el menú lateral, ve a <b>Usuarios</b>.</li>
+        <li>Haz clic en el botón <b>"Crear usuario"</b>.</li>
+        <li>Completa el formulario con los datos del usuario: <b>nombre, email, contraseña, cédula y teléfono</b>.</li>
+        <li>Selecciona el <b>rol</b> del usuario: <b>Usuario</b> (cliente regular) o <b>Admin</b> (acceso al panel administrativo).</li>
+        <li>Haz clic en <b>"Guardar"</b> para registrar el usuario.</li>
+        <li>El usuario quedará registrado y podrá acceder a la plataforma con sus credenciales.</li>
+        <li>También puedes <b>importar usuarios</b> desde un archivo CSV con los campos: Nombre, Correo, Cédula, Fecha de Nacimiento, Teléfono, Dirección, Viaja con niños, etc.</li>
+      </ol>
+    ),
+    img: "/screenshot/crearusuarios.webp",
+  },
+  {
     id: "paquetes",
     titulo: "Paquetes",
     texto: (
@@ -122,6 +138,24 @@ const secciones: Section[] = [
       </>
     ),
     img: "/screenshot/manual-default.png",
+  },
+  {
+    id: "cambiar-tasa-bcv",
+    titulo: "Cambiar Tasa BCV",
+    texto: (
+      <ol className="list-decimal ml-6 space-y-2">
+        <li>Ve al menú <b>Configuración</b> en el panel lateral.</li>
+        <li>Localiza la sección <b>"Tasa BCV"</b>.</li>
+        <li>Verás la <b>tasa actual</b> vigente en la plataforma (ej. 60,00 Bs/USD).</li>
+        <li>En el campo <b>"Nueva tasa"</b> o <b>"Próxima tasa"</b>, ingresa el valor en bolívares según el BCV del día.</li>
+        <li>Selecciona la <b>fecha de vigencia</b> para la nueva tasa (puede ser la fecha actual o una futura programada).</li>
+        <li>Haz clic en <b>"Guardar"</b> o <b>"Actualizar tasa"</b>.</li>
+        <li>La nueva tasa se aplicará automáticamente a todos los cálculos de precios en bolívares (Bs) de la plataforma.</li>
+        <li>Puedes consultar el <b>historial de tasas anteriores</b> en la misma sección.</li>
+        <li><b>Nota:</b> solo los usuarios con rol <b>SUPERADMIN</b> pueden modificar la tasa BCV.</li>
+      </ol>
+    ),
+    img: "/screenshot/tasabcv.webp",
   },
 ];
 
