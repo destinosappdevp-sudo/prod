@@ -95,51 +95,6 @@ const secciones: Section[] = [
     img: "/screenshot/ventas.png",
   },
   {
-    id: "banners",
-    titulo: "Publicidad (Banners)",
-    texto: (
-      <>
-        <ul className="list-disc ml-6 mb-2 space-y-1">
-          <li>Disponible solo para SUPERADMIN desde el menú <b>Publicidad</b>.</li>
-          <li>Sube imágenes en formato JPG o PNG.</li>
-          <li>Medidas recomendadas:
-            <ul className="list-disc ml-8 mt-1">
-              <li><b>HERO1/HERO2:</b> 800x400 px (2:1)</li>
-              <li><b>MEDIO1/MEDIO2 (Desktop):</b> 970x90 px</li>
-              <li><b>MEDIO1/MEDIO2 (Mobile):</b> 640x200 px</li>
-              <li><b>POP:</b> 1200x600 px (2:1)</li>
-            </ul>
-          </li>
-          <li>Define fechas de inicio y fin de la campaña.</li>
-          <li>Activa o desactiva campañas editando fechas.</li>
-        </ul>
-        <h4 className="font-semibold mt-4 mb-2">Crear Banner</h4>
-        <ol className="list-decimal ml-6 space-y-1">
-          <li><b>Título:</b> nombre de la campaña para identificar el banner.</li>
-          <li><b>Tipo de Banner:</b> HERO1, HERO2, MEDIO1, MEDIO2 o POP.</li>
-          <li><b>Fecha inicio / Fecha fin:</b> define el período de publicación.</li>
-          <li><b>URL destino:</b> enlace al que irá el usuario al hacer clic.</li>
-          <li><b>Teléfono / Email:</b> datos de contacto del anunciante (opcional).</li>
-          <li><b>Costo (USD):</b> monto acordado para la campaña (opcional).</li>
-          <li><b>Imagen:</b> sube nueva o selecciona del archivo. Recomendado 400x200px (2:1).</li>
-        </ol>
-        <h4 className="font-semibold mt-4 mb-2">Banners Activos</h4>
-        <ul className="list-disc ml-6 mb-2 space-y-1">
-          <li>Visualiza todos los banners actualmente publicados (dentro del rango de fechas).</li>
-          <li>Edita información o imagen con el ícono de lápiz.</li>
-          <li>Elimina banners que ya no sean necesarios.</li>
-        </ul>
-        <h4 className="font-semibold mt-4 mb-2">Banners Inactivos</h4>
-        <ul className="list-disc ml-6 mb-2 space-y-1">
-          <li>Consulta banners que aún no han iniciado o ya expiraron.</li>
-          <li>Reactiva campañas editando las fechas.</li>
-          <li>Elimina banners antiguos para mantener el panel ordenado.</li>
-        </ul>
-      </>
-    ),
-    img: "/screenshot/manual-default.png",
-  },
-  {
     id: "cambiar-tasa-bcv",
     titulo: "Cambiar Tasa BCV",
     texto: (
