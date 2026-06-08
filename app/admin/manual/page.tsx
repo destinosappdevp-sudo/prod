@@ -70,7 +70,7 @@ const secciones: Section[] = [
         <li><b>Eliminar:</b> con confirmación para evitar borrados accidentales.</li>
       </ul>
     ),
-    img: "/screenshot/manual-default.png",
+    img: "/screenshot/categorias.webp",
   },
   {
     id: "servicios",
@@ -83,7 +83,7 @@ const secciones: Section[] = [
         <li>Los servicios se muestran agrupados por categoría en el formulario de edición de paquetes.</li>
       </ul>
     ),
-    img: "/screenshot/manual-default.png",
+    img: "/screenshot/servicios.webp",
   },
   {
     id: "reserva-manual",
@@ -134,7 +134,7 @@ const secciones: Section[] = [
         <li>Alerta amarilla si hay pagos pendientes de confirmación.</li>
       </ul>
     ),
-    img: "/screenshot/manual-default.png",
+    img: "/screenshot/finanzas.webp",
   },
   {
     id: "alcancia",
@@ -148,7 +148,7 @@ const secciones: Section[] = [
         <li><b>Abonar a Alcancía:</b> modal con búsqueda de usuario por cédula/nombre/email, selector de wallet (general o por paquete) con saldo actual y meta restante, monto USD con cálculo automático de Bs, y fecha del depósito.</li>
       </ul>
     ),
-    img: "/screenshot/manual-default.png",
+    img: "/screenshot/ahorros.webp",
   },
   {
     id: "cambiar-tasa-bcv",
