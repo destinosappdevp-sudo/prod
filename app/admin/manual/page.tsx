@@ -5,6 +5,7 @@ type Section = {
   titulo: string;
   texto: React.ReactNode;
   img: string;
+  videoUrl?: string;
 };
 
 const secciones: Section[] = [
@@ -42,19 +43,8 @@ const secciones: Section[] = [
   },
   {
     id: "reserva-manual",
-    titulo: (
-      <>
-        Cómo hacer una reserva manual
-        <a
-          href="https://drive.google.com/file/d/1MA91qCGU6Fo5ogXk0imVz52XQyCpl0OR/view?usp=sharing"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-3 text-sm text-blue-600 hover:underline font-normal"
-        >
-          (Ver Video)
-        </a>
-      </>
-    ),
+    titulo: "Cómo hacer una reserva manual",
+    videoUrl: "https://drive.google.com/file/d/1MA91qCGU6Fo5ogXk0imVz52XQyCpl0OR/view?usp=sharing",
     texto: (
       <ol className="list-decimal ml-6 space-y-2">
         <li>Ve al detalle del paquete (haz clic en <b>Ver/Editar</b>).</li>
@@ -155,7 +145,17 @@ export default function ManualPage() {
       <div className="space-y-12">
         {secciones.map((sec) => (
           <section key={sec.id} id={sec.id} className="scroll-mt-24">
-            <h3 className="text-xl font-bold mb-2 text-primary">{sec.titulo}</h3>
+            <h3 className="text-xl font-bold inline-block mb-2 text-primary">{sec.titulo}</h3>
+            {sec.videoUrl && (
+              <a
+                href={sec.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-3 text-sm text-blue-600 hover:underline"
+              >
+                (Ver Video)
+              </a>
+            )}
             <div className="mb-4 text-foreground/90">{sec.texto}</div>
             <div className="w-full flex justify-center mb-2">
               <img
