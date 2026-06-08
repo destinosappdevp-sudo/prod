@@ -42,7 +42,19 @@ const secciones: Section[] = [
   },
   {
     id: "reserva-manual",
-    titulo: "Cómo hacer una reserva manual",
+    titulo: (
+      <>
+        Cómo hacer una reserva manual
+        <a
+          href="https://drive.google.com/file/d/1MA91qCGU6Fo5ogXk0imVz52XQyCpl0OR/view?usp=sharing"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-3 text-sm text-blue-600 hover:underline font-normal"
+        >
+          (Ver Video)
+        </a>
+      </>
+    ),
     texto: (
       <ol className="list-decimal ml-6 space-y-2">
         <li>Ve al detalle del paquete (haz clic en <b>Ver/Editar</b>).</li>
