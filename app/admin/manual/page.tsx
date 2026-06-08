@@ -60,7 +60,7 @@ const secciones: Section[] = [
         <li>Haz clic en <b>"Registrar Reserva Manual"</b> (pago completo) o <b>"Registrar ahorro específico"</b> (abono inicial). El sistema crea la reserva y asigna los asientos automáticamente.</li>
       </ol>
     ),
-    img: "/screenshot/manual-default.png",
+    img: "/screenshot/reservamanual.webp",
   },
   {
     id: "pagos",
