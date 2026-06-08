@@ -59,6 +59,33 @@ const secciones: Section[] = [
     img: "/screenshot/paquetes.webp",
   },
   {
+    id: "categorias",
+    titulo: "Categorías",
+    texto: (
+      <ul className="list-disc ml-6 mb-2 space-y-1">
+        <li><b>Ruta:</b> <code>/admin/categories</code></li>
+        <li>Gestión de tipos de paquete (categorías). Cada categoría tiene un <b>nombre</b> y un <b>ícono</b>.</li>
+        <li><b>Crear categoría:</b> formulario con nombre e ícono.</li>
+        <li><b>Ver/Editar:</b> modifica el nombre y el ícono de una categoría existente.</li>
+        <li><b>Eliminar:</b> con confirmación para evitar borrados accidentales.</li>
+      </ul>
+    ),
+    img: "/screenshot/manual-default.png",
+  },
+  {
+    id: "servicios",
+    titulo: "Servicios (Amenities)",
+    texto: (
+      <ul className="list-disc ml-6 mb-2 space-y-1">
+        <li><b>Ruta:</b> <code>/admin/amenities</code></li>
+        <li><b>Grupos de servicios:</b> crea grupos con nombre y orden numérico. Puedes activar/desactivar grupos con un toggle.</li>
+        <li><b>Servicios individuales:</b> cada servicio tiene nombre, icon key, icon URL y grupo asociado.</li>
+        <li>Los servicios se muestran agrupados por categoría en el formulario de edición de paquetes.</li>
+      </ul>
+    ),
+    img: "/screenshot/manual-default.png",
+  },
+  {
     id: "reserva-manual",
     titulo: "Cómo hacer una reserva manual",
     videoUrl: "https://drive.google.com/file/d/1MA91qCGU6Fo5ogXk0imVz52XQyCpl0OR/view?usp=sharing",
@@ -93,6 +120,35 @@ const secciones: Section[] = [
       </ul>
     ),
     img: "/screenshot/ventas.png",
+  },
+  {
+    id: "finanzas",
+    titulo: "Finanzas",
+    texto: (
+      <ul className="list-disc ml-6 mb-2 space-y-1">
+        <li><b>Ruta:</b> <code>/admin/payments</code></li>
+        <li>Cuatro tarjetas de resumen: <b>ingresos confirmados</b> (USD+Bs), <b>alcancías activas</b>, <b>monto en alcancías</b> (USD+Bs), <b>pagos confirmados</b>.</li>
+        <li><b>Movimientos combinados:</b> tabla unificada de pagos y abonos de alcancía con fecha, tipo (Abono/Pago), usuario, paquete, total USD+Bs, método de pago, referencia, comprobante y estado.</li>
+        <li><b>Confirmar pago:</b> botón verde para pagos pendientes.</li>
+        <li><b>Rechazar pago:</b> botón rojo, requiere motivo.</li>
+        <li>Alerta amarilla si hay pagos pendientes de confirmación.</li>
+      </ul>
+    ),
+    img: "/screenshot/manual-default.png",
+  },
+  {
+    id: "alcancia",
+    titulo: "Alcancía (Savings)",
+    videoUrl: "https://drive.google.com/drive/folders/1a4CWqM-uILdCo_oKsYES_vgRHu7mPGMr",
+    texto: (
+      <ul className="list-disc ml-6 mb-2 space-y-1">
+        <li><b>Ruta:</b> <code>/admin/savings</code></li>
+        <li><b>Resumen:</b> tres tarjetas: pendientes de revisión (cantidad + USD), aprobado total (USD), total de depósitos.</li>
+        <li><b>Depósitos:</b> tabla con fecha, usuario, referencia, comprobante, tasa BCV, monto Bs, monto USD, estado, y acciones (Aprobar/Rechazar).</li>
+        <li><b>Abonar a Alcancía:</b> modal con búsqueda de usuario por cédula/nombre/email, selector de wallet (general o por paquete) con saldo actual y meta restante, monto USD con cálculo automático de Bs, y fecha del depósito.</li>
+      </ul>
+    ),
+    img: "/screenshot/manual-default.png",
   },
   {
     id: "cambiar-tasa-bcv",
