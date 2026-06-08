@@ -199,7 +199,7 @@ Tres tarjetas: pendientes de revisión (cantidad + USD), aprobado total (USD), t
 ### Depósitos
 Tabla con fecha, usuario, referencia, comprobante, tasa BCV, monto Bs, monto USD, estado, y acciones (Aprobar/Rechazar).
 
-### Abonar a Alcancía
+### Abonar a Alcancía ([Ver Video](https://drive.google.com/drive/folders/1a4CWqM-uILdCo_oKsYES_vgRHu7mPGMr))
 Modal con:
 - **Usuario:** búsqueda autocompletada por cédula, nombre o email
 - **Alcancía existente:** selector de wallets del usuario (general o por paquete) con saldo actual y meta restante
