@@ -278,14 +278,27 @@ model usersessions {
 }
 
 model PlatformConfig {
-  id                 String    @id @default(uuid())
-  commissionPercent  Float     @default(10.0)
-  updatedAt          DateTime  @default(now())
-  maintenanceMode    Boolean   @default(false)
-  bcvRate            Decimal   @default(0.00000000) @db.Decimal(18, 8)
-  bcvRateDate        DateTime?
-  bcvProximaRate     Decimal?  @db.Decimal(18, 8)
-  bcvProximaRateDate DateTime?
+  id                       String    @id @default(uuid())
+  commissionPercent        Float     @default(10.0)
+  updatedAt                DateTime  @default(now())
+  maintenanceMode          Boolean   @default(false)
+  bcvRate                  Decimal   @default(0.00000000) @db.Decimal(18, 8)
+  bcvRateDate              DateTime?
+  bcvProximaRate           Decimal?  @db.Decimal(18, 8)
+  bcvProximaRateDate       DateTime?
+
+  // Configuración de Pago Móvil R4
+  pagomovilMode            String    @default("MANUAL") // MANUAL | R4
+  pagomovilPhone           String?
+  pagomovilBank            String?
+  pagomovilCedula          String?
+  pagomovilIdComercio      String?
+  pagomovilHmacSecret      String?
+  pagomovilAuthToken       String?
+  pagomovilAllowedIps      String?
+  pagomovilCreditoIdComercio String?
+  pagomovilCreditoHmacSecret String?
+  pagomovilCreditoAuthToken  String?
 }
 
 model BcvRateHistory {
@@ -383,6 +396,8 @@ enum PaymentMethod {
   ZILLI
   TARJETA_INTERNACIONAL
   TRANSFERENCIA_BANCARIA
+  BINANCE
+  ZINLI
 }
 
 enum PaymentStatus {
@@ -430,4 +445,27 @@ enum WithdrawalStatus {
   PROCESSING
   COMPLETED
   REJECTED
+}
+
+model PagoMovilNotificacion {
+  id               String   @id @default(uuid())
+  referencia       String   @unique
+  idComercio       String?
+  telefonoComercio String?
+  telefonoEmisor   String?
+  bancoEmisor      String?
+  monto            Float?
+  codigoRed        String?
+  paymentId        String?
+  abonado          Boolean  @default(false)
+  createdAt        DateTime @default(now())
+}
+
+model R4JsonLog {
+  id         String   @id @default(uuid())
+  tipo       String // "CONSULTA" | "NOTIFICA"
+  rawPayload String   @db.Text
+  clientIp   String?
+  respuesta  String?
+  createdAt  DateTime @default(now())
 }

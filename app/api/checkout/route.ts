@@ -2,6 +2,7 @@ import { createClient } from "@/app/lib/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { currencyForPaymentMethod } from "@/app/lib/payment-currency";
+import { getPagoMovilMode } from "@/app/lib/pagomovil-config";
 
 type CheckoutMode = "DIRECT" | "MIXED" | "SAVINGS";
 
@@ -21,8 +22,12 @@ function isLegacyReversal(details: Record<string, any>) {
 }
 
 function getEligibleSavingsUsd(
-  savingsRows: Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
-  currentHomeId: string
+  savingsRows: Array<{
+    amountUsd: number;
+    status: string;
+    paymentDetails: unknown;
+  }>,
+  currentHomeId: string,
 ) {
   return roundMoney(
     savingsRows.reduce((sum, row) => {
@@ -57,13 +62,17 @@ function getEligibleSavingsUsd(
       }
 
       return sum;
-    }, 0)
+    }, 0),
   );
 }
 
 function getWalletBreakdownUsd(
-  savingsRows: Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
-  currentHomeId: string
+  savingsRows: Array<{
+    amountUsd: number;
+    status: string;
+    paymentDetails: unknown;
+  }>,
+  currentHomeId: string,
 ) {
   return savingsRows.reduce(
     (acc, row) => {
@@ -102,7 +111,7 @@ function getWalletBreakdownUsd(
 
       return acc;
     },
-    { general: 0, currentPackage: 0 }
+    { general: 0, currentPackage: 0 },
   );
 }
 
@@ -135,8 +144,8 @@ async function getOwnedSeatIdsForUser(params: {
     const rowSeatIds = Array.isArray(details.seatIds)
       ? details.seatIds
       : typeof details.seatIds === "string"
-      ? details.seatIds.split(",")
-      : [];
+        ? details.seatIds.split(",")
+        : [];
 
     for (const seatId of rowSeatIds) {
       if (typeof seatId === "string" && seatId.trim()) {
@@ -144,7 +153,8 @@ async function getOwnedSeatIdsForUser(params: {
       }
     }
 
-    const singleSeatId = typeof details.seatId === "string" ? details.seatId.trim() : "";
+    const singleSeatId =
+      typeof details.seatId === "string" ? details.seatId.trim() : "";
     if (singleSeatId) {
       ownedSeatIds.add(singleSeatId);
     }
@@ -171,18 +181,21 @@ export async function POST(request: Request) {
     const startDate = typeof body?.startDate === "string" ? body.startDate : "";
     const endDate = typeof body?.endDate === "string" ? body.endDate : "";
     const guests = Number(body?.guests ?? 1);
-    const seatId = typeof body?.seatId === "string" && body.seatId ? body.seatId : null;
+    const seatId =
+      typeof body?.seatId === "string" && body.seatId ? body.seatId : null;
     const seatIdsInput = Array.isArray(body?.seatIds)
       ? body.seatIds
       : typeof body?.seatIds === "string"
-      ? body.seatIds.split(",")
-      : [];
+        ? body.seatIds.split(",")
+        : [];
     const selectedSeatIds = Array.from(
       new Set(
         seatIdsInput
-          .map((value: unknown) => (typeof value === "string" ? value.trim() : ""))
-          .filter(Boolean)
-      )
+          .map((value: unknown) =>
+            typeof value === "string" ? value.trim() : "",
+          )
+          .filter(Boolean),
+      ),
     );
     if (selectedSeatIds.length === 0 && seatId) {
       selectedSeatIds.push(seatId);
@@ -213,21 +226,21 @@ export async function POST(request: Request) {
     if (!homeId || !userId || !startDate || !endDate) {
       return NextResponse.json(
         { error: "Faltan datos requeridos para completar la reserva" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!validPaymentMethods.has(paymentMethod)) {
       return NextResponse.json(
         { error: "Método de pago inválido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!Number.isInteger(guests) || guests <= 0) {
       return NextResponse.json(
         { error: "Cantidad de cupos inválida" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -245,31 +258,37 @@ export async function POST(request: Request) {
     if (Number.isNaN(startTime) || Number.isNaN(endTime) || start >= end) {
       return NextResponse.json(
         { error: "Las fechas no son válidas" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const calculatedNights = Math.ceil(
-      (endTime - startTime) / (1000 * 60 * 60 * 24)
+      (endTime - startTime) / (1000 * 60 * 60 * 24),
     );
 
     if (calculatedNights <= 0) {
       return NextResponse.json(
         { error: "Las fechas no son válidas" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Verificar que la propiedad existe
     const home = await prisma.home.findUnique({
       where: { id: homeId },
-      select: { id: true, title: true, price: true, priceVip: true, guests: true },
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        priceVip: true,
+        guests: true,
+      },
     });
 
     if (!home) {
       return NextResponse.json(
         { error: "Propiedad no encontrada" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -279,7 +298,7 @@ export async function POST(request: Request) {
         {
           error: `Esta propiedad admite máximo ${maxGuests} cupo${maxGuests !== 1 ? "s" : ""}.`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -287,26 +306,28 @@ export async function POST(request: Request) {
       if (!home.priceVip || home.priceVip <= 0) {
         return NextResponse.json(
           { error: "Este paquete no tiene precio VIP configurado" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     } else if (!home.price || home.price <= 0) {
       return NextResponse.json(
         { error: "Este paquete no tiene precio Estándar configurado" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Regla de negocio: un usuario no puede reservar el mismo viaje más de una vez.
-    const existingUserReservation = await (prisma as any).reservation.findFirst({
-      where: {
-        userId,
-        homeId,
-        status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+    const existingUserReservation = await (prisma as any).reservation.findFirst(
+      {
+        where: {
+          userId,
+          homeId,
+          status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
+        },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, status: true },
       },
-      orderBy: { createdAt: "desc" },
-      select: { id: true, status: true },
-    });
+    );
 
     if (existingUserReservation) {
       const isPaidReservation =
@@ -320,20 +341,22 @@ export async function POST(request: Request) {
             : "Ya tienes una reserva en proceso para este viaje",
           reservationId: existingUserReservation.id,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
-    // Obtener configuración actual de comisión y tasa BCV
+    // Obtener configuración actual de comisión, tasa BCV y modo Pago Móvil
     let commissionPercent = 10;
     let bcvRate = 0;
     let bcvRateDate: Date | null = null;
+    let pagomovilMode: "MANUAL" | "R4" = "MANUAL";
     try {
       const config = await (prisma as any).platformConfig.findFirst({
         select: {
           commissionPercent: true,
           bcvRate: true,
           bcvRateDate: true,
+          pagomovilMode: true,
         },
       });
 
@@ -344,6 +367,7 @@ export async function POST(request: Request) {
 
       bcvRate = config?.bcvRate ? Number(config.bcvRate) : 0;
       bcvRateDate = config?.bcvRateDate ? new Date(config.bcvRateDate) : null;
+      pagomovilMode = config?.pagomovilMode === "R4" ? "R4" : "MANUAL";
     } catch (configError) {
       console.warn("No se pudo leer PlatformConfig en checkout:", configError);
     }
@@ -353,44 +377,55 @@ export async function POST(request: Request) {
     if (checkoutMode !== "SAVINGS" && !hasValidBcvRate) {
       return NextResponse.json(
         { error: "No hay tasa BCV del día configurada para procesar el pago" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const paymentCurrency = checkoutMode === "SAVINGS" ? "USD" : currencyForPaymentMethod(paymentMethod);
+    const paymentCurrency =
+      checkoutMode === "SAVINGS"
+        ? "USD"
+        : currencyForPaymentMethod(paymentMethod);
 
-    const selectedUnitPrice = plan === "vip" ? Number(home.priceVip) : Number(home.price);
+    const selectedUnitPrice =
+      plan === "vip" ? Number(home.priceVip) : Number(home.price);
     const subtotalUsd = selectedUnitPrice * calculatedNights * guests;
     const serviceFeeUsd = subtotalUsd * (commissionPercent / 100);
     const totalAmountUsd = subtotalUsd; // El huésped paga solo el subtotal
 
-    const subtotalBs = hasValidBcvRate ? Number((subtotalUsd * bcvRate).toFixed(2)) : 0;
-    const serviceFeeBs = hasValidBcvRate ? Number((serviceFeeUsd * bcvRate).toFixed(2)) : 0;
-    const totalAmountBs = hasValidBcvRate ? Number((totalAmountUsd * bcvRate).toFixed(2)) : 0;
+    const subtotalBs = hasValidBcvRate
+      ? Number((subtotalUsd * bcvRate).toFixed(2))
+      : 0;
+    const serviceFeeBs = hasValidBcvRate
+      ? Number((serviceFeeUsd * bcvRate).toFixed(2))
+      : 0;
+    const totalAmountBs = hasValidBcvRate
+      ? Number((totalAmountUsd * bcvRate).toFixed(2))
+      : 0;
 
     // Verificar disponibilidad (reservas activas + fechas bloqueadas por el host)
-    const [conflictingReservationsCount, conflictingBlockedCount] = await Promise.all([
-      (prisma as any).reservation.count({
-        where: {
-          homeId: homeId,
-          status: { in: ["PENDING", "CONFIRMED"] },
-          startDate: { lt: end },
-          endDate: { gt: start },
-        },
-      }),
-      (prisma as any).blockedDate.count({
-        where: {
-          homeId: homeId,
-          startDate: { lt: end },
-          endDate: { gt: start },
-        },
-      }),
-    ]);
+    const [conflictingReservationsCount, conflictingBlockedCount] =
+      await Promise.all([
+        (prisma as any).reservation.count({
+          where: {
+            homeId: homeId,
+            status: { in: ["PENDING", "CONFIRMED"] },
+            startDate: { lt: end },
+            endDate: { gt: start },
+          },
+        }),
+        (prisma as any).blockedDate.count({
+          where: {
+            homeId: homeId,
+            startDate: { lt: end },
+            endDate: { gt: start },
+          },
+        }),
+      ]);
 
     if (conflictingReservationsCount > 0 || conflictingBlockedCount > 0) {
       return NextResponse.json(
         { error: "Las fechas seleccionadas no están disponibles" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -417,10 +452,22 @@ export async function POST(request: Request) {
         : null;
 
     if (checkoutMode !== "SAVINGS") {
-      if (!emisorBank || !phoneNumber || !referenceNumber || !paymentProofUrl) {
+      if (!emisorBank || !phoneNumber) {
         return NextResponse.json(
-          { error: "Completa los datos de Pago Móvil y adjunta la captura para continuar" },
-          { status: 400 }
+          { error: "Completa los datos de Pago Móvil para continuar" },
+          { status: 400 },
+        );
+      }
+      if (
+        pagomovilMode === "MANUAL" &&
+        (!referenceNumber || !paymentProofUrl)
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "En modo manual debes indicar la referencia y adjuntar la captura del pago",
+          },
+          { status: 400 },
         );
       }
     }
@@ -444,24 +491,37 @@ export async function POST(request: Request) {
 
         if (usd < 0) return sum + usd;
         return s.status === "APPROVED" ? sum + usd : sum;
-      }, 0)
+      }, 0),
     );
     const eligibleSavingsUsd = getEligibleSavingsUsd(
-      savingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
-      homeId
+      savingsRows as Array<{
+        amountUsd: number;
+        status: string;
+        paymentDetails: unknown;
+      }>,
+      homeId,
     );
     const savingsAppliedUsd =
       checkoutMode === "DIRECT"
         ? 0
         : roundMoney(Math.min(Math.max(eligibleSavingsUsd, 0), totalAmountUsd));
-    const externalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - savingsAppliedUsd));
-    const savingsAppliedBs = hasValidBcvRate ? roundMoney(savingsAppliedUsd * bcvRate) : 0;
-    const externalAmountBs = hasValidBcvRate ? roundMoney(externalAmountUsd * bcvRate) : 0;
+    const externalAmountUsd = roundMoney(
+      Math.max(0, totalAmountUsd - savingsAppliedUsd),
+    );
+    const savingsAppliedBs = hasValidBcvRate
+      ? roundMoney(savingsAppliedUsd * bcvRate)
+      : 0;
+    const externalAmountBs = hasValidBcvRate
+      ? roundMoney(externalAmountUsd * bcvRate)
+      : 0;
 
     if (checkoutMode === "SAVINGS" && savingsAppliedUsd < totalAmountUsd) {
       return NextResponse.json(
-        { error: "No tienes saldo suficiente en tu alcancía para cubrir este paquete" },
-        { status: 400 }
+        {
+          error:
+            "No tienes saldo suficiente en tu alcancía para cubrir este paquete",
+        },
+        { status: 400 },
       );
     }
 
@@ -471,14 +531,14 @@ export async function POST(request: Request) {
           error:
             "No tienes saldo disponible en ahorros generales o en este paquete para un pago mixto",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (selectedSeatIds.length > 0 && selectedSeatIds.length !== guests) {
       return NextResponse.json(
         { error: "Debes seleccionar un asiento por cada pasajero." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -492,13 +552,16 @@ export async function POST(request: Request) {
       if (selectedSeats.length !== selectedSeatIds.length) {
         return NextResponse.json(
           { error: "Uno o más asientos no son válidos para este paquete" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       for (const seat of selectedSeats) {
         if (seat.homeId !== homeId) {
-          return NextResponse.json({ error: "Asiento no válido para este paquete" }, { status: 400 });
+          return NextResponse.json(
+            { error: "Asiento no válido para este paquete" },
+            { status: 400 },
+          );
         }
 
         if (seat.status === "OCCUPIED") {
@@ -510,18 +573,27 @@ export async function POST(request: Request) {
 
           if (!ownedSeatIds.has(seat.id)) {
             return NextResponse.json(
-              { error: "Uno de los asientos seleccionados ya está ocupado. Por favor elige otro." },
-              { status: 409 }
+              {
+                error:
+                  "Uno de los asientos seleccionados ya está ocupado. Por favor elige otro.",
+              },
+              { status: 409 },
             );
           }
         }
 
         if (plan === "vip" && seat.zone !== "VIP") {
-          return NextResponse.json({ error: "Uno de los asientos no pertenece a la zona VIP" }, { status: 400 });
+          return NextResponse.json(
+            { error: "Uno de los asientos no pertenece a la zona VIP" },
+            { status: 400 },
+          );
         }
 
         if (plan === "estandar" && seat.zone !== "STANDARD") {
-          return NextResponse.json({ error: "Uno de los asientos no pertenece a la zona Estándar" }, { status: 400 });
+          return NextResponse.json(
+            { error: "Uno de los asientos no pertenece a la zona Estándar" },
+            { status: 400 },
+          );
         }
       }
     }
@@ -534,8 +606,8 @@ export async function POST(request: Request) {
         checkoutMode === "SAVINGS"
           ? "Saldo de Ahorros"
           : checkoutMode === "MIXED"
-          ? "Pago Mixto"
-          : "Pago Móvil",
+            ? "Pago Mixto"
+            : "Pago Móvil",
       amountUsd: Number(totalAmountUsd.toFixed(2)),
       amountBs: totalAmountBs,
       subtotalUsd: Number(subtotalUsd.toFixed(2)),
@@ -562,35 +634,63 @@ export async function POST(request: Request) {
         select: { amountUsd: true, status: true, paymentDetails: true },
       });
       const txEligibleSavingsUsd = getEligibleSavingsUsd(
-        txSavingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
-        homeId
+        txSavingsRows as Array<{
+          amountUsd: number;
+          status: string;
+          paymentDetails: unknown;
+        }>,
+        homeId,
       );
       const txWallets = getWalletBreakdownUsd(
-        txSavingsRows as Array<{ amountUsd: number; status: string; paymentDetails: unknown }>,
-        homeId
+        txSavingsRows as Array<{
+          amountUsd: number;
+          status: string;
+          paymentDetails: unknown;
+        }>,
+        homeId,
       );
       const txSavingsAppliedUsd =
         checkoutMode === "DIRECT"
           ? 0
-          : roundMoney(Math.min(Math.max(txEligibleSavingsUsd, 0), totalAmountUsd));
+          : roundMoney(
+              Math.min(Math.max(txEligibleSavingsUsd, 0), totalAmountUsd),
+            );
 
       if (checkoutMode === "SAVINGS" && txSavingsAppliedUsd < totalAmountUsd) {
-        throw new Error("Saldo insuficiente en ahorros para completar la reserva");
+        throw new Error(
+          "Saldo insuficiente en ahorros para completar la reserva",
+        );
       }
 
       if (checkoutMode === "MIXED" && txSavingsAppliedUsd <= 0) {
         throw new Error(
-          "No hay saldo disponible en ahorros generales o en este paquete para aplicar a este pago mixto"
+          "No hay saldo disponible en ahorros generales o en este paquete para aplicar a este pago mixto",
         );
       }
 
-      const txExternalAmountUsd = roundMoney(Math.max(0, totalAmountUsd - txSavingsAppliedUsd));
-      const txSavingsAppliedBs = hasValidBcvRate ? roundMoney(txSavingsAppliedUsd * bcvRate) : 0;
-      const txExternalAmountBs = hasValidBcvRate ? roundMoney(txExternalAmountUsd * bcvRate) : 0;
-      const packageWalletUsd = Math.max(0, roundMoney(txWallets.currentPackage));
+      const txExternalAmountUsd = roundMoney(
+        Math.max(0, totalAmountUsd - txSavingsAppliedUsd),
+      );
+      const txSavingsAppliedBs = hasValidBcvRate
+        ? roundMoney(txSavingsAppliedUsd * bcvRate)
+        : 0;
+      const txExternalAmountBs = hasValidBcvRate
+        ? roundMoney(txExternalAmountUsd * bcvRate)
+        : 0;
+      const packageWalletUsd = Math.max(
+        0,
+        roundMoney(txWallets.currentPackage),
+      );
       const generalWalletUsd = Math.max(0, roundMoney(txWallets.general));
-      const packageDebitUsd = roundMoney(Math.min(packageWalletUsd, txSavingsAppliedUsd));
-      const generalDebitUsd = roundMoney(Math.min(generalWalletUsd, Math.max(0, txSavingsAppliedUsd - packageDebitUsd)));
+      const packageDebitUsd = roundMoney(
+        Math.min(packageWalletUsd, txSavingsAppliedUsd),
+      );
+      const generalDebitUsd = roundMoney(
+        Math.min(
+          generalWalletUsd,
+          Math.max(0, txSavingsAppliedUsd - packageDebitUsd),
+        ),
+      );
 
       // Crear la reserva siempre en PENDING para revisión manual del pago.
       const reservationStatus: string = "PENDING";
@@ -628,7 +728,9 @@ export async function POST(request: Request) {
         });
 
         if (occupied.count !== seatsToOccupy.length) {
-          throw new Error("Uno de los asientos ya fue ocupado por otro usuario. Por favor elige otro.");
+          throw new Error(
+            "Uno de los asientos ya fue ocupado por otro usuario. Por favor elige otro.",
+          );
         }
       }
 
@@ -666,7 +768,9 @@ export async function POST(request: Request) {
               userId,
               bcvRate: hasValidBcvRate ? bcvRate : 0,
               amountUsd: -packageDebitUsd,
-              amountBs: hasValidBcvRate ? -roundMoney(packageDebitUsd * bcvRate) : 0,
+              amountBs: hasValidBcvRate
+                ? -roundMoney(packageDebitUsd * bcvRate)
+                : 0,
               paymentDetails: {
                 kind: "CHECKOUT_DEBIT",
                 checkoutMode,
@@ -676,7 +780,9 @@ export async function POST(request: Request) {
                 homeTitle: home.title ?? null,
                 seatIds: selectedSeatIds,
                 amountUsd: -packageDebitUsd,
-                amountBs: hasValidBcvRate ? -roundMoney(packageDebitUsd * bcvRate) : 0,
+                amountBs: hasValidBcvRate
+                  ? -roundMoney(packageDebitUsd * bcvRate)
+                  : 0,
                 sourceWallet: "PACKAGE",
               },
             },
@@ -689,7 +795,9 @@ export async function POST(request: Request) {
               userId,
               bcvRate: hasValidBcvRate ? bcvRate : 0,
               amountUsd: -generalDebitUsd,
-              amountBs: hasValidBcvRate ? -roundMoney(generalDebitUsd * bcvRate) : 0,
+              amountBs: hasValidBcvRate
+                ? -roundMoney(generalDebitUsd * bcvRate)
+                : 0,
               paymentDetails: {
                 kind: "CHECKOUT_DEBIT",
                 checkoutMode,
@@ -701,7 +809,9 @@ export async function POST(request: Request) {
                 targetHomeTitle: home.title ?? null,
                 seatIds: selectedSeatIds,
                 amountUsd: -generalDebitUsd,
-                amountBs: hasValidBcvRate ? -roundMoney(generalDebitUsd * bcvRate) : 0,
+                amountBs: hasValidBcvRate
+                  ? -roundMoney(generalDebitUsd * bcvRate)
+                  : 0,
                 sourceWallet: "GENERAL",
               },
             },
@@ -725,10 +835,7 @@ export async function POST(request: Request) {
     console.error("Error en checkout:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
-
-

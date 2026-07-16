@@ -180,17 +180,28 @@ export default function HostDashboardClient({
     return "dashboard";
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [reservationFilter, setReservationFilter] = useState<"all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED">("all");
-  const [analyticsRange, setAnalyticsRange] = useState<"weekly" | "monthly">("weekly");
-  const displayName = (firstName || userName || userEmail?.split("@")[0] || "Anfitrión").trim();
+  const [reservationFilter, setReservationFilter] = useState<
+    "all" | "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED"
+  >("all");
+  const [analyticsRange, setAnalyticsRange] = useState<"weekly" | "monthly">(
+    "weekly",
+  );
+  const displayName = (
+    firstName ||
+    userName ||
+    userEmail?.split("@")[0] ||
+    "Anfitrión"
+  ).trim();
   const firstDisplayName = displayName.split(" ")[0] || "Anfitrión";
-  const userInitials = (displayName || "A")
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase())
-    .join("")
-    .slice(0, 2) || "A";
-  const activeMenuLabel = menuItems.find((item) => item.key === activeTab)?.label || "Dashboard";
+  const userInitials =
+    (displayName || "A")
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part[0]?.toUpperCase())
+      .join("")
+      .slice(0, 2) || "A";
+  const activeMenuLabel =
+    menuItems.find((item) => item.key === activeTab)?.label || "Dashboard";
 
   // -- Modal Bloquear Fechas -------------------------------------------------
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -202,20 +213,29 @@ export default function HostDashboardClient({
   });
   const [blockedDates, setBlockedDates] = useState<any[]>([]);
   const [blockLoading, setBlockLoading] = useState(false);
-  const [blockMsg, setBlockMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [blockMsg, setBlockMsg] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
   const blockFetched = useRef<string | null>(null);
 
   const fetchBlockedDates = useCallback(async (homeId: string) => {
     if (!homeId) return;
     try {
-      const res = await fetch(`/api/host/blocked-dates?homeId=${encodeURIComponent(homeId)}`);
+      const res = await fetch(
+        `/api/host/blocked-dates?homeId=${encodeURIComponent(homeId)}`,
+      );
       const json = await res.json();
       if (json.blocked) setBlockedDates(json.blocked);
     } catch {}
   }, []);
 
   useEffect(() => {
-    if (showBlockModal && blockForm.homeId && blockFetched.current !== blockForm.homeId) {
+    if (
+      showBlockModal &&
+      blockForm.homeId &&
+      blockFetched.current !== blockForm.homeId
+    ) {
       blockFetched.current = blockForm.homeId;
       fetchBlockedDates(blockForm.homeId);
     }
@@ -259,7 +279,9 @@ export default function HostDashboardClient({
 
   const deleteBlockedDate = async (id: string) => {
     try {
-      const res = await fetch(`/api/host/blocked-dates/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/host/blocked-dates/${id}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
         setBlockedDates((prev) => prev.filter((b) => b.id !== id));
       }
@@ -268,7 +290,9 @@ export default function HostDashboardClient({
 
   // -- Modal Retirar Fondos --------------------------------------------------
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [withdrawCurrency, setWithdrawCurrency] = useState<"USD" | "VES">("USD");
+  const [withdrawCurrency, setWithdrawCurrency] = useState<"USD" | "VES">(
+    "USD",
+  );
   const [withdrawData, setWithdrawData] = useState<any>(null);
   const [withdrawDataLoading, setWithdrawDataLoading] = useState(false);
   const [withdrawForm, setWithdrawForm] = useState({
@@ -278,9 +302,13 @@ export default function HostDashboardClient({
     bankName: "",
     phoneNumber: "",
     accountNumber: "",
+    cedula: "",
   });
   const [withdrawLoading, setWithdrawLoading] = useState(false);
-  const [withdrawMsg, setWithdrawMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [withdrawMsg, setWithdrawMsg] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
 
   const fetchWithdrawData = useCallback(async () => {
     setWithdrawDataLoading(true);
@@ -289,7 +317,9 @@ export default function HostDashboardClient({
       const json = await res.json();
       if (res.ok) {
         setWithdrawData(json);
-        const available = Number(json?.wallets?.[withdrawCurrency]?.availableToWithdraw ?? 0);
+        const available = Number(
+          json?.wallets?.[withdrawCurrency]?.availableToWithdraw ?? 0,
+        );
         setWithdrawForm((p) => ({ ...p, amount: available.toFixed(2) }));
       }
     } catch {}
@@ -301,18 +331,21 @@ export default function HostDashboardClient({
       return;
     }
 
-    const available = Number(withdrawData.wallets?.[withdrawCurrency]?.availableToWithdraw ?? 0);
+    const available = Number(
+      withdrawData.wallets?.[withdrawCurrency]?.availableToWithdraw ?? 0,
+    );
     setWithdrawForm((p) => ({
       ...p,
       amount: available.toFixed(2),
       paymentMethod:
         withdrawCurrency === "VES"
-          ? p.paymentMethod === "PAGO_MOVIL" || p.paymentMethod === "TRANSFERENCIA"
+          ? p.paymentMethod === "PAGO_MOVIL" ||
+            p.paymentMethod === "TRANSFERENCIA"
             ? p.paymentMethod
             : "PAGO_MOVIL"
           : p.paymentMethod === "ZELLE" || p.paymentMethod === "TRANSFERENCIA"
-          ? p.paymentMethod
-          : "ZELLE",
+            ? p.paymentMethod
+            : "ZELLE",
     }));
   }, [withdrawCurrency, withdrawData]);
 
@@ -326,10 +359,14 @@ export default function HostDashboardClient({
     setWithdrawMsg(null);
     setWithdrawLoading(true);
     const paymentDetails: Record<string, string> = {};
-    if (withdrawForm.holderName) paymentDetails.holderName = withdrawForm.holderName;
+    if (withdrawForm.holderName)
+      paymentDetails.holderName = withdrawForm.holderName;
     if (withdrawForm.bankName) paymentDetails.bankName = withdrawForm.bankName;
-    if (withdrawForm.phoneNumber) paymentDetails.phoneNumber = withdrawForm.phoneNumber;
-    if (withdrawForm.accountNumber) paymentDetails.accountNumber = withdrawForm.accountNumber;
+    if (withdrawForm.phoneNumber)
+      paymentDetails.phoneNumber = withdrawForm.phoneNumber;
+    if (withdrawForm.accountNumber)
+      paymentDetails.accountNumber = withdrawForm.accountNumber;
+    if (withdrawForm.cedula) paymentDetails.cedula = withdrawForm.cedula;
     try {
       const res = await fetch("/api/host/withdrawals", {
         method: "POST",
@@ -343,9 +380,15 @@ export default function HostDashboardClient({
       });
       const json = await res.json();
       if (!res.ok) {
-        setWithdrawMsg({ ok: false, text: json.error ?? "No se pudo solicitar" });
+        setWithdrawMsg({
+          ok: false,
+          text: json.error ?? "No se pudo solicitar",
+        });
       } else {
-        setWithdrawMsg({ ok: true, text: "¡Solicitud enviada! El equipo la procesará pronto." });
+        setWithdrawMsg({
+          ok: true,
+          text: "¡Solicitud enviada! El equipo la procesará pronto.",
+        });
         fetchWithdrawData();
       }
     } catch {
@@ -390,7 +433,7 @@ export default function HostDashboardClient({
         bg: "bg-green-50",
       },
     ],
-    [stats]
+    [stats],
   );
 
   const smallStats = [
@@ -452,7 +495,8 @@ export default function HostDashboardClient({
     const points = selectedAnalytics.revenueUsd.map((value, index) => {
       const x = leftPadding + stepX * index;
       const y =
-        topPadding + (1 - value / Math.max(selectedAnalytics.maxRevenue, 1)) * usableHeight;
+        topPadding +
+        (1 - value / Math.max(selectedAnalytics.maxRevenue, 1)) * usableHeight;
       return { x, y, value };
     });
 
@@ -481,7 +525,10 @@ export default function HostDashboardClient({
     };
   }, [selectedAnalytics]);
 
-  const recentReservations = useMemo(() => reservations.slice(0, 6), [reservations]);
+  const recentReservations = useMemo(
+    () => reservations.slice(0, 6),
+    [reservations],
+  );
 
   const reservationStatusCounts = useMemo(() => {
     const counts = {
@@ -518,13 +565,12 @@ export default function HostDashboardClient({
     });
   }, [reservations, reservationFilter, searchTerm]);
 
-  const selectedWithdrawWallet =
-    withdrawData?.wallets?.[withdrawCurrency] ?? {
-      totalEarned: 0,
-      totalWithdrawn: 0,
-      availableToWithdraw: 0,
-      pendingRelease: 0,
-    };
+  const selectedWithdrawWallet = withdrawData?.wallets?.[withdrawCurrency] ?? {
+    totalEarned: 0,
+    totalWithdrawn: 0,
+    availableToWithdraw: 0,
+    pendingRelease: 0,
+  };
 
   const withdrawCurrencyLabel = withdrawCurrency === "USD" ? "USD" : "Bs";
   const withdrawCurrencyPrefix = withdrawCurrency === "USD" ? "$" : "Bs ";
@@ -573,7 +619,7 @@ export default function HostDashboardClient({
         <div className="px-4 py-5 border-t border-white/10">
           <div className="flex items-center gap-3 mb-4">
             <div className="h-9 w-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-sm">
-              {profileImage && !profileImage.includes('avatar.vercel.sh') ? (
+              {profileImage && !profileImage.includes("avatar.vercel.sh") ? (
                 <Image
                   src={profileImage}
                   alt="avatar"
@@ -583,7 +629,9 @@ export default function HostDashboardClient({
                   unoptimized
                 />
               ) : (
-                firstName?.[0]?.toUpperCase() || userName?.[0]?.toUpperCase() || "H"
+                firstName?.[0]?.toUpperCase() ||
+                userName?.[0]?.toUpperCase() ||
+                "H"
               )}
             </div>
             <div>
@@ -605,7 +653,9 @@ export default function HostDashboardClient({
 
       <main className="flex-1 px-4 py-0 md:px-8 md:py-8">
         <div className="sticky top-[14px] z-20 mb-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:hidden">
-          <p className="text-center text-base font-bold text-slate-900">{activeMenuLabel}</p>
+          <p className="text-center text-base font-bold text-slate-900">
+            {activeMenuLabel}
+          </p>
         </div>
 
         <div className="sticky top-3 z-20 mb-6 hidden rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur md:block">
@@ -617,7 +667,7 @@ export default function HostDashboardClient({
               </h1>
             </div>
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#E0AE33]/30 bg-[#F7E7B6] text-sm font-bold text-[#8A6500]">
-              {profileImage && !profileImage.includes('avatar.vercel.sh') ? (
+              {profileImage && !profileImage.includes("avatar.vercel.sh") ? (
                 <Image
                   src={profileImage}
                   alt="avatar"
@@ -634,8 +684,12 @@ export default function HostDashboardClient({
         </div>
 
         <div className="hidden mb-8 md:block">
-          <h2 className="text-2xl font-bold text-slate-900">Dashboard Anfitrión</h2>
-          <p className="text-sm text-slate-500">Gestiona tus propiedades y reservas</p>
+          <h2 className="text-2xl font-bold text-slate-900">
+            Dashboard Anfitrión
+          </h2>
+          <p className="text-sm text-slate-500">
+            Gestiona tus propiedades y reservas
+          </p>
         </div>
 
         {activeTab === "dashboard" && (
@@ -651,10 +705,16 @@ export default function HostDashboardClient({
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm text-slate-500">{card.label}</p>
-                        <p className="text-2xl font-bold text-slate-900 mt-2">{card.value}</p>
-                        <p className="text-xs text-slate-400 mt-2">{card.note}</p>
+                        <p className="text-2xl font-bold text-slate-900 mt-2">
+                          {card.value}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          {card.note}
+                        </p>
                       </div>
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${card.bg}`}>
+                      <div
+                        className={`h-10 w-10 rounded-xl flex items-center justify-center ${card.bg}`}
+                      >
                         <Icon className={card.color} size={18} />
                       </div>
                     </div>
@@ -674,8 +734,12 @@ export default function HostDashboardClient({
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm text-slate-500">{card.label}</p>
-                        <p className="text-2xl font-bold text-slate-900 mt-2">{card.value}</p>
-                        <p className="text-xs text-green-600 mt-2">{card.note}</p>
+                        <p className="text-2xl font-bold text-slate-900 mt-2">
+                          {card.value}
+                        </p>
+                        <p className="text-xs text-green-600 mt-2">
+                          {card.note}
+                        </p>
                       </div>
                       <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                         <Icon className={card.color} size={18} />
@@ -709,16 +773,23 @@ export default function HostDashboardClient({
                   </thead>
                   <tbody>
                     {recentReservations.map((reservation) => (
-                      <tr key={reservation.id} className="border-t border-slate-100">
+                      <tr
+                        key={reservation.id}
+                        className="border-t border-slate-100"
+                      >
                         <td className="py-3 text-slate-700 font-medium">
                           {reservation.guestName}
                         </td>
-                        <td className="py-3 text-slate-500">{reservation.dates}</td>
-                        <td className="py-3 text-slate-500">{reservation.pax}</td>
+                        <td className="py-3 text-slate-500">
+                          {reservation.dates}
+                        </td>
+                        <td className="py-3 text-slate-500">
+                          {reservation.pax}
+                        </td>
                         <td className="py-3">
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle(
-                              reservation.status
+                              reservation.status,
                             )}`}
                           >
                             {statusLabel(reservation.status)}
@@ -733,11 +804,16 @@ export default function HostDashboardClient({
 
             <div className="rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 p-6 text-white">
               <h3 className="text-lg font-semibold">Acciones de Anfitrión</h3>
-              <p className="text-sm text-white/70 mt-1">Gestiona tus propiedades y fondos</p>
+              <p className="text-sm text-white/70 mt-1">
+                Gestiona tus propiedades y fondos
+              </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => { setShowBlockModal(true); setBlockMsg(null); }}
+                  onClick={() => {
+                    setShowBlockModal(true);
+                    setBlockMsg(null);
+                  }}
                   className="flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 text-sm font-medium transition"
                 >
                   <Lock size={16} />
@@ -754,9 +830,11 @@ export default function HostDashboardClient({
                 >
                   <Wallet size={16} />
                   Retirar Fondos
-                  {(stats.walletUsd.availableAmount > 0 || stats.walletBs.availableAmount > 0) && (
+                  {(stats.walletUsd.availableAmount > 0 ||
+                    stats.walletBs.availableAmount > 0) && (
                     <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs">
-                      USD ${stats.walletUsd.availableAmount.toFixed(0)} · Bs {stats.walletBs.availableAmount.toFixed(0)}
+                      USD ${stats.walletUsd.availableAmount.toFixed(0)} · Bs{" "}
+                      {stats.walletBs.availableAmount.toFixed(0)}
                     </span>
                   )}
                 </button>
@@ -771,16 +849,24 @@ export default function HostDashboardClient({
                   <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
                     <div className="flex items-center gap-2">
                       <Lock size={18} className="text-slate-700" />
-                      <h2 className="text-lg font-semibold text-slate-900">Bloquear Fechas</h2>
+                      <h2 className="text-lg font-semibold text-slate-900">
+                        Bloquear Fechas
+                      </h2>
                     </div>
-                    <button type="button" onClick={() => setShowBlockModal(false)} className="text-slate-400 hover:text-slate-700 transition">
+                    <button
+                      type="button"
+                      onClick={() => setShowBlockModal(false)}
+                      className="text-slate-400 hover:text-slate-700 transition"
+                    >
                       <X size={20} />
                     </button>
                   </div>
 
                   <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
                     {listings.length === 0 ? (
-                      <p className="text-sm text-slate-500">No tienes propiedades aún.</p>
+                      <p className="text-sm text-slate-500">
+                        No tienes propiedades aún.
+                      </p>
                     ) : (
                       <>
                         {/* Selector de propiedad */}
@@ -790,11 +876,15 @@ export default function HostDashboardClient({
                           </label>
                           <select
                             value={blockForm.homeId}
-                            onChange={(e) => handleBlockDateChange("homeId", e.target.value)}
+                            onChange={(e) =>
+                              handleBlockDateChange("homeId", e.target.value)
+                            }
                             className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
                           >
                             {listings.map((l) => (
-                              <option key={l.id} value={l.id}>{l.title || "Sin título"}</option>
+                              <option key={l.id} value={l.id}>
+                                {l.title || "Sin título"}
+                              </option>
                             ))}
                           </select>
                         </div>
@@ -802,22 +892,36 @@ export default function HostDashboardClient({
                         {/* Fechas */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Desde</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                              Desde
+                            </label>
                             <input
                               type="date"
                               value={blockForm.startDate}
                               min={new Date().toISOString().split("T")[0]}
-                              onChange={(e) => handleBlockDateChange("startDate", e.target.value)}
+                              onChange={(e) =>
+                                handleBlockDateChange(
+                                  "startDate",
+                                  e.target.value,
+                                )
+                              }
                               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Hasta</label>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                              Hasta
+                            </label>
                             <input
                               type="date"
                               value={blockForm.endDate}
-                              min={blockForm.startDate || new Date().toISOString().split("T")[0]}
-                              onChange={(e) => handleBlockDateChange("endDate", e.target.value)}
+                              min={
+                                blockForm.startDate ||
+                                new Date().toISOString().split("T")[0]
+                              }
+                              onChange={(e) =>
+                                handleBlockDateChange("endDate", e.target.value)
+                              }
                               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
                             />
                           </div>
@@ -825,49 +929,92 @@ export default function HostDashboardClient({
 
                         {/* Motivo */}
                         <div>
-                          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Motivo (opcional)</label>
+                          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                            Motivo (opcional)
+                          </label>
                           <input
                             type="text"
                             placeholder="Ej. Mantenimiento, uso personal"
                             value={blockForm.reason}
-                            onChange={(e) => handleBlockDateChange("reason", e.target.value)}
+                            onChange={(e) =>
+                              handleBlockDateChange("reason", e.target.value)
+                            }
                             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-slate-300 outline-none"
                           />
                         </div>
 
                         {blockMsg && (
-                          <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${
-                            blockMsg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                          }`}>
-                            {blockMsg.ok ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                          <div
+                            className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${
+                              blockMsg.ok
+                                ? "bg-green-50 text-green-700"
+                                : "bg-red-50 text-red-700"
+                            }`}
+                          >
+                            {blockMsg.ok ? (
+                              <CheckCircle2 size={16} />
+                            ) : (
+                              <XCircle size={16} />
+                            )}
                             {blockMsg.text}
                           </div>
                         )}
 
                         <Button
                           type="button"
-                          disabled={blockLoading || !blockForm.startDate || !blockForm.endDate}
+                          disabled={
+                            blockLoading ||
+                            !blockForm.startDate ||
+                            !blockForm.endDate
+                          }
                           onClick={submitBlockDate}
                           className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
                         >
-                          {blockLoading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Lock size={16} className="mr-2" />}
+                          {blockLoading ? (
+                            <Loader2 size={16} className="animate-spin mr-2" />
+                          ) : (
+                            <Lock size={16} className="mr-2" />
+                          )}
                           Bloquear período
                         </Button>
 
                         {/* Listado de bloqueos existentes */}
                         {blockedDates.length > 0 && (
                           <div className="pt-2">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Períodos bloqueados</p>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                              Períodos bloqueados
+                            </p>
                             <div className="space-y-2">
                               {blockedDates.map((b: any) => (
-                                <div key={b.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5">
+                                <div
+                                  key={b.id}
+                                  className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5"
+                                >
                                   <div>
                                     <p className="text-sm font-medium text-slate-800">
-                                      {new Date(b.startDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                      {new Date(b.startDate).toLocaleDateString(
+                                        "es-ES",
+                                        {
+                                          day: "2-digit",
+                                          month: "short",
+                                          year: "numeric",
+                                        },
+                                      )}
                                       {" · "}
-                                      {new Date(b.endDate).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                      {new Date(b.endDate).toLocaleDateString(
+                                        "es-ES",
+                                        {
+                                          day: "2-digit",
+                                          month: "short",
+                                          year: "numeric",
+                                        },
+                                      )}
                                     </p>
-                                    {b.reason && <p className="text-xs text-slate-500">{b.reason}</p>}
+                                    {b.reason && (
+                                      <p className="text-xs text-slate-500">
+                                        {b.reason}
+                                      </p>
+                                    )}
                                   </div>
                                   <button
                                     type="button"
@@ -898,7 +1045,11 @@ export default function HostDashboardClient({
                       <Wallet size={18} />
                       <h2 className="text-lg font-semibold">Retirar Fondos</h2>
                     </div>
-                    <button type="button" onClick={() => setShowWithdrawModal(false)} className="text-white/60 hover:text-white transition">
+                    <button
+                      type="button"
+                      onClick={() => setShowWithdrawModal(false)}
+                      className="text-white/60 hover:text-white transition"
+                    >
                       <X size={20} />
                     </button>
                   </div>
@@ -906,7 +1057,10 @@ export default function HostDashboardClient({
                   <div className="max-h-[80vh] overflow-y-auto">
                     {withdrawDataLoading ? (
                       <div className="flex items-center justify-center py-16">
-                        <Loader2 size={28} className="animate-spin text-slate-400" />
+                        <Loader2
+                          size={28}
+                          className="animate-spin text-slate-400"
+                        />
                       </div>
                     ) : withdrawData ? (
                       <>
@@ -920,12 +1074,20 @@ export default function HostDashboardClient({
                                 setWithdrawMsg(null);
                               }}
                               className={`p-5 text-left transition ${
-                                withdrawCurrency === "USD" ? "bg-slate-50" : "bg-white hover:bg-slate-50"
+                                withdrawCurrency === "USD"
+                                  ? "bg-slate-50"
+                                  : "bg-white hover:bg-slate-50"
                               }`}
                             >
-                              <p className="text-xs text-slate-500 mb-1">Disponible USD</p>
+                              <p className="text-xs text-slate-500 mb-1">
+                                Disponible USD
+                              </p>
                               <p className="text-2xl font-bold text-emerald-600">
-                                ${Number(withdrawData.wallets?.USD?.availableToWithdraw ?? 0).toFixed(2)}
+                                $
+                                {Number(
+                                  withdrawData.wallets?.USD
+                                    ?.availableToWithdraw ?? 0,
+                                ).toFixed(2)}
                               </p>
                             </button>
                             <button
@@ -935,32 +1097,55 @@ export default function HostDashboardClient({
                                 setWithdrawMsg(null);
                               }}
                               className={`p-5 text-left border-l border-slate-100 transition ${
-                                withdrawCurrency === "VES" ? "bg-slate-50" : "bg-white hover:bg-slate-50"
+                                withdrawCurrency === "VES"
+                                  ? "bg-slate-50"
+                                  : "bg-white hover:bg-slate-50"
                               }`}
                             >
-                              <p className="text-xs text-slate-500 mb-1">Disponible Bs</p>
+                              <p className="text-xs text-slate-500 mb-1">
+                                Disponible Bs
+                              </p>
                               <p className="text-2xl font-bold text-blue-600">
-                                Bs {Number(withdrawData.wallets?.VES?.availableToWithdraw ?? 0).toFixed(2)}
+                                Bs{" "}
+                                {Number(
+                                  withdrawData.wallets?.VES
+                                    ?.availableToWithdraw ?? 0,
+                                ).toFixed(2)}
                               </p>
                             </button>
                           </div>
                           <div className="grid grid-cols-3 gap-0">
                             <div className="p-4 text-center border-r border-slate-100">
-                              <p className="text-xs text-slate-500 mb-1">Ganado ({withdrawCurrencyLabel})</p>
+                              <p className="text-xs text-slate-500 mb-1">
+                                Ganado ({withdrawCurrencyLabel})
+                              </p>
                               <p className="text-lg font-bold text-slate-900">
-                                {withdrawCurrencyPrefix}{(selectedWithdrawWallet.totalEarned ?? 0).toFixed(2)}
+                                {withdrawCurrencyPrefix}
+                                {(
+                                  selectedWithdrawWallet.totalEarned ?? 0
+                                ).toFixed(2)}
                               </p>
                             </div>
                             <div className="p-4 text-center border-r border-slate-100">
-                              <p className="text-xs text-slate-500 mb-1">Retirado ({withdrawCurrencyLabel})</p>
+                              <p className="text-xs text-slate-500 mb-1">
+                                Retirado ({withdrawCurrencyLabel})
+                              </p>
                               <p className="text-lg font-bold text-orange-600">
-                                {withdrawCurrencyPrefix}{(selectedWithdrawWallet.totalWithdrawn ?? 0).toFixed(2)}
+                                {withdrawCurrencyPrefix}
+                                {(
+                                  selectedWithdrawWallet.totalWithdrawn ?? 0
+                                ).toFixed(2)}
                               </p>
                             </div>
                             <div className="p-4 text-center">
-                              <p className="text-xs text-slate-500 mb-1">Pendiente ({withdrawCurrencyLabel})</p>
+                              <p className="text-xs text-slate-500 mb-1">
+                                Pendiente ({withdrawCurrencyLabel})
+                              </p>
                               <p className="text-lg font-bold text-slate-600">
-                                {withdrawCurrencyPrefix}{(selectedWithdrawWallet.pendingRelease ?? 0).toFixed(2)}
+                                {withdrawCurrencyPrefix}
+                                {(
+                                  selectedWithdrawWallet.pendingRelease ?? 0
+                                ).toFixed(2)}
                               </p>
                             </div>
                           </div>
@@ -971,9 +1156,12 @@ export default function HostDashboardClient({
                             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                               <Clock size={24} className="text-slate-400" />
                             </div>
-                            <p className="font-semibold text-slate-700">Sin fondos disponibles</p>
+                            <p className="font-semibold text-slate-700">
+                              Sin fondos disponibles
+                            </p>
                             <p className="text-sm text-slate-500 mt-1">
-                              Los fondos se liberan una vez que finaliza la estadía del huésped.
+                              Los fondos se liberan una vez que finaliza la
+                              estadía del huésped.
                             </p>
                           </div>
                         ) : (
@@ -991,26 +1179,47 @@ export default function HostDashboardClient({
                                   type="number"
                                   min="0.01"
                                   step="0.01"
-                                  max={selectedWithdrawWallet.availableToWithdraw}
+                                  max={
+                                    selectedWithdrawWallet.availableToWithdraw
+                                  }
                                   value={withdrawForm.amount}
-                                  onChange={(e) => setWithdrawForm((p) => ({ ...p, amount: e.target.value }))}
+                                  onChange={(e) =>
+                                    setWithdrawForm((p) => ({
+                                      ...p,
+                                      amount: e.target.value,
+                                    }))
+                                  }
                                   className="w-full rounded-xl border border-slate-200 pl-10 pr-4 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
                                 />
                               </div>
                               <p className="text-xs text-slate-400 mt-1">
-                                Máximo disponible: <strong>{withdrawCurrencyPrefix}{(selectedWithdrawWallet.availableToWithdraw ?? 0).toFixed(2)}</strong>
+                                Máximo disponible:{" "}
+                                <strong>
+                                  {withdrawCurrencyPrefix}
+                                  {(
+                                    selectedWithdrawWallet.availableToWithdraw ??
+                                    0
+                                  ).toFixed(2)}
+                                </strong>
                               </p>
                             </div>
 
                             {/* Método de pago */}
                             <div>
-                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">M�todo de cobro</label>
+                              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                                M�todo de cobro
+                              </label>
                               <div className="grid grid-cols-2 gap-2 text-center text-sm">
                                 {allowedWithdrawMethods.map((m) => (
                                   <button
                                     key={m}
                                     type="button"
-                                    onClick={() => setWithdrawForm((p) => ({ ...p, paymentMethod: m }))}
+                                    onClick={() =>
+                                      setWithdrawForm((p) => ({
+                                        ...p,
+                                        paymentMethod: m,
+                                      }))
+                                    }
                                     className={`rounded-xl border py-2.5 font-medium transition text-xs ${
                                       withdrawForm.paymentMethod === m
                                         ? "border-orange-500 bg-orange-50 text-orange-700"
@@ -1020,8 +1229,8 @@ export default function HostDashboardClient({
                                     {m === "PAGO_MOVIL"
                                       ? "Pago Móvil"
                                       : m === "ZELLE"
-                                      ? "Zelle"
-                                      : "Transferencia"}
+                                        ? "Zelle"
+                                        : "Transferencia"}
                                   </button>
                                 ))}
                               </div>
@@ -1035,49 +1244,100 @@ export default function HostDashboardClient({
                             {/* Detalles del pago */}
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <label className="block text-xs text-slate-500 mb-1">Nombre del titular</label>
+                                <label className="block text-xs text-slate-500 mb-1">
+                                  Nombre del titular
+                                </label>
                                 <input
                                   type="text"
                                   placeholder="Juan Pérez"
                                   value={withdrawForm.holderName}
-                                  onChange={(e) => setWithdrawForm((p) => ({ ...p, holderName: e.target.value }))}
+                                  onChange={(e) =>
+                                    setWithdrawForm((p) => ({
+                                      ...p,
+                                      holderName: e.target.value,
+                                    }))
+                                  }
                                   className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
                                 />
                               </div>
                               {withdrawForm.paymentMethod === "PAGO_MOVIL" && (
                                 <>
                                   <div>
-                                    <label className="block text-xs text-slate-500 mb-1">Banco receptor</label>
+                                    <label className="block text-xs text-slate-500 mb-1">
+                                      Código de banco (4 dígitos)
+                                    </label>
                                     <input
                                       type="text"
-                                      placeholder="Ej. Banesco"
+                                      placeholder="Ej. 0134"
                                       value={withdrawForm.bankName}
-                                      onChange={(e) => setWithdrawForm((p) => ({ ...p, bankName: e.target.value }))}
+                                      onChange={(e) =>
+                                        setWithdrawForm((p) => ({
+                                          ...p,
+                                          bankName: e.target.value,
+                                        }))
+                                      }
                                       className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
                                     />
                                   </div>
-                                  <div className="col-span-2">
-                                    <label className="block text-xs text-slate-500 mb-1">Teléfono</label>
+                                  <div>
+                                    <label className="block text-xs text-slate-500 mb-1">
+                                      Cédula
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="V12345678"
+                                      value={withdrawForm.cedula}
+                                      onChange={(e) =>
+                                        setWithdrawForm((p) => ({
+                                          ...p,
+                                          cedula: e.target.value,
+                                        }))
+                                      }
+                                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-slate-500 mb-1">
+                                      Teléfono
+                                    </label>
                                     <input
                                       type="tel"
                                       placeholder="04XX-XXXXXXX"
                                       value={withdrawForm.phoneNumber}
-                                      onChange={(e) => setWithdrawForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+                                      onChange={(e) =>
+                                        setWithdrawForm((p) => ({
+                                          ...p,
+                                          phoneNumber: e.target.value,
+                                        }))
+                                      }
                                       className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
                                     />
                                   </div>
                                 </>
                               )}
-                              {(withdrawForm.paymentMethod === "ZELLE" || withdrawForm.paymentMethod === "TRANSFERENCIA") && (
+                              {(withdrawForm.paymentMethod === "ZELLE" ||
+                                withdrawForm.paymentMethod ===
+                                  "TRANSFERENCIA") && (
                                 <div className="col-span-2">
                                   <label className="block text-xs text-slate-500 mb-1">
-                                    {withdrawForm.paymentMethod === "ZELLE" ? "Email / teléfono Zelle" : "Número de cuenta"}
+                                    {withdrawForm.paymentMethod === "ZELLE"
+                                      ? "Email / teléfono Zelle"
+                                      : "Número de cuenta"}
                                   </label>
                                   <input
                                     type="text"
-                                    placeholder={withdrawForm.paymentMethod === "ZELLE" ? "email@ejemplo.com" : "0001-0001-XX-XXXXXXXX"}
+                                    placeholder={
+                                      withdrawForm.paymentMethod === "ZELLE"
+                                        ? "email@ejemplo.com"
+                                        : "0001-0001-XX-XXXXXXXX"
+                                    }
                                     value={withdrawForm.accountNumber}
-                                    onChange={(e) => setWithdrawForm((p) => ({ ...p, accountNumber: e.target.value }))}
+                                    onChange={(e) =>
+                                      setWithdrawForm((p) => ({
+                                        ...p,
+                                        accountNumber: e.target.value,
+                                      }))
+                                    }
                                     className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-orange-200 outline-none"
                                   />
                                 </div>
@@ -1085,28 +1345,46 @@ export default function HostDashboardClient({
                             </div>
 
                             {withdrawMsg && (
-                              <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${
-                                withdrawMsg.ok ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                              }`}>
-                                {withdrawMsg.ok ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                              <div
+                                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium ${
+                                  withdrawMsg.ok
+                                    ? "bg-green-50 text-green-700"
+                                    : "bg-red-50 text-red-700"
+                                }`}
+                              >
+                                {withdrawMsg.ok ? (
+                                  <CheckCircle2 size={16} />
+                                ) : (
+                                  <XCircle size={16} />
+                                )}
                                 {withdrawMsg.text}
                               </div>
                             )}
 
                             <Button
                               type="button"
-                              disabled={withdrawLoading || !withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0}
+                              disabled={
+                                withdrawLoading ||
+                                !withdrawForm.amount ||
+                                parseFloat(withdrawForm.amount) <= 0
+                              }
                               onClick={submitWithdrawal}
                               className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3 font-semibold"
                             >
-                              {withdrawLoading
-                                ? <><Loader2 size={16} className="animate-spin mr-2" />Enviando…</>
-                                : (
-                                  <>
-                                    <ArrowDownToLine size={16} className="mr-2" />
-                                    {`Solicitar retiro de ${withdrawCurrencyPrefix}${withdrawForm.amount || "0"}`}
-                                  </>
-                                )}
+                              {withdrawLoading ? (
+                                <>
+                                  <Loader2
+                                    size={16}
+                                    className="animate-spin mr-2"
+                                  />
+                                  Enviando…
+                                </>
+                              ) : (
+                                <>
+                                  <ArrowDownToLine size={16} className="mr-2" />
+                                  {`Solicitar retiro de ${withdrawCurrencyPrefix}${withdrawForm.amount || "0"}`}
+                                </>
+                              )}
                             </Button>
                           </div>
                         )}
@@ -1114,30 +1392,76 @@ export default function HostDashboardClient({
                         {/* Historial */}
                         {withdrawData.withdrawals?.length > 0 && (
                           <div className="px-6 pb-6">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Historial de retiros</p>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                              Historial de retiros
+                            </p>
                             <div className="space-y-2">
                               {withdrawData.withdrawals.map((w: any) => {
-                                const statusCfg: Record<string, { label: string; icon: React.ReactNode; cls: string }> = {
-                                  PENDING:    { label: "Pendiente",   icon: <Clock size={14} />,         cls: "bg-yellow-50 text-yellow-700" },
-                                  PROCESSING: { label: "En proceso",  icon: <Loader2 size={14} />,        cls: "bg-blue-50 text-blue-700" },
-                                  COMPLETED:  { label: "Completado",  icon: <CheckCircle2 size={14} />,  cls: "bg-green-50 text-green-700" },
-                                  REJECTED:   { label: "Rechazado",   icon: <XCircle size={14} />,        cls: "bg-red-50 text-red-700" },
+                                const statusCfg: Record<
+                                  string,
+                                  {
+                                    label: string;
+                                    icon: React.ReactNode;
+                                    cls: string;
+                                  }
+                                > = {
+                                  PENDING: {
+                                    label: "Pendiente",
+                                    icon: <Clock size={14} />,
+                                    cls: "bg-yellow-50 text-yellow-700",
+                                  },
+                                  PROCESSING: {
+                                    label: "En proceso",
+                                    icon: <Loader2 size={14} />,
+                                    cls: "bg-blue-50 text-blue-700",
+                                  },
+                                  COMPLETED: {
+                                    label: "Completado",
+                                    icon: <CheckCircle2 size={14} />,
+                                    cls: "bg-green-50 text-green-700",
+                                  },
+                                  REJECTED: {
+                                    label: "Rechazado",
+                                    icon: <XCircle size={14} />,
+                                    cls: "bg-red-50 text-red-700",
+                                  },
                                 };
-                                const cfg = statusCfg[w.status] ?? statusCfg.PENDING;
-                                const withdrawalCurrency = w.currency === "VES" ? "VES" : "USD";
-                                const withdrawalPrefix = withdrawalCurrency === "USD" ? "$" : "Bs ";
+                                const cfg =
+                                  statusCfg[w.status] ?? statusCfg.PENDING;
+                                const withdrawalCurrency =
+                                  w.currency === "VES" ? "VES" : "USD";
+                                const withdrawalPrefix =
+                                  withdrawalCurrency === "USD" ? "$" : "Bs ";
                                 return (
-                                  <div key={w.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                                  <div
+                                    key={w.id}
+                                    className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3"
+                                  >
                                     <div>
                                       <p className="text-sm font-semibold text-slate-800">
-                                        {withdrawalPrefix}{Number(w.amount).toFixed(2)}
+                                        {withdrawalPrefix}
+                                        {Number(w.amount).toFixed(2)}
                                       </p>
                                       <p className="text-xs text-slate-500">
-                                        {w.paymentMethod?.replace(/_/g, " ")} ({withdrawalCurrency}) · {new Date(w.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                                        {w.paymentMethod?.replace(/_/g, " ")} (
+                                        {withdrawalCurrency}) ·{" "}
+                                        {new Date(
+                                          w.createdAt,
+                                        ).toLocaleDateString("es-ES", {
+                                          day: "2-digit",
+                                          month: "short",
+                                          year: "numeric",
+                                        })}
                                       </p>
-                                      {w.adminNotes && <p className="text-xs text-slate-500 mt-0.5 italic">{w.adminNotes}</p>}
+                                      {w.adminNotes && (
+                                        <p className="text-xs text-slate-500 mt-0.5 italic">
+                                          {w.adminNotes}
+                                        </p>
+                                      )}
                                     </div>
-                                    <span className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${cfg.cls}`}>
+                                    <span
+                                      className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${cfg.cls}`}
+                                    >
                                       {cfg.icon}
                                       {cfg.label}
                                     </span>
@@ -1149,7 +1473,9 @@ export default function HostDashboardClient({
                         )}
                       </>
                     ) : (
-                      <div className="py-10 text-center text-sm text-slate-500">No se pudo cargar la información.</div>
+                      <div className="py-10 text-center text-sm text-slate-500">
+                        No se pudo cargar la información.
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1165,7 +1491,10 @@ export default function HostDashboardClient({
                 <h3 className="text-lg font-semibold">Reservaciones</h3>
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <Search
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={16}
+                    />
                     <input
                       type="text"
                       placeholder="Buscar por nombre o ID"
@@ -1250,44 +1579,62 @@ export default function HostDashboardClient({
                 </thead>
                 <tbody>
                   {filteredReservations.map((reservation) => (
-                      <tr key={reservation.id} className="border-b border-slate-100 hover:bg-slate-50 transition">
-                        <td className="px-6 py-4 font-semibold text-slate-900">
-                          {reservation.reservationId}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-slate-900 font-medium">{reservation.guestName}</div>
-                          {reservation.guestPhone && (
-                            <div className="text-xs text-slate-500">{reservation.guestPhone}</div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-slate-700">{reservation.dates}</td>
-                        <td className="px-6 py-4">
-                          <div className="text-slate-900 font-medium">{reservation.pax}</div>
-                          <div className="text-xs text-slate-500">{reservation.amountLabel}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle(
-                              reservation.status
-                            )}`}
-                          >
-                            {statusLabel(reservation.status)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <button type="button" className="text-orange-600 hover:text-orange-700 hover:underline text-xs font-medium">
-                            Ver
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    <tr
+                      key={reservation.id}
+                      className="border-b border-slate-100 hover:bg-slate-50 transition"
+                    >
+                      <td className="px-6 py-4 font-semibold text-slate-900">
+                        {reservation.reservationId}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-slate-900 font-medium">
+                          {reservation.guestName}
+                        </div>
+                        {reservation.guestPhone && (
+                          <div className="text-xs text-slate-500">
+                            {reservation.guestPhone}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-700">
+                        {reservation.dates}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-slate-900 font-medium">
+                          {reservation.pax}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {reservation.amountLabel}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle(
+                            reservation.status,
+                          )}`}
+                        >
+                          {statusLabel(reservation.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          type="button"
+                          className="text-orange-600 hover:text-orange-700 hover:underline text-xs font-medium"
+                        >
+                          Ver
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
 
             {filteredReservations.length === 0 && (
               <div className="p-12 text-center">
-                <p className="text-slate-500 text-sm">No hay reservaciones que coincidan con tu búsqueda</p>
+                <p className="text-slate-500 text-sm">
+                  No hay reservaciones que coincidan con tu búsqueda
+                </p>
               </div>
             )}
           </div>
@@ -1304,7 +1651,10 @@ export default function HostDashboardClient({
               </div>
               {createHomeAction ? (
                 <form action={createHomeAction}>
-                  <button type="submit" className="text-sm text-orange-600 hover:underline">
+                  <button
+                    type="submit"
+                    className="text-sm text-orange-600 hover:underline"
+                  >
                     Publicar nuevo
                   </button>
                 </form>
@@ -1335,7 +1685,9 @@ export default function HostDashboardClient({
           <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">Analiticas</h3>
+                <h3 className="text-2xl font-bold text-slate-900">
+                  Analiticas
+                </h3>
                 <p className="text-sm text-slate-500 mt-1">
                   Resumen financiero y rendimiento de tus reservas.
                 </p>
@@ -1385,9 +1737,12 @@ export default function HostDashboardClient({
                   </div>
                   <div>
                     <p className="text-2xl font-semibold leading-tight">
-                      Informe {analyticsRange === "weekly" ? "Semanal" : "Mensual"}
+                      Informe{" "}
+                      {analyticsRange === "weekly" ? "Semanal" : "Mensual"}
                     </p>
-                    <p className="text-sm text-white/75">{analyticsDateRangeLabel}</p>
+                    <p className="text-sm text-white/75">
+                      {analyticsDateRangeLabel}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1398,8 +1753,12 @@ export default function HostDashboardClient({
                     <span>Ingresos Brutos</span>
                     <DollarSign size={14} />
                   </div>
-                  <p className="mt-2 text-3xl font-bold">${analyticsGrossRevenue.toFixed(0)}</p>
-                  <p className="mt-1 text-xs text-emerald-300">Neto: ${analyticsNetRevenue.toFixed(2)}</p>
+                  <p className="mt-2 text-3xl font-bold">
+                    ${analyticsGrossRevenue.toFixed(0)}
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-300">
+                    Neto: ${analyticsNetRevenue.toFixed(2)}
+                  </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
@@ -1407,8 +1766,12 @@ export default function HostDashboardClient({
                     <span>Comision Destinos Venezuela</span>
                     <PieChart size={14} />
                   </div>
-                  <p className="mt-2 text-3xl font-bold">-${analyticsCommission.toFixed(2)}</p>
-                  <p className="mt-1 text-xs text-white/70">Retenido en plataforma</p>
+                  <p className="mt-2 text-3xl font-bold">
+                    -${analyticsCommission.toFixed(2)}
+                  </p>
+                  <p className="mt-1 text-xs text-white/70">
+                    Retenido en plataforma
+                  </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
@@ -1416,8 +1779,12 @@ export default function HostDashboardClient({
                     <span>Total Reservas</span>
                     <CalendarCheck size={14} />
                   </div>
-                  <p className="mt-2 text-3xl font-bold">{analyticsTotalBookings}</p>
-                  <p className="mt-1 text-xs text-white/70">Mejor dia: {analyticsBestPeriodLabel}</p>
+                  <p className="mt-2 text-3xl font-bold">
+                    {analyticsTotalBookings}
+                  </p>
+                  <p className="mt-1 text-xs text-white/70">
+                    Mejor dia: {analyticsBestPeriodLabel}
+                  </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/10 p-4">
@@ -1425,8 +1792,12 @@ export default function HostDashboardClient({
                     <span>Ticket Promedio</span>
                     <Star size={14} />
                   </div>
-                  <p className="mt-2 text-3xl font-bold">${analyticsAverageTicket.toFixed(2)}</p>
-                  <p className="mt-1 text-xs text-white/70">Rating: {stats.rating ? stats.rating.toFixed(1) : "-"}</p>
+                  <p className="mt-2 text-3xl font-bold">
+                    ${analyticsAverageTicket.toFixed(2)}
+                  </p>
+                  <p className="mt-1 text-xs text-white/70">
+                    Rating: {stats.rating ? stats.rating.toFixed(1) : "-"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1435,7 +1806,8 @@ export default function HostDashboardClient({
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <h4 className="text-lg font-semibold text-slate-900">
-                    Ingresos {analyticsRange === "weekly" ? "Semanales" : "Mensuales"}
+                    Ingresos{" "}
+                    {analyticsRange === "weekly" ? "Semanales" : "Mensuales"}
                   </h4>
                   <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600">
                     USD
@@ -1452,7 +1824,10 @@ export default function HostDashboardClient({
                       <line
                         x1={lineChartGeometry.leftPadding}
                         y1={tick.y}
-                        x2={lineChartGeometry.width - lineChartGeometry.rightPadding}
+                        x2={
+                          lineChartGeometry.width -
+                          lineChartGeometry.rightPadding
+                        }
                         y2={tick.y}
                         stroke="#e5e7eb"
                         strokeDasharray="4 6"
@@ -1463,7 +1838,10 @@ export default function HostDashboardClient({
                     </g>
                   ))}
 
-                  <polygon fill="rgba(251,146,60,0.12)" points={lineChartGeometry.areaPath} />
+                  <polygon
+                    fill="rgba(251,146,60,0.12)"
+                    points={lineChartGeometry.areaPath}
+                  />
                   <polyline
                     fill="none"
                     stroke="#f97316"
@@ -1475,7 +1853,14 @@ export default function HostDashboardClient({
 
                   {lineChartGeometry.points.map((point, index) => (
                     <g key={`point-${index}`}>
-                      <circle cx={point.x} cy={point.y} r="5" fill="#fff" stroke="#f97316" strokeWidth="2" />
+                      <circle
+                        cx={point.x}
+                        cy={point.y}
+                        r="5"
+                        fill="#fff"
+                        stroke="#f97316"
+                        strokeWidth="2"
+                      />
                     </g>
                   ))}
                 </svg>
@@ -1487,9 +1872,16 @@ export default function HostDashboardClient({
                   }}
                 >
                   {selectedAnalytics.labels.map((label, index) => (
-                    <div key={`line-label-${label}-${index}`} className="text-center">
-                      <p className="text-xs font-medium text-slate-500">{label}</p>
-                      <p className="text-xs text-slate-400">${selectedAnalytics.revenueUsd[index]}</p>
+                    <div
+                      key={`line-label-${label}-${index}`}
+                      className="text-center"
+                    >
+                      <p className="text-xs font-medium text-slate-500">
+                        {label}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        ${selectedAnalytics.revenueUsd[index]}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -1515,12 +1907,17 @@ export default function HostDashboardClient({
                     {selectedAnalytics.bookings.map((value, index) => {
                       const barHeight = Math.max(
                         10,
-                        (value / Math.max(selectedAnalytics.maxBookings, 1)) * 100
+                        (value / Math.max(selectedAnalytics.maxBookings, 1)) *
+                          100,
                       );
-                      const isPeak = index === selectedAnalytics.bestBookingIndex;
+                      const isPeak =
+                        index === selectedAnalytics.bestBookingIndex;
 
                       return (
-                        <div key={`bar-${selectedAnalytics.labels[index]}-${index}`} className="flex h-full flex-col justify-end">
+                        <div
+                          key={`bar-${selectedAnalytics.labels[index]}-${index}`}
+                          className="flex h-full flex-col justify-end"
+                        >
                           <div className="group relative flex flex-1 items-end justify-center">
                             <div
                               className={`w-full rounded-t-xl transition ${
@@ -1548,142 +1945,149 @@ export default function HostDashboardClient({
         {activeTab === "profile" && (
           <div className="max-w-2xl">
             {userData && userId ? (
-              <ProfileEditClient userData={userData} userId={userId} initialDocs={initialDocs} />
+              <ProfileEditClient
+                userData={userData}
+                userId={userId}
+                initialDocs={initialDocs}
+              />
             ) : (
-            <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
-              <h3 className="text-2xl font-semibold mb-6">Editar Perfil</h3>
-              
-              <form className="space-y-6">
-                {/* Profile Picture */}
-                <div className="flex items-center gap-6">
-                  <div className="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 border-4 border-slate-100">
-                    {profileImage ? (
-                      <Image
-                        src={profileImage}
-                        alt="Profile"
-                        width={96}
-                        height={96}
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    ) : (
-                      firstName?.[0]?.toUpperCase() || "H"
-                    )}
-                  </div>
-                  <div>
-                    <label htmlFor="profile-upload" className="block text-sm font-medium text-slate-700 mb-2">
-                      Foto de Perfil
-                    </label>
-                    <input
-                      type="file"
-                      id="profile-upload"
-                      accept="image/*"
-                      className="block w-full text-sm text-slate-500
+              <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
+                <h3 className="text-2xl font-semibold mb-6">Editar Perfil</h3>
+
+                <form className="space-y-6">
+                  {/* Profile Picture */}
+                  <div className="flex items-center gap-6">
+                    <div className="h-24 w-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 border-4 border-slate-100">
+                      {profileImage ? (
+                        <Image
+                          src={profileImage}
+                          alt="Profile"
+                          width={96}
+                          height={96}
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        firstName?.[0]?.toUpperCase() || "H"
+                      )}
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="profile-upload"
+                        className="block text-sm font-medium text-slate-700 mb-2"
+                      >
+                        Foto de Perfil
+                      </label>
+                      <input
+                        type="file"
+                        id="profile-upload"
+                        accept="image/*"
+                        className="block w-full text-sm text-slate-500
                         file:mr-4 file:py-2 file:px-4
                         file:rounded-lg file:border-0
                         file:text-sm file:font-semibold
                         file:bg-orange-50 file:text-orange-600
                         hover:file:bg-orange-100"
-                    />
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <hr className="border-slate-200" />
+                  <hr className="border-slate-200" />
 
-                {/* Name Fields */}
-                <div className="grid grid-cols-2 gap-4">
+                  {/* Name Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Nombre
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={firstName || ""}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
+                        placeholder="Tu nombre"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Apellido
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={lastName || ""}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
+                        placeholder="Tu apellido"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Email */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Nombre
+                      Email
                     </label>
                     <input
-                      type="text"
-                      defaultValue={firstName || ""}
-                      className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
-                      placeholder="Tu nombre"
+                      type="email"
+                      defaultValue={userEmail || ""}
+                      disabled
+                      className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 cursor-not-allowed"
                     />
+                    <p className="text-xs text-slate-500 mt-1">
+                      El email no se puede cambiar
+                    </p>
                   </div>
+
+                  {/* Location Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Estado / Regi�n
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={country || ""}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
+                        placeholder="Tu estado"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        Ciudad
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={city || ""}
+                        className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
+                        placeholder="Tu ciudad"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Bio/About */}
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Apellido
+                      Acerca de ti
                     </label>
-                    <input
-                      type="text"
-                      defaultValue={lastName || ""}
-                      className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
-                      placeholder="Tu apellido"
+                    <textarea
+                      rows={4}
+                      className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none resize-none"
+                      placeholder="Cu�ntales a los hu�spedes un poco sobre ti (m�ximo 500 caracteres)"
+                      maxLength={500}
                     />
                   </div>
-                </div>
 
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue={userEmail || ""}
-                    disabled
-                    className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">
-                    El email no se puede cambiar
-                  </p>
-                </div>
-
-                {/* Location Fields */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Estado / Regi�n
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue={country || ""}
-                      className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
-                      placeholder="Tu estado"
-                    />
+                  {/* Submit Button */}
+                  <div className="flex items-center justify-between pt-4">
+                    <p className="text-sm text-slate-500">
+                      Los cambios se guardar�n autom�ticamente
+                    </p>
+                    <Button
+                      type="submit"
+                      className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg"
+                    >
+                      Guardar Cambios
+                    </Button>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Ciudad
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue={city || ""}
-                      className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none"
-                      placeholder="Tu ciudad"
-                    />
-                  </div>
-                </div>
-
-                {/* Bio/About */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Acerca de ti
-                  </label>
-                  <textarea
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-200 outline-none resize-none"
-                    placeholder="Cu�ntales a los hu�spedes un poco sobre ti (m�ximo 500 caracteres)"
-                    maxLength={500}
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <div className="flex items-center justify-between pt-4">
-                  <p className="text-sm text-slate-500">
-                    Los cambios se guardar�n autom�ticamente
-                  </p>
-                  <Button 
-                    type="submit"
-                    className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg"
-                  >
-                    Guardar Cambios
-                  </Button>
-                </div>
-              </form>
-            </div>
+                </form>
+              </div>
             )}
           </div>
         )}
@@ -1691,6 +2095,3 @@ export default function HostDashboardClient({
     </div>
   );
 }
-
-
-

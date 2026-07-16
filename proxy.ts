@@ -10,6 +10,8 @@ const MAINTENANCE_BYPASS = [
   "/_next",
   "/api",
   "/favicon",
+  "/R4consulta",
+  "/R4notifica",
 ];
 
 export async function proxy(request: NextRequest) {

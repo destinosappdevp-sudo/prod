@@ -1,6 +1,15 @@
 "use client";
 import { Card } from "@/components/ui/card";
-import { Bell, Shield, Database, Globe, Palette, Wrench, Landmark } from "lucide-react";
+import {
+  Bell,
+  Shield,
+  Database,
+  Globe,
+  Palette,
+  Wrench,
+  Landmark,
+  Smartphone,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatBcvRateInput } from "@/app/lib/bcv-rate-format";
 
@@ -52,7 +61,9 @@ export default function SettingsPage() {
 
   // Tasa BCV
   const [bcvRate, setBcvRate] = useState<string>("");
-  const [bcvRateDate, setBcvRateDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [bcvRateDate, setBcvRateDate] = useState<string>(
+    new Date().toISOString().split("T")[0],
+  );
   const [proximaTasa, setProximaTasa] = useState<string>("");
   const [proximaTasaDate, setProximaTasaDate] = useState<string>("");
   const [tasasAnteriores, setTasasAnteriores] = useState<RateHistoryItem[]>([]);
@@ -69,6 +80,28 @@ export default function SettingsPage() {
   // Sincronizar Usuarios
   const [syncLoading, setSyncLoading] = useState<boolean>(false);
   const [syncMsg, setSyncMsg] = useState<string>("");
+
+  // Pago Móvil R4
+  const [pagomovilMode, setPagomovilMode] = useState<"MANUAL" | "R4">("MANUAL");
+  const [pagomovilMerchant, setPagomovilMerchant] = useState({
+    phone: "",
+    bank: "",
+    cedula: "",
+  });
+  const [pagomovilCredentials, setPagomovilCredentials] = useState({
+    idComercio: "",
+    hmacSecret: "",
+    authToken: "",
+    allowedIps: "",
+  });
+  const [pagomovilCredito, setPagomovilCredito] = useState({
+    idComercio: "",
+    hmacSecret: "",
+    authToken: "",
+  });
+  const [pagomovilLoading, setPagomovilLoading] = useState<boolean>(true);
+  const [pagomovilSaving, setPagomovilSaving] = useState<boolean>(false);
+  const [pagomovilMsg, setPagomovilMsg] = useState<string>("");
 
   useEffect(() => {
     fetch("/api/admin/settings/my-role")
@@ -145,7 +178,7 @@ export default function SettingsPage() {
           history.map((item: any) => ({
             fecha: typeof item?.fecha === "string" ? item.fecha : null,
             tasa: formatRateForInput(item?.tasa),
-          }))
+          })),
         );
       } catch {
         setBcvRate("");
@@ -154,6 +187,37 @@ export default function SettingsPage() {
       }
       setBcvLoading(false);
     });
+
+    // Cargar configuración de Pago Móvil R4
+    fetch("/api/admin/settings/pagomovil")
+      .then(async (res) => {
+        try {
+          const data = await res.json();
+          if (res.ok) {
+            setPagomovilMode(data.mode === "R4" ? "R4" : "MANUAL");
+            setPagomovilMerchant({
+              phone: data.merchant?.phone || "",
+              bank: data.merchant?.bank || "",
+              cedula: data.merchant?.cedula || "",
+            });
+            setPagomovilCredentials({
+              idComercio: data.credentials?.idComercio || "",
+              hmacSecret: data.credentials?.hmacSecret || "",
+              authToken: data.credentials?.authToken || "",
+              allowedIps: data.credentials?.allowedIps || "",
+            });
+            setPagomovilCredito({
+              idComercio: data.credito?.idComercio || "",
+              hmacSecret: data.credito?.hmacSecret || "",
+              authToken: data.credito?.authToken || "",
+            });
+          }
+        } catch {
+          // noop
+        }
+        setPagomovilLoading(false);
+      })
+      .catch(() => setPagomovilLoading(false));
   }, [currentRole]);
 
   const handleSubmit = async (e: any) => {
@@ -189,7 +253,11 @@ export default function SettingsPage() {
       const data = await res.json();
       if (res.ok) {
         setMaintenance(data.maintenanceMode);
-        setMaintenanceMsg(data.maintenanceMode ? "Modo mantenimiento activado" : "Modo mantenimiento desactivado");
+        setMaintenanceMsg(
+          data.maintenanceMode
+            ? "Modo mantenimiento activado"
+            : "Modo mantenimiento desactivado",
+        );
       } else {
         setMaintenanceMsg(data.error || "Error al guardar");
       }
@@ -229,7 +297,9 @@ export default function SettingsPage() {
         const nextRate = data.proximaTasa ?? data.bcvRateNextDay;
         const nextRateDate = data.proximaTasaDate ?? data.bcvRateNextDayDate;
         setProximaTasa(formatRateForInput(nextRate));
-        setProximaTasaDate(nextRateDate ? String(nextRateDate).slice(0, 10) : "");
+        setProximaTasaDate(
+          nextRateDate ? String(nextRateDate).slice(0, 10) : "",
+        );
 
         const history = Array.isArray(data.tasasAnteriores)
           ? data.tasasAnteriores
@@ -238,7 +308,7 @@ export default function SettingsPage() {
           history.map((item: any) => ({
             fecha: typeof item?.fecha === "string" ? item.fecha : null,
             tasa: formatRateForInput(item?.tasa),
-          }))
+          })),
         );
       } else {
         setBcvError(data.error || "Error al guardar");
@@ -268,10 +338,14 @@ export default function SettingsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setResetMsg("? Base de datos reiniciada correctamente. Solo el superadmin permanece.");
+        setResetMsg(
+          "? Base de datos reiniciada correctamente. Solo el superadmin permanece.",
+        );
         setResetConfirm(false);
       } else {
-        setResetMsg(`Error: ${data.error || "No se pudo reiniciar la base de datos"}`);
+        setResetMsg(
+          `Error: ${data.error || "No se pudo reiniciar la base de datos"}`,
+        );
       }
     } catch (err) {
       setResetMsg("Error de red al reiniciar la base de datos");
@@ -293,7 +367,9 @@ export default function SettingsPage() {
 
       const data = await res.json();
       if (res.ok) {
-        setSyncMsg(`? ${data.message} (Sincronizados: ${data.synced}, Ya existían: ${data.skipped})`);
+        setSyncMsg(
+          `? ${data.message} (Sincronizados: ${data.synced}, Ya existían: ${data.skipped})`,
+        );
       } else {
         setSyncMsg(`Error: ${data.error || "No se pudo sincronizar usuarios"}`);
       }
@@ -305,22 +381,311 @@ export default function SettingsPage() {
     setTimeout(() => setSyncMsg(""), 5000);
   };
 
+  const handlePagomovilSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPagomovilSaving(true);
+    setPagomovilMsg("");
+
+    try {
+      const res = await fetch("/api/admin/settings/pagomovil", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: pagomovilMode,
+          merchant: pagomovilMerchant,
+          credentials: pagomovilCredentials,
+          credito: pagomovilCredito,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setPagomovilMsg("Configuración guardada correctamente");
+      } else {
+        setPagomovilMsg(data.error || "Error al guardar");
+      }
+    } catch {
+      setPagomovilMsg("Error de red");
+    }
+
+    setPagomovilSaving(false);
+    setTimeout(() => setPagomovilMsg(""), 5000);
+  };
+
+  const pagomovilSettingsCard = (
+    <Card className="p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-orange-100 rounded-lg">
+          <Smartphone className="text-orange-600" size={20} />
+        </div>
+        <h3 className="text-lg font-semibold">Pago Móvil R4</h3>
+      </div>
+
+      <form className="space-y-4" onSubmit={handlePagomovilSubmit}>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="pagomovilMode"
+              value="MANUAL"
+              checked={pagomovilMode === "MANUAL"}
+              onChange={() => setPagomovilMode("MANUAL")}
+              disabled={pagomovilLoading || pagomovilSaving}
+            />
+            <span>Manual (con confirmación del admin)</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="pagomovilMode"
+              value="R4"
+              checked={pagomovilMode === "R4"}
+              onChange={() => setPagomovilMode("R4")}
+              disabled={pagomovilLoading || pagomovilSaving}
+            />
+            <span>R4 Automático</span>
+          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Teléfono receptor
+            </label>
+            <input
+              type="text"
+              value={pagomovilMerchant.phone}
+              onChange={(e) =>
+                setPagomovilMerchant((p) => ({ ...p, phone: e.target.value }))
+              }
+              className="w-full p-2 border rounded-lg bg-white"
+              disabled={pagomovilLoading || pagomovilSaving}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Banco receptor
+            </label>
+            <input
+              type="text"
+              value={pagomovilMerchant.bank}
+              onChange={(e) =>
+                setPagomovilMerchant((p) => ({ ...p, bank: e.target.value }))
+              }
+              className="w-full p-2 border rounded-lg bg-white"
+              disabled={pagomovilLoading || pagomovilSaving}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cédula receptor
+            </label>
+            <input
+              type="text"
+              value={pagomovilMerchant.cedula}
+              onChange={(e) =>
+                setPagomovilMerchant((p) => ({ ...p, cedula: e.target.value }))
+              }
+              className="w-full p-2 border rounded-lg bg-white"
+              disabled={pagomovilLoading || pagomovilSaving}
+            />
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+            Credenciales R4 (webhooks)
+          </h4>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ID Comercio
+              </label>
+              <input
+                type="text"
+                value={pagomovilCredentials.idComercio}
+                onChange={(e) =>
+                  setPagomovilCredentials((p) => ({
+                    ...p,
+                    idComercio: e.target.value,
+                  }))
+                }
+                className="w-full p-2 border rounded-lg bg-white"
+                disabled={pagomovilLoading || pagomovilSaving}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                IPs permitidas (CSV)
+              </label>
+              <input
+                type="text"
+                value={pagomovilCredentials.allowedIps}
+                onChange={(e) =>
+                  setPagomovilCredentials((p) => ({
+                    ...p,
+                    allowedIps: e.target.value,
+                  }))
+                }
+                className="w-full p-2 border rounded-lg bg-white"
+                disabled={pagomovilLoading || pagomovilSaving}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                HMAC Secret
+              </label>
+              <input
+                type="password"
+                value={pagomovilCredentials.hmacSecret}
+                placeholder="Dejar en blanco para mantener actual"
+                onChange={(e) =>
+                  setPagomovilCredentials((p) => ({
+                    ...p,
+                    hmacSecret: e.target.value,
+                  }))
+                }
+                className="w-full p-2 border rounded-lg bg-white"
+                disabled={pagomovilLoading || pagomovilSaving}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Auth Token
+              </label>
+              <input
+                type="password"
+                value={pagomovilCredentials.authToken}
+                placeholder="Dejar en blanco para mantener actual"
+                onChange={(e) =>
+                  setPagomovilCredentials((p) => ({
+                    ...p,
+                    authToken: e.target.value,
+                  }))
+                }
+                className="w-full p-2 border rounded-lg bg-white"
+                disabled={pagomovilLoading || pagomovilSaving}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t pt-4">
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+            Credenciales R4 Crédito (retiros)
+          </h4>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ID Comercio Crédito
+              </label>
+              <input
+                type="text"
+                value={pagomovilCredito.idComercio}
+                onChange={(e) =>
+                  setPagomovilCredito((p) => ({
+                    ...p,
+                    idComercio: e.target.value,
+                  }))
+                }
+                className="w-full p-2 border rounded-lg bg-white"
+                disabled={pagomovilLoading || pagomovilSaving}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                HMAC Secret Crédito
+              </label>
+              <input
+                type="password"
+                value={pagomovilCredito.hmacSecret}
+                placeholder="Dejar en blanco para mantener actual"
+                onChange={(e) =>
+                  setPagomovilCredito((p) => ({
+                    ...p,
+                    hmacSecret: e.target.value,
+                  }))
+                }
+                className="w-full p-2 border rounded-lg bg-white"
+                disabled={pagomovilLoading || pagomovilSaving}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Auth Token Crédito
+              </label>
+              <input
+                type="password"
+                value={pagomovilCredito.authToken}
+                placeholder="Dejar en blanco para mantener actual"
+                onChange={(e) =>
+                  setPagomovilCredito((p) => ({
+                    ...p,
+                    authToken: e.target.value,
+                  }))
+                }
+                className="w-full p-2 border rounded-lg bg-white"
+                disabled={pagomovilLoading || pagomovilSaving}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-60"
+            disabled={pagomovilLoading || pagomovilSaving}
+          >
+            {pagomovilSaving ? "Guardando..." : "Guardar configuración"}
+          </button>
+          {pagomovilMsg && (
+            <span
+              className={`text-sm ${pagomovilMsg.includes("Error") ? "text-red-600" : "text-green-600"}`}
+            >
+              {pagomovilMsg}
+            </span>
+          )}
+        </div>
+
+        {pagomovilMode === "R4" && (
+          <div className="rounded-lg bg-blue-50 p-3 text-xs text-blue-800">
+            <p className="font-semibold mb-1">URLs para el banco:</p>
+            <p>
+              Consulta:{" "}
+              <code className="bg-white px-1 rounded">/R4consulta</code>
+            </p>
+            <p>
+              Notifica:{" "}
+              <code className="bg-white px-1 rounded">/R4notifica</code>
+            </p>
+          </div>
+        )}
+      </form>
+    </Card>
+  );
+
   const bcvSettingsCard = (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 bg-emerald-100 rounded-lg">
           <Landmark className="text-emerald-600" size={20} />
         </div>
-        <h3 className="text-lg font-semibold">Tasa BCV del día y próxima tasa</h3>
+        <h3 className="text-lg font-semibold">
+          Tasa BCV del día y próxima tasa
+        </h3>
       </div>
       <form className="space-y-4" onSubmit={handleBcvSubmit}>
         <p className="text-sm text-gray-600">
-          Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La próxima tasa se guarda con la fecha que selecciones.
+          Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La
+          próxima tasa se guarda con la fecha que selecciones.
         </p>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tasa BCV del día (Bs/USD)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tasa BCV del día (Bs/USD)
+            </label>
             <input
               type="text"
               inputMode="decimal"
@@ -333,7 +698,9 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de referencia del día</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha de referencia del día
+            </label>
             <input
               type="date"
               value={bcvRateDate}
@@ -344,7 +711,9 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Próxima tasa (Bs/USD)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Próxima tasa (Bs/USD)
+            </label>
             <input
               type="text"
               inputMode="decimal"
@@ -357,7 +726,9 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de la próxima tasa</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha de la próxima tasa
+            </label>
             <input
               type="date"
               value={proximaTasaDate}
@@ -377,18 +748,25 @@ export default function SettingsPage() {
             {bcvSaving ? "Guardando..." : "Guardar tasa BCV"}
           </button>
 
-          {bcvSuccess && <span className="text-green-600 text-sm">¡Guardado!</span>}
+          {bcvSuccess && (
+            <span className="text-green-600 text-sm">¡Guardado!</span>
+          )}
           {bcvError && <span className="text-red-600 text-sm">{bcvError}</span>}
         </div>
 
         <p className="text-xs text-gray-500">
-          Fechas seleccionadas: día {bcvRateDate || "Sin fecha"} y próxima tasa {proximaTasaDate || "Sin fecha"}
+          Fechas seleccionadas: día {bcvRateDate || "Sin fecha"} y próxima tasa{" "}
+          {proximaTasaDate || "Sin fecha"}
         </p>
 
         <div className="rounded-lg border bg-gray-50 p-3">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">Tasas anteriores</h4>
+          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+            Tasas anteriores
+          </h4>
           {tasasAnteriores.length === 0 ? (
-            <p className="text-xs text-gray-600">Aún no hay historial registrado.</p>
+            <p className="text-xs text-gray-600">
+              Aún no hay historial registrado.
+            </p>
           ) : (
             <div className="space-y-2 max-h-56 overflow-auto pr-1">
               {tasasAnteriores.map((item, index) => (
@@ -396,8 +774,12 @@ export default function SettingsPage() {
                   key={`${item.fecha ?? "sin-fecha"}-${index}`}
                   className="flex items-center justify-between rounded-md bg-white px-3 py-2 border"
                 >
-                  <span className="text-sm text-gray-700">{formatHistoryDate(item.fecha)}</span>
-                  <span className="text-sm font-medium text-gray-900">{item.tasa || "0,00000000"}</span>
+                  <span className="text-sm text-gray-700">
+                    {formatHistoryDate(item.fecha)}
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {item.tasa || "0,00000000"}
+                  </span>
                 </div>
               ))}
             </div>
@@ -432,7 +814,9 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-        <p className="text-gray-600 mt-1">Gestiona las configuraciones de la plataforma</p>
+        <p className="text-gray-600 mt-1">
+          Gestiona las configuraciones de la plataforma
+        </p>
       </div>
 
       <div className="grid gap-6">
@@ -448,8 +832,13 @@ export default function SettingsPage() {
             {/* Modo Mantenimiento */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${maintenance ? "bg-red-100" : "bg-gray-100"}`}>
-                  <Wrench className={maintenance ? "text-red-600" : "text-gray-500"} size={18} />
+                <div
+                  className={`p-2 rounded-lg ${maintenance ? "bg-red-100" : "bg-gray-100"}`}
+                >
+                  <Wrench
+                    className={maintenance ? "text-red-600" : "text-gray-500"}
+                    size={18}
+                  />
                 </div>
                 <div>
                   <p className="font-medium">Modo de Mantenimiento</p>
@@ -459,7 +848,9 @@ export default function SettingsPage() {
                       : "El sitio está activo y accesible al público"}
                   </p>
                   {maintenanceMsg && (
-                    <p className={`text-xs mt-1 ${maintenance ? "text-red-600" : "text-green-600"}`}>
+                    <p
+                      className={`text-xs mt-1 ${maintenance ? "text-red-600" : "text-green-600"}`}
+                    >
                       {maintenanceMsg}
                     </p>
                   )}
@@ -484,9 +875,14 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Registros Públicos</p>
-                <p className="text-sm text-gray-600">Permite que nuevos usuarios se registren</p>
+                <p className="text-sm text-gray-600">
+                  Permite que nuevos usuarios se registren
+                </p>
               </div>
-              <button className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                disabled
+              >
                 Activo
               </button>
             </div>
@@ -495,7 +891,9 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Comisión Destinos Venezuela</p>
-                <p className="text-sm text-gray-600">Porcentaje aplicado a cada pago</p>
+                <p className="text-sm text-gray-600">
+                  Porcentaje aplicado a cada pago
+                </p>
               </div>
               <form className="flex items-center gap-2" onSubmit={handleSubmit}>
                 <input
@@ -505,7 +903,7 @@ export default function SettingsPage() {
                   max="100"
                   step="0.1"
                   value={commission}
-                  onChange={e => setCommission(Number(e.target.value))}
+                  onChange={(e) => setCommission(Number(e.target.value))}
                   className="w-20 p-2 border rounded-lg bg-white text-right"
                   style={{ width: "70px" }}
                   disabled={loading || saving}
@@ -518,12 +916,21 @@ export default function SettingsPage() {
                 >
                   {saving ? "Guardando..." : "Guardar"}
                 </button>
-                {success && <span className="text-green-600 ml-2 text-sm">¡Guardado!</span>}
-                {error && <span className="text-red-600 ml-2 text-sm">{error}</span>}
+                {success && (
+                  <span className="text-green-600 ml-2 text-sm">
+                    ¡Guardado!
+                  </span>
+                )}
+                {error && (
+                  <span className="text-red-600 ml-2 text-sm">{error}</span>
+                )}
               </form>
             </div>
           </div>
         </Card>
+
+        {/* Pago Móvil R4 */}
+        {pagomovilSettingsCard}
 
         {/* Notifications */}
         <Card className="p-6">
@@ -537,18 +944,28 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Notificaciones de Email</p>
-                <p className="text-sm text-gray-600">Enviar emails automáticos a usuarios</p>
+                <p className="text-sm text-gray-600">
+                  Enviar emails automáticos a usuarios
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Configurar
               </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Notificaciones Push</p>
-                <p className="text-sm text-gray-600">Notificaciones en tiempo real</p>
+                <p className="text-sm text-gray-600">
+                  Notificaciones en tiempo real
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Próximamente
               </button>
             </div>
@@ -570,18 +987,28 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Autenticación de Dos Factores</p>
-                <p className="text-sm text-gray-600">Requerir 2FA para administradores</p>
+                <p className="text-sm text-gray-600">
+                  Requerir 2FA para administradores
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Próximamente
               </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Logs de Seguridad</p>
-                <p className="text-sm text-gray-600">Ver historial de accesos y cambios</p>
+                <p className="text-sm text-gray-600">
+                  Ver historial de accesos y cambios
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Ver Logs
               </button>
             </div>
@@ -601,10 +1028,17 @@ export default function SettingsPage() {
             <div className="border-b pb-4 mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-blue-700">?? Sincronizar Usuarios</p>
-                  <p className="text-sm text-gray-600">Trae todos los usuarios de Supabase auth.users a la base de datos</p>
+                  <p className="font-medium text-blue-700">
+                    ?? Sincronizar Usuarios
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Trae todos los usuarios de Supabase auth.users a la base de
+                    datos
+                  </p>
                   {syncMsg && (
-                    <p className={`text-xs mt-2 ${syncMsg.includes("?") ? "text-green-600" : "text-red-600"}`}>
+                    <p
+                      className={`text-xs mt-2 ${syncMsg.includes("?") ? "text-green-600" : "text-red-600"}`}
+                    >
                       {syncMsg}
                     </p>
                   )}
@@ -622,28 +1056,45 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Backup Automático</p>
-                <p className="text-sm text-gray-600">Crear respaldos periódicos de los datos</p>
+                <p className="text-sm text-gray-600">
+                  Crear respaldos periódicos de los datos
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Próximamente
               </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Optimizar Base de Datos</p>
-                <p className="text-sm text-gray-600">Limpiar y optimizar tablas</p>
+                <p className="text-sm text-gray-600">
+                  Limpiar y optimizar tablas
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Optimizar
               </button>
             </div>
             <div className="border-t pt-4 mt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-red-700">?? Reiniciar Base de Datos</p>
-                  <p className="text-sm text-gray-600">Elimina TODOS los datos excepto el superadmin actual. Esta acción no se puede deshacer.</p>
+                  <p className="font-medium text-red-700">
+                    ?? Reiniciar Base de Datos
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Elimina TODOS los datos excepto el superadmin actual. Esta
+                    acción no se puede deshacer.
+                  </p>
                   {resetMsg && (
-                    <p className={`text-xs mt-2 ${resetMsg.includes("?") ? "text-green-600" : "text-red-600"}`}>
+                    <p
+                      className={`text-xs mt-2 ${resetMsg.includes("?") ? "text-green-600" : "text-red-600"}`}
+                    >
                       {resetMsg}
                     </p>
                   )}
@@ -678,8 +1129,8 @@ export default function SettingsPage() {
                     {resetLoading
                       ? "Reiniciando..."
                       : resetConfirm
-                      ? "Confirmar Reinicio"
-                      : "Reiniciar Base de Datos"}
+                        ? "Confirmar Reinicio"
+                        : "Reiniciar Base de Datos"}
                   </button>
                 </div>
               </div>
@@ -699,18 +1150,28 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Logo de la Plataforma</p>
-                <p className="text-sm text-gray-600">Personaliza el logo del sitio</p>
+                <p className="text-sm text-gray-600">
+                  Personaliza el logo del sitio
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Subir Logo
               </button>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
                 <p className="font-medium">Colores de Marca</p>
-                <p className="text-sm text-gray-600">Define la paleta de colores</p>
+                <p className="text-sm text-gray-600">
+                  Define la paleta de colores
+                </p>
               </div>
-              <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" disabled>
+              <button
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                disabled
+              >
                 Personalizar
               </button>
             </div>
@@ -720,6 +1181,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-
-

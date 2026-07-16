@@ -13,6 +13,8 @@ import {
   LogOut,
   X,
   PiggyBank,
+  Smartphone,
+  Banknote,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import { cn } from "@/lib/utils";
@@ -35,15 +37,29 @@ const getMenuItems = (role?: string) => {
     { href: "/admin/amenities", icon: Home, label: "Servicios" },
     { href: "/admin/payments", icon: CreditCard, label: "Finanzas" },
     { href: "/admin/savings", icon: PiggyBank, label: "Alcancía" },
+    { href: "/admin/pagomovil", icon: Smartphone, label: "Pago Móvil R4" },
+    { href: "/admin/withdrawals", icon: Banknote, label: "Retiros" },
   ];
   if (role === "SUPERADMIN") {
-    items.splice(1, 0, { href: "/admin/banners", icon: BarChart3, label: "Publicidad" });
+    items.splice(1, 0, {
+      href: "/admin/banners",
+      icon: BarChart3,
+      label: "Publicidad",
+    });
     items.push({ href: "/admin/reports", icon: BarChart3, label: "Informes" });
-    items.push({ href: "/admin/settings", icon: Settings, label: "Configuración" });
+    items.push({
+      href: "/admin/settings",
+      icon: Settings,
+      label: "Configuración",
+    });
     items.push({ href: "/admin/manual", icon: BookOpen, label: "Manual" });
   }
   if (role === "ADMIN") {
-    items.push({ href: "/admin/settings", icon: Settings, label: "Configuración" });
+    items.push({
+      href: "/admin/settings",
+      icon: Settings,
+      label: "Configuración",
+    });
   }
   // Mostrar la opción Manual solo para SUPERADMIN y ADMIN
   if (role === "SUPERADMIN" || role === "ADMIN") {
@@ -69,7 +85,7 @@ export function AdminSidebar({
       id="admin-sidebar-nav"
       className={cn(
         "fixed left-0 top-0 z-[60] flex h-full w-64 flex-col bg-brand-blue text-white shadow-xl transition-transform duration-200 ease-out",
-        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
       )}
     >
       <div className="border-b border-gray-800 p-6">
@@ -90,7 +106,9 @@ export function AdminSidebar({
                 Panel Administrador
               </p>
             )}
-            <p className="mt-1 truncate text-sm text-gray-400">{userName || "Administrator"}</p>
+            <p className="mt-1 truncate text-sm text-gray-400">
+              {userName || "Administrator"}
+            </p>
           </div>
           <button
             type="button"
@@ -117,7 +135,7 @@ export function AdminSidebar({
                 "flex items-center gap-3 rounded-lg px-4 py-3 transition-colors",
                 isActive
                   ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-primary"
+                  : "text-gray-300 hover:bg-gray-800 hover:text-primary",
               )}
             >
               <Icon size={20} />
@@ -150,6 +168,3 @@ export function AdminSidebar({
     </aside>
   );
 }
-
-
-
