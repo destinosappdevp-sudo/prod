@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AdminSidebar } from "./AdminSidebar";
-import { ThemeToggle, ThemeProvider } from "./ThemeToggle";
+import { ThemeProvider } from "./ThemeToggle";
 
 interface AdminShellProps {
   children: React.ReactNode;
@@ -58,7 +58,6 @@ export function AdminShell({ children, userName, role, headerRight }: AdminShell
               </h2>
             </div>
             <div className="ml-auto flex items-center justify-end gap-1">
-              <ThemeToggle />
               {headerRight}
             </div>
           </div>

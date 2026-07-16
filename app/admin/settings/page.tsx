@@ -72,11 +72,6 @@ export default function SettingsPage() {
   const [bcvSuccess, setBcvSuccess] = useState<boolean>(false);
   const [bcvError, setBcvError] = useState<string>("");
 
-  // Reset Base de Datos
-  const [resetLoading, setResetLoading] = useState<boolean>(false);
-  const [resetConfirm, setResetConfirm] = useState<boolean>(false);
-  const [resetMsg, setResetMsg] = useState<string>("");
-
   // Sincronizar Usuarios
   const [syncLoading, setSyncLoading] = useState<boolean>(false);
   const [syncMsg, setSyncMsg] = useState<string>("");
@@ -318,41 +313,6 @@ export default function SettingsPage() {
     }
 
     setBcvSaving(false);
-  };
-
-  const handleResetDatabase = async () => {
-    if (!resetConfirm) {
-      setResetMsg("Por favor, confirma que deseas reiniciar la base de datos.");
-      setTimeout(() => setResetMsg(""), 3000);
-      return;
-    }
-
-    setResetLoading(true);
-    setResetMsg("");
-
-    try {
-      const res = await fetch("/api/admin/settings/reset-database", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setResetMsg(
-          "? Base de datos reiniciada correctamente. Solo el superadmin permanece.",
-        );
-        setResetConfirm(false);
-      } else {
-        setResetMsg(
-          `Error: ${data.error || "No se pudo reiniciar la base de datos"}`,
-        );
-      }
-    } catch (err) {
-      setResetMsg("Error de red al reiniciar la base de datos");
-    }
-
-    setResetLoading(false);
-    setTimeout(() => setResetMsg(""), 5000);
   };
 
   const handleSyncUsers = async () => {
@@ -1080,60 +1040,6 @@ export default function SettingsPage() {
               >
                 Optimizar
               </button>
-            </div>
-            <div className="border-t pt-4 mt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-red-700">
-                    ?? Reiniciar Base de Datos
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Elimina TODOS los datos excepto el superadmin actual. Esta
-                    acción no se puede deshacer.
-                  </p>
-                  {resetMsg && (
-                    <p
-                      className={`text-xs mt-2 ${resetMsg.includes("?") ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {resetMsg}
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2">
-                  {resetConfirm && (
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={resetConfirm}
-                        onChange={() => setResetConfirm(!resetConfirm)}
-                        className="w-4 h-4"
-                      />
-                      Confirmar eliminación
-                    </label>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (!resetConfirm) {
-                        setResetConfirm(true);
-                      } else {
-                        handleResetDatabase();
-                      }
-                    }}
-                    disabled={resetLoading}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      resetConfirm
-                        ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-red-100 text-red-700 hover:bg-red-200"
-                    } disabled:opacity-60`}
-                  >
-                    {resetLoading
-                      ? "Reiniciando..."
-                      : resetConfirm
-                        ? "Confirmar Reinicio"
-                        : "Reiniciar Base de Datos"}
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </Card>

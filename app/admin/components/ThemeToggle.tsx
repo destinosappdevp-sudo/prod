@@ -46,28 +46,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return <div className="w-9 h-9" />;
-
-  return (
-    <button
-      onClick={toggle}
-      aria-label={theme === "dark" ? "Activar modo claro" : "Activar modo oscuro"}
-      className="flex items-center justify-center w-9 h-9 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-amber-500 dark:text-yellow-400 hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors shadow-sm"
-      title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
-    >
-      {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-    </button>
-  );
-}
-
 export function SidebarThemeToggle() {
   const { theme, toggle } = useTheme();
   const [mounted, setMounted] = useState(false);
