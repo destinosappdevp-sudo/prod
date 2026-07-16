@@ -46,22 +46,6 @@ export default async function RootLayout({
 
   return (
     <html lang="es" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('admin-theme');
-                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                  }
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
       <body className={`${inter.className} flex min-h-screen flex-col overflow-x-hidden`}>
         <NavigationLoader />
         <Navbar />
