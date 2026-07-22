@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Eye, Trash2, MapPin } from "lucide-react";
+import { SupabaseImage } from "@/app/components/SupabaseImage";
 
 export type DestinationItem = {
   id: string;
@@ -148,11 +149,14 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {destination.photo ? (
-                        <img
-                          src={destination.photo}
-                          alt=""
-                          className="w-10 h-10 rounded-lg object-cover"
-                        />
+                        <div className="w-10 h-10 rounded-lg overflow-hidden">
+                          <SupabaseImage
+                            imagePath={destination.photo}
+                            alt=""
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
                         <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
                           <MapPin className="w-5 h-5" />

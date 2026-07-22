@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
-import Image from "next/image";
+import { SupabaseImage } from "@/app/components/SupabaseImage";
 import Link from "next/link";
 import { MapPin, Phone, Calendar, Users, ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -147,13 +147,12 @@ export default async function DestinationSlugPage({
             </div>
 
             {destination.photo && (
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl">
-                <Image
-                  src={destination.photo}
+              <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-md">
+                <SupabaseImage
+                  imagePath={destination.photo}
                   alt={destination.title || "Destino"}
                   fill
                   className="object-cover"
-                  priority
                 />
               </div>
             )}
@@ -181,10 +180,10 @@ export default async function DestinationSlugPage({
                       >
                         <div className="flex items-start gap-4">
                           {home.photo ? (
-                            <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
-                              <Image
-                                src={home.photo}
-                                alt={home.title || "Paquete"}
+                            <div className="relative w-32 h-28 shrink-0 rounded-lg overflow-hidden">
+                              <SupabaseImage
+                                imagePath={home.photo}
+                                alt={home.title || ""}
                                 fill
                                 className="object-cover"
                               />

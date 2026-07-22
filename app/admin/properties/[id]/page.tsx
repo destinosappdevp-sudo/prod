@@ -7,7 +7,7 @@ import CreatePackageFromDestination from "@/app/admin/components/CreatePackageFr
 import { getAllStates } from "@/app/lib/venezuelaStates";
 import { ArrowLeft, Calendar, Heart, Star, Package } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { SupabaseImage } from "@/app/components/SupabaseImage";
 
 const prismaAny = prisma as any;
 
@@ -212,8 +212,8 @@ export default async function DestinationDetailPage({
             <h3 className="text-lg font-semibold mb-4">Imagen del Destino</h3>
             {destination.photo ? (
               <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
-                <Image
-                  src={destination.photo}
+                <SupabaseImage
+                  imagePath={destination.photo}
                   alt={destination.title || "Destino"}
                   fill
                   className="object-cover"
