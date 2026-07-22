@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Calendar } from "lucide-react";
+import { SupabaseImage } from "./SupabaseImage";
 
 interface DestinationCardProps {
   slug: string;
@@ -34,8 +34,8 @@ export default function DestinationCard({
       <div className="relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-md transition-shadow duration-300 hover:shadow-lg">
         <div className="relative aspect-[3/2] overflow-hidden">
           {imagePath ? (
-            <Image
-              src={imagePath}
+            <SupabaseImage
+              imagePath={imagePath}
               alt={title || "Destino"}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"

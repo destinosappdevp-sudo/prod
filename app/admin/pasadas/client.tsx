@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, Eye, CalendarDays } from "lucide-react";
+import { SupabaseImage } from "@/app/components/SupabaseImage";
 
 export type PasadaItem = {
   id: string;
@@ -93,7 +94,9 @@ export function PasadasClient({ packages }: PasadasClientProps) {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {pkg.photo ? (
-                      <img src={pkg.photo} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <div className="w-10 h-10 rounded-lg overflow-hidden">
+                        <SupabaseImage imagePath={pkg.photo} alt="" fill className="object-cover" />
+                      </div>
                     ) : (
                       <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
                         <CalendarDays className="w-5 h-5" />
