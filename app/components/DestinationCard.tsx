@@ -61,12 +61,9 @@ export default function DestinationCard({
             <span>{[municipality, country].filter(Boolean).join(", ") || "Ubicación no disponible"}</span>
           </div>
           {nextDate && (
-            <div className="mt-2 flex items-center gap-1 text-sm text-[#040B42]">
-              <Calendar className="h-4 w-4" />
-              <span>
-                Próxima salida: {nextDate}
-                {nextTime ? ` · ${nextTime}` : ""}
-              </span>
+            <div className="mt-2 text-sm text-[#040B42]">
+              <p className="font-semibold uppercase tracking-wide text-[11px] mb-1">Próximos</p>
+              <p>{nextDate}{nextTime ? ` · ${nextTime}` : ""}</p>
             </div>
           )}
           {reviewCount > 0 && (
