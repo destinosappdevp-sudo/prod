@@ -7,7 +7,7 @@ const prismaAny = prisma as any;
 async function getDestinations() {
   unstable_noStore();
 
-  return prismaAny.destination.findMany({
+  const destinations = await prismaAny.destination.findMany({
     select: {
       id: true,
       title: true,
@@ -17,6 +17,11 @@ async function getDestinations() {
       country: true,
       municipality: true,
       publishStatus: true,
+      Homes: {
+        select: {
+          checkInTime: true,
+        },
+      },
       _count: {
         select: {
           Homes: true,
@@ -29,6 +34,26 @@ async function getDestinations() {
       createdAt: "desc",
     },
     take: 500,
+  });
+
+  const now = new Date();
+  return destinations.map((d: any) => {
+    const packageDates = (d.Homes || [])
+      .map((h: any) => h.checkInTime ? new Date(h.checkInTime) : null)
+      .filter(Boolean) as Date[];
+    const hasExpired = packageDates.length > 0 && packageDates.every((dt: Date) => dt < now);
+    return {
+      id: d.id,
+      title: d.title,
+      subtitle: d.subtitle,
+      slug: d.slug,
+      photo: d.photo,
+      country: d.country,
+      municipality: d.municipality,
+      publishStatus: d.publishStatus,
+      isExpired: packageDates.length > 0 && hasExpired,
+      _count: d._count,
+    };
   });
 }
 

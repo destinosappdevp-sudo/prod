@@ -25,6 +25,7 @@ export type DestinationItem = {
   country: string | null;
   municipality: string | null;
   publishStatus: string;
+  isExpired: boolean;
   _count: {
     Homes: number;
     Favorite: number;
@@ -38,16 +39,12 @@ interface DestinationsClientProps {
 
 const statusLabels: Record<string, string> = {
   DRAFT: "Borrador",
-  PENDING_APPROVAL: "Pendiente",
   APPROVED: "Aprobado",
-  REJECTED: "Rechazado",
 };
 
 const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   DRAFT: "secondary",
-  PENDING_APPROVAL: "outline",
   APPROVED: "default",
-  REJECTED: "destructive",
 };
 
 export function DestinationsClient({ destinations }: DestinationsClientProps) {
@@ -65,8 +62,9 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
         (d.subtitle?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
         (d.municipality?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
         (d.country?.toLowerCase().includes(search.toLowerCase()) ?? false);
-      const matchesStatus = statusFilter === "ALL" || d.publishStatus === statusFilter;
-      return matchesSearch && matchesStatus;
+      if (statusFilter === "ALL") return matchesSearch;
+      if (statusFilter === "VENCIDAS") return matchesSearch && d.isExpired;
+      return matchesSearch && d.publishStatus === statusFilter;
     });
   }, [destinations, search, statusFilter]);
 
@@ -114,13 +112,12 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Todos</SelectItem>
-              <SelectItem value="APPROVED">Aprobados</SelectItem>
-              <SelectItem value="PENDING_APPROVAL">Pendientes</SelectItem>
-              <SelectItem value="DRAFT">Borradores</SelectItem>
-              <SelectItem value="REJECTED">Rechazados</SelectItem>
-            </SelectContent>
+              <SelectContent>
+                <SelectItem value="ALL">Todos</SelectItem>
+                <SelectItem value="APPROVED">Aprobados</SelectItem>
+                <SelectItem value="DRAFT">Borradores</SelectItem>
+                <SelectItem value="VENCIDAS">Vencidos</SelectItem>
+              </SelectContent>
           </Select>
         </div>
         <Button asChild>
