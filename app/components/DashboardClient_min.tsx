@@ -1026,8 +1026,11 @@ export default function DashboardClient(props: DashboardClientProps) {
                       <div className="font-semibold text-slate-900">{fav.title}</div>
                       <div className="text-sm text-slate-500">{fav.country}{fav.municipality ? `, ${fav.municipality}` : ""}</div>
                       <div className="mt-2 text-orange-600 font-bold">${fav.price}</div>
-                      <Link href={buildHomeUrl((fav as any).slug, fav.id, (fav as any).categoryName)} className="mt-3 block text-center text-sm bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-xl py-2 transition">
-                        Ver alojamiento
+                      <Link
+                        href={(fav as any).slug ? `/destinos/${(fav as any).slug}` : `/home/${fav.id}`}
+                        className="mt-3 block text-center text-sm bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-xl py-2 transition"
+                      >
+                        Ver destino
                       </Link>
                     </div>
                   </div>

@@ -25,6 +25,7 @@ interface iAppProps {
   isInFavoriteList: boolean;
   favoriteId?: string;
   homeId: string;
+  destinationId?: string | null;
   pathName: string;
   categoryName?: string | null;
   categoryNames?: string[] | null;
@@ -49,6 +50,7 @@ function ListingCard({
   favoriteId,
   isInFavoriteList,
   homeId,
+  destinationId,
   pathName,
   categoryName,
   categoryNames,
@@ -180,7 +182,11 @@ function ListingCard({
                 </form>
               ) : (
                 <form action={AddToFavorite}>
-                  <input type="hidden" name="homeId" value={homeId} />
+                  {destinationId ? (
+                    <input type="hidden" name="destinationId" value={destinationId} />
+                  ) : (
+                    <input type="hidden" name="homeId" value={homeId} />
+                  )}
                   <input type="hidden" name="userId" value={userId} />
                   <input type="hidden" name="pathName" value={pathName} />
                   <AddToFavoriteButton />

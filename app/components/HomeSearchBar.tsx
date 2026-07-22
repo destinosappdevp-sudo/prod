@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 type SearchSuggestion = {
   id: string;
+  slug: string;
   title: string;
   country?: string | null;
   municipality?: string | null;
@@ -90,9 +91,9 @@ export function HomeSearchBar() {
     pushQuery("");
   }
 
-  function handleSuggestionSelect(title: string) {
-    setValue(title);
-    pushQuery(title);
+  function handleSuggestionSelect(item: SearchSuggestion) {
+    router.push(`/destinos/${item.slug}`);
+    setValue(item.title);
     setIsOpen(false);
   }
 
@@ -152,7 +153,7 @@ export function HomeSearchBar() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => handleSuggestionSelect(item.title)}
+                  onClick={() => handleSuggestionSelect(item)}
                   className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:bg-[#fff7e6]"
                 >
                   <div>

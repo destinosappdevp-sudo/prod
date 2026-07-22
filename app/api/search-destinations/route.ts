@@ -9,12 +9,10 @@ export async function GET(request: NextRequest) {
     const limitParam = Number(request.nextUrl.searchParams.get("limit") ?? "6");
     const take = Math.min(Math.max(Number.isFinite(limitParam) ? Math.floor(limitParam) : 6, 1), 12);
 
-    const results = await (prisma as any).home.findMany({
+    const prismaAny = prisma as any;
+    const destinations = await prismaAny.destination.findMany({
       where: {
         publishStatus: "APPROVED",
-        addedCategory: true,
-        addedDescription: true,
-        addedLocation: true,
         title: q
           ? {
               contains: q,
@@ -24,19 +22,29 @@ export async function GET(request: NextRequest) {
       },
       select: {
         id: true,
+        slug: true,
         title: true,
         country: true,
         municipality: true,
-        checkInTime: true,
-        slug: true,
-        categoryName: true,
+        Homes: {
+          where: { publishStatus: "APPROVED" },
+          select: { checkInTime: true },
+          orderBy: { checkInTime: { sort: "asc", nulls: "last" } },
+          take: 1,
+        },
       },
-      orderBy: [
-        { checkInTime: { sort: "asc", nulls: "last" } },
-        { createdAt: "desc" },
-      ],
+      orderBy: { createdAt: "desc" },
       take,
     });
+
+    const results = destinations.map((destination: any) => ({
+      id: destination.id,
+      slug: destination.slug,
+      title: destination.title,
+      country: destination.country,
+      municipality: destination.municipality,
+      checkInTime: destination.Homes[0]?.checkInTime || null,
+    }));
 
     return NextResponse.json(results);
   } catch (error) {
@@ -44,6 +52,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([], { status: 200 });
   }
 }
-
-
-

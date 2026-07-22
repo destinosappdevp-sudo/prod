@@ -1,2 +1,0 @@
--- NOTA: El rol HOST fue eliminado. Usar ADMIN en su lugar.
--- UPDATE "User" SET role = 'ADMIN' WHERE email = '...';

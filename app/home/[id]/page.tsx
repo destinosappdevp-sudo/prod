@@ -12,8 +12,8 @@ import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import Image from "next/image";
 import { getPrimaryCategoryName } from "@/app/lib/property-categories";
-import { generateHomeSlug, toCategorySlug } from "@/app/lib/slug";
-import { redirect } from "next/navigation";
+
+import Link from "next/link";
 
 const prismaAny = prisma as any;
 
@@ -52,6 +52,13 @@ async function getData(homeId: string) {
         select: {
           profileImage: true,
           firstName: true,
+        },
+      },
+      Destination: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
         },
       },
     },
@@ -104,12 +111,6 @@ async function SingleHomePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await getData(id);
 
-  if (data?.categoryName) {
-    const categorySlug = toCategorySlug(data.categoryName);
-    const generatedSlug = generateHomeSlug(data.title || "paquete", id);
-    redirect(`/destinos/${categorySlug}/${generatedSlug}`);
-  }
-
   const amenityCategories = await getAmenities(id);
   const state = getStateByValue(data?.country as string);
   const municipality =
@@ -120,6 +121,15 @@ async function SingleHomePage({ params }: { params: Promise<{ id: string }> }) {
   const { data: { user } } = await supabase.auth.getUser();
   return (
     <div className="mx-auto mt-6 mb-12 w-full max-w-7xl px-4 sm:px-6 lg:mt-10 lg:px-8">
+      {data?.Destination && (
+        <nav className="mb-3 text-sm text-muted-foreground">
+          <Link href="/destinos" className="hover:underline">Destinos</Link>
+          <span className="mx-2">·</span>
+          <Link href={`/destinos/${data.Destination.slug}`} className="hover:underline">
+            {data.Destination.title}
+          </Link>
+        </nav>
+      )}
       <h1 className="font-medium text-2xl mb-5">{data?.title}</h1>
       <div className="relative h-[260px] sm:h-[360px] lg:h-[550px]">
         <SupabaseImage

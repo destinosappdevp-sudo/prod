@@ -397,20 +397,30 @@ export async function signOut() {
 }
 
 export async function AddToFavorite(formData: FormData) {
+  const destinationId = (formData.get("destinationId") as string | null)?.trim() || "";
   const homeId = (formData.get("homeId") as string | null)?.trim() || "";
   const userId = (formData.get("userId") as string | null)?.trim() || "";
   const pathName = (formData.get("pathName") as string | null)?.trim() || "/";
 
-  if (!homeId || !userId) return;
+  if (!userId) return;
+  if (!destinationId && !homeId) return;
 
   // Generar ID único sin dependencia de uuid tipado
   const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
-  await prisma.favorite.upsert({
-    where: { userId_homeId: { userId, homeId } },
-    create: { id, userId, homeId },
-    update: {},
-  });
+  if (destinationId) {
+    await prisma.favorite.upsert({
+      where: { userId_destinationId: { userId, destinationId } },
+      create: { id, userId, destinationId, homeId: null },
+      update: {},
+    });
+  } else {
+    await prisma.favorite.upsert({
+      where: { userId_homeId: { userId, homeId } },
+      create: { id, userId, homeId, destinationId: null },
+      update: {},
+    });
+  }
 
   revalidatePath(pathName);
 }

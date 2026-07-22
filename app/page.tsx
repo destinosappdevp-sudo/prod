@@ -1,7 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { Suspense } from "react";
-import ListingCard from "./components/ListingCard";
+import DestinationCard from "./components/DestinationCard";
 import MapFilter from "./components/MapFilter";
 import { HomeSearchBar } from "./components/HomeSearchBar";
 import BannerCarousel from "./components/BannerCarousel";
@@ -11,10 +11,7 @@ import { Nothing } from "./components/Nothing";
 import SkeletonCard from "./components/SkeletonCard";
 import SearchResultsSplit from "./components/SearchResultsSplit";
 import prisma from "./lib/db";
-import { getStateByValue } from "./lib/venezuelaStates";
-import { getMunicipalityByValue } from "./lib/venezuelaMunicipalities";
 import {
-  getPrimaryCategoryName,
   parseMultiCategoryFilter,
 } from "./lib/property-categories";
 
@@ -68,13 +65,7 @@ async function getData({
 
   const where: any = {
     publishStatus: "APPROVED",
-    addedCategory: true,
-    addedLocation: true,
-    addedDescription: true,
     country: searchParams?.country ?? undefined,
-    guests: searchParams?.guest ? { gte: searchParams.guest } : undefined,
-    bedrooms: searchParams?.rooms ? { gte: searchParams.rooms } : undefined,
-    bathrooms: searchParams?.bathrooms ? { gte: searchParams.bathrooms } : undefined,
   };
 
   if (categoryNamesFilter.length > 0) {
@@ -85,24 +76,28 @@ async function getData({
     where.title = { contains: searchParams.q.trim(), mode: "insensitive" };
   }
 
-  const data = await prismaAny.home.findMany({
+  const destinations = await prismaAny.destination.findMany({
     where,
     select: {
-      title: true,
-      photo: true,
       id: true,
-      price: true,
+      slug: true,
+      title: true,
+      subtitle: true,
       description: true,
+      photo: true,
       country: true,
       municipality: true,
       categoryName: true,
-      guests: true,
-      bedrooms: true,
-      exactAddress: true,
-      contactNumber: true,
-      checkInTime: true,
-      latitude: true,
-      longitude: true,
+      Homes: {
+        where: { publishStatus: "APPROVED" },
+        select: {
+          id: true,
+          price: true,
+          priceVip: true,
+          checkInTime: true,
+        },
+        orderBy: { checkInTime: { sort: "asc", nulls: "last" } },
+      },
       Review: {
         select: {
           rating: true,
@@ -115,10 +110,39 @@ async function getData({
       },
       Favorite: { where: { userId: userId ?? undefined } },
     },
-    orderBy: [
-      { checkInTime: { sort: "asc", nulls: "last" } },
-      { createdAt: "desc" },
-    ],
+    orderBy: { createdAt: "desc" },
+  });
+
+  const data = destinations.map((destination: any) => {
+    const futureHomes = destination.Homes.filter((h: any) => {
+      if (!h.checkInTime) return false;
+      const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
+      return d.getTime() > Date.now();
+    });
+    const nextHome = futureHomes[0] || destination.Homes[0];
+    const departure = nextHome?.checkInTime
+      ? new Date(nextHome.checkInTime.includes("T") ? nextHome.checkInTime : `${nextHome.checkInTime}T00:00`)
+      : null;
+    const prices = destination.Homes.map((h: any) => [h.price, h.priceVip]).flat().filter((p: any) => typeof p === "number");
+    const priceFrom = prices.length > 0 ? Math.min(...prices) : null;
+
+    return {
+      ...destination,
+      nextDate: departure
+        ? departure.toLocaleDateString("es-ES", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : null,
+      nextTime: departure
+        ? departure.toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : null,
+      priceFrom,
+    };
   });
 
   const appConfig = await prismaAny.platformConfig.findFirst({
@@ -211,28 +235,18 @@ async function ShowPlace({
   }
 
   const renderCard = (item: typeof data[0]) => (
-    <ListingCard
+    <DestinationCard
       key={item.id}
-      title={item.title as string}
-      description={item.description as string}
-      imagePath={item.photo as string}
-      price={item.price as number}
-      stateValue={item.country as string}
-      municipalityValue={item.municipality}
-      userId={userId}
-      favoriteId={item.Favorite[0]?.id}
-      isInFavoriteList={item.Favorite.length > 0}
-      homeId={item.id}
-      pathName="/"
-      categoryName={getPrimaryCategoryName(item.categoryName)}
-      categoryNames={item.categoryName}
-      guests={item.guests}
-      bedrooms={item.bedrooms}
-      reviews={item.Review}
-      reviewCount={item._count?.Review}
-      contactNumber={item.contactNumber}
-      checkInTime={(item as any).checkInTime}
-      bcvRate={bcvRate}
+      slug={item.slug}
+      title={item.title}
+      subtitle={item.subtitle}
+      imagePath={item.photo}
+      country={item.country}
+      municipality={item.municipality}
+      nextDate={item.nextDate}
+      nextTime={item.nextTime}
+      priceFrom={item.priceFrom}
+      reviewCount={item._count?.Review || 0}
     />
   );
 

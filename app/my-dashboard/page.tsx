@@ -575,11 +575,13 @@ export async function getGuestDashboardData(userId: string) {
       where: { userId },
       select: {
         id: true,
-        Home: {
+        Destination: {
           select: {
             id: true,
+            slug: true,
             photo: true,
             title: true,
+            subtitle: true,
             country: true,
             municipality: true,
             price: true,
@@ -609,16 +611,17 @@ export async function getGuestDashboardData(userId: string) {
             municipality: true,
             price: true,
             description: true,
+            destinationId: true,
           },
         },
       },
       orderBy: { createdAt: "desc" },
       take: 50,
     }),
-    // Separate query: get all favorite homeIds for this user
+    // Separate query: get all favorite destinationIds for this user
     prismaAny.favorite.findMany({
       where: { userId },
-      select: { homeId: true },
+      select: { destinationId: true },
     }),
     prismaAny.saving.findMany({
       where: { userId },
@@ -663,10 +666,10 @@ export async function getGuestDashboardData(userId: string) {
     }
   }
 
-  // Create set of favorited homeIds for fast lookup
-  const favoriteHomeIds = new Set(favoriteIds.map((f: any) => f.homeId));
-  const favoriteByHomeId = new Map(
-    favorites.map((fav: any) => [fav.Home.id, fav.id])
+  // Create set of favorited destinationIds for fast lookup
+  const favoriteDestinationIds = new Set(favoriteIds.map((f: any) => f.destinationId));
+  const favoriteByDestinationId = new Map(
+    favorites.map((fav: any) => [fav.Destination?.id, fav.id])
   );
 
   // El saldo disponible solo cuenta los depósitos aprobados (descontando los negativos por checkout)
@@ -715,16 +718,17 @@ export async function getGuestDashboardData(userId: string) {
 
   return {
     favorites: favorites.map((fav: any) => ({
-      id: fav.Home.id,
-      title: fav.Home.title || "Sin título",
-      country: fav.Home.country || "",
-      municipality: fav.Home.municipality,
-      price: fav.Home.price || 0,
-      photo: fav.Home.photo || "",
+      id: fav.Destination?.id || fav.id,
+      title: fav.Destination?.title || "Sin título",
+      subtitle: fav.Destination?.subtitle || null,
+      country: fav.Destination?.country || "",
+      municipality: fav.Destination?.municipality,
+      price: fav.Destination?.price || 0,
+      photo: fav.Destination?.photo || "",
       favoriteId: fav.id,
-      description: fav.Home.description || "",
-      slug: null,
-      categoryName: fav.Home.categoryName,
+      description: fav.Destination?.description || "",
+      slug: fav.Destination?.slug || null,
+      categoryName: fav.Destination?.categoryName,
     })),
     guestReservations: reservations.map((res: any) => ({
       id: res.id,
@@ -739,8 +743,8 @@ export async function getGuestDashboardData(userId: string) {
       endDate: res.endDate,
       status: res.status,
       totalAmount: res.totalAmount,
-      favoriteId: favoriteByHomeId.get(res.Home.id),
-      isInFavoriteList: favoriteHomeIds.has(res.Home.id),
+      favoriteId: favoriteByDestinationId.get(res.Home.destinationId),
+      isInFavoriteList: favoriteDestinationIds.has(res.Home.destinationId),
     })),
     savings: (savings as any[]).map((s: any) => {
       const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails : {};

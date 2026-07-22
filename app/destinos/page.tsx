@@ -1,12 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import BannerCarousel from "@/app/components/BannerCarousel";
-import ListingCard from "@/app/components/ListingCard";
+import DestinationCard from "@/app/components/DestinationCard";
 import prisma from "@/app/lib/db";
-import {
-  getPrimaryCategoryName,
-  parseMultiCategoryFilter,
-} from "@/app/lib/property-categories";
-import { generateHomeSlug } from "@/app/lib/slug";
 import ReviewsSection from "@/app/components/ReviewsSection";
 import Image from "next/image";
 import Link from "next/link";
@@ -50,7 +45,24 @@ function buildFilterHref(
   return `/destinos?${params.toString()}`;
 }
 
-async function getListings({
+function formatNextDeparture(departureDate?: Date | string | null) {
+  if (!departureDate) return { date: null, time: null };
+  const d = new Date(departureDate);
+  if (Number.isNaN(d.getTime())) return { date: null, time: null };
+  return {
+    date: d.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    time: d.toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+}
+
+async function getDestinations({
   userId,
   searchParams,
 }: {
@@ -58,55 +70,30 @@ async function getListings({
   searchParams?: {
     filter?: string;
     country?: string;
-    guest?: string;
-    rooms?: string;
-    bathrooms?: string;
     q?: string;
   };
 }) {
-  const rawCategoryFilter = searchParams?.filter;
-  const categoryFilterTokens = parseMultiCategoryFilter(rawCategoryFilter);
+  const categoryFilterTokens = (searchParams?.filter || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
   let categoryNamesFilter: string[] = [];
 
-  if (categoryFilterTokens.length > 0) {
-    const categoryIds = categoryFilterTokens
-      .filter((token) => /^\d+$/.test(token))
-      .map((token) => Number(token));
-
-    const namesFromIds =
-      categoryIds.length > 0
-        ? ((await prismaAny.property_types.findMany({
-            where: { id: { in: categoryIds } },
-            select: { id: true, name: true },
-          })) as Array<{ id: number; name: string }>).sort(
-            (a, b) => categoryIds.indexOf(a.id) - categoryIds.indexOf(b.id)
-          )
-        : [];
-
-    const namesFromLegacyTokens = categoryFilterTokens.filter(
-      (token) => !/^\d+$/.test(token)
-    );
-
-    categoryNamesFilter = Array.from(
-      new Set([
-        ...namesFromIds.map((category) => category.name),
-        ...namesFromLegacyTokens,
-      ])
-    );
+  if (categoryFilterTokens.length > 0 && !categoryFilterTokens.includes("todos")) {
+    const propertyTypes = await prismaAny.property_types.findMany({
+      select: { id: true, name: true },
+    });
+    const matchedNames = propertyTypes
+      .filter((pt: any) => categoryFilterTokens.includes(String(pt.id)) || categoryFilterTokens.includes(pt.name))
+      .map((pt: any) => pt.name);
+    categoryNamesFilter = Array.from(new Set([...matchedNames, ...categoryFilterTokens]));
   }
 
-  const data = await prismaAny.home.findMany({
+  const destinations = await prismaAny.destination.findMany({
     where: {
       publishStatus: "APPROVED",
-      addedCategory: true,
-      addedLocation: true,
-      addedDescription: true,
       country: searchParams?.country ?? undefined,
-      guests: searchParams?.guest ? { gte: searchParams.guest } : undefined,
-      bedrooms: searchParams?.rooms ? { gte: searchParams.rooms } : undefined,
-      bathrooms: searchParams?.bathrooms
-        ? { gte: searchParams.bathrooms }
-        : undefined,
       title: searchParams?.q?.trim()
         ? { contains: searchParams.q.trim(), mode: "insensitive" }
         : undefined,
@@ -115,43 +102,56 @@ async function getListings({
         : {}),
     },
     select: {
-      title: true,
-      photo: true,
       id: true,
-      price: true,
+      slug: true,
+      title: true,
+      subtitle: true,
       description: true,
+      photo: true,
       country: true,
       municipality: true,
       categoryName: true,
-      guests: true,
-      bedrooms: true,
-      contactNumber: true,
-      checkInTime: true,
-      Review: {
+      Homes: {
+        where: { publishStatus: "APPROVED" },
         select: {
-          rating: true,
+          id: true,
+          price: true,
+          priceVip: true,
+          checkInTime: true,
         },
+        orderBy: { checkInTime: { sort: "asc", nulls: "last" } },
+      },
+      Review: {
+        select: { rating: true },
       },
       _count: {
-        select: {
-          Review: true,
-        },
+        select: { Review: true },
       },
       Favorite: { where: { userId: userId ?? undefined } },
     },
-    orderBy: [
-      { checkInTime: { sort: "asc", nulls: "last" } },
-      { createdAt: "desc" },
-    ],
+    orderBy: { createdAt: "desc" },
     take: 12,
   });
 
-  const appConfig = await prismaAny.platformConfig.findFirst({
-    select: { bcvRate: true },
-  });
-  const bcvRate: number | null = appConfig?.bcvRate ? Number(appConfig.bcvRate) : null;
+  return destinations.map((destination: any) => {
+    const futureHomes = destination.Homes.filter((h: any) => {
+      if (!h.checkInTime) return false;
+      const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
+      return d.getTime() > Date.now();
+    });
 
-  return { data, bcvRate };
+    const nextHome = futureHomes[0] || destination.Homes[0];
+    const departure = formatNextDeparture(nextHome?.checkInTime);
+    const prices = destination.Homes.map((h: any) => [h.price, h.priceVip]).flat().filter((p: any) => typeof p === "number");
+    const priceFrom = prices.length > 0 ? Math.min(...prices) : null;
+
+    return {
+      ...destination,
+      nextDate: departure.date,
+      nextTime: departure.time,
+      priceFrom,
+    };
+  });
 }
 
 export default async function DestinosHomePage({
@@ -160,9 +160,6 @@ export default async function DestinosHomePage({
   searchParams?: {
     filter?: string;
     country?: string;
-    guest?: string;
-    rooms?: string;
-    bathrooms?: string;
     q?: string;
   };
 }) {
@@ -171,12 +168,15 @@ export default async function DestinosHomePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, bcvRate } = await getListings({
+  const destinations = await getDestinations({
     userId: user?.id,
     searchParams,
   });
 
-  const selectedTokens = parseMultiCategoryFilter(searchParams?.filter);
+  const selectedTokens = (searchParams?.filter || "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
   const selectedSet = new Set(selectedTokens);
 
   const propertyTypes = (await prismaAny.property_types.findMany({
@@ -185,7 +185,7 @@ export default async function DestinosHomePage({
 
   const chipsWithToken = categoryChips.map((chip) => {
     if (chip.name === "Todos") {
-      return { ...chip, token: "todos", isActive: selectedTokens.length === 0 };
+      return { ...chip, token: "todos", isActive: selectedTokens.length === 0 || selectedTokens.includes("todos") };
     }
 
     const matched = propertyTypes.find((type) => {
@@ -208,9 +208,6 @@ export default async function DestinosHomePage({
   const safeSearchParams: Record<string, string | undefined> = {
     filter: searchParams?.filter,
     country: searchParams?.country,
-    guest: searchParams?.guest,
-    rooms: searchParams?.rooms,
-    bathrooms: searchParams?.bathrooms,
     q: searchParams?.q,
   };
 
@@ -279,41 +276,30 @@ export default async function DestinosHomePage({
       <section className="mx-auto max-w-7xl px-6 pb-16 pt-10 sm:px-10 lg:px-14">
         <div className="mb-8 text-center">
           <h2 className="text-4xl font-semibold text-[#0d1f58]">Destinos Destacados</h2>
-          <p className="mt-2 text-lg text-[#24336a]">Descubre lugares increibles</p>
+          <p className="mt-2 text-lg text-[#24336a]">Descubre lugares increíbles</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {data.map((item: any) => (
-            <ListingCard
-              key={item.id}
-              title={item.title as string}
-              description={item.description as string}
-              imagePath={item.photo as string}
-              price={item.price as number}
-              stateValue={item.country as string}
-              municipalityValue={item.municipality}
-              userId={user?.id}
-              favoriteId={item.Favorite[0]?.id}
-              isInFavoriteList={item.Favorite.length > 0}
-              homeId={item.id}
-              pathName="/destinos"
-              categoryName={getPrimaryCategoryName(item.categoryName)}
-              categoryNames={item.categoryName}
-              guests={item.guests}
-              bedrooms={item.bedrooms}
-              reviews={item.Review}
-              reviewCount={item._count?.Review}
-              contactNumber={item.contactNumber}
-              checkInTime={(item as any).checkInTime}
-              bcvRate={bcvRate}
-              slug={generateHomeSlug(item.title || "paquete", item.id)}
+          {destinations.map((destination: any) => (
+            <DestinationCard
+              key={destination.id}
+              slug={destination.slug}
+              title={destination.title}
+              subtitle={destination.subtitle}
+              imagePath={destination.photo}
+              country={destination.country}
+              municipality={destination.municipality}
+              nextDate={destination.nextDate}
+              nextTime={destination.nextTime}
+              priceFrom={destination.priceFrom}
+              reviewCount={destination._count?.Review || 0}
             />
           ))}
         </div>
 
-        {data.length === 0 && (
+        {destinations.length === 0 && (
           <div className="rounded-xl border border-[#d5c9af] bg-white/60 p-8 text-center text-[#24336a]">
-            Aun no hay paquetes publicados para mostrar en esta seccion.
+            Aún no hay destinos publicados para mostrar en esta sección.
           </div>
         )}
       </section>
@@ -324,6 +310,3 @@ export default async function DestinosHomePage({
     </div>
   );
 }
-
-
-

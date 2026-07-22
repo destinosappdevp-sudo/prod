@@ -14,7 +14,7 @@ async function getAdminStats() {
   const [totalUsers, totalProperties, pendingPayments, platformConfig, savingsAgg, savingsCount, pendingSavings] =
     await Promise.all([
       prisma.user.count(),
-      prisma.home.count(),
+      prisma.destination.count(),
       prisma.payment.count({ where: { status: "PENDING" } }),
       prisma.platformConfig.findFirst({
         select: { bcvRate: true, bcvRateDate: true },
@@ -78,7 +78,7 @@ export default async function AdminDashboard() {
       format: "number" as const,
     },
     {
-      title: "Paquetes",
+      title: "Destinos",
       value: stats.totalProperties,
       icon: Home,
       color: "green",

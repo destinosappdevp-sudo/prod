@@ -58,14 +58,18 @@ model Banner {
 }
 
 model Favorite {
-  id       String   @id
-  userId   String
-  homeId   String
-  createAt DateTime @default(now())
-  Home     Home     @relation(fields: [homeId], references: [id], onDelete: Cascade)
-  User     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String        @id
+  userId        String
+  homeId        String?
+  destinationId String?
+  createAt      DateTime      @default(now())
+  Home          Home?         @relation(fields: [homeId], references: [id], onDelete: Cascade)
+  Destination   Destination?  @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  User          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, destinationId])
   @@unique([userId, homeId])
+  @@index([destinationId])
 }
 
 model Home {
@@ -104,14 +108,50 @@ model Home {
   priceVip                Int?
   vipSeats                Int?           // <--- restaurado para compatibilidad
   standardSeats           Int?           // <--- restaurado para compatibilidad
+  destinationId           String?
   BlockedDate             BlockedDate[]
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
   User                    User?          @relation(fields: [userId], references: [id])
+  Destination             Destination?   @relation(fields: [destinationId], references: [id])
   HomeAmenity             HomeAmenity[]
   PackageSeat             PackageSeat[]
   Reservation             Reservation[]
   Review                  Review[]
+
+  @@index([destinationId])
+}
+
+model Destination {
+  id                      String         @id @default(uuid())
+  title                   String?
+  subtitle                String?
+  slug                    String         @unique
+  description             String?
+  photo                   String?
+  country                 String?
+  municipality            String?
+  exactAddress            String?
+  contactNumber           String?
+  categoryName            String[]       @default([])
+  propertyTypeId          Int[]          @default([])
+  latitude                Float?
+  longitude               Float?
+  price                   Int?
+  priceVip                Int?
+  vipSeats                Int?
+  standardSeats           Int?
+  checkInTime             String?
+  publishStatus           PublishStatus  @default(DRAFT)
+  userId                  String?
+  createdAt               DateTime       @default(now())
+  User                    User?          @relation(fields: [userId], references: [id])
+  Homes                   Home[]
+  Favorite                Favorite[]
+  Review                  Review[]
+
+  @@index([userId])
+  @@index([slug])
 }
 
 model HomeAmenity {
@@ -191,20 +231,24 @@ model Reservation {
 }
 
 model Review {
-  id            String       @id
+  id            String        @id
   rating        Int
   comment       String
   stayStartDate DateTime?
   stayEndDate   DateTime?
   hostReply     String?
   hostReplyAt   DateTime?
-  createdAt     DateTime     @default(now())
+  createdAt     DateTime      @default(now())
   homeId        String?
+  destinationId String?
   userId        String?
-  reservationId String?      @unique
-  Home          Home?        @relation(fields: [homeId], references: [id])
-  Reservation   Reservation? @relation(fields: [reservationId], references: [id])
-  User          User?        @relation(fields: [userId], references: [id])
+  reservationId String?       @unique
+  Home          Home?         @relation(fields: [homeId], references: [id])
+  Destination   Destination?  @relation(fields: [destinationId], references: [id])
+  Reservation   Reservation?  @relation(fields: [reservationId], references: [id])
+  User          User?         @relation(fields: [userId], references: [id])
+
+  @@index([destinationId])
 }
 
 model User {
@@ -236,6 +280,7 @@ model User {
   Favorite                          Favorite[]
   ApprovalsGiven                    Home[]                   @relation("ApprovedBy")
   Home                              Home[]
+  Destination                       Destination[]
   Message_Message_recipientIdToUser Message[]                @relation("Message_recipientIdToUser")
   Message_Message_senderIdToUser    Message[]                @relation("Message_senderIdToUser")
   NotificationPreferences           NotificationPreferences?

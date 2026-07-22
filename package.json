@@ -1,8 +1,8 @@
 {
-  "name": "bt-travel",
+  "name": "destinos",
   "version": "0.1.0",
   "private": true,
-  "author": "Shpetim Aliu",
+  "author": "FocusDev",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -40,6 +40,19 @@ next-env.d.ts
 # mobile app (React Native/Expo)
 /ZerkkApp
 
+# archive scripts & data
+scripts/archive/
+*.csv
+audit-transactions*
+savings-full*
+payments-full*
+build-*.txt
+build-*
+.envviejo
+.vercel-build-info
+list_buckets.js
+test-pagomovil.ps1
+
 # local AI agent tooling
 /.agents
 skills-lock.json
