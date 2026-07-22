@@ -2,15 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: rgb(229 231 235);
-}
-
 @layer base {
   :root {
     --brand-blue: #040b42;
     --brand-gold: #e0ae33;
-    --background: 0 0% 100%;
+    --background: 0 0% 91%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
