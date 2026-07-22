@@ -126,7 +126,7 @@ export default async function DestinationSlugPage({
   });
 
   return (
-    <div className="min-h-screen bg-[#E5DCC6]">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-6 py-8 sm:px-10 lg:px-14">
         <Link
           href="/destinos"

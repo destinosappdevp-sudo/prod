@@ -212,7 +212,7 @@ export default async function DestinosHomePage({
   };
 
   return (
-    <div className="min-h-screen bg-[#E5DCC6]">
+    <div className="min-h-screen bg-background">
       <section className="relative">
         <BannerCarousel
           fullWidth
@@ -231,7 +231,7 @@ export default async function DestinosHomePage({
             Reservar cupo
           </a>
         </div>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#E5DCC6] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       <section className="mx-auto max-w-7xl px-6 -mt-4 sm:px-10 lg:px-14">

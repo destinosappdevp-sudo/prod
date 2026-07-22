@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function ContactoPage() {
   return (
-    <main className="bg-[#E5DCC6]">
+    <main className="bg-background">
       <section className="container mx-auto max-w-5xl px-5 py-14 lg:px-10">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-semibold text-[#040B42]">Contacto</h1>
