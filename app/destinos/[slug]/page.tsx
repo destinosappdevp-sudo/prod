@@ -164,80 +164,32 @@ export default async function DestinationSlugPage({
               </p>
             </Card>
 
-            <Card className="p-6 bg-white/80">
-              <h2 className="text-xl font-semibold text-[#0d1f58] mb-4">Próximas salidas</h2>
-              {futureHomes.length === 0 ? (
-                <p className="text-[#24336a]">No hay salidas programadas próximamente.</p>
-              ) : (
-                <div className="space-y-4">
-                  {futureHomes.map((home: any) => {
+            {pastHomes.length > 0 && (
+              <Card className="p-6 bg-white/80">
+                <h3 className="text-lg font-semibold text-[#0d1f58] mb-3">Salidas anteriores</h3>
+                <div className="space-y-3 opacity-70">
+                  {pastHomes.map((home: any) => {
                     const departure = formatDeparture(home.checkInTime);
-                    const available = calculateAvailableSeats(home);
                     return (
                       <div
                         key={home.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-[#d5c9af] bg-white p-4"
+                        className="flex items-center justify-between rounded-xl border border-[#d5c9af] bg-white p-4"
                       >
-                        <div className="flex items-start gap-4">
-                          {home.photo ? (
-                            <div className="relative w-32 h-28 shrink-0 rounded-lg overflow-hidden">
-                              <SupabaseImage
-                                imagePath={home.photo}
-                                alt={home.title || ""}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : null}
-                          <div>
-                            <p className="font-bold text-[#0d1f58]">
-                              {departure?.full || "Fecha por confirmar"}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              E: ${home.price ?? 0}
-                              {home.priceVip ? ` · VIP: $${home.priceVip}` : ""}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Cupos disponibles: {available}
-                            </p>
-                          </div>
-                        </div>
-                        <Button asChild className="bg-[#E0AE33] hover:bg-[#c99723] text-white">
-                          <Link href={`/home/${home.id}`}>Ver paquete</Link>
-                        </Button>
+                        <p className="text-sm text-gray-600">
+                          {departure?.full || "Fecha por confirmar"}
+                        </p>
+                        <Link
+                          href={`/home/${home.id}`}
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          Ver
+                        </Link>
                       </div>
                     );
                   })}
                 </div>
-              )}
-
-              {pastHomes.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold text-[#0d1f58] mb-3">Salidas anteriores</h3>
-                  <div className="space-y-3 opacity-70">
-                    {pastHomes.map((home: any) => {
-                      const departure = formatDeparture(home.checkInTime);
-                      return (
-                        <div
-                          key={home.id}
-                          className="flex items-center justify-between rounded-xl border border-[#d5c9af] bg-white p-4"
-                        >
-                          <p className="text-sm text-gray-600">
-                            {departure?.full || "Fecha por confirmar"}
-                          </p>
-                          <Link
-                            href={`/home/${home.id}`}
-                            className="text-sm text-blue-600 hover:underline"
-                          >
-                            Ver
-                          </Link>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </Card>
+              </Card>
+            )}
 
             {destination.Review.length > 0 && (
               <Card className="p-6 bg-white/80">
@@ -267,42 +219,37 @@ export default async function DestinationSlugPage({
           {/* Sidebar */}
           <div className="space-y-6">
             <Card className="p-6 bg-white/80">
-              <h3 className="text-lg font-semibold text-[#0d1f58] mb-4">Información</h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-[#E0AE33] mt-0.5" />
-                  <div>
-                    <p className="font-medium text-[#0d1f58]">Punto de partida</p>
-                    <p className="text-sm text-[#24336a]">
-                      {[destination.exactAddress, destination.municipality, destination.country]
-                        .filter(Boolean)
-                        .join(", ") || "No especificado"}
-                    </p>
-                  </div>
+              <h2 className="text-xl font-semibold text-[#0d1f58] mb-4">Próximas salidas</h2>
+              {futureHomes.length === 0 ? (
+                <p className="text-[#24336a]">No hay salidas programadas próximamente.</p>
+              ) : (
+                <div className="space-y-4">
+                  {futureHomes.map((home: any) => {
+                    const departure = formatDeparture(home.checkInTime);
+                    const available = calculateAvailableSeats(home);
+                    return (
+                      <div
+                        key={home.id}
+                        className="rounded-xl border border-[#d5c9af] bg-white p-4"
+                      >
+                        <p className="font-bold text-[#0d1f58]">
+                          {departure?.full || "Fecha por confirmar"}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          E: ${home.price ?? 0}
+                          {home.priceVip ? ` · VIP: $${home.priceVip}` : ""}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Cupos disponibles: {available}
+                        </p>
+                        <Button asChild className="mt-3 w-full bg-[#E0AE33] hover:bg-[#c99723] text-white">
+                          <Link href={`/home/${home.id}`}>Comprar Paquete</Link>
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
-                {destination.contactNumber && (
-                  <div className="flex items-start gap-3">
-                    <Phone className="h-5 w-5 text-[#E0AE33] mt-0.5" />
-                    <div>
-                      <p className="font-medium text-[#0d1f58]">Contacto</p>
-                      <p className="text-sm text-[#24336a]">{destination.contactNumber}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-[#E0AE33] mt-0.5" />
-                  <div>
-                    <p className="font-medium text-[#0d1f58]">Salidas</p>
-                    <p className="text-sm text-[#24336a]">{destination.Homes.length} paquetes</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 bg-white/80">
-              <h3 className="text-lg font-semibold text-[#0d1f58] mb-2">Organizador</h3>
-              <p className="text-[#24336a]">{destination.User?.firstName || "Destinos Venezuela"}</p>
-              <p className="text-sm text-gray-500">{destination.User?.email || "-"}</p>
+              )}
             </Card>
           </div>
         </div>
