@@ -15,6 +15,7 @@ import {
   PiggyBank,
   Smartphone,
   Banknote,
+  CalendarDays,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const getMenuItems = (role?: string) => {
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/users", icon: Users, label: "Usuarios" },
     { href: "/admin/properties", icon: Home, label: "Destinos" },
+    { href: "/admin/pasadas", icon: CalendarDays, label: "Pasadas" },
     { href: "/admin/categories", icon: BarChart3, label: "Categorías" },
     { href: "/admin/amenities", icon: Home, label: "Servicios" },
     { href: "/admin/payments", icon: CreditCard, label: "Finanzas" },
