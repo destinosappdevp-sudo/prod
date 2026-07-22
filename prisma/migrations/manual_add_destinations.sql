@@ -42,8 +42,15 @@ CREATE INDEX IF NOT EXISTS "Home_destinationId_idx" ON "Home"("destinationId");
 -- 3. Agregar destinationId a Favorite y Review, y hacer homeId nullable
 ALTER TABLE "Favorite" ADD COLUMN IF NOT EXISTS "destinationId" TEXT;
 ALTER TABLE "Favorite" ALTER COLUMN "homeId" DROP NOT NULL;
-ALTER TABLE "Favorite" ADD CONSTRAINT "Favorite_destinationId_fkey" 
-    FOREIGN KEY ("destinationId") REFERENCES "Destination"(id) ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'Favorite_destinationId_fkey'
+    ) THEN
+        ALTER TABLE "Favorite" ADD CONSTRAINT "Favorite_destinationId_fkey" 
+            FOREIGN KEY ("destinationId") REFERENCES "Destination"(id) ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS "Favorite_destinationId_idx" ON "Favorite"("destinationId");
 
 -- El unique constraint por homeId debe cambiar a destinationId
@@ -59,13 +66,27 @@ END $$;
 
 ALTER TABLE "Review" ADD COLUMN IF NOT EXISTS "destinationId" TEXT;
 ALTER TABLE "Review" ALTER COLUMN "homeId" DROP NOT NULL;
-ALTER TABLE "Review" ADD CONSTRAINT "Review_destinationId_fkey" 
-    FOREIGN KEY ("destinationId") REFERENCES "Destination"(id) ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'Review_destinationId_fkey'
+    ) THEN
+        ALTER TABLE "Review" ADD CONSTRAINT "Review_destinationId_fkey" 
+            FOREIGN KEY ("destinationId") REFERENCES "Destination"(id) ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS "Review_destinationId_idx" ON "Review"("destinationId");
 
 -- 4. Agregar FK de Home -> Destination
-ALTER TABLE "Home" ADD CONSTRAINT "Home_destinationId_fkey" 
-    FOREIGN KEY ("destinationId") REFERENCES "Destination"(id) ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'Home_destinationId_fkey'
+    ) THEN
+        ALTER TABLE "Home" ADD CONSTRAINT "Home_destinationId_fkey" 
+            FOREIGN KEY ("destinationId") REFERENCES "Destination"(id) ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- Nota: después de ejecutar este SQL, correr el script scripts/migrate-destinations.js
 -- para crear los destinos a partir de los paquetes activos y vincular hijos, favoritos y reviews.
