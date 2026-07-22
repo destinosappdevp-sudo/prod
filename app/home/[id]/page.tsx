@@ -27,9 +27,8 @@ async function getData(homeId: string) {
       photo: true,
       title: true,
       description: true,
-      guests: true,
-      bedrooms: true,
-      bathrooms: true,
+      vipSeats: true,
+      standardSeats: true,
       categoryName: true,
       price: true,
       country: true,
@@ -146,11 +145,13 @@ async function SingleHomePage({ params }: { params: Promise<{ id: string }> }) {
             {municipality ? municipality.label : state?.label}
           </h3>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">
-            <p>{data?.guests} Huéspedes</p>
-            <span>·</span>
-            <p>{data?.bedrooms} Dormitorios</p>
-            <span>·</span>
-            <p>{data?.bathrooms} Baños</p>
+            <p>{data?.standardSeats || 0} cupos estándar</p>
+            {data?.vipSeats ? (
+              <>
+                <span>·</span>
+                <p>{data.vipSeats} cupos VIP</p>
+              </>
+            ) : null}
           </div>
 
           <div className="flex items-center mt-6">
