@@ -64,6 +64,7 @@ export async function PATCH(
     const vipSeatsRaw = (formData.get("vipSeats") as string) || "";
     const standardSeatsRaw = (formData.get("standardSeats") as string) || "";
     const categoryNameRaw = (formData.get("categoryName") as string) || "";
+    const publishStatusRaw = (formData.get("publishStatus") as string) || "";
     const propertyTypeIdRaw = (formData.get("propertyTypeId") as string) || "";
     const propertyTypeIdsRaw = formData
       .getAll("propertyTypeIds")
@@ -158,9 +159,7 @@ export async function PATCH(
       standardSeats: standardSeatsRaw ? parseInt(standardSeatsRaw, 10) : null,
       categoryName: selectedCategories.map((c) => c.name),
       propertyTypeId: selectedCategories.map((c) => c.id),
-      addedCategory: selectedCategories.length > 0,
-      addedDescription: !!(title && description),
-      addedLocation: !!(country && municipality),
+      publishStatus: publishStatusRaw || "APPROVED",
     };
 
     if (photoPath) {
