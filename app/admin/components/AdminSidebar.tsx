@@ -132,16 +132,14 @@ export function AdminSidebar({
             </Link>
           );
         })}
-      </nav>
 
-      <div className="border-t border-border shrink-0">
-        <div className={cn("space-y-1", isCollapsed ? "p-2" : "p-4")}>
+        <div className="pt-2">
           <Link
             href="/"
             onClick={onNavigate}
             className={cn(
               "flex items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-              isCollapsed ? "justify-center p-3" : "gap-3 px-4 py-3",
+              isCollapsed ? "justify-center p-3 mx-auto" : "gap-3 px-4 py-3",
             )}
             title={isCollapsed ? "Volver al sitio" : undefined}
           >
@@ -152,7 +150,7 @@ export function AdminSidebar({
             <button
               type="button"
               onClick={onToggleCollapse}
-              className="w-full flex items-center justify-center rounded-lg p-3 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              className="w-full flex items-center justify-center rounded-lg p-3 mx-auto text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
               title="Expandir menú"
             >
               <ChevronRight size={20} />
@@ -163,7 +161,7 @@ export function AdminSidebar({
               <form action={signOut} className="w-full">
                 <button
                   type="submit"
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   <LogOut size={20} />
                   <span className="font-medium truncate">Cerrar sesión</span>
@@ -181,7 +179,7 @@ export function AdminSidebar({
             </>
           )}
         </div>
-      </div>
+      </nav>
     </aside>
   );
 }
