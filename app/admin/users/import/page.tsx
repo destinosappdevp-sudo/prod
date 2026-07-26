@@ -61,7 +61,7 @@ export default function ImportUsersPage() {
         </div>
         <a
           href="/api/admin/users/export"
-          className="px-3 py-2 rounded-md bg-white border text-sm text-gray-700 hover:bg-muted/50"
+          className="px-3 py-2 rounded-md bg-card border text-sm text-muted-foreground hover:bg-muted/50"
         >
           Descargar usuarios
         </a>
@@ -91,7 +91,7 @@ export default function ImportUsersPage() {
 
       {/* Uploader */}
       <div
-        className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-colors"
+        className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary transition-colors"
         onClick={() => fileRef.current?.click()}
       >
         <input
@@ -103,7 +103,7 @@ export default function ImportUsersPage() {
         />
         {file ? (
           <div className="space-y-1">
-            <p className="font-semibold text-gray-800">{file.name}</p>
+            <p className="font-semibold text-foreground">{file.name}</p>
             <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
           </div>
         ) : (
@@ -133,7 +133,7 @@ export default function ImportUsersPage() {
         </button>
         <button
           onClick={() => router.push("/admin/users")}
-          className="px-6 py-2 rounded-lg border text-gray-700 font-semibold hover:bg-muted/50 transition-colors"
+          className="px-6 py-2 rounded-lg border text-muted-foreground font-semibold hover:bg-muted/50 transition-colors"
         >
           Cancelar
         </button>
@@ -141,8 +141,8 @@ export default function ImportUsersPage() {
 
       {/* Resultado */}
       {result && (
-        <div className="rounded-xl border bg-white shadow-sm p-6 space-y-4">
-          <h2 className="text-lg font-bold text-gray-800">Resultado de la importación</h2>
+        <div className="rounded-xl border bg-card shadow-sm p-6 space-y-4">
+          <h2 className="text-lg font-bold text-foreground">Resultado de la importación</h2>
           <div className="flex gap-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-green-600">{result.created}</p>

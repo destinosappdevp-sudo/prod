@@ -42,7 +42,7 @@ const TIPO_COLORS: Record<string, string> = {
 export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "No hay banners registrados." }: BannerListProps) {
   if (!banners.length) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center mt-6">
+      <div className="bg-card rounded-lg border border-border p-8 text-center mt-6">
         <p className="text-muted-foreground">{emptyMessage}</p>
       </div>
     );
@@ -63,9 +63,9 @@ export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "
           const bannerUrl = normalizeExternalUrl(banner.url);
 
           return (
-            <div key={banner.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            <div key={banner.id} className="bg-card rounded-lg shadow-sm border border-border overflow-hidden hover:shadow-md transition-shadow">
               {/* Barra de tipo en la parte superior */}
-              <div className={`${TIPO_COLORS[banner.tipo ?? ""] ?? "bg-muted/500"} px-4 py-1.5 flex items-center justify-between`}>
+              <div className={`${TIPO_COLORS[banner.tipo ?? ""] ?? "bg-gray-500"} px-4 py-1.5 flex items-center justify-between`}>
                 <span className="text-white text-xs font-bold tracking-wide uppercase">
                   {TIPO_LABELS[banner.tipo ?? ""] ?? banner.tipo ?? "Sin tipo"}
                 </span>

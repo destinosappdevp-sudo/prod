@@ -128,7 +128,7 @@ export default async function DestinationDetailPage({
       <div className="flex items-center gap-4">
         <Link
           href="/admin/properties"
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-accent rounded-lg transition-colors"
         >
           <ArrowLeft size={24} />
         </Link>
@@ -220,7 +220,7 @@ export default async function DestinationDetailPage({
                 />
               </div>
             ) : (
-              <div className="aspect-[3/2] rounded-lg bg-gray-100 flex items-center justify-center text-muted-foreground">
+              <div className="aspect-[3/2] rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
                 Sin imagen
               </div>
             )}
@@ -228,7 +228,7 @@ export default async function DestinationDetailPage({
 
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-2">Creado por</h3>
-            <p className="text-gray-700">{destination.User?.firstName || "Admin"}</p>
+            <p className="text-muted-foreground">{destination.User?.firstName || "Admin"}</p>
             <p className="text-sm text-muted-foreground">{destination.User?.email || "-"}</p>
           </Card>
         </div>
@@ -249,13 +249,13 @@ export default async function DestinationDetailPage({
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">Fecha de salida</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">Título</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-700">Precios</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-700">Cupos</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-700">Reservas</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-700">Estado</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-700">Acciones</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Fecha de salida</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Título</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">Precios</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">Cupos</th>
+                  <th className="text-center px-4 py-3 font-medium text-muted-foreground">Reservas</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
+                  <th className="text-right px-4 py-3 font-medium text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

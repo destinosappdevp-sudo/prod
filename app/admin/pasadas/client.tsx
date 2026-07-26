@@ -80,12 +80,12 @@ export function PasadasClient({ packages }: PasadasClientProps) {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Paquete</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Destino</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-700">Fecha de salida</th>
-              <th className="text-center px-4 py-3 font-medium text-gray-700">Reservas</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">Estado</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-700">Acciones</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Paquete</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Destino</th>
+              <th className="text-center px-4 py-3 font-medium text-muted-foreground">Fecha de salida</th>
+              <th className="text-center px-4 py-3 font-medium text-muted-foreground">Reservas</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -98,7 +98,7 @@ export function PasadasClient({ packages }: PasadasClientProps) {
                         <SupabaseImage imagePath={pkg.photo} alt="" fill className="object-cover" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-muted-foreground">
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
                         <CalendarDays className="w-5 h-5" />
                       </div>
                     )}
@@ -115,7 +115,7 @@ export function PasadasClient({ packages }: PasadasClientProps) {
                   )}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-gray-700">
+                  <span className="text-muted-foreground">
                     {pkg.checkInTime.toLocaleDateString("es-ES", {
                       day: "numeric",
                       month: "short",

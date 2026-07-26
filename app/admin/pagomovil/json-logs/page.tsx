@@ -55,7 +55,7 @@ export default async function JsonLogsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-border">
+            <tbody className="bg-card divide-y divide-border">
               {logs.map((log: any) => (
                 <tr key={log.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">

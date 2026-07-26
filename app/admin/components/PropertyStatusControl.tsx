@@ -40,7 +40,7 @@ const statusUiMap: Record<
   DRAFT: {
     label: "Inactiva",
     approvalLabel: "Pausada",
-    badgeClassName: "bg-gray-100 text-gray-700 hover:bg-gray-100",
+    badgeClassName: "bg-muted text-muted-foreground hover:bg-accent",
   },
   REJECTED: {
     label: "Inactiva",

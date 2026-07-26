@@ -146,7 +146,7 @@ export default async function PackageDetailPage({
       <div className="flex items-center gap-4">
         <Link
           href={property.Destination ? `/admin/properties/${property.Destination.id}` : "/admin/properties"}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-accent rounded-lg transition-colors"
         >
           <ArrowLeft size={24} />
         </Link>
@@ -245,7 +245,7 @@ export default async function PackageDetailPage({
                 />
               </div>
             ) : (
-              <div className="aspect-[3/2] rounded-lg bg-gray-100 flex items-center justify-center text-muted-foreground">
+              <div className="aspect-[3/2] rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
                 Sin imagen
               </div>
             )}
@@ -253,7 +253,7 @@ export default async function PackageDetailPage({
 
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-2">Creado por</h3>
-            <p className="text-gray-700">{property.User?.firstName || "Admin"}</p>
+            <p className="text-muted-foreground">{property.User?.firstName || "Admin"}</p>
             <p className="text-sm text-muted-foreground">{property.User?.email || "-"}</p>
           </Card>
         </div>

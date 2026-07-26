@@ -20,14 +20,14 @@ const STATUS_LABELS: Record<PublishStatus, string> = {
 };
 
 const STATUS_STYLES: Record<PublishStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-700",
+  DRAFT: "bg-muted text-muted-foreground",
   PENDING_APPROVAL: "bg-yellow-100 text-yellow-700",
   APPROVED: "bg-green-100 text-green-700",
   REJECTED: "bg-red-100 text-red-700",
 };
 
 const STATUS_SELECT_STYLES: Record<PublishStatus, string> = {
-  DRAFT: "bg-gray-100 text-gray-700 border-gray-300",
+  DRAFT: "bg-muted text-muted-foreground border-border",
   PENDING_APPROVAL: "bg-yellow-100 text-yellow-700 border-yellow-300",
   APPROVED: "bg-green-100 text-green-700 border-green-300",
   REJECTED: "bg-red-100 text-red-700 border-red-300",
@@ -160,7 +160,7 @@ export function PropertiesClient({
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden p-0">
-        <div className="flex border-b bg-white">
+        <div className="flex border-b bg-card">
           <button
             type="button"
             onClick={() => setMainTab("paquetes")}
@@ -183,7 +183,7 @@ export function PropertiesClient({
           >
             <CalendarCheck size={18} className="hidden sm:inline shrink-0" />
             Reservas Activas
-            <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
               {activeReservations.length}
             </span>
           </button>
@@ -241,7 +241,7 @@ export function PropertiesClient({
         </Card>
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gray-100 rounded-lg">
+            <div className="p-3 bg-muted rounded-lg">
               <XCircle className="text-muted-foreground" size={24} />
             </div>
             <div>
@@ -294,7 +294,7 @@ export function PropertiesClient({
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-border">
+            <tbody className="bg-card divide-y divide-border">
               {paginated.map((property) => {
                 return (
                   <tr key={property.id} className="hover:bg-muted/50">
@@ -312,7 +312,7 @@ export function PropertiesClient({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-muted-foreground">
                         {property.checkInTime || "-"}
                       </span>
                     </td>
@@ -385,14 +385,14 @@ export function PropertiesClient({
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               «
             </button>
             <button
               onClick={() => setCurrentPage((p) => p - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               ‹ Anterior
             </button>
@@ -413,7 +413,7 @@ export function PropertiesClient({
                     className={`px-3 py-1 text-sm rounded border ${
                       currentPage === p
                         ? "bg-blue-600 text-white border-blue-600"
-                        : "hover:bg-gray-100"
+                        : "hover:bg-accent"
                     }`}
                   >
                     {p}
@@ -423,14 +423,14 @@ export function PropertiesClient({
             <button
               onClick={() => setCurrentPage((p) => p + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               Siguiente ›
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               »
             </button>

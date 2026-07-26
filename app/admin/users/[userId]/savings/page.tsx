@@ -262,13 +262,13 @@ export default async function UserSavingsPage({
       <Card className="overflow-hidden">
         <div className="px-6 py-4 border-b">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="inline-flex rounded-lg border border-gray-200 bg-muted/50 p-1">
+            <div className="inline-flex rounded-lg border border-border bg-muted/50 p-1">
               <Link
                 href={`/admin/users/${userId}/savings?tab=historial`}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
                   activeTab === "historial"
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-gray-800"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Historial de depósitos
@@ -277,8 +277,8 @@ export default async function UserSavingsPage({
                 href={`/admin/users/${userId}/savings?tab=detalle`}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
                   activeTab === "detalle"
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-gray-800"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Detalle de ahorros
@@ -299,7 +299,7 @@ export default async function UserSavingsPage({
               {walletsWithBalance.length === 0 ? (
                 <div className="p-10 text-center text-muted-foreground">Este usuario no tiene alcancías con movimientos.</div>
               ) : (
-                <div className="w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0 rounded-xl border border-gray-200">
+                <div className="w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0 rounded-xl border border-border">
                   <table className="min-w-[700px] w-full">
                     <thead className="bg-muted/50 border-b">
                       <tr>
@@ -310,7 +310,7 @@ export default async function UserSavingsPage({
                         <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Movimientos</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-border">
+                    <tbody className="bg-card divide-y divide-border">
                       {walletsWithBalance.map((wallet) => (
                         <tr key={wallet.key} className="hover:bg-muted/50">
                           <td className="px-4 py-4 text-sm font-medium text-foreground">{wallet.title}</td>
@@ -320,7 +320,7 @@ export default async function UserSavingsPage({
                           <td className="px-4 py-4 text-sm text-right font-semibold text-emerald-700">
                             ${wallet.amountUsd.toFixed(2)}
                           </td>
-                          <td className="px-4 py-4 text-sm text-right text-gray-700">
+                          <td className="px-4 py-4 text-sm text-right text-muted-foreground">
                             Bs. {wallet.amountBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                           <td className="px-4 py-4 text-sm text-right text-muted-foreground">
@@ -347,7 +347,7 @@ export default async function UserSavingsPage({
                   <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-border">
+              <tbody className="bg-card divide-y divide-border">
                 {savings.map((s) => {
                   const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails as Record<string, any> : {};
                   const ref = details.referenceNumber ?? "—";
@@ -358,7 +358,7 @@ export default async function UserSavingsPage({
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
                         {new Date(s.date).toLocaleDateString("es-VE", { day: "2-digit", month: "short", year: "numeric" })}
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-700">
+                      <td className="px-4 py-4 text-sm text-muted-foreground">
                         <div className="font-mono">{ref}</div>
                         {bank && <div className="text-xs text-muted-foreground">{bank}</div>}
                         {s.status === "REJECTED" && s.rejectionReason && (
@@ -379,13 +379,13 @@ export default async function UserSavingsPage({
                           <span className="text-muted-foreground">Sin archivo</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-700 text-right font-mono">{s.bcvRate.toFixed(2)}</td>
+                      <td className="px-4 py-4 text-sm text-muted-foreground text-right font-mono">{s.bcvRate.toFixed(2)}</td>
                       <td className="px-4 py-4 text-sm text-foreground text-right">
                         Bs. {s.amountBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-4 text-sm font-semibold text-green-700 text-right">${s.amountUsd.toFixed(2)}</td>
                       <td className="px-4 py-4 text-center">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[s.status] ?? "bg-gray-100 text-muted-foreground"}`}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[s.status] ?? "bg-muted text-muted-foreground"}`}>
                           {statusLabel[s.status] ?? s.status}
                         </span>
                       </td>

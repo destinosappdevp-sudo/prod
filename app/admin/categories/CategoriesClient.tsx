@@ -98,7 +98,7 @@ export default function CategoriesClient({
         Administra las categorías de Paquete. Aquí podrás ver, crear y editar categorías.
       </p>
 
-      <div className="bg-white rounded shadow p-4 mb-6">
+      <div className="bg-card rounded shadow p-4 mb-6">
         <h2 className="text-lg font-semibold mb-4">Crear nueva categoría</h2>
         <form onSubmit={handleCreateCategory} className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input
@@ -127,7 +127,7 @@ export default function CategoriesClient({
         </form>
       </div>
 
-      <div className="bg-white rounded shadow p-4">
+      <div className="bg-card rounded shadow p-4">
         {error && (
           <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}

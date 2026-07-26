@@ -181,7 +181,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
       case "ADMIN":
         return "bg-purple-100 text-purple-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -212,7 +212,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-card rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b px-6 py-4">
               <h2 className="text-lg font-semibold">Crear Usuario</h2>
               <button
@@ -221,7 +221,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                   setShowCreate(false);
                   resetCreateForm();
                 }}
-                className="p-1 text-muted-foreground hover:text-gray-700"
+                className="p-1 text-muted-foreground hover:text-muted-foreground"
                 aria-label="Cerrar"
               >
                 <X size={20} />
@@ -229,7 +229,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
             </div>
             <form onSubmit={handleCreateUser} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Nombre completo *</label>
                 <Input
                   value={newUser.fullName}
                   onChange={(e) => setNewUser((p) => ({ ...p, fullName: e.target.value }))}
@@ -238,7 +238,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Email *</label>
                 <Input
                   type="email"
                   value={newUser.email}
@@ -247,7 +247,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña * (mín. 8 caracteres)</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Contraseña * (mín. 8 caracteres)</label>
                 <Input
                   type="password"
                   value={newUser.password}
@@ -258,14 +258,14 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cédula</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Cédula</label>
                   <Input
                     value={newUser.cedula}
                     onChange={(e) => setNewUser((p) => ({ ...p, cedula: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">Teléfono</label>
                   <Input
                     value={newUser.phoneNumber}
                     onChange={(e) => setNewUser((p) => ({ ...p, phoneNumber: e.target.value }))}
@@ -273,7 +273,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                <label className="block text-sm font-medium text-muted-foreground mb-1">Rol</label>
                 <Select
                   value={newUser.role}
                   onValueChange={(v) => setNewUser((p) => ({ ...p, role: v as typeof p.role }))}
@@ -299,7 +299,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                     setShowCreate(false);
                     resetCreateForm();
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-muted/50"
+                  className="px-4 py-2 border border-border rounded-lg text-muted-foreground hover:bg-muted/50"
                   disabled={creating}
                 >
                   Cancelar
@@ -388,12 +388,12 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-border">
+            <tbody className="bg-card divide-y divide-border">
               {paginatedUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                         {user.profileImage && !user.profileImage.includes('avatar.vercel.sh') ? (
                           <Image
                             src={user.profileImage}
@@ -404,7 +404,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                             unoptimized
                           />
                         ) : (
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-muted-foreground">
                             {`${user.firstName || ""}`.charAt(0)}{`${user.lastName || ""}`.charAt(0)}
                           </span>
                         )}
@@ -476,14 +476,14 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
             <button
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
-              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               «
             </button>
             <button
               onClick={() => setCurrentPage((p) => p - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               ‹ Anterior
             </button>
@@ -504,7 +504,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                     className={`px-3 py-1 text-sm rounded border ${
                       currentPage === p
                         ? "bg-blue-600 text-white border-blue-600"
-                        : "hover:bg-gray-100"
+                        : "hover:bg-accent"
                     }`}
                   >
                     {p}
@@ -514,14 +514,14 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
             <button
               onClick={() => setCurrentPage((p) => p + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               Siguiente ›
             </button>
             <button
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
-              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-gray-100"
+              className="px-2 py-1 text-sm rounded border disabled:opacity-40 hover:bg-accent"
             >
               »
             </button>

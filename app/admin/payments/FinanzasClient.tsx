@@ -83,12 +83,12 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
       PENDING: { label: "Pendiente", color: "bg-yellow-100 text-yellow-700" },
       CONFIRMED: { label: "Confirmado", color: "bg-green-100 text-green-700" },
       REJECTED: { label: "Rechazado", color: "bg-red-100 text-red-700" },
-      CANCELLED: { label: "Cancelado", color: "bg-gray-100 text-gray-700" },
+      CANCELLED: { label: "Cancelado", color: "bg-muted text-muted-foreground" },
       COMPLETED: { label: "Completado", color: "bg-blue-100 text-blue-700" },
     };
     const config = statusConfig[status] || {
       label: status,
-      color: "bg-gray-100 text-gray-700",
+      color: "bg-muted text-muted-foreground",
     };
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.color}`}>

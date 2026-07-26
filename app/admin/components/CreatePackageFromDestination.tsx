@@ -310,7 +310,7 @@ export default function CreatePackageFromDestination({
                     className={`rounded-md border px-3 py-2 text-sm text-left transition-colors ${
                       selected
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     {cat.name}

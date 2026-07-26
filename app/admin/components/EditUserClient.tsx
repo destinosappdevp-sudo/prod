@@ -293,7 +293,7 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
             />
           </div>
           <div className="md:col-span-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <input
                 type="checkbox"
                 checked={formData.hasTraveledWithDestinos}
@@ -304,7 +304,7 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
                     lastTravelDestination: e.target.checked ? formData.lastTravelDestination : "",
                   })
                 }
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-border"
               />
               Ha viajado con Destinos anteriormente
             </label>
@@ -323,7 +323,7 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
             </div>
           )}
           <div className="md:col-span-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <input
                 type="checkbox"
                 checked={formData.travelsWithChildren}
@@ -334,7 +334,7 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
                     childrenAges: e.target.checked ? formData.childrenAges : "",
                   })
                 }
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-border"
               />
               Viaja con niños
             </label>
@@ -462,7 +462,7 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
             onClick={handleChangePassword}
             disabled={changingPassword || !passwordData.password || !passwordData.confirm}
             variant="outline"
-            className="border-gray-300"
+            className="border-border"
           >
             <KeyRound size={15} className="mr-2" />
             {changingPassword ? "Actualizando..." : "Actualizar contraseña"}

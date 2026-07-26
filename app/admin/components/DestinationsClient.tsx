@@ -158,7 +158,7 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
                           />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-muted-foreground">
+                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
                           <MapPin className="w-5 h-5" />
                         </div>
                       )}

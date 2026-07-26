@@ -115,7 +115,7 @@ export default function AlojamientosClient({
             <Card key={home.id} className="overflow-hidden">
               <div className="flex flex-col md:flex-row gap-4 p-6">
                 {/* Imagen */}
-                <div className="w-full md:w-48 h-48 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+                <div className="w-full md:w-48 h-48 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
                   {home.photo ? (
                     <SupabaseImage
                       imagePath={home.photo}
@@ -157,7 +157,7 @@ export default function AlojamientosClient({
                     </p>
                   </div>
 
-                  <p className="text-gray-700 line-clamp-2 whitespace-pre-line mb-3">{home.description}</p>
+                  <p className="text-muted-foreground line-clamp-2 whitespace-pre-line mb-3">{home.description}</p>
 
                   <div className="flex items-center justify-between">
                     <div>

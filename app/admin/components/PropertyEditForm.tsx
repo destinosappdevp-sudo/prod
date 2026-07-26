@@ -459,7 +459,7 @@ export default function PropertyEditForm({
                             ? "border-primary bg-primary/10 text-primary"
                             : missingCategory
                             ? "border-red-300 text-red-700 hover:border-red-400"
-                            : "border-gray-200 hover:border-gray-300"
+                            : "border-border hover:border-border"
                         }`}
                       >
                         {cat.name}

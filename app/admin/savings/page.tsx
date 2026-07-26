@@ -232,7 +232,7 @@ export default async function AdminSavingsPage() {
                   <th className="px-4 py-3 text-center text-xs font-medium uppercase text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border bg-white">
+              <tbody className="divide-y divide-border bg-card">
                 {savings.map((s: any) => {
                   const details =
                     s.paymentDetails && typeof s.paymentDetails === "object"
@@ -267,7 +267,7 @@ export default async function AdminSavingsPage() {
                           "—"
                         )}
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-700">
+                      <td className="px-4 py-4 text-sm text-muted-foreground">
                         <div className="font-mono">{ref}</div>
                         {bank && <div className="text-xs text-muted-foreground">{bank}</div>}
                         {createdByAdmin && (
@@ -319,7 +319,7 @@ export default async function AdminSavingsPage() {
                       <td className="px-4 py-4 text-center">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            statusStyle[s.status] ?? "bg-gray-100 text-muted-foreground"
+                            statusStyle[s.status] ?? "bg-muted text-muted-foreground"
                           }`}
                         >
                           {statusLabel[s.status] ?? s.status}

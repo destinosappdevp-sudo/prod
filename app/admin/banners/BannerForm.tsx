@@ -129,7 +129,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-card p-6 rounded-lg shadow-sm border border-border">
       <h2 className="text-xl font-semibold mb-4">
         {banner ? "Editar Banner" : "Crear Nuevo Banner"}
       </h2>
@@ -141,7 +141,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required 
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
+          className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
         />
       </div>
 
@@ -152,7 +152,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
           value={tipo}
           onChange={(e) => setTipo(e.target.value)}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-white"
+          className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none bg-card"
         >
           <option value="HERO1">Hero 1</option>
           <option value="HERO2">Hero 2</option>
@@ -171,7 +171,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required 
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
           />
         </div>
         <div>
@@ -182,7 +182,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             required 
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
           />
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://ejemplo.com"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
+          className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none" 
         />
       </div>
       
@@ -202,7 +202,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
         <button
           type="button"
           onClick={() => setShowOptional((v) => !v)}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-gray-700 transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-muted-foreground transition-colors"
         >
           <svg
             className={`w-4 h-4 transition-transform ${showOptional ? "rotate-90" : ""}`}
@@ -223,7 +223,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
                   value={clientPhone}
                   onChange={(e) => setClientPhone(e.target.value)}
                   placeholder="+58 424 1234567"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                 />
               </div>
               <div>
@@ -234,7 +234,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
                   placeholder="cliente@ejemplo.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
                 value={cost}
                 onChange={(e) => setCost(e.target.value)}
                 placeholder="0.00"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             </div>
           </div>
@@ -260,14 +260,14 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
         </label>
 
         {/* Tabs para elegir modo */}
-        <div className="flex gap-2 mb-3 border-b border-gray-200">
+        <div className="flex gap-2 mb-3 border-b border-border">
           <button
             type="button"
             onClick={() => setUploadMode("upload")}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               uploadMode === "upload"
                 ? "text-primary border-b-2 border-primary"
-                : "text-muted-foreground hover:text-gray-700"
+                : "text-muted-foreground hover:text-muted-foreground"
             }`}
           >
             Subir nueva
@@ -278,7 +278,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               uploadMode === "select"
                 ? "text-primary border-b-2 border-primary"
-                : "text-muted-foreground hover:text-gray-700"
+                : "text-muted-foreground hover:text-muted-foreground"
             }`}
           >
             Seleccionar del archivo
@@ -295,7 +295,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
               width={150}
               height={80}
               unoptimized
-              className="h-20 w-auto rounded border border-gray-200"
+              className="h-20 w-auto rounded border border-border"
             />
           </div>
         )}
@@ -308,7 +308,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
               accept="image/*"
               required={!banner}
               onChange={handleFileChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90 file:cursor-pointer"
+              className="w-full px-4 py-2 border border-border rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90 file:cursor-pointer"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Recomendado: 400x200px (2:1). Máx: 5MB
@@ -318,7 +318,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
 
         {/* Modo: Seleccionar existente */}
         {uploadMode === "select" && (
-          <div className="border border-gray-300 rounded-lg p-4 max-h-80 overflow-y-auto">
+          <div className="border border-border rounded-lg p-4 max-h-80 overflow-y-auto">
             {loadingImages ? (
               <p className="text-muted-foreground text-sm text-center py-4">
                 Cargando imágenes...
@@ -337,7 +337,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
                     className={`relative aspect-[2/1] rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImageUrl === img.url
                         ? "border-primary ring-2 ring-primary/20"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-border hover:border-border"
                     }`}
                   >
                     <Image
@@ -390,7 +390,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
           <button 
             type="button"
             onClick={onCancel}
-            className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-muted/50 transition-colors"
+            className="px-6 py-2.5 border border-border text-muted-foreground font-semibold rounded-lg hover:bg-muted/50 transition-colors"
             disabled={loading}
           >
             Cancelar

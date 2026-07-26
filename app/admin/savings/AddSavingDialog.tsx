@@ -247,7 +247,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Usuario</label>
+              <label className="block text-sm font-medium text-muted-foreground">Usuario</label>
               <div className="relative">
                 <Input
                   value={userQuery || (selectedUser ? (() => {
@@ -263,7 +263,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                   placeholder="Buscar por cédula, nombre o email"
                 />
 
-                <div className={`absolute left-0 right-0 mt-1 z-50 bg-white border rounded shadow max-h-60 overflow-auto ${showUserDropdown ? "" : "hidden"}`}>
+                <div className={`absolute left-0 right-0 mt-1 z-50 bg-card border rounded shadow max-h-60 overflow-auto ${showUserDropdown ? "" : "hidden"}`}>
                   {filteredUsers.length === 0 ? (
                     <div className="p-3 text-sm text-muted-foreground">No se encontraron usuarios</div>
                   ) : (
@@ -278,7 +278,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                           setSelectedWalletKey("");
                           setShowUserDropdown(false);
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 hover:bg-accent"
                       >
                         <div className="font-medium">{user.cedula ? `${user.cedula} — ` : ""}{user.firstName}</div>
                         <div className="text-xs text-muted-foreground">{user.email}</div>
@@ -290,7 +290,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Alcancía existente</label>
+            <label className="block text-sm font-medium text-muted-foreground">Alcancía existente</label>
             <Select value={selectedWalletKey} onValueChange={setSelectedWalletKey}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona una alcancía existente" />
@@ -310,7 +310,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Monto a agregar (USD)</label>
+            <label className="block text-sm font-medium text-muted-foreground">Monto a agregar (USD)</label>
             <Input
               type="number"
               min="0"
@@ -325,7 +325,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Fecha del depósito</label>
+            <label className="block text-sm font-medium text-muted-foreground">Fecha del depósito</label>
             <Input
               type="date"
               value={depositDate}

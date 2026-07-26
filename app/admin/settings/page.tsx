@@ -409,7 +409,7 @@ export default function SettingsPage() {
 
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Teléfono receptor
             </label>
             <input
@@ -418,12 +418,12 @@ export default function SettingsPage() {
               onChange={(e) =>
                 setPagomovilMerchant((p) => ({ ...p, phone: e.target.value }))
               }
-              className="w-full p-2 border rounded-lg bg-white"
+              className="w-full p-2 border rounded-lg bg-card"
               disabled={pagomovilLoading || pagomovilSaving}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Banco receptor
             </label>
             <input
@@ -432,12 +432,12 @@ export default function SettingsPage() {
               onChange={(e) =>
                 setPagomovilMerchant((p) => ({ ...p, bank: e.target.value }))
               }
-              className="w-full p-2 border rounded-lg bg-white"
+              className="w-full p-2 border rounded-lg bg-card"
               disabled={pagomovilLoading || pagomovilSaving}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-muted-foreground mb-1">
               Cédula receptor
             </label>
             <input
@@ -446,7 +446,7 @@ export default function SettingsPage() {
               onChange={(e) =>
                 setPagomovilMerchant((p) => ({ ...p, cedula: e.target.value }))
               }
-              className="w-full p-2 border rounded-lg bg-white"
+              className="w-full p-2 border rounded-lg bg-card"
               disabled={pagomovilLoading || pagomovilSaving}
             />
           </div>
@@ -458,7 +458,7 @@ export default function SettingsPage() {
           </h4>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 ID Comercio
               </label>
               <input
@@ -470,12 +470,12 @@ export default function SettingsPage() {
                     idComercio: e.target.value,
                   }))
                 }
-                className="w-full p-2 border rounded-lg bg-white"
+                className="w-full p-2 border rounded-lg bg-card"
                 disabled={pagomovilLoading || pagomovilSaving}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 IPs permitidas (CSV)
               </label>
               <input
@@ -487,12 +487,12 @@ export default function SettingsPage() {
                     allowedIps: e.target.value,
                   }))
                 }
-                className="w-full p-2 border rounded-lg bg-white"
+                className="w-full p-2 border rounded-lg bg-card"
                 disabled={pagomovilLoading || pagomovilSaving}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 HMAC Secret
               </label>
               <input
@@ -505,12 +505,12 @@ export default function SettingsPage() {
                     hmacSecret: e.target.value,
                   }))
                 }
-                className="w-full p-2 border rounded-lg bg-white"
+                className="w-full p-2 border rounded-lg bg-card"
                 disabled={pagomovilLoading || pagomovilSaving}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Auth Token
               </label>
               <input
@@ -523,7 +523,7 @@ export default function SettingsPage() {
                     authToken: e.target.value,
                   }))
                 }
-                className="w-full p-2 border rounded-lg bg-white"
+                className="w-full p-2 border rounded-lg bg-card"
                 disabled={pagomovilLoading || pagomovilSaving}
               />
             </div>
@@ -536,7 +536,7 @@ export default function SettingsPage() {
           </h4>
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 ID Comercio Crédito
               </label>
               <input
@@ -548,12 +548,12 @@ export default function SettingsPage() {
                     idComercio: e.target.value,
                   }))
                 }
-                className="w-full p-2 border rounded-lg bg-white"
+                className="w-full p-2 border rounded-lg bg-card"
                 disabled={pagomovilLoading || pagomovilSaving}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 HMAC Secret Crédito
               </label>
               <input
@@ -566,12 +566,12 @@ export default function SettingsPage() {
                     hmacSecret: e.target.value,
                   }))
                 }
-                className="w-full p-2 border rounded-lg bg-white"
+                className="w-full p-2 border rounded-lg bg-card"
                 disabled={pagomovilLoading || pagomovilSaving}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Auth Token Crédito
               </label>
               <input
@@ -584,7 +584,7 @@ export default function SettingsPage() {
                     authToken: e.target.value,
                   }))
                 }
-                className="w-full p-2 border rounded-lg bg-white"
+                className="w-full p-2 border rounded-lg bg-card"
                 disabled={pagomovilLoading || pagomovilSaving}
               />
             </div>
@@ -613,11 +613,11 @@ export default function SettingsPage() {
             <p className="font-semibold mb-1">URLs para el banco:</p>
             <p>
               Consulta:{" "}
-              <code className="bg-white px-1 rounded">/R4consulta</code>
+              <code className="bg-card px-1 rounded">/R4consulta</code>
             </p>
             <p>
               Notifica:{" "}
-              <code className="bg-white px-1 rounded">/R4notifica</code>
+              <code className="bg-card px-1 rounded">/R4notifica</code>
             </p>
           </div>
         )}
@@ -643,7 +643,7 @@ export default function SettingsPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Tasa BCV del día (Bs/USD)
             </label>
             <input
@@ -652,26 +652,26 @@ export default function SettingsPage() {
               placeholder="448,36860000"
               value={bcvRate}
               onChange={(e) => setBcvRate(e.target.value)}
-              className="w-full p-2 border rounded-lg bg-white"
+              className="w-full p-2 border rounded-lg bg-card"
               disabled={bcvLoading || bcvSaving}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Fecha de referencia del día
             </label>
             <input
               type="date"
               value={bcvRateDate}
               onChange={(e) => setBcvRateDate(e.target.value)}
-              className="w-full p-2 border rounded-lg bg-white"
+              className="w-full p-2 border rounded-lg bg-card"
               disabled={bcvLoading || bcvSaving}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Próxima tasa (Bs/USD)
             </label>
             <input
@@ -680,20 +680,20 @@ export default function SettingsPage() {
               placeholder="448,36860000"
               value={proximaTasa}
               onChange={(e) => setProximaTasa(e.target.value)}
-              className="w-full p-2 border rounded-lg bg-white"
+              className="w-full p-2 border rounded-lg bg-card"
               disabled={bcvLoading || bcvSaving}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Fecha de la próxima tasa
             </label>
             <input
               type="date"
               value={proximaTasaDate}
               onChange={(e) => setProximaTasaDate(e.target.value)}
-              className="w-full p-2 border rounded-lg bg-white"
+              className="w-full p-2 border rounded-lg bg-card"
               disabled={bcvLoading || bcvSaving}
             />
           </div>
@@ -732,9 +732,9 @@ export default function SettingsPage() {
               {tasasAnteriores.map((item, index) => (
                 <div
                   key={`${item.fecha ?? "sin-fecha"}-${index}`}
-                  className="flex items-center justify-between rounded-md bg-white px-3 py-2 border"
+                  className="flex items-center justify-between rounded-md bg-card px-3 py-2 border"
                 >
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-muted-foreground">
                     {formatHistoryDate(item.fecha)}
                   </span>
                   <span className="text-sm font-medium text-foreground">
@@ -793,7 +793,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-lg ${maintenance ? "bg-red-100" : "bg-gray-100"}`}
+                  className={`p-2 rounded-lg ${maintenance ? "bg-red-100" : "bg-muted"}`}
                 >
                   <Wrench
                     className={maintenance ? "text-red-600" : "text-muted-foreground"}
@@ -824,7 +824,7 @@ export default function SettingsPage() {
                 } ${maintenanceSaving ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
               >
                 <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  className={`inline-block h-5 w-5 transform rounded-full bg-card shadow transition-transform ${
                     maintenance ? "translate-x-8" : "translate-x-1"
                   }`}
                 />
@@ -864,11 +864,11 @@ export default function SettingsPage() {
                   step="0.1"
                   value={commission}
                   onChange={(e) => setCommission(Number(e.target.value))}
-                  className="w-20 p-2 border rounded-lg bg-white text-right"
+                  className="w-20 p-2 border rounded-lg bg-card text-right"
                   style={{ width: "70px" }}
                   disabled={loading || saving}
                 />
-                <span className="text-gray-700 font-medium">%</span>
+                <span className="text-muted-foreground font-medium">%</span>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -909,7 +909,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Configurar
@@ -923,7 +923,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Próximamente
@@ -952,7 +952,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Próximamente
@@ -966,7 +966,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Ver Logs
@@ -1021,7 +1021,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Próximamente
@@ -1035,7 +1035,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Optimizar
@@ -1061,7 +1061,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Subir Logo
@@ -1075,7 +1075,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <button
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted transition-colors"
                 disabled
               >
                 Personalizar

@@ -529,7 +529,7 @@ export default function PropertyDetailTabs({
       <div className="mb-4 flex flex-wrap gap-2">
         <button
           className={`rounded-t-lg px-4 py-2 font-semibold ${
-            tab === "reservas" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+            tab === "reservas" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground"
           }`}
           onClick={() => setTab("reservas")}
         >
@@ -537,7 +537,7 @@ export default function PropertyDetailTabs({
         </button>
         <button
           className={`rounded-t-lg px-4 py-2 font-semibold ${
-            tab === "ahorrando" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+            tab === "ahorrando" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground"
           }`}
           onClick={() => setTab("ahorrando")}
         >
@@ -545,7 +545,7 @@ export default function PropertyDetailTabs({
         </button>
         <button
           className={`rounded-t-lg px-4 py-2 font-semibold ${
-            tab === "asientos" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+            tab === "asientos" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground"
           }`}
           onClick={() => setTab("asientos")}
         >
@@ -553,7 +553,7 @@ export default function PropertyDetailTabs({
         </button>
         <button
           className={`rounded-t-lg px-4 py-2 font-semibold ${
-            tab === "reservar" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+            tab === "reservar" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground"
           }`}
           onClick={() => setTab("reservar")}
         >
@@ -561,7 +561,7 @@ export default function PropertyDetailTabs({
         </button>
         <button
           className={`rounded-t-lg px-4 py-2 font-semibold ${
-            tab === "pdf" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"
+            tab === "pdf" ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground"
           }`}
           onClick={() => setTab("pdf")}
         >
@@ -595,7 +595,7 @@ export default function PropertyDetailTabs({
                       </div>
                     </div>
                     {payment && (
-                      <div className="flex items-center justify-between border-t border-gray-200 pt-2">
+                      <div className="flex items-center justify-between border-t border-border pt-2">
                         <div className="space-y-1">
                           <p className="text-sm text-muted-foreground">
                             Método:{" "}
@@ -670,14 +670,14 @@ export default function PropertyDetailTabs({
 
       {tab === "reservar" && (
         <form onSubmit={handleManualReservation} className="space-y-5">
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div className="rounded-lg border border-border p-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Buscar Usuario Por Cedula</h4>
             <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 value={cedulaInput}
                 onChange={(e) => setCedulaInput(e.target.value)}
                 placeholder="Ej: V-12345678"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
               />
               <button
                 type="button"
@@ -699,9 +699,9 @@ export default function PropertyDetailTabs({
             )}
           </div>
 
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div className="rounded-lg border border-border p-4">
             <h4 className="mb-3 text-sm font-semibold text-foreground">Tipo de operación</h4>
-            <div className="rounded-md border border-gray-200 bg-white p-3">
+            <div className="rounded-md border border-border bg-card p-3">
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -721,21 +721,21 @@ export default function PropertyDetailTabs({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Tipo de Cupo</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Tipo de Cupo</label>
               <select
                 value={plan}
                 onChange={(e) => {
                   setPlan(e.target.value === "vip" ? "vip" : "estandar");
                   setSelectedSeatIds([]);
                 }}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
               >
                 <option value="estandar">Estandar</option>
                 <option value="vip">Premium VIP</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Cupos</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Cupos</label>
               <input
                 type="number"
                 min={1}
@@ -744,12 +744,12 @@ export default function PropertyDetailTabs({
                   setGuests(e.target.value);
                   setSelectedSeatIds([]);
                 }}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
               />
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-md bg-muted/50 p-3 text-sm text-gray-700 md:grid-cols-2 md:items-end">
+          <div className="grid gap-3 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground md:grid-cols-2 md:items-end">
             <div>
               Monto estimado: <span className="font-semibold">${totalAmount.toFixed(2)}</span>
             </div>
@@ -767,7 +767,7 @@ export default function PropertyDetailTabs({
                       setSavingDepositUsd(e.target.value);
                       setSelectedSeatIds([]);
                     }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm"
                     placeholder="Ej: 25.00"
                   />
                 </div>
@@ -781,14 +781,14 @@ export default function PropertyDetailTabs({
                       setSavingStartedAt(e.target.value);
                       setSelectedSeatIds([]);
                     }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <div className="rounded-lg border border-gray-200 p-4">
+          <div className="rounded-lg border border-border p-4">
             <div className="mb-3 flex items-center justify-between">
               <h4 className="text-sm font-semibold text-foreground">Selecciona Asiento</h4>
               <p className="text-xs text-muted-foreground">
@@ -841,49 +841,49 @@ export default function PropertyDetailTabs({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Telefono Pago Movil</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Telefono Pago Movil</label>
               <input
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
                 placeholder="04141234567"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Banco Emisor</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Banco Emisor</label>
                 <input
                 value={emisorBank}
                 onChange={(e) => setEmisorBank(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
                 placeholder="0169 R4"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Referencia</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Referencia</label>
               <input
                 value={referenceNumber}
                 onChange={(e) => setReferenceNumber(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
                 placeholder="123456"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Cedula Pagador</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Cedula Pagador</label>
               <input
                 value={payerCedula}
                 onChange={(e) => setPayerCedula(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
                 placeholder="V-12345678"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Observaciones</label>
+            <label className="mb-1 block text-sm font-medium text-muted-foreground">Observaciones</label>
             <textarea
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
-              className="min-h-[90px] w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="min-h-[90px] w-full rounded-md border border-border px-3 py-2 text-sm"
               placeholder="Notas internas de la venta manual"
             />
           </div>
@@ -905,7 +905,7 @@ export default function PropertyDetailTabs({
       )}
 
       {tab === "pdf" && (
-        <div className="space-y-4 rounded-lg border border-gray-200 bg-muted/50 p-4">
+        <div className="space-y-4 rounded-lg border border-border bg-muted/50 p-4">
           <div>
             <h4 className="text-base font-semibold text-foreground">Exportar reporte PDF del paquete</h4>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -914,16 +914,16 @@ export default function PropertyDetailTabs({
             </p>
           </div>
 
-          <div className="grid gap-3 text-sm text-gray-700 sm:grid-cols-3">
-            <div className="rounded-md border border-gray-200 bg-white p-3">
+          <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+            <div className="rounded-md border border-border bg-card p-3">
               <p className="text-xs text-muted-foreground">Reservas Confirmadas</p>
               <p className="text-lg font-semibold text-foreground">{confirmedReservations.length}</p>
             </div>
-            <div className="rounded-md border border-gray-200 bg-white p-3">
+            <div className="rounded-md border border-border bg-card p-3">
               <p className="text-xs text-muted-foreground">Usuarios Ahorrando</p>
               <p className="text-lg font-semibold text-foreground">{savings.length}</p>
             </div>
-            <div className="rounded-md border border-gray-200 bg-white p-3">
+            <div className="rounded-md border border-border bg-card p-3">
               <p className="text-xs text-muted-foreground">Asientos Registrados</p>
               <p className="text-lg font-semibold text-foreground">{seats.length}</p>
             </div>
