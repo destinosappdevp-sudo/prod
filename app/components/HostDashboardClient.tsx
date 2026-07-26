@@ -24,11 +24,48 @@ import {
   XCircle,
   Loader2,
   ArrowDownToLine,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { signOut } from "@/app/action";
 import HostListingCard from "@/app/components/HostListingCard";
 import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { Button } from "@/components/ui/button";
+
+function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const preferred = stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setDark(preferred);
+    document.documentElement.classList.toggle("dark", preferred);
+    setMounted(true);
+  }, []);
+
+  const toggle = () => {
+    setDark((prev) => {
+      const next = !prev;
+      document.documentElement.classList.toggle("dark", next);
+      localStorage.setItem("theme", next ? "dark" : "light");
+      return next;
+    });
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/70 hover:bg-white/10 hover:text-primary transition mt-2"
+    >
+      {dark ? <Sun size={18} /> : <Moon size={18} />}
+      <span className="text-sm font-medium">{dark ? "Modo Claro" : "Modo Oscuro"}</span>
+    </button>
+  );
+}
 
 interface HostStats {
   walletUsd: {
@@ -648,6 +685,7 @@ export default function HostDashboardClient({
               <span className="text-sm font-medium">Cerrar sesión</span>
             </button>
           </form>
+          <ThemeToggle />
         </div>
       </aside>
 
