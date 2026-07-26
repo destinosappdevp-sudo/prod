@@ -712,9 +712,24 @@ export async function getGuestDashboardData(userId: string) {
           country: true,
           municipality: true,
           categoryName: true,
+          destinationId: true,
         },
       })
     : [];
+
+  // Fetch destination slugs for saving packages
+  const savingPackageDestIds = (savingPackages as any[])
+    .map((p: any) => p.destinationId)
+    .filter(Boolean);
+  const destSlugs = savingPackageDestIds.length > 0
+    ? await prismaAny.destination.findMany({
+        where: { id: { in: savingPackageDestIds } },
+        select: { id: true, slug: true },
+      })
+    : [];
+  const slugByDestId = new Map(
+    (destSlugs as any[]).map((d: any) => [d.id, d.slug])
+  );
 
   return {
     favorites: favorites.map((fav: any) => ({
@@ -779,7 +794,7 @@ export async function getGuestDashboardData(userId: string) {
       priceVip: pkg.priceVip ? Number(pkg.priceVip) : null,
       country: pkg.country || null,
       municipality: pkg.municipality || null,
-      slug: null,
+      slug: slugByDestId.get(pkg.destinationId) || null,
       categoryName: pkg.categoryName || null,
     })),
     savingsTotal,

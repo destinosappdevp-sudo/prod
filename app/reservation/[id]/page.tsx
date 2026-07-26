@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
+import { buildHomeUrl } from "@/app/lib/slug";
 
 const supabaseImagesBase = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images`
@@ -131,6 +132,10 @@ export default async function ReservationDetailPage({
             municipality: true,
             country: true,
             userId: true,
+            destinationId: true,
+            Destination: {
+              select: { slug: true, categoryName: true },
+            },
             User: {
               select: userSummarySelect,
             },
@@ -409,6 +414,16 @@ export default async function ReservationDetailPage({
                     <p className="font-semibold text-orange-600 mt-2">
                       ${reservation.Home.price}/persona
                     </p>
+                    <Link
+                      href={buildHomeUrl(
+                        reservation.Home.Destination?.slug,
+                        reservation.Home.id,
+                        reservation.Home.Destination?.categoryName
+                      )}
+                      className="inline-block mt-2 text-sm text-blue-600 hover:underline"
+                    >
+                      Ver paquete →
+                    </Link>
                   </div>
                 </div>
               </div>
