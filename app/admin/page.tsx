@@ -1,9 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { unstable_noStore } from "next/cache";
 import prisma from "@/app/lib/db";
+import { createClient } from "@/app/lib/supabase/server";
 import { Users, Home, AlertCircle, CalendarDays, TrendingUp, PiggyBank } from "lucide-react";
 import Link from "next/link";
 import { formatBcvRateDisplay } from "@/app/lib/bcv-rate-format";
+import { redirect } from "next/navigation";
+import PanelGroupClient from "./components/PanelGroupClient";
 
 async function getAdminStats() {
   unstable_noStore();
@@ -69,6 +72,16 @@ async function getAdminStats() {
 export default async function AdminDashboard() {
   const stats = await getAdminStats();
 
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const userRecord = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+  const userRole = userRecord?.role || null;
+
   const statCards = [
     {
       title: "Total Usuarios",
@@ -96,20 +109,12 @@ export default async function AdminDashboard() {
     },
   ];
 
-  return (
+  const dashboardContent = (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">Bienvenido al panel de administración de Destinos Venezuela</p>
-        </div>
-        <div>
-          <Link
-            href="/admin/manual"
-            className="text-sm font-medium text-primary hover:text-primary/80 underline"
-          >
-            Manual de Admin
-          </Link>
         </div>
       </div>
 
@@ -119,16 +124,9 @@ export default async function AdminDashboard() {
             <div className="flex items-center min-w-0">
               <AlertCircle className="h-5 w-5 text-yellow-400 dark:text-yellow-300 flex-shrink-0" />
               <p className="ml-3 text-sm text-yellow-700 dark:text-yellow-300">
-                Tienes <span className="font-bold">{stats.pendingPayments}</span> pago(s) pendiente(s)
-                de confirmación.
+                Tienes <span className="font-bold">{stats.pendingPayments}</span> pago(s) pendiente(s) de confirmación.
               </p>
             </div>
-            <Link
-              href="/admin/payments"
-              className="text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:text-yellow-800 dark:hover:text-yellow-200 underline shrink-0"
-            >
-              Ver pagos →
-            </Link>
           </div>
         </div>
       )}
@@ -142,12 +140,6 @@ export default async function AdminDashboard() {
                 Tienes <span className="font-bold">{stats.pendingSavings}</span> depósito(s) a alcancía esperando aprobación.
               </p>
             </div>
-            <Link
-              href="/admin/savings"
-              className="text-sm font-medium text-orange-800 dark:text-orange-300 hover:text-orange-900 dark:hover:text-orange-200 underline shrink-0"
-            >
-              Revisar depósitos →
-            </Link>
           </div>
         </div>
       )}
@@ -156,9 +148,7 @@ export default async function AdminDashboard() {
         <Card className="p-6 border-l-4 border-l-primary">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Fecha y hora del servidor
-              </p>
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Fecha y hora del servidor</p>
               <p className="text-lg font-bold text-foreground mt-2 capitalize">{stats.serverDate}</p>
               <p className="text-2xl font-bold text-foreground mt-1 font-mono">{stats.serverTime}</p>
               <p className="text-xs text-muted-foreground mt-2">Hora Venezuela (VET)</p>
@@ -176,9 +166,7 @@ export default async function AdminDashboard() {
               <p className="text-2xl font-bold text-foreground mt-1">
                 {stats.bcvRate !== "—" ? `Bs. ${stats.bcvRate}` : "—"}
               </p>
-              {stats.bcvDate && (
-                <p className="text-xs text-muted-foreground mt-1">Actualizada: {stats.bcvDate}</p>
-              )}
+              {stats.bcvDate && <p className="text-xs text-muted-foreground mt-1">Actualizada: {stats.bcvDate}</p>}
               {!stats.bcvDate && <p className="text-xs text-muted-foreground mt-1">Sin configurar</p>}
             </div>
             <div className="p-3 rounded-lg bg-primary-soft">
@@ -191,11 +179,7 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
-          const displayValue =
-            stat.format === "money"
-              ? `$${(stat.value as number).toFixed(2)}`
-              : stat.value;
-
+          const displayValue = stat.format === "money" ? `$${(stat.value as number).toFixed(2)}` : stat.value;
           return (
             <Card key={stat.title} className="p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between">
@@ -212,22 +196,17 @@ export default async function AdminDashboard() {
         })}
       </div>
 
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Configuración</h2>
-        <Card className="mt-3 p-4">
-          <div className="flex flex-col gap-2">
-            <Link href="/admin/settings" className="text-sm text-foreground hover:underline">
-              Ajustes de la plataforma
-            </Link>
-            <Link href="/admin/manual" className="text-sm text-primary hover:text-primary/80">
-              Manual de Admin
-            </Link>
-          </div>
-        </Card>
-      </div>
       <div className="mt-10 text-center text-xs text-muted-foreground/50">
         v{Date.now().toString(36)} · deploy {new Date().toISOString().slice(0, 10)}
       </div>
     </div>
+  );
+
+  return (
+    <PanelGroupClient
+      userRole={userRole || undefined}
+      userId={user.id}
+      dashboardContent={dashboardContent}
+    />
   );
 }

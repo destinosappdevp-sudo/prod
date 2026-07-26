@@ -5,17 +5,12 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  Home,
-  CreditCard,
-  BarChart3,
+  MapPin,
+  Wallet,
   Settings,
-  BookOpen,
   LogOut,
   X,
-  PiggyBank,
-  Smartphone,
-  Banknote,
-  CalendarDays,
+  Home,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -33,46 +28,14 @@ interface AdminSidebarProps {
   onCloseMobile?: () => void;
 }
 
-const getMenuItems = (role?: string) => {
-  const items = [
-    { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+const getMenuItems = () => {
+  return [
+    { href: "/admin", icon: LayoutDashboard, label: "Panel" },
     { href: "/admin/users", icon: Users, label: "Usuarios" },
-    { href: "/admin/properties", icon: Home, label: "Destinos" },
-    { href: "/admin/pasadas", icon: CalendarDays, label: "Pasadas" },
-    { href: "/admin/categories", icon: BarChart3, label: "Categorías" },
-    { href: "/admin/amenities", icon: Home, label: "Servicios" },
-    { href: "/admin/payments", icon: CreditCard, label: "Finanzas" },
-    { href: "/admin/savings", icon: PiggyBank, label: "Alcancía" },
-    { href: "/admin/pagomovil", icon: Smartphone, label: "Pago Móvil R4" },
-    { href: "/admin/withdrawals", icon: Banknote, label: "Retiros" },
+    { href: "/admin/destinos", icon: MapPin, label: "Destinos" },
+    { href: "/admin/finanzas", icon: Wallet, label: "Finanzas" },
+    { href: "/admin/configuracion", icon: Settings, label: "Configuración" },
   ];
-  if (role === "SUPERADMIN") {
-    items.splice(1, 0, {
-      href: "/admin/banners",
-      icon: BarChart3,
-      label: "Publicidad",
-    });
-    items.push({ href: "/admin/reports", icon: BarChart3, label: "Informes" });
-    items.push({
-      href: "/admin/settings",
-      icon: Settings,
-      label: "Configuración",
-    });
-    items.push({ href: "/admin/manual", icon: BookOpen, label: "Manual" });
-  }
-  if (role === "ADMIN") {
-    items.push({
-      href: "/admin/settings",
-      icon: Settings,
-      label: "Configuración",
-    });
-  }
-  if (role === "SUPERADMIN" || role === "ADMIN") {
-    if (!items.find((i) => i.href === "/admin/manual")) {
-      items.push({ href: "/admin/manual", icon: BookOpen, label: "Manual" });
-    }
-  }
-  return items;
 };
 
 export function AdminSidebar({
@@ -85,7 +48,7 @@ export function AdminSidebar({
   onCloseMobile,
 }: AdminSidebarProps) {
   const pathname = usePathname();
-  const menuItems = getMenuItems(role);
+  const menuItems = getMenuItems();
   const isCollapsed = collapsed;
 
   return (
@@ -137,7 +100,16 @@ export function AdminSidebar({
       <nav className="flex-1 space-y-1 overflow-y-auto p-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive =
+            item.href === "/admin"
+              ? pathname === "/admin" || pathname === "/admin/banners"
+              : pathname.startsWith(item.href) ||
+                (item.href === "/admin/destinos" &&
+                  ["/admin/properties", "/admin/pasadas", "/admin/categories", "/admin/amenities"].includes(pathname)) ||
+                (item.href === "/admin/finanzas" &&
+                  ["/admin/payments", "/admin/savings", "/admin/pagomovil", "/admin/withdrawals", "/admin/reports"].includes(pathname)) ||
+                (item.href === "/admin/configuracion" &&
+                  ["/admin/settings", "/admin/manual"].includes(pathname));
           return (
             <Link
               key={item.href}
