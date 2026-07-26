@@ -32,6 +32,7 @@ async function getDestinations() {
 }
 
 async function getPasadasPackages() {
+  unstable_noStore();
   const now = new Date();
   const homes = await prismaAny.home.findMany({
     where: { checkInTime: { not: null } },
@@ -53,10 +54,12 @@ async function getPasadasPackages() {
 }
 
 async function getCategories() {
+  unstable_noStore();
   return prismaAny.property_types.findMany({ orderBy: [{ name: "asc" }] });
 }
 
 async function getAmenities() {
+  unstable_noStore();
   return prisma.amenityCategory.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],
     include: { Amenity: { orderBy: { name: "asc" } } },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, Suspense, lazy } from "react";
+import ManualPage from "../manual/page";
 
 const SettingsPage = lazy(() => import("../settings/page"));
 
@@ -12,8 +13,6 @@ const TABS = [
   { key: "ajustes", label: "Ajustes" },
   { key: "manual", label: "Manual" },
 ];
-
-import ManualPage from "../manual/page";
 
 export default function ConfigGroupClient({ initialTab }: ConfigGroupClientProps) {
   const [activeTab, setActiveTab] = useState(initialTab || "ajustes");
