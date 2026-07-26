@@ -92,7 +92,7 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar destino..."
               value={search}
@@ -132,20 +132,20 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">Destino</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">Ubicación</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-700">Paquetes</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-700">Favs</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-700">Reviews</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-700">Estado</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-700">Acciones</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Destino</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ubicación</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Paquetes</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Favs</th>
+                <th className="text-center px-4 py-3 font-medium text-muted-foreground">Reviews</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border">
               {paginated.map((destination) => (
-                <tr key={destination.id} className="hover:bg-gray-50">
+                <tr key={destination.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {destination.photo ? (
@@ -158,26 +158,26 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
                           />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
+                        <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-muted-foreground">
                           <MapPin className="w-5 h-5" />
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-gray-900">{destination.title || "Sin título"}</p>
+                        <p className="font-medium text-foreground">{destination.title || "Sin título"}</p>
                         {destination.subtitle && (
-                          <p className="text-xs text-gray-500">{destination.subtitle}</p>
+                          <p className="text-xs text-muted-foreground">{destination.subtitle}</p>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-muted-foreground">
                     {[destination.municipality, destination.country]
                       .filter(Boolean)
                       .join(", ") || "-"}
                   </td>
                   <td className="px-4 py-3 text-center font-medium">{destination._count.Homes}</td>
-                  <td className="px-4 py-3 text-center text-gray-500">{destination._count.Favorite}</td>
-                  <td className="px-4 py-3 text-center text-gray-500">{destination._count.Review}</td>
+                  <td className="px-4 py-3 text-center text-muted-foreground">{destination._count.Favorite}</td>
+                  <td className="px-4 py-3 text-center text-muted-foreground">{destination._count.Review}</td>
                   <td className="px-4 py-3">
                     <Badge variant={statusVariant[destination.publishStatus] ?? "secondary"}>
                       {statusLabels[destination.publishStatus] ?? destination.publishStatus}
@@ -205,7 +205,7 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                     No se encontraron destinos.
                   </td>
                 </tr>
@@ -217,7 +217,7 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Mostrando {paginated.length} de {filtered.length} destinos
           </p>
           <div className="flex gap-2">

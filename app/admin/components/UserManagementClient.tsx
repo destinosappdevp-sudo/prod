@@ -221,7 +221,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                   setShowCreate(false);
                   resetCreateForm();
                 }}
-                className="p-1 text-gray-500 hover:text-gray-700"
+                className="p-1 text-muted-foreground hover:text-gray-700"
                 aria-label="Cerrar"
               >
                 <X size={20} />
@@ -299,7 +299,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                     setShowCreate(false);
                     resetCreateForm();
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-muted/50"
                   disabled={creating}
                 >
                   Cancelar
@@ -321,7 +321,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
       <Card className="p-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
             <Input
               type="text"
               placeholder="Buscar por nombre, email o cédula..."
@@ -346,15 +346,15 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="p-4">
-          <p className="text-sm text-gray-600">Total</p>
+          <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-2xl font-bold">{users.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-600">Usuarios</p>
+          <p className="text-sm text-muted-foreground">Usuarios</p>
           <p className="text-2xl font-bold">{users.filter((u) => u.role === "GUEST").length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-600">Admins</p>
+          <p className="text-sm text-muted-foreground">Admins</p>
           <p className="text-2xl font-bold">
             {users.filter((u) => u.role === "ADMIN").length}
           </p>
@@ -365,32 +365,32 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
       <Card className="overflow-hidden">
         <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="min-w-[700px] w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Usuario
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Favoritos
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Reservas
-                </th>                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </th>                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Ahorros
-                </th>                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </th>                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Verificación
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Editar
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-border">
               {paginatedUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr key={user.id} className="hover:bg-muted/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
@@ -410,17 +410,17 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                         )}
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-foreground">
                           {`${user.firstName} ${user.lastName || ""}`.trim()}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground">
                           Cédula: {user.cedula || "No registrada"}
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{user.email}</div>
+                    <div className="text-sm text-foreground">{user.email}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="text-sm font-semibold">{user._count?.Favorite || 0}</span>
@@ -442,7 +442,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="text-xs text-gray-400">N/A</span>
+                    <span className="text-xs text-muted-foreground">N/A</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <Link 
@@ -462,14 +462,14 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
 
       {filteredUsers.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No se encontraron usuarios</p>
+          <p className="text-muted-foreground">No se encontraron usuarios</p>
         </div>
       )}
 
       {/* Paginación */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredUsers.length)} de {filteredUsers.length} usuarios
           </p>
           <div className="flex items-center gap-1">
@@ -496,7 +496,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
               }, [])
               .map((p, i) =>
                 p === "..." ? (
-                  <span key={`dots-${i}`} className="px-2 text-gray-400">…</span>
+                  <span key={`dots-${i}`} className="px-2 text-muted-foreground">…</span>
                 ) : (
                   <button
                     key={p}

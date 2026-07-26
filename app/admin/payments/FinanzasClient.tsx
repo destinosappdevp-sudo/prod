@@ -125,41 +125,41 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
   return (
     <Card className="overflow-hidden">
       <div className="border-b px-6 py-4">
-        <h2 className="text-lg font-semibold text-gray-900">Movimientos financieros</h2>
-        <p className="text-sm text-gray-500">Pagos y abonos de alcancía registrados en la plataforma</p>
+        <h2 className="text-lg font-semibold text-foreground">Movimientos financieros</h2>
+        <p className="text-sm text-muted-foreground">Pagos y abonos de alcancía registrados en la plataforma</p>
       </div>
 
       <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
         <table className="min-w-[700px] w-full">
-          <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b border-border">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Fecha
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Tipo
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Usuario
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Paquete
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Total
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Método
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Estado
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-border">
             {movements.map((movement: any) => {
               const isSaving = movement.type === "saving";
               const res = isSaving ? null : movement.raw?.Reservation;
@@ -175,8 +175,8 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
               const paymentProofUrl = getPaymentProofUrl(movement);
               const dateSrc = movement.date;
               return (
-                <tr key={`${movement.type}-${movement.id}`} className="hover:bg-gray-50">
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tr key={`${movement.type}-${movement.id}`} className="hover:bg-muted/50">
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
                     {dateSrc
                       ? new Date(dateSrc).toLocaleString("es-VE", {
                           day: "2-digit",
@@ -187,30 +187,30 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
                         })
                       : "—"}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
                     {getMovementBadge(movement.type)}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-foreground">
                       {movement.user?.firstName || "—"}
                     </div>
-                    <div className="text-sm text-gray-500">{movement.user?.email ?? "—"}</div>
+                    <div className="text-sm text-muted-foreground">{movement.user?.email ?? "—"}</div>
                   </td>
                   <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900">{movement.homeTitle || "—"}</div>
+                    <div className="text-sm text-foreground">{movement.homeTitle || "—"}</div>
                   </td>
                   <td className="px-3 py-4 whitespace-nowrap text-center">
                     <div className="text-sm font-semibold">{totals.usdLabel}</div>
                     {totals.bsLabel && (
-                      <div className="text-xs text-gray-500 mt-0.5">{totals.bsLabel}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{totals.bsLabel}</div>
                     )}
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-4 whitespace-nowrap text-sm text-foreground">
                     {isSaving
                       ? "Abono de Alcancía"
                       : getPaymentMethodLabel(movement.paymentMethod, movement.paymentDetails)}
                     {!isSaving && movement.referenceNumber && (
-                      <div className="text-xs text-gray-500">Ref: {movement.referenceNumber}</div>
+                      <div className="text-xs text-muted-foreground">Ref: {movement.referenceNumber}</div>
                     )}
                     {paymentProofUrl && (
                       <div className="mt-1">
@@ -218,7 +218,7 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
                           href={paymentProofUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                          className="text-xs font-medium text-primary hover:text-primary/80 hover:underline"
                         >
                           Ver captura
                         </a>
@@ -239,7 +239,7 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
                     ) : movement.type === "saving" && movement.status === "PENDING" ? (
                       <SavingActions savingId={movement.id} currentStatus={movement.status} />
                     ) : (
-                      <span className="text-xs text-gray-400">—</span>
+                      <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </td>
                 </tr>
@@ -251,7 +251,7 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
 
       {movements.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No hay movimientos registrados</p>
+          <p className="text-muted-foreground">No hay movimientos registrados</p>
         </div>
       )}
     </Card>

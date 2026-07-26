@@ -94,7 +94,7 @@ export default function CategoriesClient({
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-2">Categorías</h1>
-      <p className="text-gray-600 mb-6">
+      <p className="text-muted-foreground mb-6">
         Administra las categorías de Paquete. Aquí podrás ver, crear y editar categorías.
       </p>
 
@@ -144,7 +144,7 @@ export default function CategoriesClient({
               <li key={cat.id} className="py-2 border-b flex items-center justify-between">
                 <span>
                   <span className="font-semibold mr-2">{cat.name}</span>
-                  {cat.icon && <span className="text-gray-400">({cat.icon})</span>}
+                  {cat.icon && <span className="text-muted-foreground">({cat.icon})</span>}
                 </span>
                 <Link
                   href={`/admin/categories/${cat.id}`}

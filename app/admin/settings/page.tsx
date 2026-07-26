@@ -453,7 +453,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="border-t pt-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+          <h4 className="text-sm font-semibold text-foreground mb-2">
             Credenciales R4 (webhooks)
           </h4>
           <div className="grid gap-4 md:grid-cols-2">
@@ -531,7 +531,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="border-t pt-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+          <h4 className="text-sm font-semibold text-foreground mb-2">
             Credenciales R4 Crédito (retiros)
           </h4>
           <div className="grid gap-4 md:grid-cols-3">
@@ -636,7 +636,7 @@ export default function SettingsPage() {
         </h3>
       </div>
       <form className="space-y-4" onSubmit={handleBcvSubmit}>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           Ingresa tasas en formato decimal con coma (ejemplo: 448,36860000). La
           próxima tasa se guarda con la fecha que selecciones.
         </p>
@@ -714,17 +714,17 @@ export default function SettingsPage() {
           {bcvError && <span className="text-red-600 text-sm">{bcvError}</span>}
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Fechas seleccionadas: día {bcvRateDate || "Sin fecha"} y próxima tasa{" "}
           {proximaTasaDate || "Sin fecha"}
         </p>
 
-        <div className="rounded-lg border bg-gray-50 p-3">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">
+        <div className="rounded-lg border bg-muted/50 p-3">
+          <h4 className="text-sm font-semibold text-foreground mb-2">
             Tasas anteriores
           </h4>
           {tasasAnteriores.length === 0 ? (
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               Aún no hay historial registrado.
             </p>
           ) : (
@@ -737,7 +737,7 @@ export default function SettingsPage() {
                   <span className="text-sm text-gray-700">
                     {formatHistoryDate(item.fecha)}
                   </span>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-foreground">
                     {item.tasa || "0,00000000"}
                   </span>
                 </div>
@@ -752,8 +752,8 @@ export default function SettingsPage() {
   if (roleLoading) {
     return (
       <div className="space-y-3">
-        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-        <p className="text-gray-600">Cargando permisos...</p>
+        <h1 className="text-3xl font-bold text-foreground">Configuración</h1>
+        <p className="text-muted-foreground">Cargando permisos...</p>
       </div>
     );
   }
@@ -762,8 +762,8 @@ export default function SettingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-          <p className="text-gray-600 mt-1">Acceso limitado: solo tasas BCV</p>
+          <h1 className="text-3xl font-bold text-foreground">Configuración</h1>
+          <p className="text-muted-foreground mt-1">Acceso limitado: solo tasas BCV</p>
         </div>
         <div className="grid gap-6">{bcvSettingsCard}</div>
       </div>
@@ -773,8 +773,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Configuración</h1>
+        <p className="text-muted-foreground mt-1">
           Gestiona las configuraciones de la plataforma
         </p>
       </div>
@@ -790,19 +790,19 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-4">
             {/* Modo Mantenimiento */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-3">
                 <div
                   className={`p-2 rounded-lg ${maintenance ? "bg-red-100" : "bg-gray-100"}`}
                 >
                   <Wrench
-                    className={maintenance ? "text-red-600" : "text-gray-500"}
+                    className={maintenance ? "text-red-600" : "text-muted-foreground"}
                     size={18}
                   />
                 </div>
                 <div>
                   <p className="font-medium">Modo de Mantenimiento</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {maintenance
                       ? "El sitio está en mantenimiento  solo admins pueden acceder"
                       : "El sitio está activo y accesible al público"}
@@ -832,10 +832,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Registros Públicos */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Registros Públicos</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Permite que nuevos usuarios se registren
                 </p>
               </div>
@@ -848,10 +848,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Comisión Destinos Venezuela */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Comisión Destinos Venezuela</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Porcentaje aplicado a cada pago
                 </p>
               </div>
@@ -901,10 +901,10 @@ export default function SettingsPage() {
             <h3 className="text-lg font-semibold">Notificaciones</h3>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Notificaciones de Email</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Enviar emails automáticos a usuarios
                 </p>
               </div>
@@ -915,10 +915,10 @@ export default function SettingsPage() {
                 Configurar
               </button>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Notificaciones Push</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Notificaciones en tiempo real
                 </p>
               </div>
@@ -944,10 +944,10 @@ export default function SettingsPage() {
             <h3 className="text-lg font-semibold">Seguridad</h3>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Autenticación de Dos Factores</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Requerir 2FA para administradores
                 </p>
               </div>
@@ -958,10 +958,10 @@ export default function SettingsPage() {
                 Próximamente
               </button>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Logs de Seguridad</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Ver historial de accesos y cambios
                 </p>
               </div>
@@ -991,7 +991,7 @@ export default function SettingsPage() {
                   <p className="font-medium text-blue-700">
                     ?? Sincronizar Usuarios
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Trae todos los usuarios de Supabase auth.users a la base de
                     datos
                   </p>
@@ -1013,10 +1013,10 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Backup Automático</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Crear respaldos periódicos de los datos
                 </p>
               </div>
@@ -1027,10 +1027,10 @@ export default function SettingsPage() {
                 Próximamente
               </button>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Optimizar Base de Datos</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Limpiar y optimizar tablas
                 </p>
               </div>
@@ -1053,10 +1053,10 @@ export default function SettingsPage() {
             <h3 className="text-lg font-semibold">Apariencia</h3>
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Logo de la Plataforma</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Personaliza el logo del sitio
                 </p>
               </div>
@@ -1067,10 +1067,10 @@ export default function SettingsPage() {
                 Subir Logo
               </button>
             </div>
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <div>
                 <p className="font-medium">Colores de Marca</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Define la paleta de colores
                 </p>
               </div>

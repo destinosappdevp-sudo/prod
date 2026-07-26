@@ -17,8 +17,8 @@ export default async function NewDestinationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Nuevo Destino</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Nuevo Destino</h1>
+        <p className="text-muted-foreground mt-1">
           Crea un destino/categoría padre. Luego podrás agregar paquetes/fechas dentro de él.
         </p>
       </div>

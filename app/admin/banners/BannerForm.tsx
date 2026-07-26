@@ -202,7 +202,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
         <button
           type="button"
           onClick={() => setShowOptional((v) => !v)}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-gray-700 transition-colors"
         >
           <svg
             className={`w-4 h-4 transition-transform ${showOptional ? "rotate-90" : ""}`}
@@ -267,7 +267,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               uploadMode === "upload"
                 ? "text-primary border-b-2 border-primary"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-muted-foreground hover:text-gray-700"
             }`}
           >
             Subir nueva
@@ -278,7 +278,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               uploadMode === "select"
                 ? "text-primary border-b-2 border-primary"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-muted-foreground hover:text-gray-700"
             }`}
           >
             Seleccionar del archivo
@@ -288,7 +288,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
         {/* Preview de imagen actual si está editando */}
         {banner && banner.imageUrl && (
           <div className="mb-3">
-            <p className="text-xs text-gray-500 mb-1">Imagen actual:</p>
+            <p className="text-xs text-muted-foreground mb-1">Imagen actual:</p>
             <Image
               src={banner.imageUrl}
               alt="Preview actual"
@@ -310,7 +310,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
               onChange={handleFileChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90 file:cursor-pointer"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Recomendado: 400x200px (2:1). Máx: 5MB
             </p>
           </div>
@@ -320,11 +320,11 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
         {uploadMode === "select" && (
           <div className="border border-gray-300 rounded-lg p-4 max-h-80 overflow-y-auto">
             {loadingImages ? (
-              <p className="text-gray-500 text-sm text-center py-4">
+              <p className="text-muted-foreground text-sm text-center py-4">
                 Cargando imágenes...
               </p>
             ) : existingImages.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center py-4">
+              <p className="text-muted-foreground text-sm text-center py-4">
                 No hay imágenes en el archivo. Sube la primera.
               </p>
             ) : (
@@ -390,7 +390,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
           <button 
             type="button"
             onClick={onCancel}
-            className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-muted/50 transition-colors"
             disabled={loading}
           >
             Cancelar

@@ -192,24 +192,24 @@ export default async function AdminSavingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Ahorros / Alcancía</h1>
-          <p className="mt-1 text-gray-600">Aprueba, rechaza o registra abonos en alcancías de usuarios registrados</p>
+          <h1 className="text-3xl font-bold text-foreground">Ahorros / Alcancía</h1>
+          <p className="mt-1 text-muted-foreground">Aprueba, rechaza o registra abonos en alcancías de usuarios registrados</p>
         </div>
         <AddSavingDialog users={users} homes={homes} walletBalances={walletBalances} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="p-6">
-          <p className="mb-1 text-sm text-gray-500">Pendientes de revisión</p>
+          <p className="mb-1 text-sm text-muted-foreground">Pendientes de revisión</p>
           <p className="text-3xl font-bold text-yellow-600">{pendingCount}</p>
-          <p className="mt-1 text-xs text-gray-400">${pendingUsd.toFixed(2)} USD</p>
+          <p className="mt-1 text-xs text-muted-foreground">${pendingUsd.toFixed(2)} USD</p>
         </Card>
         <Card className="p-6">
-          <p className="mb-1 text-sm text-gray-500">Aprobado total (USD)</p>
+          <p className="mb-1 text-sm text-muted-foreground">Aprobado total (USD)</p>
           <p className="text-3xl font-bold text-green-700">${approvedUsd.toFixed(2)}</p>
         </Card>
         <Card className="p-6">
-          <p className="mb-1 text-sm text-gray-500">Total de depósitos</p>
+          <p className="mb-1 text-sm text-muted-foreground">Total de depósitos</p>
           <p className="text-3xl font-bold text-blue-700">{savings.length}</p>
         </Card>
       </div>
@@ -217,22 +217,22 @@ export default async function AdminSavingsPage() {
       <Card className="overflow-hidden">
         <div className="w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
           {savings.length === 0 ? (
-            <div className="p-10 text-center text-gray-500">No hay depósitos registrados.</div>
+            <div className="p-10 text-center text-muted-foreground">No hay depósitos registrados.</div>
           ) : (
             <table className="min-w-[700px] w-full">
-              <thead className="border-b bg-gray-50">
+              <thead className="border-b bg-muted/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Fecha</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Usuario</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Referencia</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Comprobante</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Bs.</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">USD</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">Estado</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium uppercase text-gray-500">Acciones</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Fecha</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Usuario</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Referencia</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Comprobante</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase text-muted-foreground">Bs.</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase text-muted-foreground">USD</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium uppercase text-muted-foreground">Estado</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium uppercase text-muted-foreground">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-border bg-white">
                 {savings.map((s: any) => {
                   const details =
                     s.paymentDetails && typeof s.paymentDetails === "object"
@@ -249,8 +249,8 @@ export default async function AdminSavingsPage() {
                   const user = s.User;
 
                   return (
-                    <tr key={s.id} className="hover:bg-gray-50">
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-900">
+                    <tr key={s.id} className="hover:bg-muted/50">
+                      <td className="whitespace-nowrap px-4 py-4 text-sm text-foreground">
                         {new Date(s.date).toLocaleDateString("es-VE", {
                           day: "2-digit",
                           month: "short",
@@ -261,7 +261,7 @@ export default async function AdminSavingsPage() {
                         {user ? (
                           <Link href={`/admin/users/${user.id}/savings`} className="text-blue-600 hover:underline">
                             <div className="font-medium">{user.firstName}</div>
-                            <div className="text-xs text-gray-500">{user.email}</div>
+                            <div className="text-xs text-muted-foreground">{user.email}</div>
                           </Link>
                         ) : (
                           "—"
@@ -269,7 +269,7 @@ export default async function AdminSavingsPage() {
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-700">
                         <div className="font-mono">{ref}</div>
-                        {bank && <div className="text-xs text-gray-400">{bank}</div>}
+                        {bank && <div className="text-xs text-muted-foreground">{bank}</div>}
                         {createdByAdmin && (
                           <div className="mt-1 rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">
                             Creada por admin
@@ -304,10 +304,10 @@ export default async function AdminSavingsPage() {
                             Ver captura
                           </a>
                         ) : (
-                          <span className="text-gray-400">Sin archivo</span>
+                          <span className="text-muted-foreground">Sin archivo</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm text-gray-900">
+                      <td className="px-4 py-4 text-right text-sm text-foreground">
                         Bs. {Number(s.amountBs).toLocaleString("es-VE", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
@@ -319,7 +319,7 @@ export default async function AdminSavingsPage() {
                       <td className="px-4 py-4 text-center">
                         <span
                           className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            statusStyle[s.status] ?? "bg-gray-100 text-gray-600"
+                            statusStyle[s.status] ?? "bg-gray-100 text-muted-foreground"
                           }`}
                         >
                           {statusLabel[s.status] ?? s.status}

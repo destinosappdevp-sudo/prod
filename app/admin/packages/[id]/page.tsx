@@ -151,11 +151,11 @@ export default async function PackageDetailPage({
           <ArrowLeft size={24} />
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             {property.title || "Sin título"}
           </h1>
           {property.Destination && (
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               Destino: {" "}
               <Link
                 href={`/admin/properties/${property.Destination.id}`}
@@ -165,7 +165,7 @@ export default async function PackageDetailPage({
               </Link>
             </p>
           )}
-          <p className="text-gray-600 mt-1">Detalles y edición del paquete</p>
+          <p className="text-muted-foreground mt-1">Detalles y edición del paquete</p>
         </div>
       </div>
 
@@ -176,7 +176,7 @@ export default async function PackageDetailPage({
               <Calendar className="text-purple-600" size={20} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Reservas</p>
+              <p className="text-sm text-muted-foreground">Reservas</p>
               <p className="text-xl font-bold">{property._count.Reservation}</p>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default async function PackageDetailPage({
               <Heart className="text-pink-600" size={20} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Favoritos</p>
+              <p className="text-sm text-muted-foreground">Favoritos</p>
               <p className="text-xl font-bold">{property._count.Favorite}</p>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default async function PackageDetailPage({
               <span className="text-green-600 text-xl font-bold">$</span>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Precio Desde</p>
+              <p className="text-sm text-muted-foreground">Precio Desde</p>
               <p className="text-xl font-bold">${property.price || 0}</p>
             </div>
           </div>
@@ -245,7 +245,7 @@ export default async function PackageDetailPage({
                 />
               </div>
             ) : (
-              <div className="aspect-[3/2] rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+              <div className="aspect-[3/2] rounded-lg bg-gray-100 flex items-center justify-center text-muted-foreground">
                 Sin imagen
               </div>
             )}
@@ -254,7 +254,7 @@ export default async function PackageDetailPage({
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-2">Creado por</h3>
             <p className="text-gray-700">{property.User?.firstName || "Admin"}</p>
-            <p className="text-sm text-gray-500">{property.User?.email || "-"}</p>
+            <p className="text-sm text-muted-foreground">{property.User?.email || "-"}</p>
           </Card>
         </div>
       </div>

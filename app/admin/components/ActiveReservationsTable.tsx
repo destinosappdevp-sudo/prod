@@ -116,57 +116,57 @@ export function ActiveReservationsTable({ reservations }: ActiveReservationsTabl
     <Card className="overflow-hidden">
       <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
         <table className="min-w-[700px] w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-muted/50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Usuario
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Paquete
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Fechas
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Noches
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Total
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Método de Pago
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Estado Pago
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Estado Reserva
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Reenviar Email
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-border">
             {reservations.map((reservation: any) => (
-              <tr key={reservation.id} className="hover:bg-gray-50">
+              <tr key={reservation.id} className="hover:bg-muted/50">
                 <td className="px-4 py-4">
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-sm font-medium text-foreground">
                     {reservation.User?.firstName} {reservation.User?.lastName}
                   </div>
-                  <div className="text-sm text-gray-500">{reservation.User?.email}</div>
+                  <div className="text-sm text-muted-foreground">{reservation.User?.email}</div>
                 </td>
                 <td className="px-4 py-4">
-                  <div className="text-sm text-gray-900">{reservation.Home?.title || "Sin título"}</div>
+                  <div className="text-sm text-foreground">{reservation.Home?.title || "Sin título"}</div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
+                  <div className="text-sm text-foreground">
                     {new Date(reservation.startDate).toLocaleDateString("es-ES", {
                       day: "2-digit",
                       month: "short",
                     })}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-muted-foreground">
                     {new Date(reservation.endDate).toLocaleDateString("es-ES", {
                       day: "2-digit",
                       month: "short",
@@ -184,14 +184,14 @@ export function ActiveReservationsTable({ reservations }: ActiveReservationsTabl
                       <>
                         <div className="text-sm font-semibold">{totals.usdLabel}</div>
                         {totals.bsLabel && (
-                          <div className="text-xs text-gray-500 mt-0.5">{totals.bsLabel}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5">{totals.bsLabel}</div>
                         )}
                       </>
                     );
                   })()}
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
+                  <div className="text-sm text-foreground">
                     {reservation.Payment
                       ? getPaymentMethodLabel(
                           reservation.Payment.paymentMethod,
@@ -200,7 +200,7 @@ export function ActiveReservationsTable({ reservations }: ActiveReservationsTabl
                       : "N/A"}
                   </div>
                   {reservation.Payment?.referenceNumber && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-muted-foreground">
                       Ref: {reservation.Payment.referenceNumber}
                     </div>
                   )}
@@ -231,7 +231,7 @@ export function ActiveReservationsTable({ reservations }: ActiveReservationsTabl
 
       {reservations.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No hay reservas activas</p>
+          <p className="text-muted-foreground">No hay reservas activas</p>
         </div>
       )}
     </Card>

@@ -136,7 +136,7 @@ export default function PropertyStatusControl({
           </SelectContent>
         </Select>
       </div>
-      <p className="text-xs text-gray-500">Aprobación: {currentUi.approvalLabel}</p>
+      <p className="text-xs text-muted-foreground">Aprobación: {currentUi.approvalLabel}</p>
       <button
         onClick={handleDelete}
         disabled={isDeleting || isUpdating}

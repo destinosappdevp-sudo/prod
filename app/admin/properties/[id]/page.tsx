@@ -133,13 +133,13 @@ export default async function DestinationDetailPage({
           <ArrowLeft size={24} />
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             {destination.title || "Sin título"}
           </h1>
           {destination.subtitle && (
-            <p className="text-gray-500">{destination.subtitle}</p>
+            <p className="text-muted-foreground">{destination.subtitle}</p>
           )}
-          <p className="text-gray-600 mt-1">Detalles y edición del destino</p>
+          <p className="text-muted-foreground mt-1">Detalles y edición del destino</p>
         </div>
         <Badge variant={destination.publishStatus === "APPROVED" ? "default" : "secondary"}>
           {statusLabels[destination.publishStatus] || destination.publishStatus}
@@ -153,7 +153,7 @@ export default async function DestinationDetailPage({
               <Package className="text-blue-600" size={20} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Paquetes</p>
+              <p className="text-sm text-muted-foreground">Paquetes</p>
               <p className="text-xl font-bold">{destination._count.Homes}</p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default async function DestinationDetailPage({
               <Heart className="text-pink-600" size={20} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Favoritos</p>
+              <p className="text-sm text-muted-foreground">Favoritos</p>
               <p className="text-xl font-bold">{destination._count.Favorite}</p>
             </div>
           </div>
@@ -175,7 +175,7 @@ export default async function DestinationDetailPage({
               <Star className="text-amber-600" size={20} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Reviews</p>
+              <p className="text-sm text-muted-foreground">Reviews</p>
               <p className="text-xl font-bold">{destination._count.Review}</p>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default async function DestinationDetailPage({
               <Calendar className="text-green-600" size={20} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Próxima salida</p>
+              <p className="text-sm text-muted-foreground">Próxima salida</p>
               <p className="text-sm font-bold">
                 {nextPackage ? formatCheckInTime(nextPackage.checkInTime) : "Sin fechas"}
               </p>
@@ -220,7 +220,7 @@ export default async function DestinationDetailPage({
                 />
               </div>
             ) : (
-              <div className="aspect-[3/2] rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+              <div className="aspect-[3/2] rounded-lg bg-gray-100 flex items-center justify-center text-muted-foreground">
                 Sin imagen
               </div>
             )}
@@ -229,14 +229,14 @@ export default async function DestinationDetailPage({
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-2">Creado por</h3>
             <p className="text-gray-700">{destination.User?.firstName || "Admin"}</p>
-            <p className="text-sm text-gray-500">{destination.User?.email || "-"}</p>
+            <p className="text-sm text-muted-foreground">{destination.User?.email || "-"}</p>
           </Card>
         </div>
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Paquetes / Fechas</h2>
+          <h2 className="text-2xl font-bold text-foreground">Paquetes / Fechas</h2>
           <CreatePackageFromDestination
             destination={destination}
             categories={categoriesForForm}
@@ -247,7 +247,7 @@ export default async function DestinationDetailPage({
         <Card className="overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-muted/50 border-b">
                 <tr>
                   <th className="text-left px-4 py-3 font-medium text-gray-700">Fecha de salida</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-700">Título</th>
@@ -260,7 +260,7 @@ export default async function DestinationDetailPage({
               </thead>
               <tbody className="divide-y">
                 {destination.Homes.map((home: any) => (
-                  <tr key={home.id} className="hover:bg-gray-50">
+                  <tr key={home.id} className="hover:bg-muted/50">
                     <td className="px-4 py-3">{formatCheckInTime(home.checkInTime)}</td>
                     <td className="px-4 py-3 font-medium">{home.title || "Sin título"}</td>
                     <td className="px-4 py-3 text-center">
@@ -288,7 +288,7 @@ export default async function DestinationDetailPage({
                 ))}
                 {destination.Homes.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                       No hay paquetes/fechas creados todavía.
                     </td>
                   </tr>

@@ -63,7 +63,6 @@ const getMenuItems = (role?: string) => {
       label: "Configuración",
     });
   }
-  // Mostrar la opción Manual solo para SUPERADMIN y ADMIN
   if (role === "SUPERADMIN" || role === "ADMIN") {
     if (!items.find((i) => i.href === "/admin/manual")) {
       items.push({ href: "/admin/manual", icon: BookOpen, label: "Manual" });
@@ -86,36 +85,36 @@ export function AdminSidebar({
     <aside
       id="admin-sidebar-nav"
       className={cn(
-        "fixed left-0 top-0 z-[60] flex h-full w-64 flex-col bg-brand-blue text-white shadow-xl transition-transform duration-200 ease-out",
+        "fixed left-0 top-0 z-[60] flex h-full w-64 flex-col bg-card text-foreground border-r border-border shadow-xl transition-transform duration-200 ease-out",
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
       )}
     >
-      <div className="border-b border-gray-800 p-6">
+      <div className="border-b border-border p-6">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <Link href="/admin" onClick={onNavigate} className="block">
-              <h1 className="text-xl font-bold text-white leading-tight sm:text-2xl">
+              <h1 className="text-xl font-bold text-foreground leading-tight sm:text-2xl">
                 Destinos Venezuela Admin
               </h1>
             </Link>
             {role === "SUPERADMIN" && (
-              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-amber-400/90">
+              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-primary">
                 Panel Superadmin
               </p>
             )}
             {role === "ADMIN" && (
-              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-sky-400/90">
+              <p className="mt-1 text-xs font-medium uppercase tracking-wide text-primary">
                 Panel Administrador
               </p>
             )}
-            <p className="mt-1 truncate text-sm text-gray-400">
+            <p className="mt-1 truncate text-sm text-muted-foreground">
               {userName || "Administrator"}
             </p>
           </div>
           <button
             type="button"
             aria-label="Cerrar menú"
-            className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white lg:hidden"
+            className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden"
             onClick={onCloseMobile}
           >
             <X size={22} />
@@ -136,8 +135,8 @@ export function AdminSidebar({
               className={cn(
                 "flex items-center gap-3 rounded-lg px-4 py-3 transition-colors",
                 isActive
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-primary",
+                  ? "bg-primary-soft text-primary font-semibold"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
               <Icon size={20} />
@@ -147,20 +146,20 @@ export function AdminSidebar({
         })}
       </nav>
 
-      <div className="border-t border-gray-800 p-4">
+      <div className="border-t border-border p-4 space-y-1">
         <Link
           href="/"
           onClick={onNavigate}
-          className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-gray-300 transition-colors hover:bg-gray-800 hover:text-primary"
+          className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <Home size={20} />
           <span>Volver al sitio</span>
         </Link>
         <SidebarThemeToggle />
-        <form action={signOut} className="w-full mt-1">
+        <form action={signOut} className="w-full">
           <button
             type="submit"
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-gray-300 transition-colors hover:bg-gray-800 hover:text-primary"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut size={20} />
             <span>Cerrar sesión</span>

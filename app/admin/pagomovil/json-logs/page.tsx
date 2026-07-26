@@ -20,8 +20,8 @@ export default async function JsonLogsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Logs JSON R4</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Logs JSON R4</h1>
+          <p className="text-muted-foreground mt-1">
             Payloads recibidos de R4consulta y R4notifica
           </p>
         </div>
@@ -36,29 +36,29 @@ export default async function JsonLogsPage() {
       <Card className="overflow-hidden">
         <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="min-w-[900px] w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Fecha
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Tipo
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   IP
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Respuesta
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                   Payload
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-border">
               {logs.map((log: any) => (
-                <tr key={log.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                <tr key={log.id} className="hover:bg-muted/50">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground">
                     {new Date(log.createdAt).toLocaleString("es-VE")}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
@@ -68,14 +68,14 @@ export default async function JsonLogsPage() {
                       {log.tipo}
                     </span>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 font-mono">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground font-mono">
                     {log.clientIp || "—"}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                     {log.respuesta || "—"}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    <pre className="max-w-md overflow-auto text-xs bg-gray-50 p-2 rounded">
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <pre className="max-w-md overflow-auto text-xs bg-muted/50 p-2 rounded">
                       {log.rawPayload}
                     </pre>
                   </td>
@@ -87,7 +87,7 @@ export default async function JsonLogsPage() {
 
         {logs.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No hay logs registrados</p>
+            <p className="text-muted-foreground">No hay logs registrados</p>
           </div>
         )}
       </Card>

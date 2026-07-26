@@ -39,7 +39,7 @@ const getSeatColor = (
     return "bg-amber-400 border-amber-500 text-white cursor-pointer scale-105 shadow-md hover:bg-amber-400 hover:border-amber-500 hover:text-white";
   }
 
-  if (seat.status === "OCCUPIED") return "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed";
+  if (seat.status === "OCCUPIED") return "bg-gray-200 border-gray-300 text-muted-foreground cursor-not-allowed";
 
   if (seat.zone === "VIP") {
     return canSelect
@@ -50,12 +50,12 @@ const getSeatColor = (
   if (seat.zone === "STANDARD") {
     return canSelect
       ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
-      : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
+      : "bg-gray-100 border-gray-200 text-muted-foreground cursor-not-allowed opacity-50";
   }
 
   return canSelect
     ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
-    : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
+    : "bg-gray-100 border-gray-200 text-muted-foreground cursor-not-allowed opacity-50";
 };
 
 const getSeatContent = (seat: Seat, selectionPlan?: "vip" | "estandar") => {
@@ -91,16 +91,16 @@ export default function SeatMap({ seats, onSelectSeat, selectedSeatId, selection
       {/* Leyenda */}
       <div className="flex gap-4 mb-4">
         <Legend color="bg-gray-900" label="Premium" />
-        <Legend color="bg-gray-50 border border-gray-200" label="Estándar" />
+        <Legend color="bg-muted/50 border border-gray-200" label="Estándar" />
         <Legend color="bg-yellow-400" label="Tu Selección" />
         <Legend color="bg-gray-200" label="Ocupado" />
       </div>
       <div className="rounded-2xl bg-white shadow p-6 w-full max-w-xs flex flex-col items-center">
         <div className="flex flex-col items-center mb-2">
           <div className="w-16 h-16 rounded-full border-2 border-gray-200 flex items-center justify-center mb-2">
-            <span className="text-3xl text-gray-400">👤</span>
+            <span className="text-3xl text-muted-foreground">👤</span>
           </div>
-          <div className="text-xs text-gray-500 tracking-widest mb-2">CONDUCTOR</div>
+          <div className="text-xs text-muted-foreground tracking-widest mb-2">CONDUCTOR</div>
         </div>
         {/* VIP */}
         <div className="w-full flex flex-col items-center mb-2">
@@ -138,7 +138,7 @@ export default function SeatMap({ seats, onSelectSeat, selectedSeatId, selection
             </div>
           ))}
         </div>
-        <div className="w-full text-center text-xs text-gray-400 my-2 border-t border-dashed pt-2">ZONA ESTÁNDAR</div>
+        <div className="w-full text-center text-xs text-muted-foreground my-2 border-t border-dashed pt-2">ZONA ESTÁNDAR</div>
         {/* STANDARD */}
         <div className="w-full flex flex-col items-center">
           {stdRows.map(row => (

@@ -19,10 +19,11 @@ const config = {
     },
     extend: {
       colors: {
-        orange: {
-          500: '#E1B042',
-          600: '#C99A38',
-          700: '#B3872F',
+        brand: {
+          DEFAULT: '#040B42',
+          hover: '#030833',
+          light: '#4D6BFF',
+          soft: 'rgba(4, 11, 66, 0.12)',
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -384,7 +384,7 @@ export default function DestinationEditForm({
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Datos de referencia (heredables)</h3>
-            <p className="text-xs text-gray-500 mb-4">
+            <p className="text-xs text-muted-foreground mb-4">
               Estos valores se copiarán a cada paquete hijo al crearlo, pero podrán modificarse en el hijo.
             </p>
             <div className="grid grid-cols-2 gap-4">
@@ -477,7 +477,7 @@ export default function DestinationEditForm({
               onChange={(e) => setImageFile(e.target.files?.[0] || null)}
             />
             {destination.photo && !imageFile && (
-              <p className="text-xs text-gray-500 mt-1">Ya existe una imagen. Sube una nueva para reemplazarla.</p>
+              <p className="text-xs text-muted-foreground mt-1">Ya existe una imagen. Sube una nueva para reemplazarla.</p>
             )}
           </div>
 

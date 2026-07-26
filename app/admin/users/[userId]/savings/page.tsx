@@ -212,45 +212,45 @@ export default async function UserSavingsPage({
           <ArrowLeft size={14} />
           Volver a Usuarios
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-foreground">
           Ahorros de {user.firstName}
         </h1>
-        <p className="text-gray-600 mt-1">{user.email}</p>
+        <p className="text-muted-foreground mt-1">{user.email}</p>
       </div>
 
       {/* Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Ahorros (USD)</p>
+          <p className="text-sm text-muted-foreground mb-1">Ahorros (USD)</p>
           <p className="text-3xl font-bold text-emerald-700">${totalSavingsUsd.toFixed(2)}</p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {referenceRate > 0
               ? `Bs. ${totalSavingsBsFromRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "Tasa no disponible"}
           </p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Saldo disponible</p>
+          <p className="text-sm text-muted-foreground mb-1">Saldo disponible</p>
           <p className="text-3xl font-bold text-green-700">${approvedUsd.toFixed(2)}</p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {referenceRate > 0
               ? `Bs. ${approvedBsFromRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "Tasa no disponible"}
           </p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Pendiente de revisión (USD)</p>
+          <p className="text-sm text-muted-foreground mb-1">Pendiente de revisión (USD)</p>
           <p className="text-3xl font-bold text-yellow-600">${pendingUsd.toFixed(2)}</p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {referenceRate > 0
               ? `Bs. ${pendingBsFromRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "Tasa no disponible"}
           </p>
         </Card>
         <Card className="p-6">
-          <p className="text-sm text-gray-500 mb-1">Saldo usado o canjeado</p>
+          <p className="text-sm text-muted-foreground mb-1">Saldo usado o canjeado</p>
           <p className="text-3xl font-bold text-slate-800">${usedOrRedeemedUsd.toFixed(2)}</p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {referenceRate > 0
               ? `Bs. ${usedOrRedeemedBsFromRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
               : "Tasa no disponible"}
@@ -262,13 +262,13 @@ export default async function UserSavingsPage({
       <Card className="overflow-hidden">
         <div className="px-6 py-4 border-b">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+            <div className="inline-flex rounded-lg border border-gray-200 bg-muted/50 p-1">
               <Link
                 href={`/admin/users/${userId}/savings?tab=historial`}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
                   activeTab === "historial"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-gray-800"
                 }`}
               >
                 Historial de depósitos
@@ -277,14 +277,14 @@ export default async function UserSavingsPage({
                 href={`/admin/users/${userId}/savings?tab=detalle`}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
                   activeTab === "detalle"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-gray-800"
                 }`}
               >
                 Detalle de ahorros
               </Link>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Tasa BCV usada: {referenceRate > 0
                 ? referenceRate.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                 : "No disponible"}
@@ -293,28 +293,28 @@ export default async function UserSavingsPage({
         </div>
         <div className="w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
           {activeTab === "historial" && savings.length === 0 ? (
-            <div className="p-10 text-center text-gray-500">Este usuario no tiene ahorros registrados.</div>
+            <div className="p-10 text-center text-muted-foreground">Este usuario no tiene ahorros registrados.</div>
           ) : activeTab === "detalle" ? (
             <div className="p-6">
               {walletsWithBalance.length === 0 ? (
-                <div className="p-10 text-center text-gray-500">Este usuario no tiene alcancías con movimientos.</div>
+                <div className="p-10 text-center text-muted-foreground">Este usuario no tiene alcancías con movimientos.</div>
               ) : (
                 <div className="w-full max-w-full overflow-x-auto overscroll-x-contain touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0 rounded-xl border border-gray-200">
                   <table className="min-w-[700px] w-full">
-                    <thead className="bg-gray-50 border-b">
+                    <thead className="bg-muted/50 border-b">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Alcancía</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto (USD)</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Equivalente (Bs.)</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Movimientos</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Alcancía</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Tipo</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Monto (USD)</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Equivalente (Bs.)</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Movimientos</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-border">
                       {walletsWithBalance.map((wallet) => (
-                        <tr key={wallet.key} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 text-sm font-medium text-gray-900">{wallet.title}</td>
-                          <td className="px-4 py-4 text-sm text-gray-600">
+                        <tr key={wallet.key} className="hover:bg-muted/50">
+                          <td className="px-4 py-4 text-sm font-medium text-foreground">{wallet.title}</td>
+                          <td className="px-4 py-4 text-sm text-muted-foreground">
                             {wallet.targetType === "general" ? "General" : "Paquete"}
                           </td>
                           <td className="px-4 py-4 text-sm text-right font-semibold text-emerald-700">
@@ -323,7 +323,7 @@ export default async function UserSavingsPage({
                           <td className="px-4 py-4 text-sm text-right text-gray-700">
                             Bs. {wallet.amountBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td className="px-4 py-4 text-sm text-right text-gray-600">
+                          <td className="px-4 py-4 text-sm text-right text-muted-foreground">
                             {wallet.movementCount}
                           </td>
                         </tr>
@@ -335,32 +335,32 @@ export default async function UserSavingsPage({
             </div>
             ) : (
             <table className="min-w-[700px] w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Referencia</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comprobante</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tasa BCV</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto Bs.</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monto USD</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Fecha</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Referencia</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Comprobante</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Tasa BCV</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Monto Bs.</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Monto USD</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Estado</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-border">
                 {savings.map((s) => {
                   const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails as Record<string, any> : {};
                   const ref = details.referenceNumber ?? "—";
                   const bank = details.emisorBank ?? "";
                   const paymentProofUrl = typeof details.paymentProofUrl === "string" ? details.paymentProofUrl : "";
                   return (
-                    <tr key={s.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr key={s.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
                         {new Date(s.date).toLocaleDateString("es-VE", { day: "2-digit", month: "short", year: "numeric" })}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-700">
                         <div className="font-mono">{ref}</div>
-                        {bank && <div className="text-xs text-gray-400">{bank}</div>}
+                        {bank && <div className="text-xs text-muted-foreground">{bank}</div>}
                         {s.status === "REJECTED" && s.rejectionReason && (
                           <div className="text-xs text-red-500 mt-0.5">Motivo: {s.rejectionReason}</div>
                         )}
@@ -376,16 +376,16 @@ export default async function UserSavingsPage({
                             Ver captura
                           </a>
                         ) : (
-                          <span className="text-gray-400">Sin archivo</span>
+                          <span className="text-muted-foreground">Sin archivo</span>
                         )}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-700 text-right font-mono">{s.bcvRate.toFixed(2)}</td>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-right">
+                      <td className="px-4 py-4 text-sm text-foreground text-right">
                         Bs. {s.amountBs.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="px-4 py-4 text-sm font-semibold text-green-700 text-right">${s.amountUsd.toFixed(2)}</td>
                       <td className="px-4 py-4 text-center">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[s.status] ?? "bg-gray-100 text-gray-600"}`}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[s.status] ?? "bg-gray-100 text-muted-foreground"}`}>
                           {statusLabel[s.status] ?? s.status}
                         </span>
                       </td>

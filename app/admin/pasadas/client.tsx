@@ -67,7 +67,7 @@ export function PasadasClient({ packages }: PasadasClientProps) {
     <Card className="overflow-hidden">
       <div className="p-4 border-b">
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar paquete pasado..."
             value={search}
@@ -78,7 +78,7 @@ export function PasadasClient({ packages }: PasadasClientProps) {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-muted/50 border-b">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Paquete</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Destino</th>
@@ -90,7 +90,7 @@ export function PasadasClient({ packages }: PasadasClientProps) {
           </thead>
           <tbody className="divide-y">
             {filtered.map((pkg) => (
-              <tr key={pkg.id} className="hover:bg-gray-50">
+              <tr key={pkg.id} className="hover:bg-muted/50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {pkg.photo ? (
@@ -98,20 +98,20 @@ export function PasadasClient({ packages }: PasadasClientProps) {
                         <SupabaseImage imagePath={pkg.photo} alt="" fill className="object-cover" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400">
+                      <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-muted-foreground">
                         <CalendarDays className="w-5 h-5" />
                       </div>
                     )}
-                    <p className="font-medium text-gray-900">{pkg.title || "Sin título"}</p>
+                    <p className="font-medium text-foreground">{pkg.title || "Sin título"}</p>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-4 py-3 text-muted-foreground">
                   {pkg.Destination ? (
                     <Link href={`/admin/properties/${pkg.Destination.id}`} className="text-blue-600 hover:underline">
                       {pkg.Destination.title || "Ver destino"}
                     </Link>
                   ) : (
-                    <span className="text-gray-400">Sin destino</span>
+                    <span className="text-muted-foreground">Sin destino</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -145,7 +145,7 @@ export function PasadasClient({ packages }: PasadasClientProps) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                   No se encontraron paquetes pasados.
                 </td>
               </tr>

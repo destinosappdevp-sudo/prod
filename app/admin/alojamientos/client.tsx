@@ -98,14 +98,14 @@ export default function AlojamientosClient({
     <main className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Gestionar Alojamientos</h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-muted-foreground mt-2">
           Aprueba o rechaza alojamientos pendientes de hosts no verificados
         </p>
       </div>
 
       {homes.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-gray-500 text-lg">
+          <p className="text-muted-foreground text-lg">
             No hay alojamientos pendientes de aprobación
           </p>
         </Card>
@@ -124,7 +124,7 @@ export default function AlojamientosClient({
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       Sin imagen
                     </div>
                   )}
@@ -135,7 +135,7 @@ export default function AlojamientosClient({
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="text-xl font-semibold">{home.title}</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         {home.country} {home.municipality && `- ${home.municipality}`}
                       </p>
                     </div>
@@ -143,11 +143,11 @@ export default function AlojamientosClient({
                   </div>
 
                   {/* Host Info */}
-                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                  <div className="bg-muted/50 rounded-lg p-3 mb-3">
                     <p className="text-sm font-medium">
                       Host: {home.User.firstName} {home.User.lastName}
                     </p>
-                    <p className="text-sm text-gray-600">{home.User.email}</p>
+                    <p className="text-sm text-muted-foreground">{home.User.email}</p>
                     <p className="text-sm mt-1">
                       {home.User.isVerified ? (
                         <Badge className="bg-green-100 text-green-800">Verificado</Badge>
@@ -164,7 +164,7 @@ export default function AlojamientosClient({
                       <p className="text-lg font-bold text-orange-600">
                         Desde ${home.price}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Publicado:{" "}
                         {new Date(home.createdAt).toLocaleDateString("es-ES")}
                       </p>

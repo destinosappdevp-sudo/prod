@@ -59,8 +59,8 @@ export default async function PasadasPage() {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Paquetes Pasados</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-foreground">Paquetes Pasados</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Paquetes cuya fecha de salida ya venció ({packages.length} encontrados)
         </p>
       </div>

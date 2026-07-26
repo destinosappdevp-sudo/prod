@@ -35,13 +35,13 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Informes & Analytics</h1>
-          <p className="text-gray-600 mt-1">Análisis de datos y reportes de rendimiento</p>
+          <h1 className="text-3xl font-bold text-foreground">Informes & Analytics</h1>
+          <p className="text-muted-foreground mt-1">Análisis de datos y reportes de rendimiento</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64 text-gray-400">
+        <div className="flex items-center justify-center h-64 text-muted-foreground">
           <p className="text-lg">Cargando datos...</p>
         </div>
       ) : (
@@ -61,7 +61,7 @@ export default function ReportsPage() {
                 height={250}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <Users size={48} className="mb-2" />
                 <p>Sin datos disponibles</p>
               </div>
@@ -84,7 +84,7 @@ export default function ReportsPage() {
                 height={250}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <Home size={48} className="mb-2" />
                 <p>Sin datos disponibles</p>
               </div>
@@ -108,7 +108,7 @@ export default function ReportsPage() {
                 height={250}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <TrendingUp size={48} className="mb-2" />
                 <p>Sin datos disponibles</p>
               </div>
@@ -131,7 +131,7 @@ export default function ReportsPage() {
                 height={250}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <BarChart3 size={48} className="mb-2" />
                 <p>Sin datos disponibles</p>
               </div>

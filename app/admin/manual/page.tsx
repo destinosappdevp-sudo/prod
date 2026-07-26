@@ -257,7 +257,7 @@ export default function ManualPage() {
         </div>
       )}
 
-      <div className="mt-12 text-gray-500 text-sm text-center">
+      <div className="mt-12 text-muted-foreground text-sm text-center">
         Las imágenes serán reemplazadas por capturas reales.<br />
         Si tienes dudas, contacta soporte.
       </div>

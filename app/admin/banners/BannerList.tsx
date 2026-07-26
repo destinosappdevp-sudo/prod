@@ -43,7 +43,7 @@ export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "
   if (!banners.length) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8 text-center mt-6">
-        <p className="text-gray-500">{emptyMessage}</p>
+        <p className="text-muted-foreground">{emptyMessage}</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "
           return (
             <div key={banner.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               {/* Barra de tipo en la parte superior */}
-              <div className={`${TIPO_COLORS[banner.tipo ?? ""] ?? "bg-gray-500"} px-4 py-1.5 flex items-center justify-between`}>
+              <div className={`${TIPO_COLORS[banner.tipo ?? ""] ?? "bg-muted/500"} px-4 py-1.5 flex items-center justify-between`}>
                 <span className="text-white text-xs font-bold tracking-wide uppercase">
                   {TIPO_LABELS[banner.tipo ?? ""] ?? banner.tipo ?? "Sin tipo"}
                 </span>
@@ -81,10 +81,10 @@ export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "
               </div>
               
               <div className="p-4">
-                <h3 className="font-bold text-base text-gray-900 mb-2">{banner.title}</h3>
+                <h3 className="font-bold text-base text-foreground mb-2">{banner.title}</h3>
                 
                 <div className="space-y-1.5 mb-3">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     <span className="font-medium">Periodo:</span>{" "}
                     {formatDate(banner.startDate)} - {formatDate(banner.endDate)}
                   </p>
@@ -102,13 +102,13 @@ export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "
                   )}
                   
                   {banner.cost && banner.cost > 0 && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       <span className="font-medium">Costo:</span> ${banner.cost.toFixed(2)}
                     </p>
                   )}
                   
                   {(banner.clientEmail || banner.clientPhone) && (
-                    <p className="text-xs text-gray-500 pt-1 border-t border-gray-100">
+                    <p className="text-xs text-muted-foreground pt-1 border-t border-gray-100">
                       Cliente: {banner.clientEmail || banner.clientPhone}
                     </p>
                   )}

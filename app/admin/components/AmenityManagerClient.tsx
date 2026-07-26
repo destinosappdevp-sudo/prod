@@ -170,7 +170,7 @@ export default function AmenityManagerClient({
             >
               <div>
                 <p className="font-medium">{category.name}</p>
-                <p className="text-xs text-gray-500">Orden: {category.order ?? "-"}</p>
+                <p className="text-xs text-muted-foreground">Orden: {category.order ?? "-"}</p>
               </div>
               <Button
                 variant={category.isActive ? "secondary" : "outline"}
@@ -247,7 +247,7 @@ export default function AmenityManagerClient({
                   >
                     <div>
                       <p className="font-medium">{amenity.name}</p>
-                      <p className="text-xs text-gray-500">{amenity.iconKey}</p>
+                      <p className="text-xs text-muted-foreground">{amenity.iconKey}</p>
                     </div>
                     <Button
                       variant={amenity.isActive ? "secondary" : "outline"}

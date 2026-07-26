@@ -64,8 +64,8 @@ export default async function DestinationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Destinos</h1>
-          <p className="text-gray-600 mt-1">Administra los destinos y sus paquetes/fechas</p>
+          <h1 className="text-3xl font-bold text-foreground">Gestión de Destinos</h1>
+          <p className="text-muted-foreground mt-1">Administra los destinos y sus paquetes/fechas</p>
         </div>
       </div>
 

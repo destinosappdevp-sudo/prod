@@ -53,15 +53,15 @@ export default function ImportUsersPage() {
     <div className="max-w-2xl mx-auto py-10 px-4 space-y-8">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Importar Usuarios desde CSV</h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <h1 className="text-3xl font-bold text-foreground">Importar Usuarios desde CSV</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
             Sube un archivo <b>.csv</b> con los datos de los usuarios. El sistema detecta
             automáticamente el separador (<code>,</code> o <code>;</code>).
           </p>
         </div>
         <a
           href="/api/admin/users/export"
-          className="px-3 py-2 rounded-md bg-white border text-sm text-gray-700 hover:bg-gray-50"
+          className="px-3 py-2 rounded-md bg-white border text-sm text-gray-700 hover:bg-muted/50"
         >
           Descargar usuarios
         </a>
@@ -104,15 +104,15 @@ export default function ImportUsersPage() {
         {file ? (
           <div className="space-y-1">
             <p className="font-semibold text-gray-800">{file.name}</p>
-            <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+            <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
           </div>
         ) : (
           <div className="space-y-2">
-            <svg className="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="mx-auto h-10 w-10 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 7l-4-4-4 4" />
             </svg>
-            <p className="text-gray-600 font-medium">Haz clic para seleccionar el CSV</p>
-            <p className="text-xs text-gray-400">Solo archivos .csv</p>
+            <p className="text-muted-foreground font-medium">Haz clic para seleccionar el CSV</p>
+            <p className="text-xs text-muted-foreground">Solo archivos .csv</p>
           </div>
         )}
       </div>
@@ -133,7 +133,7 @@ export default function ImportUsersPage() {
         </button>
         <button
           onClick={() => router.push("/admin/users")}
-          className="px-6 py-2 rounded-lg border text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+          className="px-6 py-2 rounded-lg border text-gray-700 font-semibold hover:bg-muted/50 transition-colors"
         >
           Cancelar
         </button>
@@ -146,15 +146,15 @@ export default function ImportUsersPage() {
           <div className="flex gap-6">
             <div className="text-center">
               <p className="text-3xl font-bold text-green-600">{result.created}</p>
-              <p className="text-sm text-gray-500">Creados</p>
+              <p className="text-sm text-muted-foreground">Creados</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-blue-600">{result.updated}</p>
-              <p className="text-sm text-gray-500">Actualizados</p>
+              <p className="text-sm text-muted-foreground">Actualizados</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-red-500">{result.errors.length}</p>
-              <p className="text-sm text-gray-500">Errores</p>
+              <p className="text-sm text-muted-foreground">Errores</p>
             </div>
           </div>
 

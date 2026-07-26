@@ -60,7 +60,7 @@ export function SidebarThemeToggle() {
     <button
       onClick={toggle}
       aria-label={theme === "dark" ? "Activar modo claro" : "Activar modo oscuro"}
-      className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-gray-300 transition-colors hover:bg-gray-800 hover:text-primary"
+      className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
     >
       {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
       <span className="font-medium">{theme === "dark" ? "Modo Claro" : "Modo Oscuro"}</span>

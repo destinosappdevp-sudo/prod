@@ -167,7 +167,7 @@ export function PropertiesClient({
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors sm:flex-none sm:px-6 sm:py-4 ${
               mainTab === "paquetes"
                 ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             }`}
           >
             Paquetes
@@ -178,7 +178,7 @@ export function PropertiesClient({
             className={`flex-1 px-4 py-3 text-sm font-medium transition-colors sm:flex-none sm:px-6 sm:py-4 inline-flex items-center justify-center gap-2 ${
               mainTab === "reservas_activas"
                 ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             }`}
           >
             <CalendarCheck size={18} className="hidden sm:inline shrink-0" />
@@ -212,7 +212,7 @@ export function PropertiesClient({
               <Home className="text-blue-600" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total</p>
+              <p className="text-sm text-muted-foreground">Total</p>
               <p className="text-2xl font-bold">{statsTotal}</p>
             </div>
           </div>
@@ -223,7 +223,7 @@ export function PropertiesClient({
               <CheckCircle className="text-green-600" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Activas</p>
+              <p className="text-sm text-muted-foreground">Activas</p>
               <p className="text-2xl font-bold">{statsActive}</p>
             </div>
           </div>
@@ -234,7 +234,7 @@ export function PropertiesClient({
               <Clock className="text-yellow-600" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Pendientes</p>
+              <p className="text-sm text-muted-foreground">Pendientes</p>
               <p className="text-2xl font-bold">{statsPending}</p>
             </div>
           </div>
@@ -242,10 +242,10 @@ export function PropertiesClient({
         <Card className="p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gray-100 rounded-lg">
-              <XCircle className="text-gray-500" size={24} />
+              <XCircle className="text-muted-foreground" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Borrador</p>
+              <p className="text-sm text-muted-foreground">Borrador</p>
               <p className="text-2xl font-bold">{statsDraft}</p>
             </div>
           </div>
@@ -255,7 +255,7 @@ export function PropertiesClient({
       {/* Buscador */}
       <Card className="p-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
           <Input
             placeholder="Buscar por título, email o categoría..."
             value={search}
@@ -269,40 +269,40 @@ export function PropertiesClient({
       <Card className="overflow-hidden">
         <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="min-w-[700px] w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Paquete
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Fecha de salida
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Cupos
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Reservas
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Usuarios Ahorrando
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-border">
               {paginated.map((property) => {
                 return (
-                  <tr key={property.id} className="hover:bg-gray-50">
+                  <tr key={property.id} className="hover:bg-muted/50">
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-foreground">
                         {property.title || "Sin título"}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted-foreground">
                         {property.country
                           ? getStateByValue(property.country)?.label
                           : "Sin ubicación"}
@@ -371,14 +371,14 @@ export function PropertiesClient({
 
       {filtered.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No se encontraron Paquetes</p>
+          <p className="text-muted-foreground">No se encontraron Paquetes</p>
         </div>
       )}
 
       {/* Paginación */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length} Paquetes
           </p>
           <div className="flex items-center gap-1">
@@ -405,7 +405,7 @@ export function PropertiesClient({
               }, [])
               .map((p, i) =>
                 p === "..." ? (
-                  <span key={`dots-${i}`} className="px-2 text-gray-400">…</span>
+                  <span key={`dots-${i}`} className="px-2 text-muted-foreground">…</span>
                 ) : (
                   <button
                     key={p}

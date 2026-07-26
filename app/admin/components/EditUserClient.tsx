@@ -386,15 +386,15 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
           {/* Estadísticas */}
           <div className="grid grid-cols-3 gap-4 pt-4 border-t">
             <div className="text-center">
-              <p className="text-sm text-gray-600">Paquetes</p>
+              <p className="text-sm text-muted-foreground">Paquetes</p>
               <p className="text-2xl font-bold">{user._count?.Home || 0}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600">Favoritos</p>
+              <p className="text-sm text-muted-foreground">Favoritos</p>
               <p className="text-2xl font-bold">{user._count?.Favorite || 0}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600">Reservas</p>
+              <p className="text-sm text-muted-foreground">Reservas</p>
               <p className="text-2xl font-bold">{user._count?.Reservation || 0}</p>
             </div>
           </div>
@@ -404,10 +404,10 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
       {/* Cambiar Contraseña */}
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
-          <KeyRound size={20} className="text-gray-500" />
+          <KeyRound size={20} className="text-muted-foreground" />
           Cambiar Contraseña
         </h2>
-        <p className="text-sm text-gray-500 mb-4">Establece una nueva contraseña para este usuario. Mínimo 8 caracteres.</p>
+        <p className="text-sm text-muted-foreground mb-4">Establece una nueva contraseña para este usuario. Mínimo 8 caracteres.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -424,7 +424,7 @@ export function EditUserClient({ user, documents = [], currentUserRole }: EditUs
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                 tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}

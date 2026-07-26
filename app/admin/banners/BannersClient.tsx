@@ -112,7 +112,7 @@ export default function BannersClient({ userId }: BannersClientProps) {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6 text-gray-900">Gestión de Publicidad</h1>
+      <h1 className="text-3xl font-bold mb-6 text-foreground">Gestión de Publicidad</h1>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200 mb-6">
@@ -122,8 +122,8 @@ export default function BannersClient({ userId }: BannersClientProps) {
             onClick={() => setActiveTab(tab.key)}
             className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
               activeTab === tab.key
-                ? "bg-white border border-b-white border-gray-200 text-gray-900 -mb-px"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                ? "bg-white border border-b-white border-gray-200 text-foreground -mb-px"
+                : "text-muted-foreground hover:text-gray-700 hover:bg-muted/50"
             }`}
           >
             {tab.label}
@@ -131,8 +131,8 @@ export default function BannersClient({ userId }: BannersClientProps) {
               <span
                 className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
                   activeTab === tab.key
-                    ? "bg-gray-100 text-gray-600"
-                    : "bg-gray-100 text-gray-500"
+                    ? "bg-gray-100 text-muted-foreground"
+                    : "bg-gray-100 text-muted-foreground"
                 }`}
               >
                 {tab.count}

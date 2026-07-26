@@ -187,8 +187,8 @@ export default async function FinanzasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Finanzas</h1>
-          <p className="text-gray-600 mt-1">Ingresos, pagos y alcancías</p>
+          <h1 className="text-3xl font-bold text-foreground">Finanzas</h1>
+          <p className="text-muted-foreground mt-1">Ingresos, pagos y alcancías</p>
         </div>
       </div>
 
@@ -211,52 +211,52 @@ export default async function FinanzasPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="text-green-600" size={24} />
+            <div className="p-3 bg-primary-soft rounded-lg">
+              <DollarSign className="text-primary" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Ingresos confirmados</p>
+              <p className="text-sm text-muted-foreground">Ingresos confirmados</p>
               <div className="mt-1">
-                <p className="text-2xl font-bold leading-tight">{formatUsd(stats.totalRevenueUsd)}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{formatBs(stats.totalRevenueBs)}</p>
+                <p className="text-2xl font-bold leading-tight text-foreground">{formatUsd(stats.totalRevenueUsd)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{formatBs(stats.totalRevenueBs)}</p>
               </div>
             </div>
           </div>
         </Card>
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-100 rounded-lg">
-              <PiggyBank className="text-amber-600" size={24} />
+            <div className="p-3 bg-primary-soft rounded-lg">
+              <PiggyBank className="text-primary" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Alcancías activas</p>
-              <p className="text-xs text-gray-500">Usuarios con depósitos en alcancía</p>
-              <p className="text-2xl font-bold">{stats.alcanciasActivas}</p>
+              <p className="text-sm text-muted-foreground">Alcancías activas</p>
+              <p className="text-xs text-muted-foreground">Usuarios con depósitos en alcancía</p>
+              <p className="text-2xl font-bold text-foreground">{stats.alcanciasActivas}</p>
             </div>
           </div>
         </Card>
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-sky-100 rounded-lg">
-              <DollarSign className="text-sky-600" size={24} />
+            <div className="p-3 bg-primary-soft rounded-lg">
+              <DollarSign className="text-primary" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Monto en alcancías</p>
+              <p className="text-sm text-muted-foreground">Monto en alcancías</p>
               <div className="mt-1">
-                <p className="text-2xl font-bold leading-tight">{formatUsd(stats.montoAlcanciasUsd)}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{formatBs(stats.montoAlcanciasBs)}</p>
+                <p className="text-2xl font-bold leading-tight text-foreground">{formatUsd(stats.montoAlcanciasUsd)}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{formatBs(stats.montoAlcanciasBs)}</p>
               </div>
             </div>
           </div>
         </Card>
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <CreditCard className="text-purple-600" size={24} />
+            <div className="p-3 bg-primary-soft rounded-lg">
+              <CreditCard className="text-primary" size={24} />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Pagos confirmados</p>
-              <p className="text-2xl font-bold">{stats.confirmedPayments}</p>
+              <p className="text-sm text-muted-foreground">Pagos confirmados</p>
+              <p className="text-2xl font-bold text-foreground">{stats.confirmedPayments}</p>
             </div>
           </div>
         </Card>

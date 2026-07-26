@@ -265,7 +265,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
 
                 <div className={`absolute left-0 right-0 mt-1 z-50 bg-white border rounded shadow max-h-60 overflow-auto ${showUserDropdown ? "" : "hidden"}`}>
                   {filteredUsers.length === 0 ? (
-                    <div className="p-3 text-sm text-gray-500">No se encontraron usuarios</div>
+                    <div className="p-3 text-sm text-muted-foreground">No se encontraron usuarios</div>
                   ) : (
                     filteredUsers.map((user) => (
                       <button
@@ -281,7 +281,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
                         className="w-full text-left px-3 py-2 hover:bg-gray-100"
                       >
                         <div className="font-medium">{user.cedula ? `${user.cedula} — ` : ""}{user.firstName}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                        <div className="text-xs text-muted-foreground">{user.email}</div>
                       </button>
                     ))
                   )}
@@ -321,7 +321,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
               placeholder="Ej: 50.00"
               required
             />
-            <p className="text-xs text-gray-500">El equivalente en Bs se calcula automáticamente con la tasa BCV vigente.</p>
+            <p className="text-xs text-muted-foreground">El equivalente en Bs se calcula automáticamente con la tasa BCV vigente.</p>
           </div>
 
           <div className="space-y-2">
@@ -333,7 +333,7 @@ export default function AddSavingDialog({ users, homes, walletBalances }: AddSav
               onChange={(event) => setDepositDate(event.target.value)}
               required
             />
-            <p className="text-xs text-gray-500">Por defecto es hoy. Puedes elegir una fecha anterior para cargar depósitos históricos.</p>
+            <p className="text-xs text-muted-foreground">Por defecto es hoy. Puedes elegir una fecha anterior para cargar depósitos históricos.</p>
           </div>
 
           {selectedUser && selectedWallet && (

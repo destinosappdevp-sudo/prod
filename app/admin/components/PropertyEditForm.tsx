@@ -538,7 +538,7 @@ export default function PropertyEditForm({
                   disabled
                   placeholder="Número de cupos"
                 />
-                <p className="text-xs text-gray-400 mt-1">Se calcula automáticamente como VIP + Estándar</p>
+                <p className="text-xs text-muted-foreground mt-1">Se calcula automáticamente como VIP + Estándar</p>
               </div>
               <div>
                 <Label htmlFor="bedrooms">Zona VIP</Label>
@@ -685,7 +685,7 @@ export default function PropertyEditForm({
             </div>
             <div className="grid grid-cols-2 gap-4 mt-4">
               <div className="col-span-2">
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   Los cupos VIP y Estándar se configuran en la sección "Características".
                 </p>
               </div>

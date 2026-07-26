@@ -576,20 +576,20 @@ export default function PropertyDetailTabs({
               {confirmedReservations.map((reservation) => {
                 const payment = reservation.Payment;
                 return (
-                  <div key={reservation.id} className="space-y-3 rounded-lg bg-gray-50 p-4">
+                  <div key={reservation.id} className="space-y-3 rounded-lg bg-muted/50 p-4">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium">
                           {reservation.User?.firstName} {reservation.User?.lastName}
                         </p>
-                        <p className="text-sm text-gray-600">{reservation.User?.email}</p>
+                        <p className="text-sm text-muted-foreground">{reservation.User?.email}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-medium">
                           {new Date(reservation.startDate).toLocaleDateString("es-ES")} -{" "}
                           {new Date(reservation.endDate).toLocaleDateString("es-ES")}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           Asiento: {getSeatLabelFromReservation(reservation, seats)} · Plan: {getPlanLabelFromReservation(reservation, seats)}
                         </p>
                       </div>
@@ -597,16 +597,16 @@ export default function PropertyDetailTabs({
                     {payment && (
                       <div className="flex items-center justify-between border-t border-gray-200 pt-2">
                         <div className="space-y-1">
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-muted-foreground">
                             Método:{" "}
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-foreground">
                               {getPaymentMethodLabel(payment.paymentMethod, payment.paymentDetails)}
                             </span>
                           </p>
                           {payment.referenceNumber && (
-                            <p className="text-xs text-gray-500">Ref: {payment.referenceNumber}</p>
+                            <p className="text-xs text-muted-foreground">Ref: {payment.referenceNumber}</p>
                           )}
-                          <p className="text-sm font-semibold text-gray-900">
+                          <p className="text-sm font-semibold text-foreground">
                             ${payment.amount.toFixed(2)}
                           </p>
                         </div>
@@ -620,7 +620,7 @@ export default function PropertyDetailTabs({
               })}
             </div>
           ) : (
-            <p className="py-8 text-center text-gray-500">No hay reservas confirmadas aun</p>
+            <p className="py-8 text-center text-muted-foreground">No hay reservas confirmadas aun</p>
           )}
         </div>
       )}
@@ -632,18 +632,18 @@ export default function PropertyDetailTabs({
               {savings.map((saving) => (
                 <div
                   key={saving.id}
-                  className="flex items-center justify-between rounded-lg bg-gray-50 p-4"
+                  className="flex items-center justify-between rounded-lg bg-muted/50 p-4"
                 >
                   <div>
                     <p className="font-medium">
                       {saving.User?.firstName} {saving.User?.lastName}
                     </p>
-                    <p className="text-sm text-gray-600">{saving.User?.email}</p>
+                    <p className="text-sm text-muted-foreground">{saving.User?.email}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-green-700">Ahorrado: ${saving.amountUsd.toFixed(2)}</p>
                     <p className="text-xs font-medium text-amber-700">Saldo restante: ${saving.remainingUsd.toFixed(2)}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Plan: {saving.plan === "vip" ? "VIP" : "Estándar"}
                       {saving.guestsCount && saving.guestsCount > 1 ? ` · ${saving.guestsCount} cupos` : ""}
                       {saving.planInferred ? " · inferido" : ""}
@@ -653,7 +653,7 @@ export default function PropertyDetailTabs({
               ))}
             </div>
           ) : (
-            <p className="py-8 text-center text-gray-500">No hay usuarios ahorrando aun</p>
+            <p className="py-8 text-center text-muted-foreground">No hay usuarios ahorrando aun</p>
           )}
         </div>
       )}
@@ -663,7 +663,7 @@ export default function PropertyDetailTabs({
           {seats.length > 0 ? (
             <SeatMap seats={seats as Seat[]} />
           ) : (
-            <p className="py-8 text-center text-gray-500">No hay asientos registrados</p>
+            <p className="py-8 text-center text-muted-foreground">No hay asientos registrados</p>
           )}
         </div>
       )}
@@ -671,7 +671,7 @@ export default function PropertyDetailTabs({
       {tab === "reservar" && (
         <form onSubmit={handleManualReservation} className="space-y-5">
           <div className="rounded-lg border border-gray-200 p-4">
-            <h4 className="mb-3 text-sm font-semibold text-gray-900">Buscar Usuario Por Cedula</h4>
+            <h4 className="mb-3 text-sm font-semibold text-foreground">Buscar Usuario Por Cedula</h4>
             <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 value={cedulaInput}
@@ -700,7 +700,7 @@ export default function PropertyDetailTabs({
           </div>
 
           <div className="rounded-lg border border-gray-200 p-4">
-            <h4 className="mb-3 text-sm font-semibold text-gray-900">Tipo de operación</h4>
+            <h4 className="mb-3 text-sm font-semibold text-foreground">Tipo de operación</h4>
             <div className="rounded-md border border-gray-200 bg-white p-3">
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -714,7 +714,7 @@ export default function PropertyDetailTabs({
                 Ahorrar
               </label>
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               Estado actual: <span className="font-medium">{reservationMode === "saving" ? "Ahorrar" : "Pagar de contado"}</span>. Por defecto es pagar de contado.
             </p>
           </div>
@@ -749,14 +749,14 @@ export default function PropertyDetailTabs({
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-md bg-gray-50 p-3 text-sm text-gray-700 md:grid-cols-2 md:items-end">
+          <div className="grid gap-3 rounded-md bg-muted/50 p-3 text-sm text-gray-700 md:grid-cols-2 md:items-end">
             <div>
               Monto estimado: <span className="font-semibold">${totalAmount.toFixed(2)}</span>
             </div>
             {reservationMode === "saving" && (
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Monto del abono (USD)</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Monto del abono (USD)</label>
                   <input
                     type="number"
                     min={0.01}
@@ -772,7 +772,7 @@ export default function PropertyDetailTabs({
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Fecha de inicio / abono</label>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha de inicio / abono</label>
                   <input
                     type="date"
                     value={savingStartedAt}
@@ -790,8 +790,8 @@ export default function PropertyDetailTabs({
 
           <div className="rounded-lg border border-gray-200 p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-gray-900">Selecciona Asiento</h4>
-              <p className="text-xs text-gray-500">
+              <h4 className="text-sm font-semibold text-foreground">Selecciona Asiento</h4>
+              <p className="text-xs text-muted-foreground">
                 Disponibles para {plan === "vip" ? "Premium" : "Estandar"}: {selectableSeats.length}
               </p>
             </div>
@@ -835,7 +835,7 @@ export default function PropertyDetailTabs({
                 )}
               </>
             ) : (
-              <p className="text-sm text-gray-500">Este paquete no tiene asientos configurados.</p>
+              <p className="text-sm text-muted-foreground">Este paquete no tiene asientos configurados.</p>
             )}
           </div>
 
@@ -905,10 +905,10 @@ export default function PropertyDetailTabs({
       )}
 
       {tab === "pdf" && (
-        <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <div className="space-y-4 rounded-lg border border-gray-200 bg-muted/50 p-4">
           <div>
-            <h4 className="text-base font-semibold text-gray-900">Exportar reporte PDF del paquete</h4>
-            <p className="mt-1 text-sm text-gray-600">
+            <h4 className="text-base font-semibold text-foreground">Exportar reporte PDF del paquete</h4>
+            <p className="mt-1 text-sm text-muted-foreground">
               El PDF incluye informacion de la ficha, tabla de usuarios ahorrando y tabla de
               usuarios con pago confirmado y su asiento asignado.
             </p>
@@ -916,16 +916,16 @@ export default function PropertyDetailTabs({
 
           <div className="grid gap-3 text-sm text-gray-700 sm:grid-cols-3">
             <div className="rounded-md border border-gray-200 bg-white p-3">
-              <p className="text-xs text-gray-500">Reservas Confirmadas</p>
-              <p className="text-lg font-semibold text-gray-900">{confirmedReservations.length}</p>
+              <p className="text-xs text-muted-foreground">Reservas Confirmadas</p>
+              <p className="text-lg font-semibold text-foreground">{confirmedReservations.length}</p>
             </div>
             <div className="rounded-md border border-gray-200 bg-white p-3">
-              <p className="text-xs text-gray-500">Usuarios Ahorrando</p>
-              <p className="text-lg font-semibold text-gray-900">{savings.length}</p>
+              <p className="text-xs text-muted-foreground">Usuarios Ahorrando</p>
+              <p className="text-lg font-semibold text-foreground">{savings.length}</p>
             </div>
             <div className="rounded-md border border-gray-200 bg-white p-3">
-              <p className="text-xs text-gray-500">Asientos Registrados</p>
-              <p className="text-lg font-semibold text-gray-900">{seats.length}</p>
+              <p className="text-xs text-muted-foreground">Asientos Registrados</p>
+              <p className="text-lg font-semibold text-foreground">{seats.length}</p>
             </div>
           </div>
 

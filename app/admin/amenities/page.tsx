@@ -22,8 +22,8 @@ export default async function AmenitiesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Servicios</h1>
-        <p className="text-gray-600 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Servicios</h1>
+        <p className="text-muted-foreground mt-1">
           Administra grupos de servicios (amenities). Las categorías de Paquete se gestionan aparte.
         </p>
       </div>
