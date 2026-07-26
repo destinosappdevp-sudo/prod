@@ -225,6 +225,9 @@ export default async function AdminDashboard() {
           </div>
         </Card>
       </div>
+      <div className="mt-10 text-center text-xs text-muted-foreground/50">
+        v{Date.now().toString(36)} · deploy {new Date().toISOString().slice(0, 10)}
+      </div>
     </div>
   );
 }
