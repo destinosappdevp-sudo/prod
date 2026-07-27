@@ -16,9 +16,6 @@ const prismaAny = prisma as any;
 
 async function getDataBySlug(slug: string) {
   noStore();
-  // Los slugs tienen formato "{titulo}-{id.slice(0,6)}".
-  // Extraemos el prefijo del ID para buscar la propiedad aunque no exista
-  // el campo slug en el schema actual.
   const idPrefix = slug.split("-").pop() || "";
   if (!idPrefix || idPrefix.length < 4) return null;
   return await prismaAny.home.findFirst({
@@ -73,33 +70,7 @@ async function getAmenities(homeId: string) {
   }));
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ categorySlug: string; slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const data = await getDataBySlug(slug);
-  if (!data) return { title: "Paquete no encontrado" };
-
-  const baseKeywords = ["paquete turístico", "viaje Venezuela", "destinos Venezuela"];
-  const titleWords = (data.title ?? "").split(/\s+/).filter((w: string) => w.length > 3);
-  const categoryWord = data.categoryName ? [String(data.categoryName)] : [];
-  const keywords = [...baseKeywords, ...titleWords, ...categoryWord].slice(0, 15);
-
-  return {
-    title: `${data.title} | Destinos Venezuela`,
-    description: data.description?.slice(0, 160) || "Reserva tu cupo en nuestros paquetes turísticos.",
-    keywords,
-  };
-}
-
-async function DestinoPage({
-  params,
-}: {
-  params: Promise<{ categorySlug: string; slug: string }>;
-}) {
-  const { slug, categorySlug } = await params;
+export default async function PackageView({ categorySlug, slug }: { categorySlug: string; slug: string }) {
   const data = await getDataBySlug(slug);
 
   if (!data) notFound();
@@ -193,7 +164,6 @@ async function DestinoPage({
       ? getMunicipalityByValue(data.country, data.municipality)
       : null;
 
-  // Formatear checkInTime: "2026-04-30T19:00" → "30-04-2026 Hora 7:00 PM"
   const formatSalidaDate = (raw: string | null): string => {
     if (!raw) return "—";
     const d = new Date(raw.includes("T") ? raw : raw + "T00:00");
@@ -209,7 +179,6 @@ async function DestinoPage({
     return `${dd}-${mm}-${yyyy} Hora ${h12}${minStr} ${ampm}`;
   };
 
-  // 1 hora antes para "Hora de Encuentro"
   const formatMeetupTime = (raw: string | null): string => {
     if (!raw) return "—";
     const d = new Date(raw.includes("T") ? raw : raw + "T00:00");
@@ -267,7 +236,6 @@ async function DestinoPage({
 
   return (
     <div className="mx-auto mt-4 mb-8 w-full max-w-5xl px-4 sm:px-6 lg:mt-6 lg:px-0 lg:mb-10">
-      {/* Foto principal — ancho completo */}
       <div className="relative mb-6 w-full aspect-[3/2]">
         <SupabaseImage
           imagePath={data.photo as string}
@@ -278,10 +246,8 @@ async function DestinoPage({
       </div>
 
       <div className="px-4 sm:px-6 lg:px-8">
-        {/* Título (ahora después de la imagen) - H1 para SEO */}
         <h1 className="mb-3 px-0 text-[1.75rem] font-bold leading-tight sm:text-[2rem]">{data.title}</h1>
 
-      {/* Stats bar */}
       <div className="grid grid-cols-2 divide-x divide-gray-200 border border-gray-200 rounded-2xl mb-6 overflow-hidden">
         <div className="flex flex-col items-center gap-1 py-5">
           <Clock className="w-6 h-6 text-gray-500" />
@@ -297,7 +263,6 @@ async function DestinoPage({
         </div>
       </div>
 
-      {/* Información de Salida */}
       <div className="mb-6">
         <div className="border border-gray-200 rounded-2xl p-6">
           <h2 className="flex items-center gap-2 font-semibold text-base mb-4">
@@ -339,7 +304,6 @@ async function DestinoPage({
         </div>
       </div>
 
-      {/* Descripción */}
       {data.description && (
         <div className="mb-6">
           <FormattedDescription
@@ -349,12 +313,10 @@ async function DestinoPage({
         </div>
       )}
 
-      {/* Elige tu Experiencia */}
       <div className="mb-8">
         <h2 className="font-bold text-2xl mb-6">Elige tu Experiencia</h2>
         <div className={`grid grid-cols-1 ${hasStandardPlan && hasVipPlan ? "sm:grid-cols-2" : "sm:grid-cols-1"} gap-4`}>
 
-          {/* Plan Estándar */}
           {hasStandardPlan && (
           <div className="border-2 border-gray-300 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-1">
@@ -433,7 +395,6 @@ async function DestinoPage({
           </div>
           )}
 
-          {/* Plan Premium */}
           {hasVipPlan && (
           <div className="border-2 border-[#E1B042] rounded-2xl p-6 relative">
             <div className="absolute top-0 right-0 bg-[#E1B042] text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl tracking-wide">
@@ -532,5 +493,3 @@ async function DestinoPage({
     </div>
   );
 }
-
-export default DestinoPage;

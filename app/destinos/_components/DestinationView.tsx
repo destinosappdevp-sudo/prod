@@ -62,7 +62,6 @@ async function getDestinationBySlug(slug: string) {
       },
     },
   });
-
   return destination;
 }
 
@@ -96,12 +95,7 @@ function calculateAvailableSeats(home: any) {
   return Math.max(0, total - reserved);
 }
 
-export default async function DestinationSlugPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
+export default async function DestinationView({ slug }: { slug: string }) {
   const destination = await getDestinationBySlug(slug);
 
   if (!destination) {
@@ -137,7 +131,6 @@ export default async function DestinationSlugPage({
         </Link>
 
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Columna principal */}
           <div className="lg:col-span-2 space-y-6">
             <div>
               <h1 className="text-4xl font-bold text-[#0d1f58]">{destination.title || "Sin título"}</h1>
@@ -216,7 +209,6 @@ export default async function DestinationSlugPage({
             )}
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
             <Card className="p-6 bg-white/80">
               <h2 className="text-xl font-semibold text-[#0d1f58] mb-4">Próximas salidas</h2>
@@ -253,10 +245,6 @@ export default async function DestinationSlugPage({
             </Card>
           </div>
         </div>
-      </div>
-
-      <div className="w-full pt-0">
-        <ReviewsSection />
       </div>
     </div>
   );

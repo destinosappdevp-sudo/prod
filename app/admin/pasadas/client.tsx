@@ -116,11 +116,15 @@ export function PasadasClient({ packages }: PasadasClientProps) {
                 </td>
                 <td className="px-4 py-3 text-center">
                   <span className="text-muted-foreground">
-                    {pkg.checkInTime.toLocaleDateString("es-ES", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {(() => {
+                      const d = new Date(pkg.checkInTime);
+                      if (isNaN(d.getTime())) return "Fecha inválida";
+                      return d.toLocaleDateString("es-ES", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      });
+                    })()}
                   </span>
                   <br />
                   <span className="text-xs text-red-500 font-medium">Vencido</span>

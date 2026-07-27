@@ -33,7 +33,7 @@ export async function GET() {
 
   const amenities = await prismaAny.amenity.findMany({
     include: {
-      category: true,
+      AmenityCategory: true,
     },
     orderBy: { name: "asc" },
   });

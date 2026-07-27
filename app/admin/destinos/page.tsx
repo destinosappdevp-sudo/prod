@@ -46,11 +46,14 @@ async function getPasadasPackages() {
     orderBy: { checkInTime: "desc" },
   });
   return homes
-    .map((h: any) => ({
-      ...h,
-      checkInTime: h.checkInTime instanceof Date ? h.checkInTime : new Date(h.checkInTime),
-    }))
-    .filter((h: any) => h.checkInTime < now);
+    .map((h: any) => {
+      const checkInTime = h.checkInTime instanceof Date ? h.checkInTime : new Date(h.checkInTime);
+      return {
+        ...h,
+        checkInTime,
+      };
+    })
+    .filter((h: any) => !isNaN(h.checkInTime.getTime()) && h.checkInTime < now);
 }
 
 async function getCategories() {
