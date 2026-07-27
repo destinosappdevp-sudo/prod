@@ -36,7 +36,18 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (PRIVATE_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
-    event.respondWith(fetch(request));
+    event.respondWith(
+      fetch(request).catch(() =>
+        new Response(
+          JSON.stringify({ error: "Offline", offline: true }),
+          {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      )
+    );
     return;
   }
 

@@ -149,7 +149,7 @@ export function DestinationsClient({ destinations }: DestinationsClientProps) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {destination.photo ? (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden relative">
                           <SupabaseImage
                             imagePath={destination.photo}
                             alt=""

@@ -52,6 +52,9 @@ export async function GET() {
         pagomovilCreditoHmacSecret: true,
         pagomovilCreditoAuthToken: true,
       },
+    }).catch((dbError: unknown) => {
+      console.error("[admin/settings/pagomovil] DB select error:", dbError);
+      return null;
     });
 
     return NextResponse.json({

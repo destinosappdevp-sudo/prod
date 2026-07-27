@@ -94,7 +94,7 @@ export function PasadasClient({ packages }: PasadasClientProps) {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {pkg.photo ? (
-                      <div className="w-10 h-10 rounded-lg overflow-hidden">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden relative">
                         <SupabaseImage imagePath={pkg.photo} alt="" fill className="object-cover" />
                       </div>
                     ) : (

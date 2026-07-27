@@ -23,8 +23,16 @@ async function requireSuperAdmin() {
 
 // GET: Obtener el porcentaje de comisión actual
 export async function GET() {
-  const config = await prisma.platformConfig.findFirst();
-  return NextResponse.json({ commissionPercent: config?.commissionPercent ?? 10 });
+  try {
+    const config = await prisma.platformConfig.findFirst();
+    return NextResponse.json({ commissionPercent: config?.commissionPercent ?? 10 });
+  } catch (error) {
+    console.error("[admin/settings/commission] GET error:", error);
+    return NextResponse.json(
+      { commissionPercent: 10, fallback: true },
+      { status: 200 }
+    );
+  }
 }
 
 // POST: Actualizar el porcentaje de comisión

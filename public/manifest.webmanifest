@@ -10,13 +10,15 @@
   "icons": [
     {
       "src": "/favicon.webp",
-      "sizes": "512x512",
-      "type": "image/webp"
+      "sizes": "96x96",
+      "type": "image/webp",
+      "purpose": "any"
     },
     {
       "src": "/favicon.webp",
-      "sizes": "192x192",
-      "type": "image/webp"
+      "sizes": "96x96",
+      "type": "image/webp",
+      "purpose": "maskable"
     }
   ]
 }
