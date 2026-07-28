@@ -31,6 +31,7 @@ export default function SeatSelector({
   const guests = guestsProp ?? 0;
   const router = useRouter();
   const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
+
   const selectedSeatIdSet = useMemo(
     () => new Set(selectedSeatIds),
     [selectedSeatIds]
@@ -64,43 +65,20 @@ export default function SeatSelector({
   };
 
   const handleContinue = () => {
-    const effectiveGuests = selectedSeatIds.length > 0 ? selectedSeatIds.length : guests > 0 ? guests : 1;
-
-    const savingsUrl = (seatIds: string[]) => {
-      const params = new URLSearchParams({
-        flow: "ahorro",
-        plan,
-        guests: String(effectiveGuests),
-      });
-      if (seatIds.length > 0) {
-        params.set("seatId", seatIds[0]);
-        params.set("seatIds", seatIds.join(","));
-      }
-      return `/checkout/${homeId}?${params.toString()}`;
-    };
-
     if (seats.length === 0) {
-      if (flow === "ahorro") {
-        router.push(savingsUrl([]));
-        return;
-      }
-      router.push(`/checkout/${homeId}?plan=${plan}&guests=${effectiveGuests}`);
+      const params = new URLSearchParams({ flow, plan });
+      router.push(`/checkout/${homeId}?${params.toString()}`);
       return;
     }
 
     if (selectedSeatIds.length === 0) return;
 
-    if (flow === "ahorro") {
-      router.push(savingsUrl(selectedSeatIds));
-      return;
-    }
-
-    const checkoutParams = new URLSearchParams({ plan, guests: String(effectiveGuests) });
-    if (selectedSeatIds.length > 0) {
-      checkoutParams.set("seatId", selectedSeatIds[0]);
-      checkoutParams.set("seatIds", selectedSeatIds.join(","));
-    }
-    router.push(`/checkout/${homeId}?${checkoutParams.toString()}`);
+    const params = new URLSearchParams({
+      plan,
+      flow,
+      seatIds: selectedSeatIds.join(","),
+    });
+    router.push(`/seats/${homeId}/passengers?${params.toString()}`);
   };
 
   const renderSeat = (row: number, column: string) => {
@@ -337,7 +315,7 @@ export default function SeatSelector({
           disabled={seats.length > 0 && selectedSeatIds.length === 0}
           onClick={handleContinue}
         >
-          Continuar al pago
+          Continuar
         </Button>
       </div>
     </div>

@@ -4,26 +4,35 @@ import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
+import PassengersClient from "./PassengersClient";
 
 const prismaAny = prisma as any;
 
-async function getPackageWithSeats(homeId: string) {
+async function getSelectedSeats(homeId: string, seatIds: string[]) {
   noStore();
-  return prismaAny.home.findUnique({
-    where: { id: homeId },
+  if (seatIds.length === 0) return [];
+  return prismaAny.packageSeat.findMany({
+    where: {
+      homeId,
+      id: { in: seatIds },
+    },
     select: {
       id: true,
-      title: true,
-      guests: true,
-      PackageSeat: {
-        select: {
-          id: true,
-          zone: true,
-          status: true,
-        },
-      },
+      zone: true,
+      row: true,
+      column: true,
     },
+    orderBy: [{ row: "asc" }, { column: "asc" }],
   });
+}
+
+async function getHomeTitle(homeId: string) {
+  noStore();
+  const home = await prismaAny.home.findUnique({
+    where: { id: homeId },
+    select: { title: true },
+  });
+  return home?.title ?? null;
 }
 
 export default async function PassengersPage({
@@ -31,7 +40,7 @@ export default async function PassengersPage({
   searchParams,
 }: {
   params: Promise<{ homeId: string }>;
-  searchParams: Promise<{ plan?: string; flow?: string }>;
+  searchParams: Promise<{ plan?: string; flow?: string; seatIds?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -39,33 +48,53 @@ export default async function PassengersPage({
   } = await supabase.auth.getUser();
 
   const { homeId } = await params;
-  const { plan: planParam, flow: flowParam } = await searchParams;
+  const { plan: planParam, flow: flowParam, seatIds: seatIdsParam } = await searchParams;
+
   const plan = planParam === "vip" ? "vip" : "estandar";
   const flow = flowParam === "ahorro" ? "ahorro" : "contado";
 
   if (!user) {
-    redirect(
-      `/login?next=/seats/${homeId}/passengers?plan=${plan}&flow=${flow}`
-    );
+    redirect(`/login?next=/seats/${homeId}/passengers?plan=${plan}&flow=${flow}`);
   }
 
-  const home = await getPackageWithSeats(homeId);
-  if (!home) notFound();
+  const seatIds = (seatIdsParam || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  const zone = plan === "vip" ? "VIP" : "STANDARD";
-  const seats = home.PackageSeat ?? [];
-  const hasSeatMapForPlan = seats.some((seat: any) => seat.zone === zone);
-  const availableSeats = seats.filter(
-    (seat: any) => seat.zone === zone && seat.status === "AVAILABLE"
-  ).length;
+  if (seatIds.length === 0) {
+    redirect(`/seats/${homeId}?plan=${plan}&flow=${flow}`);
+  }
 
-  const parsedGuests = Number.parseInt(String(home.guests ?? "0"), 10);
-  const propertyMaxGuests = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 1;
-  const maxPassengers = hasSeatMapForPlan ? availableSeats : propertyMaxGuests;
-  const passengerOptions = Array.from(
-    { length: Math.max(0, maxPassengers) },
-    (_, idx) => idx + 1
-  );
+  const seats = await getSelectedSeats(homeId, seatIds);
+  if (seats.length === 0) {
+    redirect(`/seats/${homeId}?plan=${plan}&flow=${flow}`);
+  }
+
+  const homeTitle = await getHomeTitle(homeId);
+
+  const currentUser = {
+    id: user.id,
+    firstName: user.user_metadata?.first_name ?? user.user_metadata?.name ?? "",
+    email: user.email ?? "",
+    cedula: "",
+  };
+
+  // Try to get cedula from prisma user
+  try {
+    const prismaUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { cedula: true, firstName: true },
+    });
+    if (prismaUser) {
+      currentUser.cedula = prismaUser.cedula ?? "";
+      if (prismaUser.firstName && !currentUser.firstName) {
+        currentUser.firstName = prismaUser.firstName;
+      }
+    }
+  } catch {
+    // ignore
+  }
 
   const planLabel = plan === "vip" ? "Plan Premium VIP" : "Plan Estándar";
 
@@ -74,58 +103,28 @@ export default async function PassengersPage({
       <div className="mx-auto max-w-lg px-4 py-8">
         <div className="mb-6">
           <Link
-            href={`/home/${homeId}`}
+            href={`/seats/${homeId}?plan=${plan}&flow=${flow}`}
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Volver
+            Volver a asientos
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Cantidad de Pasajeros</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Datos de Pasajeros</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {home.title} · <span className="font-medium text-gray-700">{planLabel}</span>
+            {homeTitle} &nbsp;·&nbsp; <span className="font-medium text-gray-700">{planLabel}</span>
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            {seats.length} asiento{seats.length > 1 ? "s" : ""} seleccionado{seats.length > 1 ? "s" : ""}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
-          <div>
-            <p className="text-sm text-gray-500">Pasajeros</p>
-            <p className="text-xs text-gray-400 mt-1">
-              Máximo disponible para este plan: {maxPassengers}
-            </p>
-          </div>
-
-          {maxPassengers <= 0 && (
-            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
-              No hay cupos disponibles para este plan en este momento.
-            </p>
-          )}
-
-          <form action={`/seats/${homeId}`} method="get" className="space-y-4">
-            <input type="hidden" name="plan" value={plan} />
-            <input type="hidden" name="flow" value={flow} />
-
-            <select
-              name="guests"
-              defaultValue="1"
-              disabled={maxPassengers <= 0}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            >
-              {passengerOptions.map((value) => (
-                <option key={value} value={value}>
-                  {value} pasajero{value > 1 ? "s" : ""}
-                </option>
-              ))}
-            </select>
-
-            <button
-              type="submit"
-              disabled={maxPassengers <= 0}
-              className="w-full rounded-full bg-gray-900 px-4 py-2.5 text-sm font-semibold !text-white transition hover:bg-black hover:!text-white disabled:bg-gray-900/70 disabled:!text-white"
-            >
-              Continuar
-            </button>
-          </form>
-        </div>
+        <PassengersClient
+          homeId={homeId}
+          plan={plan}
+          flow={flow}
+          seats={seats}
+          currentUser={currentUser}
+        />
       </div>
     </div>
   );

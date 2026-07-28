@@ -67,6 +67,7 @@ export default async function CheckoutPage({
     seatIds?: string;
     flow?: string;
     target?: string;
+    passengers?: string;
   }>;
 }) {
   const supabase = await createClient();
@@ -79,11 +80,22 @@ export default async function CheckoutPage({
   }
 
   const { homeId } = await params;
-  const { startDate, endDate, guests, plan, seatId, seatIds, flow, target } =
+  const { startDate, endDate, guests, plan, seatId, seatIds, flow, target, passengers } =
     await searchParams;
   const isSavingsFlow = flow === "ahorro";
   const isGeneralSavings =
     isSavingsFlow && (target === "general" || homeId === "general");
+
+  const parsedPassengers: Array<{ cedula: string; nombre: string; userId?: string; email?: string }> = (() => {
+    if (!passengers) return [];
+    try {
+      const parsed = JSON.parse(passengers);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
+
   const resolvedSeatIds = (() => {
     const parsed = (seatIds || "")
       .split(",")
@@ -264,6 +276,7 @@ export default async function CheckoutPage({
             seatId={resolvedSeatIds[0]}
             seatIds={resolvedSeatIds}
             plan={plan}
+            passengers={parsedPassengers}
             savingsFlow={{
               kind: isGeneralSavings ? "general" : "package",
               goalUsd,
@@ -551,6 +564,7 @@ export default async function CheckoutPage({
           seatId={resolvedSeatIds[0]}
           seatIds={resolvedSeatIds}
           plan={plan}
+          passengers={parsedPassengers}
           pagomovilMode={pagomovilConfig.mode}
           merchantPhone={pagomovilConfig.merchant.phone}
           merchantBank={pagomovilConfig.merchant.bank}

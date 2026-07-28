@@ -202,6 +202,10 @@ export async function POST(request: Request) {
     }
     const planParam = typeof body?.plan === "string" ? body.plan : "estandar";
     const plan: "vip" | "estandar" = planParam === "vip" ? "vip" : "estandar";
+    const passengersRaw = body?.passengers;
+    const passengers: Array<{ cedula: string; nombre: string; userId?: string; email?: string }> = Array.isArray(passengersRaw)
+      ? passengersRaw
+      : [];
     const paymentMethod =
       typeof body?.paymentMethod === "string" ? body.paymentMethod : "";
     const checkoutModeRaw =
@@ -757,6 +761,7 @@ export async function POST(request: Request) {
             savingsAppliedBs: txSavingsAppliedBs,
             externalAmountUsd: txExternalAmountUsd,
             externalAmountBs: txExternalAmountBs,
+            ...(passengers.length > 0 ? { passengers } : {}),
           },
         },
       });

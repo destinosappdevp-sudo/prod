@@ -34,6 +34,13 @@ export type SavingsFlowConfig = {
   packageTitle?: string;
 };
 
+export type PassengerInfo = {
+  cedula: string;
+  nombre: string;
+  userId?: string;
+  email?: string;
+};
+
 interface CheckoutFormProps {
   homeId: string;
   userId: string;
@@ -49,6 +56,7 @@ interface CheckoutFormProps {
   seatId?: string;
   seatIds?: string[];
   plan?: string;
+  passengers?: PassengerInfo[];
   savingsFlow?: SavingsFlowConfig;
   pagomovilMode?: PagoMovilMode;
   merchantPhone?: string;
@@ -75,6 +83,7 @@ export default function CheckoutForm({
   seatId,
   seatIds,
   plan,
+  passengers = [],
   savingsFlow,
   pagomovilMode = "MANUAL",
   merchantPhone = "",
@@ -264,6 +273,7 @@ export default function CheckoutForm({
               seatIds: Array.isArray(seatIds) ? seatIds : [],
               guests: guests || 1,
               plan: plan || null,
+              passengers: passengers.length > 0 ? passengers : null,
             },
           }),
         });
@@ -305,6 +315,7 @@ export default function CheckoutForm({
           seatId: seatId || null,
           seatIds: Array.isArray(seatIds) ? seatIds : [],
           plan: plan || null,
+          passengers: passengers.length > 0 ? passengers : null,
         }),
       });
       await delayMs(EXTRA_LOADING_MS);
