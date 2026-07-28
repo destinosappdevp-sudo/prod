@@ -610,11 +610,14 @@ export default function PropertyEditForm({
                   <SelectContent>
                     <SelectItem value="ENC32">Encava 32 (31 pasajeros + copiloto)</SelectItem>
                     <SelectItem value="VAN20">Van 20 (19 pasajeros + copiloto)</SelectItem>
+                    <SelectItem value="VAN20_PASILLO">Van 20 Pasillo (18 pasajeros + copiloto)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
                   {formData.transportType === "VAN20"
                     ? "Distribución: Filas 1-5 con 3 asientos (A,B,C), Fila 6 con 4 asientos (A,B,C,D)"
+                    : formData.transportType === "VAN20_PASILLO"
+                    ? "Distribución: Filas 1-5 con 2 asientos izq + pasillo + 1 der (A,B|C), Fila 6 con 3 asientos (A,B,C)"
                     : "Distribución: Filas 1-6 con 4 asientos, Fila 7 con 2 asientos, Fila 8 con 5 asientos"}
                 </p>
               </div>

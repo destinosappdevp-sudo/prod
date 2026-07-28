@@ -442,6 +442,7 @@ export default function DestinationEditForm({
                   <SelectContent>
                     <SelectItem value="ENC32">Encava 32</SelectItem>
                     <SelectItem value="VAN20">Van 20</SelectItem>
+                    <SelectItem value="VAN20_PASILLO">Van 20 Pasillo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

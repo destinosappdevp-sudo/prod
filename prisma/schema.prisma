@@ -420,6 +420,7 @@ model PackageSeat {
 enum TransportType {
   ENC32
   VAN20
+  VAN20_PASILLO
 }
 
 enum SeatZone {

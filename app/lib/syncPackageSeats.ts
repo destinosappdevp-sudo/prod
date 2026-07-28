@@ -28,7 +28,7 @@
  *   VIP = los primeros N asientos vendibles, Estándar = el resto
  */
 
-type TransportType = "ENC32" | "VAN20";
+type TransportType = "ENC32" | "VAN20" | "VAN20_PASILLO";
 
 const LAYOUTS: Record<TransportType, { row: number; columns: string[] }[]> = {
   ENC32: [
@@ -49,11 +49,20 @@ const LAYOUTS: Record<TransportType, { row: number; columns: string[] }[]> = {
     { row: 5, columns: ["A", "B", "C"] },
     { row: 6, columns: ["A", "B", "C", "D"] },
   ],
+  VAN20_PASILLO: [
+    { row: 1, columns: ["A", "B", "C"] },
+    { row: 2, columns: ["A", "B", "C"] },
+    { row: 3, columns: ["A", "B", "C"] },
+    { row: 4, columns: ["A", "B", "C"] },
+    { row: 5, columns: ["A", "B", "C"] },
+    { row: 6, columns: ["A", "B", "C"] },
+  ],
 };
 
 const TOTAL_SELLABLE_BY_TRANSPORT: Record<TransportType, number> = {
   ENC32: 31,
   VAN20: 19,
+  VAN20_PASILLO: 18,
 };
 
 export async function syncPackageSeats(

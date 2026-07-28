@@ -19,7 +19,7 @@ interface SeatSelectorProps {
   homeId: string;
   flow: "ahorro" | "contado";
   guests?: number;
-  transportType?: "ENC32" | "VAN20";
+  transportType?: "ENC32" | "VAN20" | "VAN20_PASILLO";
 }
 
 export default function SeatSelector({
@@ -138,6 +138,28 @@ export default function SeatSelector({
   };
 
   const renderRow = (row: number) => {
+    if (transportType === "VAN20_PASILLO") {
+      const isLastRow = row === 6;
+      return (
+        <div key={row} className="flex items-center justify-center gap-2">
+          {isLastRow ? (
+            <>
+              {renderSeat(6, "A")}
+              {renderSeat(6, "B")}
+              {renderSeat(6, "C")}
+            </>
+          ) : (
+            <>
+              {renderSeat(row, "A")}
+              {renderSeat(row, "B")}
+              <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
+              {renderSeat(row, "C")}
+            </>
+          )}
+        </div>
+      );
+    }
+
     if (transportType === "VAN20") {
       const isLastRow = row === 6;
       return (
