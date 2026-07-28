@@ -21,20 +21,6 @@ interface SeatSelectorProps {
   guests?: number;
 }
 
-const BUS_LAYOUT: {
-  row: number;
-  columns: { label: string }[];
-}[] = [
-  { row: 1, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
-  { row: 2, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
-  { row: 3, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
-  { row: 4, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
-  { row: 5, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
-  { row: 6, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
-  { row: 7, columns: [{ label: "A" }, { label: "B" }] },
-  { row: 8, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }, { label: "E" }] },
-];
-
 export default function SeatSelector({
   seats,
   plan,
@@ -148,7 +134,7 @@ export default function SeatSelector({
     }
 
     const seatLabel = `${column}${row}`;
-    const seatContent = isOccupied ? "✕" : !selectableByPlan ? "⛔" : seatLabel;
+    const seatContent = isOccupied ? "✕" : !selectableByPlan ? "" : seatLabel;
 
     return (
       <button
@@ -190,7 +176,6 @@ export default function SeatSelector({
           <>
             {renderSeat(8, "A")}
             {renderSeat(8, "B")}
-            <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
             {renderSeat(8, "C")}
             {renderSeat(8, "D")}
             {renderSeat(8, "E")}
@@ -259,33 +244,34 @@ export default function SeatSelector({
         </div>
       </div>
 
-      {/* Contenedor del bus */}
-      <div className="bg-gray-50 border border-gray-200 rounded-3xl px-8 py-6 flex flex-col items-center gap-3 min-w-[260px]">
-        {/* Cabecera */}
-        <div className="flex items-center justify-center gap-4 mb-1 w-full">
-          {[
-            { label: "Chofer" },
-            { label: "Motor", icon: <span className="text-lg">⚙</span> },
-            { label: "Guía Turístico" },
-          ].map((item) => (
-            <div key={item.label} className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center text-gray-500">
-                {item.icon ?? <User className="w-5 h-5" />}
-              </div>
-              <span className="text-[8px] text-gray-400 font-semibold uppercase tracking-widest mt-1">
-                {item.label}
-              </span>
+      {/* Contenedor del bus con forma de autobús */}
+      <div className="relative bg-gray-50 border-4 border-gray-700 rounded-[2rem] px-6 py-5 flex flex-col items-center gap-3 min-w-[280px] shadow-xl">
+        {/* Parabrisas superior */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-3 bg-gray-600 rounded-b-lg" />
+
+        {/* Fila frontal: Chofer + Copiloto */}
+        <div className="flex items-center justify-between gap-4 mb-2 w-full pt-2">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center text-gray-600 shadow-sm">
+              <User className="w-6 h-6" />
             </div>
-          ))}
+            <span className="text-[9px] text-gray-500 font-semibold uppercase tracking-wider mt-1">
+              Chofer
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 rounded-lg border-2 border-gray-400 bg-gray-200 flex items-center justify-center text-gray-500">
+              <span className="text-xs font-bold">01</span>
+            </div>
+            <span className="text-[9px] text-gray-500 font-semibold uppercase tracking-wider mt-1">
+              Copiloto
+            </span>
+          </div>
         </div>
 
-        {/* Puerta Delantera */}
-        <div className="w-full flex justify-end pr-2 mb-1">
-          <div className="flex items-center gap-1 text-[9px] text-gray-400 font-semibold">
-            <span className="inline-block w-3 h-0.5 bg-gray-300" />
-            Puerta
-            <span className="inline-block w-3 h-0.5 bg-gray-300" />
-          </div>
+        {/* Puerta Delantera (indicador lateral derecho) */}
+        <div className="absolute top-20 -right-2 w-4 h-12 bg-gray-600 rounded-r-lg flex items-center justify-center">
+          <span className="text-[7px] text-white font-bold writing-mode-vertical">PUERTA</span>
         </div>
 
         {/* Zona VIP */}
@@ -324,6 +310,11 @@ export default function SeatSelector({
             </div>
           </>
         )}
+
+        {/* Puerta Trasera (indicador lateral derecho) */}
+        <div className="absolute bottom-20 -right-2 w-4 h-12 bg-gray-600 rounded-r-lg flex items-center justify-center">
+          <span className="text-[7px] text-white font-bold writing-mode-vertical">PUERTA</span>
+        </div>
       </div>
 
       {/* Asiento seleccionado + botón */}
