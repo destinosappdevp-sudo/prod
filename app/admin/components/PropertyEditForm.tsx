@@ -197,9 +197,42 @@ export default function PropertyEditForm({
     return getMunicipalitiesByState(formData.country);
   }, [formData.country, getMunicipalitiesByState]);
 
+  const TRANSPORT_CAPACITY: Record<string, number> = {
+    ENC32: 31,
+    VAN20: 19,
+    VAN20_PASILLO: 18,
+  };
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => {
       const next = { ...prev, [field]: value };
+
+      if (field === "transportType") {
+        const totalCapacity = TRANSPORT_CAPACITY[value] || 31;
+        next.vipSeats = "0";
+        next.standardSeats = totalCapacity.toString();
+        next.bedrooms = "0";
+        next.bathrooms = totalCapacity.toString();
+        next.guests = totalCapacity.toString();
+      } else if (field === "vipSeats" || field === "bedrooms") {
+        const vipValue = field === "vipSeats" ? value : value;
+        const totalCapacity = TRANSPORT_CAPACITY[next.transportType || "ENC32"] || 31;
+        let vip = parseSeatValue(vipValue);
+        if (vip > totalCapacity) vip = totalCapacity;
+        const std = Math.max(0, totalCapacity - vip);
+        next.vipSeats = vip.toString();
+        next.standardSeats = std.toString();
+        next.bedrooms = vip.toString();
+        next.bathrooms = std.toString();
+        next.guests = totalCapacity.toString();
+      } else if (field === "standardSeats" || field === "bathrooms") {
+        next.standardSeats = field === "standardSeats" ? value : value;
+        next.bathrooms = field === "standardSeats" ? value : value;
+        const vip = parseSeatValue(next.vipSeats || next.bedrooms);
+        const std = parseSeatValue(next.standardSeats || next.bathrooms);
+        next.guests = (vip + std).toString();
+      }
+
       if (field === "bedrooms") {
         next.vipSeats = value;
       }
@@ -213,16 +246,6 @@ export default function PropertyEditForm({
         next.bathrooms = value;
       }
 
-      if (
-        field === "bedrooms" ||
-        field === "bathrooms" ||
-        field === "vipSeats" ||
-        field === "standardSeats"
-      ) {
-        const vip = parseSeatValue(next.vipSeats || next.bedrooms);
-        const std = parseSeatValue(next.standardSeats || next.bathrooms);
-        next.guests = (vip + std).toString();
-      }
       return next;
     });
   };
