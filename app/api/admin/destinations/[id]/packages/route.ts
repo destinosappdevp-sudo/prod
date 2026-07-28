@@ -144,12 +144,7 @@ export async function POST(
       );
     }
 
-    if (vipSeats % 2 !== 0 || standardSeats % 2 !== 0) {
-      return NextResponse.json(
-        { error: "Los cupos VIP y Estándar deben ser números pares" },
-        { status: 400 }
-      );
-    }
+
 
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;

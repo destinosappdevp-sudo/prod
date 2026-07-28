@@ -225,12 +225,7 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    if (effectiveVipSeats % 2 !== 0 || effectiveStandardSeats % 2 !== 0) {
-      return NextResponse.json(
-        { error: "Los cupos VIP y Estándar deben ser números pares" },
-        { status: 400 }
-      );
-    }
+
 
     let photoPath: string | undefined;
     if (imageFile && imageFile.size > 0) {

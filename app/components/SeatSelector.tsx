@@ -21,88 +21,18 @@ interface SeatSelectorProps {
   guests: number;
 }
 
-/**
- * Layout completo del bus (33 posiciones físicas, 31 vendibles).
- * Chofer y copiloto NO se venden.
- */
 const BUS_LAYOUT: {
   row: number;
-  columns: { label: string; sellable: boolean }[];
+  columns: { label: string }[];
 }[] = [
-  // Chofer y copiloto se renderizan como elementos estáticos en el JSX
-  {
-    row: 1,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: true },
-      { label: "D", sellable: true },
-    ],
-  },
-  {
-    row: 2,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: true },
-      { label: "D", sellable: true },
-    ],
-  },
-  {
-    row: 3,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: true },
-      { label: "D", sellable: true },
-    ],
-  },
-  {
-    row: 4,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: true },
-      { label: "D", sellable: true },
-    ],
-  },
-  {
-    row: 5,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: true },
-      { label: "D", sellable: true },
-    ],
-  },
-  {
-    row: 6,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: true },
-      { label: "D", sellable: true },
-    ],
-  },
-  {
-    row: 7,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: true },
-      { label: "D", sellable: true },
-    ],
-  },
-  {
-    row: 8,
-    columns: [
-      { label: "A", sellable: true },
-      { label: "B", sellable: true },
-      { label: "C", sellable: false }, // Copiloto
-      { label: "D", sellable: true },
-      { label: "E", sellable: true },
-    ],
-  },
+  { row: 1, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
+  { row: 2, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
+  { row: 3, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
+  { row: 4, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
+  { row: 5, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
+  { row: 6, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }] },
+  { row: 7, columns: [{ label: "A" }, { label: "B" }] },
+  { row: 8, columns: [{ label: "A" }, { label: "B" }, { label: "C" }, { label: "D" }, { label: "E" }] },
 ];
 
 export default function SeatSelector({
@@ -119,7 +49,6 @@ export default function SeatSelector({
     [selectedSeatIds]
   );
 
-  // Index by row+column for fast lookup
   const seatMap = useMemo(
     () => new Map(seats.map((s) => [`${s.row}-${s.column}`, s])),
     [seats]
@@ -143,9 +72,7 @@ export default function SeatSelector({
       if (current.includes(seat.id)) {
         return current.filter((id) => id !== seat.id);
       }
-      if (current.length >= guests) {
-        return current;
-      }
+      if (current.length >= guests) return current;
       return [...current, seat.id];
     });
   };
@@ -173,24 +100,18 @@ export default function SeatSelector({
       return;
     }
 
-    const requiredSeatCount = guests;
-    if (selectedSeatIds.length < requiredSeatCount) return;
+    if (selectedSeatIds.length < guests) return;
 
     if (flow === "ahorro") {
       router.push(savingsUrl(selectedSeatIds));
       return;
     }
 
-    const checkoutParams = new URLSearchParams({
-      plan,
-      guests: String(guests),
-    });
-
+    const checkoutParams = new URLSearchParams({ plan, guests: String(guests) });
     if (selectedSeatIds.length > 0) {
       checkoutParams.set("seatId", selectedSeatIds[0]);
       checkoutParams.set("seatIds", selectedSeatIds.join(","));
     }
-
     router.push(`/checkout/${homeId}?${checkoutParams.toString()}`);
   };
 
@@ -211,20 +132,17 @@ export default function SeatSelector({
       "w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold border-2 transition-all select-none ";
 
     if (isSelected) {
-      className +=
-        "bg-amber-400 border-amber-500 text-white cursor-pointer scale-105 shadow-md hover:bg-amber-400 hover:border-amber-500 hover:text-white";
+      className += "bg-amber-400 border-amber-500 text-white cursor-pointer scale-105 shadow-md hover:bg-amber-400 hover:border-amber-500 hover:text-white";
     } else if (isOccupied) {
       className += "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed";
     } else if (isVip) {
-      className +=
-        canSelect
-          ? "bg-gray-900 border-gray-700 text-white cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
-          : "bg-gray-700 border-gray-600 text-gray-300 cursor-not-allowed opacity-50";
+      className += canSelect
+        ? "bg-gray-900 border-gray-700 text-white cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
+        : "bg-gray-700 border-gray-600 text-gray-300 cursor-not-allowed opacity-50";
     } else {
-      className +=
-        canSelect
-          ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
-          : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
+      className += canSelect
+        ? "bg-white border-gray-300 text-gray-800 cursor-pointer hover:bg-amber-400 hover:border-amber-500 hover:text-white"
+        : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-50";
     }
 
     const seatLabel = `${column}${row}`;
@@ -251,12 +169,42 @@ export default function SeatSelector({
     );
   };
 
-  // Non-sellable seat placeholder (copilot)
-  const renderNonSellableSeat = (label: string) => (
-    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold border-2 border-dashed border-gray-300 bg-gray-100 text-gray-400">
-      {label}
-    </div>
-  );
+  const renderRow = (row: number) => {
+    const isRow7 = row === 7;
+    const isRow8 = row === 8;
+
+    return (
+      <div key={row} className="flex items-center justify-center gap-2">
+        {isRow7 ? (
+          <>
+            {renderSeat(7, "A")}
+            {renderSeat(7, "B")}
+            <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
+            <div className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 flex items-center justify-center">
+              <span className="text-[8px] text-gray-400 font-bold tracking-wider">PUERTA</span>
+            </div>
+          </>
+        ) : isRow8 ? (
+          <>
+            {renderSeat(8, "A")}
+            {renderSeat(8, "B")}
+            <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
+            {renderSeat(8, "C")}
+            {renderSeat(8, "D")}
+            {renderSeat(8, "E")}
+          </>
+        ) : (
+          <>
+            {renderSeat(row, "A")}
+            {renderSeat(row, "B")}
+            <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
+            {renderSeat(row, "C")}
+            {renderSeat(row, "D")}
+          </>
+        )}
+      </div>
+    );
+  };
 
   const selectedSeats = useMemo(
     () => seats.filter((s) => selectedSeatIdSet.has(s.id)),
@@ -268,9 +216,7 @@ export default function SeatSelector({
       <div className="flex flex-col items-center gap-6 py-8">
         <div className="text-center space-y-2">
           <p className="text-gray-600 font-medium">Tu cupo está reservado.</p>
-          <p className="text-sm text-gray-400">
-            Los asientos serán asignados por el organizador.
-          </p>
+          <p className="text-sm text-gray-400">Los asientos serán asignados por el organizador.</p>
         </div>
         <Button className="w-full max-w-xs" onClick={handleContinue}>
           Continuar al pago
@@ -278,6 +224,16 @@ export default function SeatSelector({
       </div>
     );
   }
+
+  const hasVip = seats.some((s) => s.zone === "VIP");
+  const hasStd = seats.some((s) => s.zone === "STANDARD");
+
+  const vipRows = hasVip
+    ? [...new Set(seats.filter((s) => s.zone === "VIP").map((s) => s.row))].sort((a, b) => a - b)
+    : [];
+  const stdRows = hasStd
+    ? [...new Set(seats.filter((s) => s.zone === "STANDARD").map((s) => s.row))].sort((a, b) => a - b)
+    : [];
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -296,147 +252,73 @@ export default function SeatSelector({
           <span>Tu Selección</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded bg-gray-200 border-2 border-gray-300 flex items-center justify-center text-gray-400 text-[10px] font-bold">
-            ✕
-          </div>
+          <div className="w-5 h-5 rounded bg-gray-200 border-2 border-gray-300 flex items-center justify-center text-gray-400 text-[10px] font-bold">✕</div>
           <span>Ocupado</span>
         </div>
       </div>
 
       {/* Contenedor del bus */}
       <div className="bg-gray-50 border border-gray-200 rounded-3xl px-8 py-6 flex flex-col items-center gap-3 min-w-[260px]">
-        {/* Chofer */}
-        <div className="flex items-center justify-center gap-8 mb-2 w-full">
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center text-gray-500">
-              <User className="w-5 h-5" />
+        {/* Cabecera */}
+        <div className="flex items-center justify-center gap-4 mb-1 w-full">
+          {[
+            { label: "Chofer" },
+            { label: "Motor", icon: <span className="text-lg">⚙</span> },
+            { label: "Guía Turístico" },
+          ].map((item) => (
+            <div key={item.label} className="flex flex-col items-center">
+              <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center text-gray-500">
+                {item.icon ?? <User className="w-5 h-5" />}
+              </div>
+              <span className="text-[8px] text-gray-400 font-semibold uppercase tracking-widest mt-1">
+                {item.label}
+              </span>
             </div>
-            <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-widest mt-1">
-              Chofer
-            </span>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center text-gray-500">
-              <span className="text-lg">⚙</span>
-            </div>
-            <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-widest mt-1">
-              Motor
-            </span>
-          </div>
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-white flex items-center justify-center text-gray-500">
-              <User className="w-5 h-5" />
-            </div>
-            <span className="text-[9px] text-gray-400 font-semibold uppercase tracking-widest mt-1">
-              Copiloto
-            </span>
+          ))}
+        </div>
+
+        {/* Puerta Delantera */}
+        <div className="w-full flex justify-end pr-2 mb-1">
+          <div className="flex items-center gap-1 text-[9px] text-gray-400 font-semibold">
+            <span className="inline-block w-3 h-0.5 bg-gray-300" />
+            Puerta
+            <span className="inline-block w-3 h-0.5 bg-gray-300" />
           </div>
         </div>
 
         {/* Zona VIP */}
-        {seats.some((s) => s.zone === "VIP") && (
+        {hasVip && (
           <>
             <div className="bg-amber-400 text-white text-[10px] font-bold px-4 py-0.5 rounded-full tracking-wider">
               ✦ ZONA PREMIUM
             </div>
             <div className="flex flex-col gap-2">
-              {BUS_LAYOUT.filter((layoutRow) =>
-                seats.some(
-                  (s) => s.row === layoutRow.row && s.zone === "VIP"
-                )
-              ).map((layoutRow) => {
-                const rowSeats = layoutRow.columns.filter((c) => {
-                  const seat = seatMap.get(`${layoutRow.row}-${c.label}`);
-                  return seat && seat.zone === "VIP";
-                });
-                if (rowSeats.length === 0) return null;
-                return (
-                  <div
-                    key={layoutRow.row}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    {renderSeat(layoutRow.row, "A")}
-                    {renderSeat(layoutRow.row, "B")}
-                    <span className="w-5 text-center text-[10px] text-gray-400 font-medium">
-                      {layoutRow.row}
-                    </span>
-                    {renderSeat(layoutRow.row, "C")}
-                    {renderSeat(layoutRow.row, "D")}
-                  </div>
-                );
-              })}
+              {vipRows.map((row) => renderRow(row))}
             </div>
           </>
         )}
 
         {/* Divisor */}
-        {seats.some((s) => s.zone === "VIP") &&
-          seats.some((s) => s.zone === "STANDARD") && (
-            <div className="flex items-center gap-2 w-full mt-2">
-              <div className="flex-1 border-t border-dashed border-gray-300" />
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider whitespace-nowrap">
-                Zona Estándar
-              </span>
-              <div className="flex-1 border-t border-dashed border-gray-300" />
-            </div>
-          )}
+        {hasVip && hasStd && (
+          <div className="flex items-center gap-2 w-full mt-2">
+            <div className="flex-1 border-t border-dashed border-gray-300" />
+            <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider whitespace-nowrap">
+              Zona Estándar
+            </span>
+            <div className="flex-1 border-t border-dashed border-gray-300" />
+          </div>
+        )}
 
         {/* Zona Estándar */}
-        {seats.some((s) => s.zone === "STANDARD") && (
+        {hasStd && (
           <>
-            {!seats.some((s) => s.zone === "VIP") && (
+            {!hasVip && (
               <div className="bg-gray-400 text-white text-[10px] font-bold px-4 py-0.5 rounded-full tracking-wider">
                 ZONA ESTÁNDAR
               </div>
             )}
             <div className="flex flex-col gap-2">
-              {BUS_LAYOUT.filter((layoutRow) =>
-                seats.some(
-                  (s) =>
-                    s.row === layoutRow.row && s.zone === "STANDARD"
-                )
-              ).map((layoutRow) => {
-                const hasStdSeats = layoutRow.columns.some((c) => {
-                  const seat = seatMap.get(`${layoutRow.row}-${c.label}`);
-                  return seat && seat.zone === "STANDARD";
-                });
-                if (!hasStdSeats) return null;
-
-                // Row 8 has special layout with 5 positions and copilot
-                const isRow8 = layoutRow.row === 8;
-
-                return (
-                  <div
-                    key={layoutRow.row}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    {isRow8 ? (
-                      <>
-                        {renderSeat(8, "A")}
-                        {renderSeat(8, "B")}
-                        <div className="flex flex-col items-center">
-                          <span className="text-[8px] text-gray-400 font-medium mb-0.5">
-                            8
-                          </span>
-                          {renderNonSellableSeat("C")}
-                        </div>
-                        {renderSeat(8, "D")}
-                        {renderSeat(8, "E")}
-                      </>
-                    ) : (
-                      <>
-                        {renderSeat(layoutRow.row, "A")}
-                        {renderSeat(layoutRow.row, "B")}
-                        <span className="w-5 text-center text-[10px] text-gray-400 font-medium">
-                          {layoutRow.row}
-                        </span>
-                        {renderSeat(layoutRow.row, "C")}
-                        {renderSeat(layoutRow.row, "D")}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
+              {stdRows.map((row) => renderRow(row))}
             </div>
           </>
         )}
@@ -444,17 +326,11 @@ export default function SeatSelector({
 
       {/* Asiento seleccionado + botón */}
       <div className="w-full max-w-xs space-y-3 mt-2">
-        {seats.length === 0 ? (
-          <p className="text-center text-sm text-gray-400">
-            Los asientos serán asignados por el organizador.
-          </p>
-        ) : selectedSeats.length > 0 ? (
+        {selectedSeats.length > 0 ? (
           <p className="text-center text-sm font-medium text-gray-700">
-            Asientos seleccionados ({selectedSeats.length}/{guests}):{" "}
+            Asientos ({selectedSeats.length}/{guests}):{" "}
             <span className="font-bold text-amber-600">
-              {selectedSeats
-                .map((seat) => `${seat.column}${seat.row}`)
-                .join(", ")}
+              {selectedSeats.map((s) => `${s.column}${s.row}`).join(", ")}
             </span>
           </p>
         ) : (
@@ -467,7 +343,7 @@ export default function SeatSelector({
 
         <Button
           className="w-full bg-gray-900 !text-white hover:bg-gray-800 hover:!text-white disabled:bg-gray-900/70 disabled:!text-white"
-          disabled={seats.length > 0 && selectedSeatIds.length < guests}
+          disabled={selectedSeatIds.length < guests}
           onClick={handleContinue}
         >
           Continuar al pago

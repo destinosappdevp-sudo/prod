@@ -160,12 +160,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    if (effectiveVipSeats % 2 !== 0 || effectiveStandardSeats % 2 !== 0) {
-      return NextResponse.json(
-        { error: "Los cupos VIP y Estándar deben ser números pares" },
-        { status: 400 }
-      );
-    }
+
 
     const amenitiesPayload = formData.get("amenities") as string | null;
     const imageFile = formData.get("image") as File | null;

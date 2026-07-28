@@ -115,9 +115,7 @@ export default function CreatePackageFromDestination({
       if (vipSeats > 0 && (!formData.priceVip || Number(formData.priceVip) <= 0)) {
         throw new Error("Indica un precio VIP mayor a 0");
       }
-      if (vipSeats % 2 !== 0 || standardSeats % 2 !== 0) {
-        throw new Error("Los cupos deben ser números pares");
-      }
+
 
       const payload = new FormData();
       payload.append("title", formData.title);

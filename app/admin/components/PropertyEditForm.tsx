@@ -282,9 +282,7 @@ export default function PropertyEditForm({
         throw new Error("Si configuras cupos VIP debes indicar un precio VIP mayor a 0");
       }
 
-      if (vipSeats % 2 !== 0 || standardSeats % 2 !== 0) {
-        throw new Error("Los cupos VIP y Estándar deben ser números pares");
-      }
+
 
       const payload = new FormData();
       payload.append("title", formData.title);

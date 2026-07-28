@@ -20,8 +20,10 @@ interface SeatMapProps {
 }
 
 /**
- * Layout completo del bus (mismo que SeatSelector).
- * Fila 8 tiene 5 posiciones: A, B, C (copiloto), D, E.
+ * Layout completo del bus (31 cupos vendibles).
+ * Fila 7 solo tiene A, B (puerta trasera).
+ * Fila 8 tiene 5 posiciones: A, B, C, D, E.
+ * Guía Turístico es tripulación, no se vende.
  */
 const BUS_LAYOUT: {
   row: number;
@@ -33,8 +35,8 @@ const BUS_LAYOUT: {
   { row: 4, columns: [{ label: "A", sellable: true }, { label: "B", sellable: true }, { label: "C", sellable: true }, { label: "D", sellable: true }] },
   { row: 5, columns: [{ label: "A", sellable: true }, { label: "B", sellable: true }, { label: "C", sellable: true }, { label: "D", sellable: true }] },
   { row: 6, columns: [{ label: "A", sellable: true }, { label: "B", sellable: true }, { label: "C", sellable: true }, { label: "D", sellable: true }] },
-  { row: 7, columns: [{ label: "A", sellable: true }, { label: "B", sellable: true }, { label: "C", sellable: true }, { label: "D", sellable: true }] },
-  { row: 8, columns: [{ label: "A", sellable: true }, { label: "B", sellable: true }, { label: "C", sellable: false }, { label: "D", sellable: true }, { label: "E", sellable: true }] },
+  { row: 7, columns: [{ label: "A", sellable: true }, { label: "B", sellable: true }] },
+  { row: 8, columns: [{ label: "A", sellable: true }, { label: "B", sellable: true }, { label: "C", sellable: true }, { label: "D", sellable: true }, { label: "E", sellable: true }] },
 ];
 
 const isSeatSelectableByPlan = (seat: Seat, selectionPlan?: "vip" | "estandar") => {
@@ -100,7 +102,6 @@ export default function SeatMap({
   selectedSeatId,
   selectionPlan,
 }: SeatMapProps) {
-  // Index seats by row+column
   const seatIndex = new Map(seats.map((s) => [`${s.row}-${s.column}`, s]));
 
   const hasVip = seats.some((s) => s.zone === "VIP");
@@ -133,25 +134,19 @@ export default function SeatMap({
     );
   };
 
-  const renderNonSellableSeat = () => (
-    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold border-2 border-dashed border-gray-300 bg-gray-100 text-gray-400">
-      C
-    </div>
-  );
-
   return (
     <div className="flex flex-col items-center w-full">
       {/* Leyenda */}
       <div className="flex gap-4 mb-4">
         <Legend color="bg-gray-900" label="Premium" />
         <Legend color="bg-muted/50 border border-border" label="Estándar" />
-        <Legend color="bg-yellow-400" label="Tu Selección" />
+        <Legend color="bg-yellow-400" label="Selección" />
         <Legend color="bg-muted" label="Ocupado" />
       </div>
 
       <div className="rounded-2xl bg-card shadow p-6 w-full max-w-xs flex flex-col items-center">
-        {/* Chofer + Motor + Copiloto */}
-        <div className="flex items-center justify-center gap-6 mb-4 w-full">
+        {/* Chofer + Motor + Guía Turístico */}
+        <div className="flex items-center justify-center gap-5 mb-2 w-full">
           <div className="flex flex-col items-center">
             <div className="w-10 h-10 rounded-full border-2 border-border flex items-center justify-center">
               <span className="text-lg text-muted-foreground">👤</span>
@@ -173,8 +168,17 @@ export default function SeatMap({
               <span className="text-lg text-muted-foreground">👤</span>
             </div>
             <span className="text-[9px] text-muted-foreground tracking-widest mt-1">
-              COPILOTO
+              GUÍA TURÍSTICO
             </span>
+          </div>
+        </div>
+
+        {/* Puerta Delantera */}
+        <div className="w-full flex justify-end pr-1 mb-2">
+          <div className="flex items-center gap-1 text-[9px] text-muted-foreground tracking-widest">
+            <span className="inline-block w-3 h-px bg-muted-foreground" />
+            PUERTA
+            <span className="inline-block w-3 h-px bg-muted-foreground" />
           </div>
         </div>
 
@@ -198,8 +202,8 @@ export default function SeatMap({
                 >
                   {renderSeatButton(layoutRow.row, "A")}
                   {renderSeatButton(layoutRow.row, "B")}
-                  <span className="w-5 text-center text-[10px] text-muted-foreground font-medium">
-                    {layoutRow.row}
+                  <span className="w-12 text-center text-[9px] text-muted-foreground font-semibold tracking-wider uppercase">
+                    Pasillo
                   </span>
                   {renderSeatButton(layoutRow.row, "C")}
                   {renderSeatButton(layoutRow.row, "D")}
@@ -232,22 +236,35 @@ export default function SeatMap({
                 (s) => s.row === layoutRow.row && s.zone === "STANDARD"
               )
             ).map((layoutRow) => {
+              const isRow7 = layoutRow.row === 7;
               const isRow8 = layoutRow.row === 8;
+
               return (
                 <div
                   key={layoutRow.row}
                   className="flex items-center justify-center gap-2"
                 >
-                  {isRow8 ? (
+                  {isRow7 ? (
+                    <>
+                      {renderSeatButton(7, "A")}
+                      {renderSeatButton(7, "B")}
+                      <span className="w-12 text-center text-[9px] text-muted-foreground font-semibold tracking-wider uppercase">
+                        Pasillo
+                      </span>
+                      <div className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 flex items-center justify-center">
+                        <span className="text-[8px] text-muted-foreground font-bold tracking-wider">
+                          PUERTA
+                        </span>
+                      </div>
+                    </>
+                  ) : isRow8 ? (
                     <>
                       {renderSeatButton(8, "A")}
                       {renderSeatButton(8, "B")}
-                      <div className="flex flex-col items-center">
-                        <span className="text-[8px] text-muted-foreground font-medium mb-0.5">
-                          8
-                        </span>
-                        {renderNonSellableSeat()}
-                      </div>
+                      <span className="w-12 text-center text-[9px] text-muted-foreground font-semibold tracking-wider uppercase">
+                        Pasillo
+                      </span>
+                      {renderSeatButton(8, "C")}
                       {renderSeatButton(8, "D")}
                       {renderSeatButton(8, "E")}
                     </>
@@ -255,8 +272,8 @@ export default function SeatMap({
                     <>
                       {renderSeatButton(layoutRow.row, "A")}
                       {renderSeatButton(layoutRow.row, "B")}
-                      <span className="w-5 text-center text-[10px] text-muted-foreground font-medium">
-                        {layoutRow.row}
+                      <span className="w-12 text-center text-[9px] text-muted-foreground font-semibold tracking-wider uppercase">
+                        Pasillo
                       </span>
                       {renderSeatButton(layoutRow.row, "C")}
                       {renderSeatButton(layoutRow.row, "D")}
