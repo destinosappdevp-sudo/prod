@@ -9,7 +9,6 @@ import {
   CreditCard,
   PiggyBank,
   Smartphone,
-  Banknote,
   BarChart3,
   Settings,
   LogOut,
@@ -40,7 +39,6 @@ const getMenuItems = () => {
     { href: "/admin/payments", icon: CreditCard, label: "Pagos" },
     { href: "/admin/savings", icon: PiggyBank, label: "Alcancía" },
     { href: "/admin/pagomovil", icon: Smartphone, label: "R4" },
-    { href: "/admin/withdrawals", icon: Banknote, label: "Retiros" },
     { href: "/admin/reports", icon: BarChart3, label: "Informes" },
     { href: "/admin/configuracion", icon: Settings, label: "Configuración" },
   ];
