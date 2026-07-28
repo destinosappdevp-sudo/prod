@@ -115,7 +115,7 @@ model Home {
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
   User                    User?          @relation(fields: [userId], references: [id])
-  PrivateOwner            User?          @relation("PrivateOwner", fields: [privateOwnerId], references: [id])
+  PrivateOwner            User?          @relation("PrivatePackageOwner", fields: [privateOwnerId], references: [id])
   Destination             Destination?   @relation(fields: [destinationId], references: [id])
   HomeAmenity             HomeAmenity[]
   PackageSeat             PackageSeat[]
@@ -283,7 +283,7 @@ model User {
   Favorite                          Favorite[]
   ApprovalsGiven                    Home[]                   @relation("ApprovedBy")
   Home                              Home[]
-  PrivatePackages                   Home[]                   @relation("PrivateOwner")
+  PrivatePackages                   Home[]                   @relation("PrivatePackageOwner")
   Destination                       Destination[]
   Message_Message_recipientIdToUser Message[]                @relation("Message_recipientIdToUser")
   Message_Message_senderIdToUser    Message[]                @relation("Message_senderIdToUser")
