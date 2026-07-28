@@ -29,6 +29,7 @@ async function getData({
     rooms?: string;
     bathrooms?: string;
     q?: string;
+    month?: string;
   };
 }) {
   noStore();
@@ -76,6 +77,23 @@ async function getData({
     where.title = { contains: searchParams.q.trim(), mode: "insensitive" };
   }
 
+  let homesMonthFilter: any = undefined;
+  if (searchParams?.month) {
+    const [yearStr, monthStr] = searchParams.month.split("-");
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 1);
+      homesMonthFilter = { gte: start, lt: end };
+    }
+  }
+
+  const homesWhere: any = { publishStatus: "APPROVED" };
+  if (homesMonthFilter) {
+    homesWhere.checkInTime = homesMonthFilter;
+  }
+
   const destinations = await prismaAny.destination.findMany({
     where,
     select: {
@@ -89,7 +107,7 @@ async function getData({
       municipality: true,
       categoryName: true,
       Homes: {
-        where: { publishStatus: "APPROVED" },
+        where: homesWhere,
         select: {
           id: true,
           price: true,
@@ -119,28 +137,20 @@ async function getData({
       const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
       return d.getTime() > Date.now();
     });
-    const nextHome = futureHomes[0] || destination.Homes[0];
-    const departure = nextHome?.checkInTime
-      ? new Date(nextHome.checkInTime.includes("T") ? nextHome.checkInTime : `${nextHome.checkInTime}T00:00`)
-      : null;
+    const allDates = futureHomes.map((h: any) => {
+      const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
+      return d.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    });
     const prices = destination.Homes.map((h: any) => [h.price, h.priceVip]).flat().filter((p: any) => typeof p === "number");
     const priceFrom = prices.length > 0 ? Math.min(...prices) : null;
 
     return {
       ...destination,
-      nextDate: departure
-        ? departure.toLocaleDateString("es-ES", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
-        : null,
-      nextTime: departure
-        ? departure.toLocaleTimeString("es-ES", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : null,
+      allDates,
       priceFrom,
     };
   });
@@ -163,6 +173,7 @@ export default async function Home({
     rooms?: string;
     bathrooms?: string;
     q?: string;
+    month?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -173,7 +184,7 @@ export default async function Home({
       <MapFilter />
       <HomeSearchBar />
 
-      <Suspense key={`${sp?.filter}-${sp?.q}`} fallback={<SkeletonLoader />}>
+      <Suspense key={`${sp?.filter}-${sp?.q}-${sp?.month}`} fallback={<SkeletonLoader />}>
         <ShowPlace searchParams={sp} />
       </Suspense>
     </div>
@@ -191,6 +202,7 @@ async function ShowPlace({
     rooms?: string;
     bathrooms?: string;
     q?: string;
+    month?: string;
   };
 }) {
   let userId: string | undefined;
@@ -243,8 +255,7 @@ async function ShowPlace({
       imagePath={item.photo}
       country={item.country}
       municipality={item.municipality}
-      nextDate={item.nextDate}
-      nextTime={item.nextTime}
+      allDates={item.allDates}
       priceFrom={item.priceFrom}
       reviewCount={item._count?.Review || 0}
     />

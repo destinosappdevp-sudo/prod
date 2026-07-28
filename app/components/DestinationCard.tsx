@@ -11,8 +11,7 @@ interface DestinationCardProps {
   imagePath: string | null;
   country: string | null;
   municipality: string | null;
-  nextDate: string | null;
-  nextTime: string | null;
+  allDates: string[];
   priceFrom: number | null;
   reviewCount: number;
 }
@@ -24,8 +23,7 @@ export default function DestinationCard({
   imagePath,
   country,
   municipality,
-  nextDate,
-  nextTime,
+  allDates,
   priceFrom,
   reviewCount,
 }: DestinationCardProps) {
@@ -60,10 +58,16 @@ export default function DestinationCard({
             <MapPin className="h-4 w-4" />
             <span>{[municipality, country].filter(Boolean).join(", ") || "Ubicación no disponible"}</span>
           </div>
-          {nextDate && (
+          {allDates.length > 0 && (
             <div className="mt-2 text-sm text-[#040B42]">
               <p className="font-semibold uppercase tracking-wide text-[11px] mb-1">Próximos</p>
-              <p>{nextDate}{nextTime ? ` · ${nextTime}` : ""}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {allDates.map((date, idx) => (
+                  <span key={idx} className="inline-block rounded-md bg-[#f0f4ff] px-2 py-0.5 text-xs font-medium text-[#040B42]">
+                    {date}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
           {reviewCount > 0 && (

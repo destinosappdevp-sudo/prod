@@ -13,18 +13,35 @@ type SearchSuggestion = {
   checkInTime?: string | null;
 };
 
+type MonthOption = {
+  value: string;
+  label: string;
+};
+
 export function HomeSearchBar() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(searchParams.get("q") ?? "");
+  const [selectedMonth, setSelectedMonth] = useState(searchParams.get("month") ?? "");
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [months, setMonths] = useState<MonthOption[]>([]);
 
   useEffect(() => {
     setValue(searchParams.get("q") ?? "");
+    setSelectedMonth(searchParams.get("month") ?? "");
   }, [searchParams]);
+
+  useEffect(() => {
+    fetch("/api/available-months")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setMonths(data);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,12 +84,17 @@ export function HomeSearchBar() {
     };
   }, [isOpen, value]);
 
-  function pushQuery(nextValue: string) {
+  function pushFilters(nextQ: string, nextMonth: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (nextValue.trim()) {
-      params.set("q", nextValue.trim());
+    if (nextQ.trim()) {
+      params.set("q", nextQ.trim());
     } else {
       params.delete("q");
+    }
+    if (nextMonth) {
+      params.set("month", nextMonth);
+    } else {
+      params.delete("month");
     }
 
     const queryString = params.toString();
@@ -81,14 +103,19 @@ export function HomeSearchBar() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    pushQuery(value);
+    pushFilters(value, selectedMonth);
     setIsOpen(false);
   }
 
   function handleClear() {
     setValue("");
     setSuggestions([]);
-    pushQuery("");
+    pushFilters("", selectedMonth);
+  }
+
+  function handleMonthChange(monthValue: string) {
+    setSelectedMonth(monthValue);
+    pushFilters(value, monthValue);
   }
 
   function handleSuggestionSelect(item: SearchSuggestion) {
@@ -114,29 +141,47 @@ export function HomeSearchBar() {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <form onSubmit={handleSubmit} className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          value={value}
-          onFocus={() => setIsOpen(true)}
-          onChange={(e) => {
-            setValue(e.target.value);
-            setIsOpen(true);
-          }}
-          placeholder="Buscar destino, ciudad o lugar..."
-          className="w-full pl-10 pr-10 py-2.5 rounded-full border border-gray-200 bg-white text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition"
-        />
-        {value && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none"
-            aria-label="Limpiar búsqueda"
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={value}
+            onFocus={() => setIsOpen(true)}
+            onChange={(e) => {
+              setValue(e.target.value);
+              setIsOpen(true);
+            }}
+            placeholder="Buscar destino..."
+            className="w-full pl-10 pr-10 py-2.5 rounded-full border border-gray-200 bg-white text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition"
+          />
+          {value && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-lg leading-none"
+              aria-label="Limpiar búsqueda"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        <div className="relative">
+          <CalendarDays className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <select
+            value={selectedMonth}
+            onChange={(e) => handleMonthChange(e.target.value)}
+            className="appearance-none pl-10 pr-8 py-2.5 rounded-full border border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition cursor-pointer min-w-[170px]"
           >
-            ×
-          </button>
-        )}
+            <option value="">Todas las Fechas</option>
+            {months.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </form>
 
       {isOpen && (
@@ -181,6 +226,3 @@ export function HomeSearchBar() {
     </div>
   );
 }
-
-
-

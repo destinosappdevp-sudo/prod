@@ -45,23 +45,6 @@ function buildFilterHref(
   return `/destinos?${params.toString()}`;
 }
 
-function formatNextDeparture(departureDate?: Date | string | null) {
-  if (!departureDate) return { date: null, time: null };
-  const d = new Date(departureDate);
-  if (Number.isNaN(d.getTime())) return { date: null, time: null };
-  return {
-    date: d.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }),
-    time: d.toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-  };
-}
-
 async function getDestinations({
   userId,
   searchParams,
@@ -71,6 +54,7 @@ async function getDestinations({
     filter?: string;
     country?: string;
     q?: string;
+    month?: string;
   };
 }) {
   const categoryFilterTokens = (searchParams?.filter || "")
@@ -88,6 +72,23 @@ async function getDestinations({
       .filter((pt: any) => categoryFilterTokens.includes(String(pt.id)) || categoryFilterTokens.includes(pt.name))
       .map((pt: any) => pt.name);
     categoryNamesFilter = Array.from(new Set([...matchedNames, ...categoryFilterTokens]));
+  }
+
+  let homesMonthFilter: any = undefined;
+  if (searchParams?.month) {
+    const [yearStr, monthStr] = searchParams.month.split("-");
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 1);
+      homesMonthFilter = { gte: start, lt: end };
+    }
+  }
+
+  const homesWhere: any = { publishStatus: "APPROVED" };
+  if (homesMonthFilter) {
+    homesWhere.checkInTime = homesMonthFilter;
   }
 
   const destinations = await prismaAny.destination.findMany({
@@ -112,7 +113,7 @@ async function getDestinations({
       municipality: true,
       categoryName: true,
       Homes: {
-        where: { publishStatus: "APPROVED" },
+        where: homesWhere,
         select: {
           id: true,
           price: true,
@@ -140,15 +141,20 @@ async function getDestinations({
       return d.getTime() > Date.now();
     });
 
-    const nextHome = futureHomes[0] || destination.Homes[0];
-    const departure = formatNextDeparture(nextHome?.checkInTime);
+    const allDates = futureHomes.map((h: any) => {
+      const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
+      return d.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    });
     const prices = destination.Homes.map((h: any) => [h.price, h.priceVip]).flat().filter((p: any) => typeof p === "number");
     const priceFrom = prices.length > 0 ? Math.min(...prices) : null;
 
     return {
       ...destination,
-      nextDate: departure.date,
-      nextTime: departure.time,
+      allDates,
       priceFrom,
     };
   });
@@ -161,6 +167,7 @@ export default async function DestinosHomePage({
     filter?: string;
     country?: string;
     q?: string;
+    month?: string;
   };
 }) {
   const supabase = await createClient();
@@ -209,6 +216,7 @@ export default async function DestinosHomePage({
     filter: searchParams?.filter,
     country: searchParams?.country,
     q: searchParams?.q,
+    month: searchParams?.month,
   };
 
   return (
@@ -289,8 +297,7 @@ export default async function DestinosHomePage({
               imagePath={destination.photo}
               country={destination.country}
               municipality={destination.municipality}
-              nextDate={destination.nextDate}
-              nextTime={destination.nextTime}
+              allDates={destination.allDates}
               priceFrom={destination.priceFrom}
               reviewCount={destination._count?.Review || 0}
             />
