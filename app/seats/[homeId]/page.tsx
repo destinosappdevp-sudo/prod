@@ -50,11 +50,11 @@ export default async function SeatSelectionPage({
 
   const plan = planParam === "vip" ? "vip" : "estandar";
   const flow = flowParam === "ahorro" ? "ahorro" : "contado";
-  const parsedGuests = guestsParam ? Number.parseInt(guestsParam, 10) : 1;
-  const guests = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 1;
+  const parsedGuests = guestsParam ? Number.parseInt(guestsParam, 10) : 0;
+  const guests = Number.isInteger(parsedGuests) && parsedGuests > 0 ? parsedGuests : 0;
 
   if (!user) {
-    redirect(`/login?next=/seats/${homeId}?plan=${plan}&flow=${flow}&guests=${guests}`);
+    redirect(`/login?next=/seats/${homeId}?plan=${plan}&flow=${flow}`);
   }
   const home = await getPackageWithSeats(homeId);
   if (!home) notFound();

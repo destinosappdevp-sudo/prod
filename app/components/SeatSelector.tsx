@@ -18,7 +18,7 @@ interface SeatSelectorProps {
   plan: "vip" | "estandar";
   homeId: string;
   flow: "ahorro" | "contado";
-  guests: number;
+  guests?: number;
 }
 
 const BUS_LAYOUT: {
@@ -40,8 +40,9 @@ export default function SeatSelector({
   plan,
   homeId,
   flow,
-  guests,
+  guests: guestsProp,
 }: SeatSelectorProps) {
+  const guests = guestsProp ?? 0;
   const router = useRouter();
   const [selectedSeatIds, setSelectedSeatIds] = useState<string[]>([]);
   const selectedSeatIdSet = useMemo(
@@ -72,17 +73,18 @@ export default function SeatSelector({
       if (current.includes(seat.id)) {
         return current.filter((id) => id !== seat.id);
       }
-      if (current.length >= guests) return current;
       return [...current, seat.id];
     });
   };
 
   const handleContinue = () => {
+    const effectiveGuests = selectedSeatIds.length > 0 ? selectedSeatIds.length : guests > 0 ? guests : 1;
+
     const savingsUrl = (seatIds: string[]) => {
       const params = new URLSearchParams({
         flow: "ahorro",
         plan,
-        guests: String(guests),
+        guests: String(effectiveGuests),
       });
       if (seatIds.length > 0) {
         params.set("seatId", seatIds[0]);
@@ -96,18 +98,18 @@ export default function SeatSelector({
         router.push(savingsUrl([]));
         return;
       }
-      router.push(`/checkout/${homeId}?plan=${plan}&guests=${guests}`);
+      router.push(`/checkout/${homeId}?plan=${plan}&guests=${effectiveGuests}`);
       return;
     }
 
-    if (selectedSeatIds.length < guests) return;
+    if (selectedSeatIds.length === 0) return;
 
     if (flow === "ahorro") {
       router.push(savingsUrl(selectedSeatIds));
       return;
     }
 
-    const checkoutParams = new URLSearchParams({ plan, guests: String(guests) });
+    const checkoutParams = new URLSearchParams({ plan, guests: String(effectiveGuests) });
     if (selectedSeatIds.length > 0) {
       checkoutParams.set("seatId", selectedSeatIds[0]);
       checkoutParams.set("seatIds", selectedSeatIds.join(","));
@@ -328,22 +330,20 @@ export default function SeatSelector({
       <div className="w-full max-w-xs space-y-3 mt-2">
         {selectedSeats.length > 0 ? (
           <p className="text-center text-sm font-medium text-gray-700">
-            Asientos ({selectedSeats.length}/{guests}):{" "}
+            Asientos ({selectedSeats.length}):{" "}
             <span className="font-bold text-amber-600">
               {selectedSeats.map((s) => `${s.column}${s.row}`).join(", ")}
             </span>
           </p>
         ) : (
           <p className="text-center text-sm text-gray-400">
-            {plan === "vip"
-              ? `Selecciona ${guests} asiento${guests > 1 ? "s" : ""} Premium`
-              : `Selecciona ${guests} asiento${guests > 1 ? "s" : ""} Estándar`}
+            Selecciona 1 o más asientos en el mapa
           </p>
         )}
 
         <Button
           className="w-full bg-gray-900 !text-white hover:bg-gray-800 hover:!text-white disabled:bg-gray-900/70 disabled:!text-white"
-          disabled={selectedSeatIds.length < guests}
+          disabled={seats.length > 0 && selectedSeatIds.length === 0}
           onClick={handleContinue}
         >
           Continuar al pago

@@ -468,7 +468,7 @@ export default async function CheckoutPage({
                   </p>
                 </div>
                 <Link
-                  href={`/seats/${homeId}/passengers?plan=${plan || "estandar"}&flow=contado`}
+                  href={`/seats/${homeId}?plan=${plan || "estandar"}&flow=contado`}
                   className="text-sm font-semibold underline hover:text-gray-600"
                 >
                   Editar

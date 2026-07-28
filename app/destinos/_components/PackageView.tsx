@@ -374,14 +374,14 @@ export default async function PackageView({ categorySlug, slug }: { categorySlug
               ) : (
                 <>
                   <Link
-                    href={`/seats/${data.id}/passengers?plan=estandar&flow=ahorro`}
+                    href={`/seats/${data.id}?plan=estandar&flow=ahorro`}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#A67C12] transition hover:bg-[#E1B042] hover:text-white"
                   >
                     Ahorrar
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
-                    href={`/seats/${data.id}/passengers?plan=estandar&flow=contado`}
+                    href={`/seats/${data.id}?plan=estandar&flow=contado`}
                     className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
                   >
                     Pagar de contado
@@ -459,14 +459,14 @@ export default async function PackageView({ categorySlug, slug }: { categorySlug
                   ) : (
                     <>
                       <Link
-                        href={`/seats/${data.id}/passengers?plan=vip&flow=ahorro`}
+                        href={`/seats/${data.id}?plan=vip&flow=ahorro`}
                         className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#E1B042] px-4 py-2.5 text-sm font-semibold text-[#C49A28] transition hover:bg-[#E1B042] hover:text-white"
                       >
                         Ahorrar
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                       <Link
-                        href={`/seats/${data.id}/passengers?plan=vip&flow=contado`}
+                        href={`/seats/${data.id}?plan=vip&flow=contado`}
                         className="inline-flex flex-1 items-center justify-center rounded-full border border-gray-900 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-900 hover:text-white"
                       >
                         Pagar de contado
