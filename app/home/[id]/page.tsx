@@ -28,6 +28,8 @@ async function getData(homeId: string) {
       checkInTime: true,
       contactNumber: true,
       createdAt: true,
+      isPrivate: true,
+      privateOwnerId: true,
       Reservation: {
         where: {
           homeId: homeId,
@@ -96,15 +98,34 @@ export default async function SingleHomePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const data = await getData(id);
+
+  if (!data) {
+    return (
+      <div className="mx-auto mt-6 mb-12 w-full max-w-4xl px-4 sm:px-6 lg:mt-10 lg:px-8">
+        <p className="text-center text-gray-500">Paquete no encontrado</p>
+      </div>
+    );
+  }
+
+  // Si el paquete es privado y el usuario no es el owner, mostrar mensaje
+  if (data.isPrivate && data.privateOwnerId !== user?.id) {
+    return (
+      <div className="mx-auto mt-6 mb-12 w-full max-w-4xl px-4 sm:px-6 lg:mt-10 lg:px-8">
+        <p className="text-center text-gray-500">Este paquete es privado y no está disponible.</p>
+      </div>
+    );
+  }
+
   const amenities = await getAmenities(id);
   const state = getStateByValue(data?.country as string);
   const municipality =
     data?.country && data?.municipality
       ? getMunicipalityByValue(data.country, data.municipality)
       : null;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
   const standardAmenities = amenities.filter((a: any) => a.status === "YES");
   const vipAmenities = amenities.filter((a: any) => a.status === "NO");

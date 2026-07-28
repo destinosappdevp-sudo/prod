@@ -14,7 +14,7 @@ import Image from "next/image";
 
 const prismaAny = prisma as any;
 
-async function getDataBySlug(slug: string) {
+async function getDataBySlug(slug: string, currentUserId?: string) {
   noStore();
   const idPrefix = slug.split("-").pop() || "";
   if (!idPrefix || idPrefix.length < 4) return null;
@@ -38,6 +38,8 @@ async function getDataBySlug(slug: string) {
       checkInTime: true,
       guests: true,
       publishStatus: true,
+      isPrivate: true,
+      privateOwnerId: true,
       User: {
         select: { id: true, role: true },
       },
@@ -71,17 +73,23 @@ async function getAmenities(homeId: string) {
 }
 
 export default async function PackageView({ categorySlug, slug }: { categorySlug: string; slug: string }) {
-  const data = await getDataBySlug(slug);
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const data = await getDataBySlug(slug, user?.id);
 
   if (!data) notFound();
+
+  // Si el paquete es privado y el usuario no es el owner, redirigir
+  if (data.isPrivate && data.privateOwnerId !== user?.id) {
+    notFound();
+  }
 
   const correctCategorySlug = toCategorySlug(data.categoryName);
   if (categorySlug !== correctCategorySlug) {
     redirect(`/home/${data.id}`);
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
   const isApproved = data.publishStatus === "APPROVED";
 
   let hasAnyReservation = false;

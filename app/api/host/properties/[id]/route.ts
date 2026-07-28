@@ -138,6 +138,8 @@ export async function PATCH(
       .getAll("propertyTypeIds")
       .map((value) => (typeof value === "string" ? value.trim() : ""))
       .filter(Boolean);
+    const isPrivate = formData.get("isPrivate") === "true";
+    const privateOwnerId = (formData.get("privateOwnerId") as string) || null;
 
     const selectedTypeIds = Array.from(
       new Set(
@@ -281,6 +283,8 @@ export async function PATCH(
       priceVip: effectiveVipSeats > 0 ? parseInt(priceVipRaw) : null,
       vipSeats: effectiveVipSeats,
       standardSeats: effectiveStandardSeats,
+      isPrivate,
+      privateOwnerId: isPrivate ? privateOwnerId : null,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),

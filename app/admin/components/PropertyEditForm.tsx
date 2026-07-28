@@ -46,6 +46,10 @@ interface PropertyEditFormProps {
     addedCategory: boolean;
     addedDescription: boolean;
     addedLocation: boolean;
+    isPrivate?: boolean;
+    privateOwnerId?: string | null;
+    privateOwnerName?: string | null;
+    privateOwnerCedula?: string | null;
   };
   categories: Array<{ id: number; name: string; title: string }>;
   states: Array<{ value: string; label: string }>;
@@ -95,7 +99,23 @@ export default function PropertyEditForm({
         : property.propertyTypeId
         ? [property.propertyTypeId]
         : [],
+    isPrivate: property.isPrivate || false,
+    privateOwnerId: property.privateOwnerId || "",
   });
+
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerResults, setOwnerResults] = useState<Array<{ id: string; firstName: string; cedula: string; email: string }>>([]);
+  const [ownerSearching, setOwnerSearching] = useState(false);
+  const [ownerSelected, setOwnerSelected] = useState<{ id: string; firstName: string; cedula: string; email: string } | null>(
+    property.privateOwnerId && property.privateOwnerName
+      ? {
+          id: property.privateOwnerId,
+          firstName: property.privateOwnerName,
+          cedula: property.privateOwnerCedula || "",
+          email: "",
+        }
+      : null
+  );
 
   const existingCoords =
     property.latitude != null && property.longitude != null
@@ -244,6 +264,49 @@ export default function PropertyEditForm({
     setAmenityMap((prev) => ({ ...prev, [amenityId]: status }));
   };
 
+  const handleOwnerSearch = async () => {
+    const query = ownerSearch.trim();
+    if (!query) {
+      setOwnerResults([]);
+      return;
+    }
+    setOwnerSearching(true);
+    try {
+      const res = await fetch(`/api/admin/users?search=${encodeURIComponent(query)}&limit=10`);
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.users)) {
+        setOwnerResults(data.users);
+      } else {
+        setOwnerResults([]);
+      }
+    } catch {
+      setOwnerResults([]);
+    } finally {
+      setOwnerSearching(false);
+    }
+  };
+
+  const handleSelectOwner = (user: { id: string; firstName: string; cedula: string; email: string }) => {
+    setOwnerSelected(user);
+    setOwnerSearch("");
+    setOwnerResults([]);
+    setFormData((prev) => ({ ...prev, privateOwnerId: user.id }));
+  };
+
+  const handleClearOwner = () => {
+    setOwnerSelected(null);
+    setFormData((prev) => ({ ...prev, privateOwnerId: "" }));
+  };
+
+  const handleTogglePrivate = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, isPrivate: checked }));
+    if (!checked) {
+      setOwnerSelected(null);
+      setOwnerResults([]);
+      setOwnerSearch("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -322,6 +385,11 @@ export default function PropertyEditForm({
           }))
         )
       );
+
+      payload.append("isPrivate", formData.isPrivate ? "true" : "false");
+      if (formData.isPrivate && formData.privateOwnerId) {
+        payload.append("privateOwnerId", formData.privateOwnerId);
+      }
 
       if (imageFile) {
         payload.append("image", imageFile);
@@ -744,6 +812,98 @@ export default function PropertyEditForm({
                 className="text-sm"
               />
             </div>
+          </div>
+
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <h3 className="text-lg font-semibold mb-3 text-amber-900">Paquete Privado</h3>
+            <div className="flex items-center gap-3 mb-3">
+              <input
+                type="checkbox"
+                id="isPrivate"
+                checked={formData.isPrivate}
+                onChange={(e) => handleTogglePrivate(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+              />
+              <Label htmlFor="isPrivate" className="cursor-pointer text-amber-900">
+                Este paquete es privado (solo el dueño puede verlo)
+              </Label>
+            </div>
+
+            {formData.isPrivate && (
+              <div className="space-y-3 mt-3">
+                <p className="text-sm text-amber-800">
+                  Busca al usuario que será el dueño de este paquete privado. Solo él podrá ver esta fecha cuando esté logueado.
+                </p>
+
+                {ownerSelected ? (
+                  <div className="flex items-center justify-between bg-white rounded-lg border border-amber-200 p-3">
+                    <div>
+                      <p className="font-medium text-gray-800">{ownerSelected.firstName}</p>
+                      <p className="text-sm text-gray-500">
+                        {ownerSelected.cedula && `Cédula: ${ownerSelected.cedula}`}
+                        {ownerSelected.email && ` · ${ownerSelected.email}`}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearOwner}
+                    >
+                      Cambiar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Buscar por nombre, cédula o email..."
+                        value={ownerSearch}
+                        onChange={(e) => {
+                          setOwnerSearch(e.target.value);
+                          setOwnerResults([]);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleOwnerSearch();
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleOwnerSearch}
+                        disabled={ownerSearching}
+                      >
+                        {ownerSearching ? "Buscando..." : "Buscar"}
+                      </Button>
+                    </div>
+
+                    {ownerResults.length > 0 && (
+                      <div className="bg-white rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                        {ownerResults.map((user) => (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => handleSelectOwner(user)}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                          >
+                            <p className="font-medium text-sm text-gray-800">{user.firstName}</p>
+                            <p className="text-xs text-gray-500">
+                              {user.cedula && `Cédula: ${user.cedula}`}
+                              {user.email && ` · ${user.email}`}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>

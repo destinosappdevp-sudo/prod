@@ -21,6 +21,14 @@ async function getProperty(id: string) {
           profileImage: true,
         },
       },
+      PrivateOwner: {
+        select: {
+          id: true,
+          firstName: true,
+          cedula: true,
+          email: true,
+        },
+      },
       Destination: {
         select: {
           id: true,
@@ -212,6 +220,8 @@ export default async function PackageDetailPage({
               ...property,
               propertyTypeId: selectedPropertyTypeIds[0] ?? null,
               propertyTypeIds: selectedPropertyTypeIds,
+              privateOwnerName: property.PrivateOwner?.firstName ?? null,
+              privateOwnerCedula: property.PrivateOwner?.cedula ?? null,
             }}
             categories={categoriesForForm}
             states={states}

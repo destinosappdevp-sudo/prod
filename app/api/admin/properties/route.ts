@@ -85,8 +85,10 @@ export async function POST(request: Request) {
     const propertyTypeIdRaw = (formData.get("propertyTypeId") as string) || "";
     const propertyTypeIdsRaw = formData
       .getAll("propertyTypeIds")
-      .map((v) => (typeof v === "string" ? v.trim() : ""))
+      .map((value) => (typeof value === "string" ? value.trim() : ""))
       .filter(Boolean);
+    const isPrivate = formData.get("isPrivate") === "true";
+    const privateOwnerId = (formData.get("privateOwnerId") as string) || null;
 
     const selectedTypeIds = Array.from(
       new Set(
@@ -227,6 +229,8 @@ export async function POST(request: Request) {
         addedDescription: !!(title && description),
         addedLocation: !!(country && municipality),
         publishStatus: "PENDING_APPROVAL",
+        isPrivate,
+        privateOwnerId: isPrivate ? privateOwnerId : null,
       },
     });
 

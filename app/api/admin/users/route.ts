@@ -25,7 +25,7 @@ async function userTableHasLastNameColumn() {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -44,12 +44,34 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam, 10) : 50;
+
+    const whereClause: any = {
+      role: { not: "SUPERADMIN" },
+    };
+
+    if (search.trim()) {
+      const searchTerm = search.trim();
+      whereClause.OR = [
+        { firstName: { contains: searchTerm, mode: "insensitive" } },
+        { cedula: { contains: searchTerm, mode: "insensitive" } },
+        { email: { contains: searchTerm, mode: "insensitive" } },
+      ];
+    }
+
     // Obtener todos los usuarios con sus estadísticas (excluir SUPERADMIN)
     const users = await prisma.user.findMany({
-      where: {
-        role: { not: "SUPERADMIN" },
-      },
-      include: {
+      where: whereClause,
+      take: limit,
+      select: {
+        id: true,
+        firstName: true,
+        email: true,
+        cedula: true,
+        role: true,
         _count: {
           select: {
             Home: true,
@@ -63,7 +85,7 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(users);
+    return NextResponse.json({ users });
   } catch (error) {
     console.error("Error:", error);
     return NextResponse.json(

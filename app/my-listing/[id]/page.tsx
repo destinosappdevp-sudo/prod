@@ -23,6 +23,14 @@ async function getPropertyForHost(id: string, userId: string) {
           profileImage: true,
         },
       },
+      PrivateOwner: {
+        select: {
+          id: true,
+          firstName: true,
+          cedula: true,
+          email: true,
+        },
+      },
       _count: {
         select: {
           Reservation: true,
@@ -142,6 +150,8 @@ export default async function HostPropertyDetailPage({
     longitude: propertyDetails.longitude ?? null,
     propertyTypeId: selectedPropertyTypeIds[0] ?? null,
     propertyTypeIds: selectedPropertyTypeIds,
+    privateOwnerName: (propertyDetails as any).PrivateOwner?.firstName ?? null,
+    privateOwnerCedula: (propertyDetails as any).PrivateOwner?.cedula ?? null,
   };
   const states = getAllStates();
   const state = propertyDetails.country

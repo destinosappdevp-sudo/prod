@@ -10,7 +10,7 @@ import ReviewsSection from "@/app/components/ReviewsSection";
 
 const prismaAny = prisma as any;
 
-async function getDestinationBySlug(slug: string) {
+async function getDestinationBySlug(slug: string, currentUserId?: string) {
   const destination = await prismaAny.destination.findUnique({
     where: { slug },
     include: {
@@ -22,7 +22,14 @@ async function getDestinationBySlug(slug: string) {
         },
       },
       Homes: {
-        where: { publishStatus: "APPROVED" },
+        where: {
+          publishStatus: "APPROVED",
+          OR: [
+            { isPrivate: false },
+            { isPrivate: null },
+            ...(currentUserId ? [{ privateOwnerId: currentUserId }] : []),
+          ],
+        },
         orderBy: { checkInTime: { sort: "asc", nulls: "last" } },
         select: {
           id: true,
@@ -33,6 +40,7 @@ async function getDestinationBySlug(slug: string) {
           vipSeats: true,
           standardSeats: true,
           photo: true,
+          isPrivate: true,
           _count: {
             select: {
               PackageSeat: true,
@@ -96,16 +104,16 @@ function calculateAvailableSeats(home: any) {
 }
 
 export default async function DestinationView({ slug }: { slug: string }) {
-  const destination = await getDestinationBySlug(slug);
-
-  if (!destination) {
-    notFound();
-  }
-
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const destination = await getDestinationBySlug(slug, user?.id);
+
+  if (!destination) {
+    notFound();
+  }
 
   const futureHomes = destination.Homes.filter((h: any) => {
     if (!h.checkInTime) return false;
