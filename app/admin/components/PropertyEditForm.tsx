@@ -572,46 +572,83 @@ export default function PropertyEditForm({
 
           <div className="flex flex-col gap-1">
             {rows.map((rowDef) => (
-              <div key={rowDef.row} className="flex items-center gap-1">
-                {rowDef.left.map((col) => {
-                  const seat = rowDef.seats.find((s) => s.col === col);
-                  const isVip = seat?.isVip ?? false;
-                  return (
-                    <div
-                      key={`${rowDef.row}-${col}`}
-                      className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
-                        isVip
-                          ? "bg-gray-900 border-gray-700 text-white"
-                          : "bg-white border-gray-300 text-gray-500"
-                      }`}
-                    >
-                      {col}
+              <div key={rowDef.row} className={`flex items-center ${rowDef.hasAisle ? 'w-[76px]' : 'gap-1'}`}>
+                {rowDef.hasAisle ? (
+                  <>
+                    <div className="flex items-center gap-1">
+                      {rowDef.left.map((col) => {
+                        const seat = rowDef.seats.find((s) => s.col === col);
+                        const isVip = seat?.isVip ?? false;
+                        return (
+                          <div
+                            key={`${rowDef.row}-${col}`}
+                            className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
+                              isVip
+                                ? "bg-gray-900 border-gray-700 text-white"
+                                : "bg-white border-gray-300 text-gray-500"
+                            }`}
+                          >
+                            {col}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-
-                {rowDef.hasAisle && (
-                  <div className="w-2 flex items-center justify-center">
-                    <div className="w-0.5 h-4 bg-gray-200 rounded-full" />
-                  </div>
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="w-0.5 h-4 bg-gray-200 rounded-full" />
+                    </div>
+                    {rowDef.right.map((col) => {
+                      const seat = rowDef.seats.find((s) => s.col === col);
+                      const isVip = seat?.isVip ?? false;
+                      return (
+                        <div
+                          key={`${rowDef.row}-${col}`}
+                          className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
+                            isVip
+                              ? "bg-gray-900 border-gray-700 text-white"
+                              : "bg-white border-gray-300 text-gray-500"
+                          }`}
+                        >
+                          {col}
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <>
+                    {rowDef.left.map((col) => {
+                      const seat = rowDef.seats.find((s) => s.col === col);
+                      const isVip = seat?.isVip ?? false;
+                      return (
+                        <div
+                          key={`${rowDef.row}-${col}`}
+                          className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
+                            isVip
+                              ? "bg-gray-900 border-gray-700 text-white"
+                              : "bg-white border-gray-300 text-gray-500"
+                          }`}
+                        >
+                          {col}
+                        </div>
+                      );
+                    })}
+                    {rowDef.right.map((col) => {
+                      const seat = rowDef.seats.find((s) => s.col === col);
+                      const isVip = seat?.isVip ?? false;
+                      return (
+                        <div
+                          key={`${rowDef.row}-${col}`}
+                          className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
+                            isVip
+                              ? "bg-gray-900 border-gray-700 text-white"
+                              : "bg-white border-gray-300 text-gray-500"
+                          }`}
+                        >
+                          {col}
+                        </div>
+                      );
+                    })}
+                  </>
                 )}
-
-                {rowDef.right.map((col) => {
-                  const seat = rowDef.seats.find((s) => s.col === col);
-                  const isVip = seat?.isVip ?? false;
-                  return (
-                    <div
-                      key={`${rowDef.row}-${col}`}
-                      className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
-                        isVip
-                          ? "bg-gray-900 border-gray-700 text-white"
-                          : "bg-white border-gray-300 text-gray-500"
-                      }`}
-                    >
-                      {col}
-                    </div>
-                  );
-                })}
               </div>
             ))}
           </div>

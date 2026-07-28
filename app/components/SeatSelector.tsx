@@ -141,21 +141,25 @@ export default function SeatSelector({
     if (transportType === "VAN20_PASILLO") {
       const isLastRow = row === 6;
       return (
-        <div key={row} className="flex items-center justify-center gap-2">
+        <div key={row} className="flex items-center justify-center">
           {isLastRow ? (
-            <>
+            <div className="flex items-center gap-2 w-[184px]">
               {renderSeat(6, "A")}
               {renderSeat(6, "B")}
               {renderSeat(6, "C")}
               {renderSeat(6, "D")}
-            </>
+            </div>
           ) : (
-            <>
-              {renderSeat(row, "A")}
-              {renderSeat(row, "B")}
-              <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
+            <div className="flex items-center w-[184px]">
+              <div className="flex items-center gap-2">
+                {renderSeat(row, "A")}
+                {renderSeat(row, "B")}
+              </div>
+              <div className="flex-1 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase leading-3">
+                Pasillo
+              </div>
               {renderSeat(row, "C")}
-            </>
+            </div>
           )}
         </div>
       );
