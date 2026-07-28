@@ -6,7 +6,11 @@ import {
   LayoutDashboard,
   Users,
   MapPin,
-  Wallet,
+  CreditCard,
+  PiggyBank,
+  Smartphone,
+  Banknote,
+  BarChart3,
   Settings,
   LogOut,
   X,
@@ -33,7 +37,11 @@ const getMenuItems = () => {
     { href: "/admin", icon: LayoutDashboard, label: "Panel" },
     { href: "/admin/users", icon: Users, label: "Usuarios" },
     { href: "/admin/destinos", icon: MapPin, label: "Destinos" },
-    { href: "/admin/finanzas", icon: Wallet, label: "Finanzas" },
+    { href: "/admin/payments", icon: CreditCard, label: "Pagos" },
+    { href: "/admin/savings", icon: PiggyBank, label: "Alcancía" },
+    { href: "/admin/pagomovil", icon: Smartphone, label: "R4" },
+    { href: "/admin/withdrawals", icon: Banknote, label: "Retiros" },
+    { href: "/admin/reports", icon: BarChart3, label: "Informes" },
     { href: "/admin/configuracion", icon: Settings, label: "Configuración" },
   ];
 };
@@ -106,8 +114,6 @@ export function AdminSidebar({
               : pathname.startsWith(item.href) ||
                 (item.href === "/admin/destinos" &&
                   ["/admin/properties", "/admin/pasadas", "/admin/categories", "/admin/amenities"].includes(pathname)) ||
-                (item.href === "/admin/finanzas" &&
-                  ["/admin/payments", "/admin/savings", "/admin/pagomovil", "/admin/withdrawals", "/admin/reports"].includes(pathname)) ||
                 (item.href === "/admin/configuracion" &&
                   ["/admin/settings", "/admin/manual"].includes(pathname));
           return (
