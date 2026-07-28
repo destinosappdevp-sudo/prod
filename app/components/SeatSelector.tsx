@@ -147,6 +147,7 @@ export default function SeatSelector({
               {renderSeat(6, "A")}
               {renderSeat(6, "B")}
               {renderSeat(6, "C")}
+              {renderSeat(6, "D")}
             </>
           ) : (
             <>

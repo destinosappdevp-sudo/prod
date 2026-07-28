@@ -200,7 +200,13 @@ export default function PropertyEditForm({
   const TRANSPORT_CAPACITY: Record<string, number> = {
     ENC32: 31,
     VAN20: 19,
-    VAN20_PASILLO: 18,
+    VAN20_PASILLO: 19,
+  };
+
+  const TRANSPORT_LABELS: Record<string, string> = {
+    ENC32: "Encava 32",
+    VAN20: "Van 20",
+    VAN20_PASILLO: "Van 20 Pasillo",
   };
 
   const handleChange = (field: string, value: string) => {
@@ -504,6 +510,128 @@ export default function PropertyEditForm({
     }
   };
 
+  function TransportPreview({ transportType, vipSeats, standardSeats: stdSeats, capacity }: { transportType: string; vipSeats: number; standardSeats: number; capacity: number }) {
+    const rows = useMemo(() => {
+      const layouts: Record<string, { row: number; left: string[]; right: string[]; hasAisle: boolean }[]> = {
+        ENC32: [
+          { row: 1, left: ["A","B"], right: ["C","D"], hasAisle: true },
+          { row: 2, left: ["A","B"], right: ["C","D"], hasAisle: true },
+          { row: 3, left: ["A","B"], right: ["C","D"], hasAisle: true },
+          { row: 4, left: ["A","B"], right: ["C","D"], hasAisle: true },
+          { row: 5, left: ["A","B"], right: ["C","D"], hasAisle: true },
+          { row: 6, left: ["A","B"], right: ["C","D"], hasAisle: true },
+          { row: 7, left: ["A","B"], right: [], hasAisle: false },
+          { row: 8, left: ["A","B","C","D","E"], right: [], hasAisle: false },
+        ],
+        VAN20: [
+          { row: 1, left: ["A","B","C"], right: [], hasAisle: false },
+          { row: 2, left: ["A","B","C"], right: [], hasAisle: false },
+          { row: 3, left: ["A","B","C"], right: [], hasAisle: false },
+          { row: 4, left: ["A","B","C"], right: [], hasAisle: false },
+          { row: 5, left: ["A","B","C"], right: [], hasAisle: false },
+          { row: 6, left: ["A","B","C","D"], right: [], hasAisle: false },
+        ],
+        VAN20_PASILLO: [
+          { row: 1, left: ["A","B"], right: ["C"], hasAisle: true },
+          { row: 2, left: ["A","B"], right: ["C"], hasAisle: true },
+          { row: 3, left: ["A","B"], right: ["C"], hasAisle: true },
+          { row: 4, left: ["A","B"], right: ["C"], hasAisle: true },
+          { row: 5, left: ["A","B"], right: ["C"], hasAisle: true },
+          { row: 6, left: ["A","B","C","D"], right: [], hasAisle: false },
+        ],
+      };
+      return (layouts[transportType] || layouts.ENC32).map((rowDef) => {
+        const allCols = [...rowDef.left, ...rowDef.right];
+        let idx = 0;
+        const seatEls: { col: string; isVip: boolean }[] = allCols.map((col) => {
+          const isVip = idx < parseSeatValue(formData.vipSeats || formData.bedrooms);
+          idx++;
+          return { col, isVip };
+        });
+        return { ...rowDef, seats: seatEls };
+      });
+    }, [transportType, formData.vipSeats, formData.bedrooms]);
+
+    const totalColors = [`${capacity} cupos`];
+
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-3">
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          {TRANSPORT_LABELS[transportType] || transportType}
+        </div>
+
+        <div className="relative bg-white border-2 border-gray-600 rounded-2xl px-3 py-2 flex flex-col items-center gap-1.5 shadow-sm">
+          <div className="w-8 h-1.5 bg-gray-400 rounded-b-sm" />
+
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-4 h-4 rounded-full border border-gray-400 bg-gray-100" />
+            <div className="w-4 h-4 rounded border border-gray-400 bg-gray-200 flex items-center justify-center">
+              <span className="text-[5px] font-bold text-gray-500">01</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            {rows.map((rowDef) => (
+              <div key={rowDef.row} className="flex items-center gap-1">
+                {rowDef.left.map((col) => {
+                  const seat = rowDef.seats.find((s) => s.col === col);
+                  const isVip = seat?.isVip ?? false;
+                  return (
+                    <div
+                      key={`${rowDef.row}-${col}`}
+                      className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
+                        isVip
+                          ? "bg-gray-900 border-gray-700 text-white"
+                          : "bg-white border-gray-300 text-gray-500"
+                      }`}
+                    >
+                      {col}
+                    </div>
+                  );
+                })}
+
+                {rowDef.hasAisle && (
+                  <div className="w-2 flex items-center justify-center">
+                    <div className="w-0.5 h-4 bg-gray-200 rounded-full" />
+                  </div>
+                )}
+
+                {rowDef.right.map((col) => {
+                  const seat = rowDef.seats.find((s) => s.col === col);
+                  const isVip = seat?.isVip ?? false;
+                  return (
+                    <div
+                      key={`${rowDef.row}-${col}`}
+                      className={`w-4 h-4 rounded-sm border text-[5px] font-bold flex items-center justify-center ${
+                        isVip
+                          ? "bg-gray-900 border-gray-700 text-white"
+                          : "bg-white border-gray-300 text-gray-500"
+                      }`}
+                    >
+                      {col}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-[9px] text-gray-500">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-gray-900 border border-gray-700" />
+            <span>VIP</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded-sm bg-white border border-gray-300" />
+            <span>Std</span>
+          </div>
+          <div className="text-gray-400 font-semibold">{totalColors.join(" · ")}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <Card className="p-6">
@@ -620,55 +748,64 @@ export default function PropertyEditForm({
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Transporte</h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="transportType">Tipo de Transporte</Label>
-                <Select
-                  value={formData.transportType || "ENC32"}
-                  onValueChange={(value) => handleChange("transportType", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el transporte" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ENC32">Encava 32 (31 pasajeros + copiloto)</SelectItem>
-                    <SelectItem value="VAN20">Van 20 (19 pasajeros + copiloto)</SelectItem>
-                    <SelectItem value="VAN20_PASILLO">Van 20 Pasillo (18 pasajeros + copiloto)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formData.transportType === "VAN20"
-                    ? "Distribución: Filas 1-5 con 3 asientos (A,B,C), Fila 6 con 4 asientos (A,B,C,D)"
-                    : formData.transportType === "VAN20_PASILLO"
-                    ? "Distribución: Filas 1-5 con 2 asientos izq + pasillo + 1 der (A,B|C), Fila 6 con 3 asientos (A,B,C)"
-                    : "Distribución: Filas 1-6 con 4 asientos, Fila 7 con 2 asientos, Fila 8 con 5 asientos"}
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="transportType">Tipo de Transporte</Label>
+                  <Select
+                    value={formData.transportType || "ENC32"}
+                    onValueChange={(value) => handleChange("transportType", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona el transporte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ENC32">Encava 32 (31 pasajeros + copiloto)</SelectItem>
+                      <SelectItem value="VAN20">Van 20 (19 pasajeros + copiloto)</SelectItem>
+                      <SelectItem value="VAN20_PASILLO">Van 20 Pasillo (19 pasajeros + copiloto)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formData.transportType === "VAN20"
+                      ? "Distribución: Filas 1-5 con 3 asientos (A,B,C), Fila 6 con 4 asientos (A,B,C,D)"
+                      : formData.transportType === "VAN20_PASILLO"
+                      ? "Distribución: Filas 1-5 con 2 asientos izq + pasillo + 1 der (A,B|C), Fila 6 con 4 asientos (A,B,C,D)"
+                      : "Distribución: Filas 1-6 con 4 asientos, Fila 7 con 2 asientos, Fila 8 con 5 asientos"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="vipSeats">Zona VIP (referencia)</Label>
+                    <Input
+                      id="vipSeats"
+                      type="number"
+                      value={formData.vipSeats}
+                      onChange={(e) => handleChange("vipSeats", e.target.value)}
+                      min={0}
+                      placeholder="Asientos VIP"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="standardSeats">Zona Estándar (referencia)</Label>
+                    <Input
+                      id="standardSeats"
+                      type="number"
+                      value={formData.standardSeats}
+                      onChange={(e) => handleChange("standardSeats", e.target.value)}
+                      min={0}
+                      placeholder="Asientos Estándar"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="vipSeats">Zona VIP (referencia)</Label>
-                  <Input
-                    id="vipSeats"
-                    type="number"
-                    value={formData.vipSeats}
-                    onChange={(e) => handleChange("vipSeats", e.target.value)}
-                    min={0}
-                    placeholder="Asientos VIP"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="standardSeats">Zona Estándar (referencia)</Label>
-                  <Input
-                    id="standardSeats"
-                    type="number"
-                    value={formData.standardSeats}
-                    onChange={(e) => handleChange("standardSeats", e.target.value)}
-                    min={0}
-                    placeholder="Asientos Estándar"
-                  />
-                </div>
-              </div>
+              <TransportPreview
+                transportType={formData.transportType || "ENC32"}
+                vipSeats={parseSeatValue(formData.vipSeats || formData.bedrooms)}
+                standardSeats={parseSeatValue(formData.standardSeats || formData.bathrooms)}
+                capacity={TRANSPORT_CAPACITY[formData.transportType || "ENC32"] || 31}
+              />
             </div>
           </div>
 

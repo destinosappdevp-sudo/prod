@@ -25,6 +25,16 @@
  *   Fila 6: [6A][6B][6C][6D] ← 4 asientos
  *   Total vendibles = 5×3 + 4 = 19
  *
+ * VAN20_PASILLO (Van 20 Pasillo) - 19 cupos vendibles + 1 copiloto:
+ *   [CHOFER] [COPILOTO]
+ *   Fila 1: [1A][1B] [PASILLO] [1C]  ← 3 asientos (2 izq + 1 der)
+ *   Fila 2: [2A][2B] [PASILLO] [2C]  ← 3 asientos
+ *   Fila 3: [3A][3B] [PASILLO] [3C]  ← 3 asientos
+ *   Fila 4: [4A][4B] [PASILLO] [4C]  ← 3 asientos
+ *   Fila 5: [5A][5B] [PASILLO] [5C]  ← 3 asientos
+ *   Fila 6: [6A][6B][6C][6D]         ← 4 asientos
+ *   Total vendibles = 5×3 + 4 = 19
+ *
  *   VIP = los primeros N asientos vendibles, Estándar = el resto
  */
 
@@ -55,14 +65,14 @@ const LAYOUTS: Record<TransportType, { row: number; columns: string[] }[]> = {
     { row: 3, columns: ["A", "B", "C"] },
     { row: 4, columns: ["A", "B", "C"] },
     { row: 5, columns: ["A", "B", "C"] },
-    { row: 6, columns: ["A", "B", "C"] },
+    { row: 6, columns: ["A", "B", "C", "D"] },
   ],
 };
 
 const TOTAL_SELLABLE_BY_TRANSPORT: Record<TransportType, number> = {
   ENC32: 31,
   VAN20: 19,
-  VAN20_PASILLO: 18,
+  VAN20_PASILLO: 19,
 };
 
 export async function syncPackageSeats(
