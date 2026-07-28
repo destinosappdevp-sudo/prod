@@ -24,11 +24,6 @@ async function getDestinationBySlug(slug: string, currentUserId?: string) {
       Homes: {
         where: {
           publishStatus: "APPROVED",
-          OR: [
-            { isPrivate: false },
-            { isPrivate: null },
-            ...(currentUserId ? [{ privateOwnerId: currentUserId }] : []),
-          ],
         },
         orderBy: { checkInTime: { sort: "asc", nulls: "last" } },
         select: {
@@ -41,6 +36,7 @@ async function getDestinationBySlug(slug: string, currentUserId?: string) {
           standardSeats: true,
           photo: true,
           isPrivate: true,
+          privateOwnerId: true,
           _count: {
             select: {
               PackageSeat: true,
@@ -117,12 +113,16 @@ export default async function DestinationView({ slug }: { slug: string }) {
 
   const futureHomes = destination.Homes.filter((h: any) => {
     if (!h.checkInTime) return false;
+    // Filtrar paquetes privados: solo mostrar si el usuario es el owner
+    if (h.isPrivate && h.privateOwnerId !== user?.id) return false;
     const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
     return d.getTime() > Date.now();
   });
 
   const pastHomes = destination.Homes.filter((h: any) => {
     if (!h.checkInTime) return false;
+    // Filtrar paquetes privados: solo mostrar si el usuario es el owner
+    if (h.isPrivate && h.privateOwnerId !== user?.id) return false;
     const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
     return d.getTime() <= Date.now();
   });
