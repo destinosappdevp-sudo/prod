@@ -81,6 +81,7 @@ export async function POST(
       .getAll("propertyTypeIds")
       .map((v) => (typeof v === "string" ? v.trim() : ""))
       .filter(Boolean);
+    const transportType = (formData.get("transportType") as string) || destination.transportType || "ENC32";
 
     const vipSeats = parseSeatInput(vipSeatsRaw) ?? 0;
     const standardSeats = parseSeatInput(standardSeatsRaw) ?? 0;
@@ -205,6 +206,7 @@ export async function POST(
         addedDescription: !!(title && description),
         addedLocation: !!(country && municipality),
         publishStatus: "APPROVED",
+        transportType: transportType as any,
       },
     });
 
@@ -234,7 +236,7 @@ export async function POST(
 
     if (vipSeats > 0 || standardSeats > 0) {
       await prismaAny.$transaction(async (tx: any) => {
-        await syncPackageSeats(tx, newId, vipSeats, standardSeats);
+        await syncPackageSeats(tx, newId, vipSeats, standardSeats, transportType as any);
       });
     }
 

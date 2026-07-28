@@ -38,6 +38,7 @@ interface DestinationEditFormProps {
     propertyTypeIds?: number[] | null;
     propertyTypeId?: number | null;
     publishStatus?: string;
+    transportType?: string;
   };
   categories: Array<{ id: number; name: string; title: string }>;
   states: Array<{ value: string; label: string }>;
@@ -77,6 +78,7 @@ export default function DestinationEditForm({
         ? [destination.propertyTypeId]
         : [],
     publishStatus: destination.publishStatus || "APPROVED",
+    transportType: destination.transportType || "ENC32",
   });
 
   const existingCoords =
@@ -176,6 +178,7 @@ export default function DestinationEditForm({
       payload.append("priceVip", formData.priceVip);
       payload.append("vipSeats", formData.vipSeats);
       payload.append("standardSeats", formData.standardSeats);
+      payload.append("transportType", formData.transportType || "ENC32");
       payload.append("publishStatus", formData.publishStatus);
 
       if (formData.latitude) payload.append("latitude", formData.latitude);
@@ -426,6 +429,21 @@ export default function DestinationEditForm({
                   onChange={(e) => handleChange("priceVip", e.target.value)}
                   placeholder="Precio VIP de referencia"
                 />
+              </div>
+              <div>
+                <Label htmlFor="transportType">Transporte</Label>
+                <Select
+                  value={formData.transportType || "ENC32"}
+                  onValueChange={(value) => handleChange("transportType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo de transporte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ENC32">Encava 32</SelectItem>
+                    <SelectItem value="VAN20">Van 20</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="vipSeats">Cupos VIP</Label>

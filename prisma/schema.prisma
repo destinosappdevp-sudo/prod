@@ -111,6 +111,7 @@ model Home {
   destinationId           String?
   isPrivate               Boolean        @default(false)
   privateOwnerId          String?
+  transportType           TransportType  @default(ENC32)
   BlockedDate             BlockedDate[]
   Favorite                Favorite[]
   approvedBy              User?          @relation("ApprovedBy", fields: [approvedById], references: [id])
@@ -148,6 +149,7 @@ model Destination {
   publishStatus           PublishStatus  @default(DRAFT)
   userId                  String?
   createdAt               DateTime       @default(now())
+  transportType           TransportType  @default(ENC32)
   User                    User?          @relation(fields: [userId], references: [id])
   Homes                   Home[]
   Favorite                Favorite[]
@@ -413,6 +415,11 @@ model PackageSeat {
   Reservation Reservation?
 
   @@unique([homeId, row, column])
+}
+
+enum TransportType {
+  ENC32
+  VAN20
 }
 
 enum SeatZone {

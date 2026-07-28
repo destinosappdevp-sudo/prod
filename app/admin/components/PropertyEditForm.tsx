@@ -50,6 +50,7 @@ interface PropertyEditFormProps {
     privateOwnerId?: string | null;
     privateOwnerName?: string | null;
     privateOwnerCedula?: string | null;
+    transportType?: string;
   };
   categories: Array<{ id: number; name: string; title: string }>;
   states: Array<{ value: string; label: string }>;
@@ -101,6 +102,7 @@ export default function PropertyEditForm({
         : [],
     isPrivate: property.isPrivate || false,
     privateOwnerId: property.privateOwnerId || "",
+    transportType: property.transportType || "ENC32",
   });
 
   const [ownerSearch, setOwnerSearch] = useState("");
@@ -391,6 +393,8 @@ export default function PropertyEditForm({
         payload.append("privateOwnerId", formData.privateOwnerId);
       }
 
+      payload.append("transportType", formData.transportType || "ENC32");
+
       if (imageFile) {
         payload.append("image", imageFile);
       }
@@ -592,43 +596,52 @@ export default function PropertyEditForm({
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4">Características</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <h3 className="text-lg font-semibold mb-4">Transporte</h3>
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="guests">Cupos</Label>
-                <Input
-                  id="guests"
-                  type="number"
-                  value={formData.guests}
-                  readOnly
-                  disabled
-                  placeholder="Número de cupos"
-                />
-                <p className="text-xs text-muted-foreground mt-1">Se calcula automáticamente como VIP + Estándar</p>
+                <Label htmlFor="transportType">Tipo de Transporte</Label>
+                <Select
+                  value={formData.transportType || "ENC32"}
+                  onValueChange={(value) => handleChange("transportType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona el transporte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ENC32">Encava 32 (31 pasajeros + copiloto)</SelectItem>
+                    <SelectItem value="VAN20">Van 20 (19 pasajeros + copiloto)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formData.transportType === "VAN20"
+                    ? "Distribución: Filas 1-5 con 3 asientos (A,B,C), Fila 6 con 4 asientos (A,B,C,D)"
+                    : "Distribución: Filas 1-6 con 4 asientos, Fila 7 con 2 asientos, Fila 8 con 5 asientos"}
+                </p>
               </div>
-              <div>
-                <Label htmlFor="bedrooms">Zona VIP</Label>
-                <Input
-                  id="bedrooms"
-                  type="number"
-                  value={formData.bedrooms}
-                  onChange={(e) => handleChange("bedrooms", e.target.value)}
-                  min={0}
-                  step={2}
-                  placeholder="Número de zonas VIP"
-                />
-              </div>
-              <div>
-                <Label htmlFor="bathrooms">Zona Estándar</Label>
-                <Input
-                  id="bathrooms"
-                  type="number"
-                  value={formData.bathrooms}
-                  onChange={(e) => handleChange("bathrooms", e.target.value)}
-                  min={0}
-                  step={2}
-                  placeholder="Número de zonas estándar"
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="vipSeats">Zona VIP (referencia)</Label>
+                  <Input
+                    id="vipSeats"
+                    type="number"
+                    value={formData.vipSeats}
+                    onChange={(e) => handleChange("vipSeats", e.target.value)}
+                    min={0}
+                    placeholder="Asientos VIP"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="standardSeats">Zona Estándar (referencia)</Label>
+                  <Input
+                    id="standardSeats"
+                    type="number"
+                    value={formData.standardSeats}
+                    onChange={(e) => handleChange("standardSeats", e.target.value)}
+                    min={0}
+                    placeholder="Asientos Estándar"
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -89,6 +89,7 @@ export async function POST(request: Request) {
       .filter(Boolean);
     const isPrivate = formData.get("isPrivate") === "true";
     const privateOwnerId = (formData.get("privateOwnerId") as string) || null;
+    const transportType = (formData.get("transportType") as string) || "ENC32";
 
     const selectedTypeIds = Array.from(
       new Set(
@@ -231,6 +232,7 @@ export async function POST(request: Request) {
         publishStatus: "PENDING_APPROVAL",
         isPrivate,
         privateOwnerId: isPrivate ? privateOwnerId : null,
+        transportType: transportType as any,
       },
     });
 
@@ -262,7 +264,7 @@ export async function POST(request: Request) {
     // Generar asientos si se configuraron cupos
     if (effectiveVipSeats > 0 || effectiveStandardSeats > 0) {
       await prismaAny.$transaction(async (tx: any) => {
-        await syncPackageSeats(tx, newId, effectiveVipSeats, effectiveStandardSeats);
+        await syncPackageSeats(tx, newId, effectiveVipSeats, effectiveStandardSeats, transportType as any);
       });
     }
 

@@ -18,6 +18,7 @@ async function getPackageWithSeats(homeId: string) {
       vipSeats: true,
       standardSeats: true,
       categoryName: true,
+      transportType: true,
       PackageSeat: {
         select: {
           id: true,
@@ -81,7 +82,14 @@ export default async function SeatSelectionPage({
           </p>
         </div>
 
-        <SeatSelector seats={seats} plan={plan} homeId={homeId} flow={flow} guests={guests} />
+        <SeatSelector
+          seats={seats}
+          plan={plan}
+          homeId={homeId}
+          flow={flow}
+          guests={guests}
+          transportType={home.transportType || "ENC32"}
+        />
       </div>
     </div>
   );

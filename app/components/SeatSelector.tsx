@@ -19,6 +19,7 @@ interface SeatSelectorProps {
   homeId: string;
   flow: "ahorro" | "contado";
   guests?: number;
+  transportType?: "ENC32" | "VAN20";
 }
 
 export default function SeatSelector({
@@ -27,6 +28,7 @@ export default function SeatSelector({
   homeId,
   flow,
   guests: guestsProp,
+  transportType = "ENC32",
 }: SeatSelectorProps) {
   const guests = guestsProp ?? 0;
   const router = useRouter();
@@ -136,6 +138,28 @@ export default function SeatSelector({
   };
 
   const renderRow = (row: number) => {
+    if (transportType === "VAN20") {
+      const isLastRow = row === 6;
+      return (
+        <div key={row} className="flex items-center justify-center gap-2">
+          {isLastRow ? (
+            <>
+              {renderSeat(6, "A")}
+              {renderSeat(6, "B")}
+              {renderSeat(6, "C")}
+              {renderSeat(6, "D")}
+            </>
+          ) : (
+            <>
+              {renderSeat(row, "A")}
+              {renderSeat(row, "B")}
+              {renderSeat(row, "C")}
+            </>
+          )}
+        </div>
+      );
+    }
+
     const isRow7 = row === 7;
     const isRow8 = row === 8;
 

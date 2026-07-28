@@ -130,6 +130,7 @@ export async function PATCH(
       .filter(Boolean);
     const isPrivate = formData.get("isPrivate") === "true";
     const privateOwnerId = (formData.get("privateOwnerId") as string) || null;
+    const transportType = (formData.get("transportType") as string) || "ENC32";
 
     const selectedTypeIds = Array.from(
       new Set(
@@ -287,6 +288,7 @@ export async function PATCH(
       standardSeats: effectiveStandardSeats,
       isPrivate,
       privateOwnerId: isPrivate ? privateOwnerId : null,
+      transportType: transportType as any,
       ...(photoPath ? { photo: photoPath } : {}),
       addedDescription: !!(title && description),
       addedLocation: !!(country && municipality),
@@ -306,7 +308,7 @@ export async function PATCH(
 
     // Regenerar asientos si cambiaron los cupos
     await prismaAny.$transaction(async (tx: any) => {
-      await syncPackageSeats(tx, id, effectiveVipSeats, effectiveStandardSeats);
+      await syncPackageSeats(tx, id, effectiveVipSeats, effectiveStandardSeats, transportType as any);
     });
 
     await syncHomeVisibilityFlags(id);
