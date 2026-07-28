@@ -168,7 +168,7 @@ export default function SeatSelector({
             {renderSeat(7, "A")}
             {renderSeat(7, "B")}
             <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
-            <div className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 flex items-center justify-center">
+            <div className="w-[5.5rem] h-10 rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 flex items-center justify-center">
               <span className="text-[8px] text-gray-400 font-bold tracking-wider">PUERTA</span>
             </div>
           </>
