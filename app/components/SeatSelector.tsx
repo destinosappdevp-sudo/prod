@@ -163,7 +163,7 @@ export default function SeatSelector({
     if (transportType === "VAN20") {
       const isLastRow = row === 6;
       return (
-        <div key={row} className="flex items-center justify-center gap-2">
+        <div key={row} className="flex items-center justify-start gap-2">
           {isLastRow ? (
             <>
               {renderSeat(6, "A")}
@@ -176,6 +176,7 @@ export default function SeatSelector({
               {renderSeat(row, "A")}
               {renderSeat(row, "B")}
               {renderSeat(row, "C")}
+              <span className="w-12 text-center text-[9px] text-gray-400 font-semibold tracking-wider uppercase">Pasillo</span>
             </>
           )}
         </div>
