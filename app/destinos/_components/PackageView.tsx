@@ -16,35 +16,40 @@ const prismaAny = prisma as any;
 
 async function getDataBySlug(slug: string, currentUserId?: string) {
   noStore();
-  const idPrefix = slug.split("-").pop() || "";
-  if (!idPrefix || idPrefix.length < 4) return null;
-  return await prismaAny.home.findFirst({
-    where: { id: { startsWith: idPrefix } },
-    select: {
-      id: true,
-      photo: true,
-      title: true,
-      description: true,
-      categoryName: true,
-      price: true,
-      priceVip: true,
-      vipSeats: true,
-      standardSeats: true,
-      bedrooms: true,
-      bathrooms: true,
-      country: true,
-      municipality: true,
-      exactAddress: true,
-      checkInTime: true,
-      guests: true,
-      publishStatus: true,
-      isPrivate: true,
-      privateOwnerId: true,
-      User: {
-        select: { id: true, role: true },
+  try {
+    const idPrefix = slug.split("-").pop() || "";
+    if (!idPrefix || idPrefix.length < 4) return null;
+    return await prismaAny.home.findFirst({
+      where: { id: { startsWith: idPrefix } },
+      select: {
+        id: true,
+        photo: true,
+        title: true,
+        description: true,
+        categoryName: true,
+        price: true,
+        priceVip: true,
+        vipSeats: true,
+        standardSeats: true,
+        bedrooms: true,
+        bathrooms: true,
+        country: true,
+        municipality: true,
+        exactAddress: true,
+        checkInTime: true,
+        guests: true,
+        publishStatus: true,
+        isPrivate: true,
+        privateOwnerId: true,
+        User: {
+          select: { id: true, role: true },
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error('Error fetching package:', error);
+    return null;
+  }
 }
 
 async function getAmenities(homeId: string) {

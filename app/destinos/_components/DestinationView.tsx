@@ -11,62 +11,67 @@ import ReviewsSection from "@/app/components/ReviewsSection";
 const prismaAny = prisma as any;
 
 async function getDestinationBySlug(slug: string, currentUserId?: string) {
-  const destination = await prismaAny.destination.findUnique({
-    where: { slug },
-    include: {
-      User: {
-        select: {
-          firstName: true,
-          email: true,
-          phoneNumber: true,
+  try {
+    const destination = await prismaAny.destination.findUnique({
+      where: { slug },
+      include: {
+        User: {
+          select: {
+            firstName: true,
+            email: true,
+            phoneNumber: true,
+          },
         },
-      },
-      Homes: {
-        where: {
-          publishStatus: "APPROVED",
-        },
-        orderBy: { checkInTime: { sort: "asc", nulls: "last" } },
-        select: {
-          id: true,
-          title: true,
-          checkInTime: true,
-          price: true,
-          priceVip: true,
-          vipSeats: true,
-          standardSeats: true,
-          photo: true,
-          isPrivate: true,
-          privateOwnerId: true,
-          _count: {
-            select: {
-              PackageSeat: true,
-              Reservation: true,
+        Homes: {
+          where: {
+            publishStatus: "APPROVED",
+          },
+          orderBy: { checkInTime: { sort: "asc", nulls: "last" } },
+          select: {
+            id: true,
+            title: true,
+            checkInTime: true,
+            price: true,
+            priceVip: true,
+            vipSeats: true,
+            standardSeats: true,
+            photo: true,
+            isPrivate: true,
+            privateOwnerId: true,
+            _count: {
+              select: {
+                PackageSeat: true,
+                Reservation: true,
+              },
             },
           },
         },
-      },
-      Review: {
-        select: {
-          id: true,
-          rating: true,
-          comment: true,
-          createdAt: true,
-          User: {
-            select: {
-              firstName: true,
-              profileImage: true,
+        Review: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            User: {
+              select: {
+                firstName: true,
+                profileImage: true,
+              },
             },
           },
+          orderBy: { createdAt: "desc" },
+          take: 5,
         },
-        orderBy: { createdAt: "desc" },
-        take: 5,
+        _count: {
+          select: { Review: true },
+        },
       },
-      _count: {
-        select: { Review: true },
-      },
-    },
-  });
-  return destination;
+    });
+    return destination;
+  } catch (error) {
+    console.error('Error fetching destination:', error);
+    return null;
+  }
 }
 
 function formatDeparture(value: string | null) {
