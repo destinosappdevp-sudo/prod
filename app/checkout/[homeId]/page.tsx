@@ -75,13 +75,16 @@ export default async function CheckoutPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { homeId } = await params;
+  const sp = await searchParams;
+  const { startDate, endDate, guests, plan, seatId, seatIds, flow, target, passengers } = sp;
+
   if (!user) {
-    return redirect("/api/auth/login");
+    const qs = new URLSearchParams(sp as Record<string, string>).toString();
+    const next = `/checkout/${homeId}${qs ? `?${qs}` : ""}`;
+    return redirect(`/login?next=${encodeURIComponent(next)}`);
   }
 
-  const { homeId } = await params;
-  const { startDate, endDate, guests, plan, seatId, seatIds, flow, target, passengers } =
-    await searchParams;
   const isSavingsFlow = flow === "ahorro";
   const isGeneralSavings =
     isSavingsFlow && (target === "general" || homeId === "general");

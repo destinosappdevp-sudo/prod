@@ -233,14 +233,14 @@ export default async function SingleHomePage({
               <div className="mt-6 flex flex-col gap-2">
                 {user ? (
                   <Link
-                    href={`/seats/${id}?plan=estandar&flow=ahorrar`}
+                    href={`/seats/${id}?plan=estandar&flow=ahorro`}
                     className="block w-full text-center rounded-xl border border-orange-300 text-orange-700 py-2.5 text-sm font-semibold hover:bg-orange-50 transition"
                   >
                     Ahorrar
                   </Link>
                 ) : (
                   <Link
-                    href="/api/auth/login"
+                    href={`/login?next=${encodeURIComponent(`/seats/${id}?plan=estandar&flow=ahorro`)}`}
                     className="block w-full text-center rounded-xl border border-orange-300 text-orange-700 py-2.5 text-sm font-semibold hover:bg-orange-50 transition"
                   >
                     Ahorrar
@@ -255,7 +255,7 @@ export default async function SingleHomePage({
                   </Link>
                 ) : (
                   <Link
-                    href="/api/auth/login"
+                    href={`/login?next=${encodeURIComponent(`/seats/${id}?plan=estandar&flow=contado`)}`}
                     className="block w-full text-center rounded-xl bg-orange-500 text-white py-2.5 text-sm font-semibold hover:bg-orange-600 transition"
                   >
                     Pagar de contado
@@ -295,14 +295,14 @@ export default async function SingleHomePage({
               <div className="mt-6 flex flex-col gap-2">
                 {user ? (
                   <Link
-                    href={`/seats/${id}?plan=vip&flow=ahorrar`}
+                    href={`/seats/${id}?plan=vip&flow=ahorro`}
                     className="block w-full text-center rounded-xl border border-amber-300 text-amber-700 py-2.5 text-sm font-semibold hover:bg-amber-50 transition"
                   >
                     Ahorrar
                   </Link>
                 ) : (
                   <Link
-                    href="/api/auth/login"
+                    href={`/login?next=${encodeURIComponent(`/seats/${id}?plan=vip&flow=ahorro`)}`}
                     className="block w-full text-center rounded-xl border border-amber-300 text-amber-700 py-2.5 text-sm font-semibold hover:bg-amber-50 transition"
                   >
                     Ahorrar
@@ -317,7 +317,7 @@ export default async function SingleHomePage({
                   </Link>
                 ) : (
                   <Link
-                    href="/api/auth/login"
+                    href={`/login?next=${encodeURIComponent(`/seats/${id}?plan=vip&flow=contado`)}`}
                     className="block w-full text-center rounded-xl bg-amber-500 text-white py-2.5 text-sm font-semibold hover:bg-amber-600 transition"
                   >
                     Pagar de contado

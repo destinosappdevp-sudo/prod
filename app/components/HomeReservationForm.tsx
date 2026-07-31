@@ -35,7 +35,7 @@ export function HomeReservationForm({
 
   const handleReservation = () => {
     if (!userId) {
-      router.push("/api/auth/login");
+      router.push(`/login?next=${encodeURIComponent(`/checkout/${homeId}`)}`);
       return;
     }
 
@@ -112,7 +112,7 @@ export function HomeReservationForm({
           </Button>
         ) : (
           <Button className="w-full" asChild>
-            <Link href={"/api/auth/login"}>Hacer una reserva</Link>
+            <Link href={"/login"}>Hacer una reserva</Link>
           </Button>
         )}
       </div>
