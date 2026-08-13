@@ -85,20 +85,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: publicUrlData } = adminClient.storage
-      .from("images")
-      .getPublicUrl(filePath);
-
-    if (!publicUrlData?.publicUrl) {
-      return NextResponse.json(
-        { error: "No se pudo obtener la URL de la captura" },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json({
       success: true,
-      url: publicUrlData.publicUrl,
+      url: filePath,
     });
   } catch (error) {
     console.error("Error uploading payment proof:", error);

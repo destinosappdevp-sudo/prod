@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 import { normalizeExternalUrl } from "@/lib/utils";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
 
@@ -75,7 +76,11 @@ export async function PATCH(
         quality: 82,
       });
       const fileName = `${Date.now()}.${optimizedImage.extension}`;
-      const { error } = await supabase.storage
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "admin banners PATCH"
+      );
+      const { data, error } = await storageClient.storage
         .from("images")
         .upload(fileName, optimizedImage.file, {
           contentType: optimizedImage.contentType,
@@ -89,9 +94,7 @@ export async function PATCH(
         );
       }
 
-      imageUrl = supabase.storage
-        .from("images")
-        .getPublicUrl(fileName).data.publicUrl;
+      imageUrl = data.path;
       
       shouldDeleteOldImage = true;
     }
@@ -100,7 +103,11 @@ export async function PATCH(
     if (shouldDeleteOldImage) {
       const oldFileName = existingBanner.imageUrl.split("/").pop();
       if (oldFileName) {
-        await supabase.storage.from("images").remove([oldFileName]);
+        const storageClient = await getAdminStorageClientOrThrow(
+          "images",
+          "admin banners PATCH"
+        );
+        await storageClient.storage.from("images").remove([oldFileName]);
       }
     }
 
@@ -175,7 +182,11 @@ export async function DELETE(
     // Eliminar imagen de storage
     const fileName = banner.imageUrl.split("/").pop();
     if (fileName) {
-      await supabase.storage.from("images").remove([fileName]);
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "admin banners DELETE"
+      );
+      await storageClient.storage.from("images").remove([fileName]);
     }
 
     // Eliminar banner de BD

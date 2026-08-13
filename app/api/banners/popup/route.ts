@@ -1,6 +1,7 @@
 import prisma from "@/app/lib/db";
 import { NextResponse } from "next/server";
 import { normalizeExternalUrl } from "@/lib/utils";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export async function GET() {
     return NextResponse.json({
       ...banner,
       url: normalizeExternalUrl(banner.url),
+      imageUrl: resolveImageSrc(banner.imageUrl),
     });
   } catch (error) {
     console.error("Error fetching popup banner:", error);

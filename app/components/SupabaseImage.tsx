@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 interface SupabaseImageProps {
   imagePath?: string | null;
@@ -22,32 +23,6 @@ export function SupabaseImage({
   height,
   sizes,
 }: SupabaseImageProps) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const resolveImageSrc = (path?: string | null) => {
-    if (!path) {
-      return "/placeholder.webp";
-    }
-
-    const trimmedPath = path.trim();
-    if (!trimmedPath) {
-      return "/placeholder.webp";
-    }
-
-    if (
-      trimmedPath.startsWith("http://") ||
-      trimmedPath.startsWith("https://") ||
-      trimmedPath.startsWith("/")
-    ) {
-      return trimmedPath;
-    }
-
-    if (!supabaseUrl) {
-      return "/placeholder.webp";
-    }
-
-    return `${supabaseUrl}/storage/v1/object/public/images/${trimmedPath}`;
-  };
-
   const initialSrc = resolveImageSrc(imagePath);
   const [imgSrc, setImgSrc] = useState<string>(initialSrc);
 

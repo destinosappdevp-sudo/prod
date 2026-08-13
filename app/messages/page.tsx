@@ -4,6 +4,7 @@ import prisma from "@/app/lib/db";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, MessageCircle } from "lucide-react";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 export default async function MessagesPage() {
   const supabase = await createClient();
@@ -116,7 +117,7 @@ export default async function MessagesPage() {
                   <div className="flex items-center gap-4">
                     {conv.profileImage && (
                       <Image
-                        src={conv.profileImage}
+                        src={resolveImageSrc(conv.profileImage)}
                         alt={conv.firstName}
                         width={48}
                         height={48}

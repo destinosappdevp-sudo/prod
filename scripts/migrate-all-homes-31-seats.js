@@ -15,9 +15,10 @@
  */
 
 const { PrismaClient } = require("@prisma/client");
+require("dotenv").config();
 
-const STAGING_DB =
-  "postgresql://postgres.hxdhkbiwhrroeffxyxfz:l8IPlvpvhKRN3BCK@aws-1-us-east-1.pooler.supabase.com:5432/postgres";
+// Apunta a STAGING (.env). Usa DIRECT_URL para evitar el pooler en migraciones.
+const STAGING_DB = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
 const TOTAL = 31;
 

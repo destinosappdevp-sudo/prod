@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { updateProfile } from "../action";
 import { Mail, Calendar, Upload } from "lucide-react";
 import DocumentsSection, { UserDocumentItem } from "./DocumentsSection";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 interface ProfileEditClientProps {
   userData: any;
@@ -145,7 +146,7 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
     }
   };
 
-  const displayImage = previewImage || currentUserData?.profileImage || "/avatar-default.svg";
+  const displayImage = previewImage || resolveImageSrc(currentUserData?.profileImage);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -411,7 +412,7 @@ export default function ProfileEditClient({ userData, userId, initialDocs = [] }
           <div className="flex items-start gap-6">
             <div className="relative">
               <Image
-                src={currentUserData?.profileImage || "/avatar-default.svg"}
+                src={resolveImageSrc(currentUserData?.profileImage)}
                 alt={`${currentUserData?.firstName} ${currentUserData?.lastName}`}
                 width={120}
                 height={120}

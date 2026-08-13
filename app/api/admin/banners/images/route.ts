@@ -1,4 +1,5 @@
 import { createClient } from "@/app/lib/supabase/server";
+import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 import prisma from "@/app/lib/db";
 import { NextResponse } from "next/server";
 
@@ -25,7 +26,11 @@ export async function GET() {
   }
 
   try {
-    const { data, error } = await supabase.storage
+    const storageClient = await getAdminStorageClientOrThrow(
+      "images",
+      "admin banners images GET"
+    );
+    const { data, error } = await storageClient.storage
       .from("images")
       .list("", {
         limit: 100,
@@ -38,8 +43,7 @@ export async function GET() {
 
     const images = data.map((file) => ({
       name: file.name,
-      url: supabase.storage.from("images").getPublicUrl(file.name).data
-        .publicUrl,
+      url: `/api/images/${file.name}`,
       createdAt: file.created_at,
     }));
 

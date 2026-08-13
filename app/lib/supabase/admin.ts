@@ -33,7 +33,7 @@ export async function getAdminStorageClientOrThrow(bucket: string, context: stri
 
     if (error) {
       const { error: createError } = await client.storage.createBucket(bucket, {
-        public: true,
+        public: false,
       });
 
       if (createError) {
@@ -41,14 +41,14 @@ export async function getAdminStorageClientOrThrow(bucket: string, context: stri
           `${context}: bucket \"${bucket}\" no disponible y no se pudo crear (${createError.message})`
         );
       }
-    } else if (data && data.public === false) {
+    } else if (data && data.public === true) {
       const { error: updateError } = await client.storage.updateBucket(bucket, {
-        public: true,
+        public: false,
       });
 
       if (updateError) {
         throw new Error(
-          `${context}: bucket \"${bucket}\" existe pero no se pudo volver público (${updateError.message})`
+          `${context}: bucket \"${bucket}\" existe pero no se pudo volver privado (${updateError.message})`
         );
       }
     }

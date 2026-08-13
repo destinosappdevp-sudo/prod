@@ -1,6 +1,7 @@
 import prisma from "@/app/lib/db";
 import { NextResponse } from "next/server";
 import { normalizeExternalUrl } from "@/lib/utils";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export async function GET() {
     const result = banners.map((b) => ({
       ...b,
       url: normalizeExternalUrl(b.url),
+      imageUrl: resolveImageSrc(b.imageUrl),
     }));
 
     return NextResponse.json(result);

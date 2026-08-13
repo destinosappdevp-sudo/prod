@@ -7,6 +7,7 @@ import { getAllStates } from "@/app/lib/venezuelaStates";
 import { ArrowLeft, Calendar, Heart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 const prismaAny = prisma as any;
 
@@ -248,7 +249,7 @@ export default async function PackageDetailPage({
             {property.photo ? (
               <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
                 <Image
-                  src={property.photo}
+                  src={resolveImageSrc(property.photo)}
                   alt={property.title || "Paquete"}
                   fill
                   className="object-cover"

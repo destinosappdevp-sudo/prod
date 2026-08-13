@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Send } from "lucide-react";
 import { sendMessage } from "@/app/action";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 export default async function ChatPage({
   params,
@@ -69,7 +70,7 @@ export default async function ChatPage({
             <div className="flex items-center gap-3">
               {partner.profileImage && (
                 <Image
-                  src={partner.profileImage}
+                  src={resolveImageSrc(partner.profileImage)}
                   alt={partner.firstName}
                   width={40}
                   height={40}

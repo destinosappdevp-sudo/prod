@@ -818,7 +818,11 @@ export async function updateProfile(formData: FormData) {
         quality: 82,
       });
       const fileName = `${Date.now()}.${optimizedProfileImage.extension}`;
-      const { data: storageData, error: storageError } = await supabase.storage
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "updateProfile"
+      );
+      const { data: storageData, error: storageError } = await storageClient.storage
         .from("images")
         .upload(`profiles/${user.id}/${fileName}`, optimizedProfileImage.file, {
           contentType: optimizedProfileImage.contentType,
@@ -830,7 +834,7 @@ export async function updateProfile(formData: FormData) {
         return { success: false, error: "Error al subir la imagen de perfil" };
       }
 
-      profileImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+      profileImageUrl = storageData.path;
     }
 
     if (document1File && document1File.size > 0) {
@@ -840,7 +844,11 @@ export async function updateProfile(formData: FormData) {
         quality: 88,
       });
       const fileName = `${Date.now()}-doc1.${optimizedDocument1.extension}`;
-      const { data: storageData, error: storageError } = await supabase.storage
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "updateProfile"
+      );
+      const { data: storageData, error: storageError } = await storageClient.storage
         .from("images")
         .upload(`verification-docs/${user.id}/${fileName}`, optimizedDocument1.file, {
           contentType: optimizedDocument1.contentType,
@@ -852,7 +860,7 @@ export async function updateProfile(formData: FormData) {
         return { success: false, error: "Error al subir el documento 1" };
       }
 
-      document1ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+      document1ImageUrl = storageData.path;
     }
 
     if (document2File && document2File.size > 0) {
@@ -862,7 +870,11 @@ export async function updateProfile(formData: FormData) {
         quality: 88,
       });
       const fileName = `${Date.now()}-doc2.${optimizedDocument2.extension}`;
-      const { data: storageData, error: storageError } = await supabase.storage
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "updateProfile"
+      );
+      const { data: storageData, error: storageError } = await storageClient.storage
         .from("images")
         .upload(`verification-docs/${user.id}/${fileName}`, optimizedDocument2.file, {
           contentType: optimizedDocument2.contentType,
@@ -874,7 +886,7 @@ export async function updateProfile(formData: FormData) {
         return { success: false, error: "Error al subir el documento 2" };
       }
 
-      document2ImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+      document2ImageUrl = storageData.path;
     }
 
     const hasVerificationDocs = !!document1ImageUrl || !!document2ImageUrl;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/db";
 import { createClient } from "@/app/lib/supabase/server";
+import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 import { normalizeExternalUrl } from "@/lib/utils";
 import { randomUUID } from "crypto";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
@@ -109,7 +110,11 @@ export async function POST(req: NextRequest) {
         quality: 82,
       });
       const fileName = `${Date.now()}.${optimizedImage.extension}`;
-      const { data, error } = await supabase.storage
+      const storageClient = await getAdminStorageClientOrThrow(
+        "images",
+        "admin banners POST"
+      );
+      const { data, error } = await storageClient.storage
         .from("images")
         .upload(fileName, optimizedImage.file, {
           contentType: optimizedImage.contentType,
@@ -123,9 +128,7 @@ export async function POST(req: NextRequest) {
         );
       }
       
-      imageUrl = supabase.storage
-        .from("images")
-        .getPublicUrl(fileName).data.publicUrl;
+      imageUrl = data.path;
     }
 
     const banner = await prisma.banner.create({

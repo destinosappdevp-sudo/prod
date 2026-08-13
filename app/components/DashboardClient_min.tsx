@@ -20,6 +20,7 @@ import {
 import { signOut } from "@/app/action";
 import ProfileEditClient from "@/app/components/ProfileEditClient";
 import { SupabaseImage } from "@/app/components/SupabaseImage";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -798,7 +799,7 @@ export default function DashboardClient(props: DashboardClientProps) {
             <div className="h-9 w-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center text-sm">
               {props.profileImage ? (
                 <Image
-                  src={props.profileImage}
+                  src={resolveImageSrc(props.profileImage)}
                   alt="Foto de perfil"
                   width={36}
                   height={36}

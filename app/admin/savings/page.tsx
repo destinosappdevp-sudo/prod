@@ -4,6 +4,7 @@ import { unstable_noStore } from "next/cache";
 import { Card } from "@/components/ui/card";
 import SavingActions from "../users/[userId]/savings/SavingActions";
 import AddSavingDialog from "./AddSavingDialog";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 const prismaAny = prisma as any;
 
@@ -244,8 +245,9 @@ export default async function AdminSavingsPage() {
                   const initialAmountBs = Number(details.initialAmountBs ?? NaN);
                   const initialAmountUsd = Number(details.initialAmountUsd ?? NaN);
                   const bcvRateAtCreation = Number(details.bcvRateAtCreation ?? NaN);
-                  const paymentProofUrl =
+                  const rawPaymentProofUrl =
                     typeof details.paymentProofUrl === "string" ? details.paymentProofUrl : "";
+                  const paymentProofUrl = resolveImageSrc(rawPaymentProofUrl);
                   const user = s.User;
 
                   return (
@@ -294,7 +296,7 @@ export default async function AdminSavingsPage() {
                         )}
                       </td>
                       <td className="px-4 py-4 text-sm">
-                        {paymentProofUrl ? (
+                        {rawPaymentProofUrl ? (
                           <a
                             href={paymentProofUrl}
                             target="_blank"

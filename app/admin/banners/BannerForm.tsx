@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Banner } from "./BannerList";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 interface BannerFormProps {
   onSubmit: (data: FormData) => void;
@@ -290,7 +291,7 @@ export default function BannerForm({ onSubmit, loading, banner, onCancel }: Bann
           <div className="mb-3">
             <p className="text-xs text-muted-foreground mb-1">Imagen actual:</p>
             <Image
-              src={banner.imageUrl}
+              src={resolveImageSrc(banner.imageUrl)}
               alt="Preview actual"
               width={150}
               height={80}

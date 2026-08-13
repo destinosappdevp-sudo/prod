@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import SavingActions from "./SavingActions";
 import { unstable_noStore } from "next/cache";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 const prismaAny = prisma as any;
 
@@ -352,7 +353,8 @@ export default async function UserSavingsPage({
                   const details = s.paymentDetails && typeof s.paymentDetails === "object" ? s.paymentDetails as Record<string, any> : {};
                   const ref = details.referenceNumber ?? "—";
                   const bank = details.emisorBank ?? "";
-                  const paymentProofUrl = typeof details.paymentProofUrl === "string" ? details.paymentProofUrl : "";
+                  const rawPaymentProofUrl = typeof details.paymentProofUrl === "string" ? details.paymentProofUrl : "";
+                  const paymentProofUrl = resolveImageSrc(rawPaymentProofUrl);
                   return (
                     <tr key={s.id} className="hover:bg-muted/50">
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-foreground">
@@ -366,7 +368,7 @@ export default async function UserSavingsPage({
                         )}
                       </td>
                       <td className="px-4 py-4 text-sm">
-                        {paymentProofUrl ? (
+                        {rawPaymentProofUrl ? (
                           <a
                             href={paymentProofUrl}
                             target="_blank"

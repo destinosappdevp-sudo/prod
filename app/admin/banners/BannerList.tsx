@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { normalizeExternalUrl } from "@/lib/utils";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 export interface Banner {
   id: string;
@@ -73,7 +74,7 @@ export default function BannerList({ banners, onEdit, onDelete, emptyMessage = "
               </div>
               <div className="relative h-48 w-full">
                 <Image
-                  src={banner.imageUrl}
+                  src={resolveImageSrc(banner.imageUrl)}
                   alt={banner.title}
                   fill
                   className="object-cover"

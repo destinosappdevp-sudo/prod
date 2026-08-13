@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/app/lib/supabase/server";
+import { getAdminStorageClientOrThrow } from "@/app/lib/supabase/admin";
 import prisma from "@/app/lib/db";
 import { optimizeImageForUpload } from "@/app/lib/image-upload";
 import { Prisma } from "@prisma/client";
@@ -64,8 +65,12 @@ export async function POST(request: Request) {
       quality: 88,
     });
     const storagePath = `verification-docs/${user.id}/${Date.now()}.${optimizedFile.extension}`;
+    const storageClient = await getAdminStorageClientOrThrow(
+      "images",
+      "user documents POST"
+    );
 
-    const { data: storageData, error: storageError } = await supabase.storage
+    const { data: storageData, error: storageError } = await storageClient.storage
       .from("images")
       .upload(storagePath, optimizedFile.file, {
         upsert: false,
@@ -77,7 +82,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Error al subir el archivo" }, { status: 500 });
     }
 
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/${storageData.path}`;
+    const url = storageData.path;
 
     const id = crypto.randomUUID();
     const rows = (await prisma.$queryRaw(

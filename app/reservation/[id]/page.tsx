@@ -6,45 +6,7 @@ import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { getPaymentMethodLabel } from "@/app/lib/payment-currency";
 import { buildHomeUrl } from "@/app/lib/slug";
-
-const supabaseImagesBase = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images`
-  : "";
-
-function resolveImageSrc(imagePath?: string | null) {
-  if (!imagePath) {
-    return null;
-  }
-
-  const trimmedPath = imagePath.trim();
-  if (!trimmedPath) {
-    return null;
-  }
-
-  if (/^https?:\/\//i.test(trimmedPath)) {
-    return trimmedPath;
-  }
-
-  if (trimmedPath.startsWith("/storage/v1/object/public/images/")) {
-    return process.env.NEXT_PUBLIC_SUPABASE_URL
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}${trimmedPath}`
-      : trimmedPath;
-  }
-
-  if (trimmedPath.startsWith("storage/v1/object/public/images/")) {
-    return supabaseImagesBase
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/${trimmedPath}`
-      : `/${trimmedPath}`;
-  }
-
-  if (trimmedPath.startsWith("/")) {
-    return trimmedPath;
-  }
-
-  return supabaseImagesBase
-    ? `${supabaseImagesBase}/${trimmedPath.replace(/^\/+/, "")}`
-    : `/${trimmedPath.replace(/^\/+/, "")}`;
-}
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 function parseNumberFromUnknown(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {

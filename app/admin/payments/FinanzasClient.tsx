@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import PaymentActions from "./PaymentActions";
 import { getPaymentMethodLabel, parsePaymentFinancials } from "@/app/lib/payment-currency";
 import SavingActions from "../users/[userId]/savings/SavingActions";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 interface FinanzasClientProps {
   /** Movimientos financieros unificados: pagos y abonos de alcancía. */
@@ -107,7 +108,7 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
 
   const getPaymentProofUrl = (movement: any) => {
     if (typeof movement?.paymentProofUrl === "string" && movement.paymentProofUrl.trim()) {
-      return movement.paymentProofUrl;
+      return resolveImageSrc(movement.paymentProofUrl);
     }
 
     const details =
@@ -116,7 +117,7 @@ export default function FinanzasClient({ movements }: FinanzasClientProps) {
         : null;
 
     if (typeof details?.paymentProofUrl === "string" && details.paymentProofUrl.trim()) {
-      return details.paymentProofUrl;
+      return resolveImageSrc(details.paymentProofUrl);
     }
 
     return null;

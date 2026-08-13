@@ -2,6 +2,7 @@
 import { UserNavClient } from "./UserNavClient";
 import { createClient } from "@/app/lib/supabase/server";
 import prisma from "@/app/lib/db";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 async function UserNav() {
   const supabase = await createClient();
@@ -24,7 +25,7 @@ async function UserNav() {
   const isRealPhoto = (url?: string | null) => !!url && !url.includes('avatar.vercel.sh');
 
   const userPicture = isRealPhoto(userProfileImage)
-    ? userProfileImage!
+    ? resolveImageSrc(userProfileImage)
     : isRealPhoto(user?.user_metadata?.avatar_url)
     ? user!.user_metadata.avatar_url
     : null;

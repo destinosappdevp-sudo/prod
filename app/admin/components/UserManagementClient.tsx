@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Edit, Plus, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 interface User {
   id: string;
@@ -396,7 +397,7 @@ export function UserManagementClient({ initialUsers }: UserManagementClientProps
                       <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                         {user.profileImage && !user.profileImage.includes('avatar.vercel.sh') ? (
                           <Image
-                            src={user.profileImage}
+                            src={resolveImageSrc(user.profileImage)}
                             alt={`${user.firstName} ${user.lastName || ""}`.trim()}
                             width={40}
                             height={40}

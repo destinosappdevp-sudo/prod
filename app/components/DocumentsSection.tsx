@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { FileText, Image as ImageIcon, Trash2, Upload, ExternalLink, Loader2 } from "lucide-react";
+import { resolveImageSrc } from "@/app/lib/image-url";
 
 export interface UserDocumentItem {
   id: string;
@@ -144,7 +145,7 @@ export default function DocumentsSection({ initialDocs, readOnly = false }: Docu
                 {isImage(doc.mimeType) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={doc.url}
+                    src={resolveImageSrc(doc.url)}
                     alt={doc.fileName}
                     className="w-full h-full object-cover"
                   />
@@ -170,7 +171,7 @@ export default function DocumentsSection({ initialDocs, readOnly = false }: Docu
               {/* Acciones */}
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <a
-                  href={doc.url}
+                  href={resolveImageSrc(doc.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 rounded hover:bg-gray-200 text-gray-500 hover:text-blue-600 transition-colors"
