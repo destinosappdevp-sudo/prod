@@ -76,7 +76,6 @@ export function revalidateHomeVisibilityPaths(homeId: string) {
   revalidatePath(`/checkout/${homeId}`);
   revalidatePath(`/seats/${homeId}`);
   revalidatePath(`/seats/${homeId}/passengers`);
-  revalidatePath(`/my-listing/${homeId}`);
   revalidatePath("/reservation");
   revalidatePath("/my-dashboard");
   revalidatePath("/admin/properties");
