@@ -21,45 +21,19 @@ async function requireSuperAdmin() {
   return record?.role === "SUPERADMIN";
 }
 
-// GET: Obtener el porcentaje de comisión actual
+// GET: Obtener el porcentaje de comisión actual (siempre 0% ya que no existe comisión)
 export async function GET() {
-  try {
-    const config = await prisma.platformConfig.findFirst();
-    return NextResponse.json({ commissionPercent: config?.commissionPercent ?? 10 });
-  } catch (error) {
-    console.error("[admin/settings/commission] GET error:", error);
-    return NextResponse.json(
-      { commissionPercent: 10, fallback: true },
-      { status: 200 }
-    );
-  }
+  return NextResponse.json({ commissionPercent: 0 });
 }
 
-// POST: Actualizar el porcentaje de comisión
+// POST: Actualizar el porcentaje de comisión (siempre se mantiene en 0%)
 export async function POST(request: Request) {
   const canEdit = await requireSuperAdmin();
   if (!canEdit) {
     return NextResponse.json({ error: "Solo superadmin puede actualizar comisión" }, { status: 403 });
   }
 
-  const data = await request.json();
-  const percent = Number(data.commissionPercent ?? data.commission ?? 10);
-  if (isNaN(percent) || percent < 0 || percent > 100) {
-    return NextResponse.json({ error: "Porcentaje inválido" }, { status: 400 });
-  }
-  // Si ya existe, actualiza; si no, crea
-  const config = await prisma.platformConfig.findFirst();
-  if (config) {
-    await prisma.platformConfig.update({
-      where: { id: config.id },
-      data: { commissionPercent: percent, updatedAt: new Date() },
-    });
-  } else {
-    await prisma.platformConfig.create({
-      data: { commissionPercent: percent },
-    });
-  }
-  return NextResponse.json({ success: true, commissionPercent: percent });
+  return NextResponse.json({ success: true, commissionPercent: 0 });
 }
 
 

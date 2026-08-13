@@ -847,45 +847,7 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            {/* Comisión Destinos Venezuela */}
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <div>
-                <p className="font-medium">Comisión Destinos Venezuela</p>
-                <p className="text-sm text-muted-foreground">
-                  Porcentaje aplicado a cada pago
-                </p>
-              </div>
-              <form className="flex items-center gap-2" onSubmit={handleSubmit}>
-                <input
-                  type="number"
-                  name="commission"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={commission}
-                  onChange={(e) => setCommission(Number(e.target.value))}
-                  className="w-20 p-2 border rounded-lg bg-card text-right"
-                  style={{ width: "70px" }}
-                  disabled={loading || saving}
-                />
-                <span className="text-muted-foreground font-medium">%</span>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  disabled={loading || saving}
-                >
-                  {saving ? "Guardando..." : "Guardar"}
-                </button>
-                {success && (
-                  <span className="text-green-600 ml-2 text-sm">
-                    ¡Guardado!
-                  </span>
-                )}
-                {error && (
-                  <span className="text-red-600 ml-2 text-sm">{error}</span>
-                )}
-              </form>
-            </div>
+
           </div>
         </Card>
 

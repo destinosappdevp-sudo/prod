@@ -350,24 +350,21 @@ export async function POST(request: Request) {
     }
 
     // Obtener configuración actual de comisión, tasa BCV y modo Pago Móvil
-    let commissionPercent = 10;
+    let commissionPercent = 0;
     let bcvRate = 0;
     let bcvRateDate: Date | null = null;
     let pagomovilMode: "MANUAL" | "R4" = "MANUAL";
     try {
       const config = await (prisma as any).platformConfig.findFirst({
         select: {
-          commissionPercent: true,
           bcvRate: true,
           bcvRateDate: true,
           pagomovilMode: true,
         },
       });
 
-      commissionPercent =
-        typeof config?.commissionPercent === "number"
-          ? config.commissionPercent
-          : 10;
+      // La comisión ya no existe en el sistema (paquetes turísticos gestionados por admin)
+      commissionPercent = 0;
 
       bcvRate = config?.bcvRate ? Number(config.bcvRate) : 0;
       bcvRateDate = config?.bcvRateDate ? new Date(config.bcvRateDate) : null;
