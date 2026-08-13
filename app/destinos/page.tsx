@@ -163,13 +163,15 @@ async function getDestinations({
 export default async function DestinosHomePage({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     filter?: string;
     country?: string;
     q?: string;
     month?: string;
-  };
+  }>;
 }) {
+  const sp = (await searchParams) ?? {};
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -177,10 +179,10 @@ export default async function DestinosHomePage({
 
   const destinations = await getDestinations({
     userId: user?.id,
-    searchParams,
+    searchParams: sp,
   });
 
-  const selectedTokens = (searchParams?.filter || "")
+  const selectedTokens = (sp?.filter || "")
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean);
@@ -213,10 +215,10 @@ export default async function DestinosHomePage({
   });
 
   const safeSearchParams: Record<string, string | undefined> = {
-    filter: searchParams?.filter,
-    country: searchParams?.country,
-    q: searchParams?.q,
-    month: searchParams?.month,
+    filter: sp?.filter,
+    country: sp?.country,
+    q: sp?.q,
+    month: sp?.month,
   };
 
   return (

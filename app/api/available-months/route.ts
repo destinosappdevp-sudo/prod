@@ -7,11 +7,13 @@ export async function GET() {
   try {
     const prismaAny = prisma as any;
     const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const nowStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
     const homes = await prismaAny.home.findMany({
       where: {
         publishStatus: "APPROVED",
-        checkInTime: { gte: now },
+        checkInTime: { gte: nowStr },
       },
       select: { checkInTime: true },
     });
