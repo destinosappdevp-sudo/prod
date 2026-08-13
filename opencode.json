@@ -1,0 +1,36 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md", "docs/PROYECTO-ARQUITECTURA.md"],
+  "agent": {
+    "prisma-expert": {
+      "description": "Experto en Prisma ORM, schema design, migraciones y queries optimizadas para el proyecto destinos.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "supabase-rls": {
+      "description": "Especialista en políticas RLS de Supabase, seguridad y autenticación.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "nextjs-route": {
+      "description": "Especialista en crear páginas y API routes de Next.js siguiendo las convenciones del proyecto.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "pago-movil-r4": {
+      "description": "Especialista en integración de Pago Móvil R4, webhooks, HMAC y sistema de pagos venezolano.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "admin-panel": {
+      "description": "Especialista en el panel de administración, gestión de usuarios, propiedades y finanzas.",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    },
+    "testing": {
+      "description": "Especialista en testing y verificación del proyecto destinos (tsc/build, QA manual y scripts contra STAGING).",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6"
+    }
+  }
+}

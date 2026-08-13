@@ -1,50 +1,47 @@
-# Git Workflow Rules
+# destinos (bt-travel)
 
-## Remote Configuration
-- **origin** = `https://github.com/lord-daxul/zk.git` → **STAGING** (usa env viejo)
-- **client** = `https://github.com/destinosappdevp-sudo/prod.git` → **PRODUCCIÓN** (usa env local y env de producción)
+Next.js 16 (App Router) + React 19 + Tailwind + Prisma 5 + Supabase. **No hay test runner.** `docs/PROYECTO-ARQUITECTURA.md` se auto-carga (rutas, modelos, flujos) — no duplicar su contenido aquí.
 
-## Supabase / Database Configuration
+## Entornos / Bases de datos (VERIFICAR ANTES DE CUALQUIER OPERACIÓN)
 
-### PRODUCCIÓN (`.env` / `.env.local`)
-- **Supabase**: `rprwpvyubukjsqlcqdde` (us-west-2)
-- **DB Host**: `aws-1-us-west-2.pooler.supabase.com`
-- **Site URL**: `https://destinos.pro`
-- **Resend API**: `re_6hxdVYgR_...`
+Hay 2 proyectos Supabase y 3 archivos env:
 
-### STAGING (`.envviejo`)
-- **Supabase**: `hxdhkbiwhrroeffxyxfz` (us-east-1)
-- **DB Host**: `aws-1-us-east-1.pooler.supabase.com`
-- **Site URL**: `https://verdemo.website`
-- **Resend API**: `re_QnW3jW1u_...`
+| Archivo | Supabase | Región | Site | Entorno |
+|---------|----------|--------|------|---------|
+| `.env` | `hxdhkbiwhrroeffxyxfz` | us-east-1 | verdemo.website | **STAGING** (idéntico a `.envviejo`) |
+| `.env.local` | `rprwpvyubukjsqlcqdde` | us-west-2 | destinos.pro | **PRODUCCIÓN** |
+| `.envviejo` | `hxdhkbiwhrroeffxyxfz` | us-east-1 | verdemo.website | **STAGING** |
 
-### REGLA PARA IA
-- **Cuando revise/consulte staging** → usar `.envviejo` (Supabase `hxdhk...`, DB `hxdhk...`)
-- **Cuando trabaje en producción** → usar `.env` (Supabase `rprw...`, DB `rprw...`)
-- **SIEMPRE indicar** qué base de datos se está usando en cada operación
+**Gotchas que rompen datos si no se saben:**
+- Next.js da precedencia a `.env.local` sobre `.env` → `npm run dev` y `npm run build` apuntan a **PRODUCCIÓN** (`rprw...`).
+- Los scripts standalone (`node prisma/*.js`, `node scripts/*.js`) usan Prisma, que auto-carga `.env` → **STAGING** (`hxdhk...`). Algunos script hardcodean URL (ej: `scripts/check-staging.js`).
+- **SIEMPRE indicar** en cada operación si se trabaja contra prod (`rprw...`) o staging (`hxdhk...`). Ante la duda, `grep NEXT_PUBLIC_SUPABASE_URL` del archivo env correspondiente.
 
-## Reglas Obligatorias
+## Flujo de Git
 
-### 1. Push Default
-- **SIEMPRE** hacer push a `origin/main` (rama `main` del repo lord-daxul/zk)
-- El deploy en Vercel está configurado para `main` de origin
+- **origin** = `lord-daxul/zk.git` → deploy de **STAGING** en Vercel (desde `main`).
+- **client** = `destinosappdevp-sudo/prod.git` → **PRODUCCIÓN**. **PROHIBIDO** push a `client` salvo orden explícita ("sube a client").
+- Trabajar en ramas feature/fix → merge a `main` → push solo a `origin main`:
+  ```bash
+  git checkout main
+  git merge <feature-branch>
+  git push origin main
+  ```
 
-### 2. Remote `client`
-- **PROHIBIDO** hacer push a `client` salvo orden explícita del usuario
-- Si se necesita, el usuario dirá "sube a client" o similar
+## Comandos
 
-### 3. Flujo estándar
-```bash
-git checkout main
-git merge <feature-branch>
-git push origin main
-```
+- Dev/build: `npm run dev` · `npm run build` · `npm run start`
+- **Typecheck** (gate confiable): `npx tsc --noEmit` (actualmente pasa, exit 0)
+- **Lint roto**: `npm run lint` (= `next lint`) no existe en Next 16, y ESLint 9 exige flat config pero el repo solo tiene `.eslintrc.json`. No depender de él.
+- Seeds: `npm run seed` (`prisma/seed.js`)
+- Prisma: `npx prisma migrate dev --name <cambio>` · `npx prisma generate` · `npx prisma db push`
 
-### 4. Ramas
-- Trabajo en ramas feature/fix
-- Merge a `main` via fast-forward o merge commit
-- Push solo a `origin/main`
+## Convenciones verificadas
 
----
-
-**Recordatorio**: Vercel despliega desde `origin/main`. Cualquier push a `client` sin autorización rompe el flujo.
+- Alias: `@/*` → raíz del repo.
+- Cliente Prisma canónico: import default desde `@/app/lib/db` (90+ archivos). Algunos pocos usan `@/app/lib/prisma`.
+- Modelos con nombres en lowercase (`property_types`, `pagoMovilNotificacion`, ...) se acceden con `prisma as any`.
+- `createAdminClient()` (`app/lib/supabase/admin.ts`) salta RLS — solo server-side. Para el resto: `@/app/lib/supabase/server` o `client`.
+- Páginas con datos sensibles: llamar `unstable_noStore()` de `next/cache` (no confiar en la caché de Next).
+- Middleware vive en `proxy.ts` (gating de modo mantenimiento), no `middleware.ts`.
+- Scripts de mantenimiento uno-off viven tanto en `prisma/` como en `scripts/`; se ejecutan con `node` y apuntan a **STAGING** por defecto.
