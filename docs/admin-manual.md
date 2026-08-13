@@ -102,7 +102,7 @@ Tabla paginada con: título, ubicación (estado - municipio), fecha de salida, c
 Formulario con las siguientes secciones:
 
 1. **Información básica:** título, categorías (multiselección), descripción con formato básico (`**negrita**` y `[center]texto[/center]`)
-2. **Características:** cupos totales (auto-calculado), zona VIP (pares), zona estándar (pares)
+2. **Características:** cupos totales (auto-calculado), zona VIP, zona estándar
 3. **Ubicación y precio:** estado, municipio, precio estándar, precio VIP
 4. **Datos del paquete:** fecha y hora de salida, número de contacto, punto de partida
 5. **Servicios:** selector de amenities con estado Sí/No/Sin especificar

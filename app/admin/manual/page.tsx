@@ -52,7 +52,6 @@ const secciones: Section[] = [
           <li>Cambia el estado del paquete inline: Borrador / Pendiente / Activa / Inactiva.</li>
           <li><b>Nuevo Paquete:</b> formulario con título, categorías, descripción, cupos VIP/Estándar, ubicación, precios, fecha de salida, contacto, servicios e imagen.</li>
           <li>Pestaña <b>Reservas Activas:</b> reservas próximas confirmadas con opción de reenviar email.</li>
-          <li>Los cupos VIP y Estándar deben ser números pares.</li>
         </ul>
       </>
     ),
