@@ -57,14 +57,22 @@ export function AdminSidebar({
   const menuItems = getMenuItems();
   const isCollapsed = collapsed;
 
+  const sidebarClasses = cn(
+    "fixed left-0 z-[60] flex flex-col bg-card text-foreground border-r border-border shadow-xl transition-all duration-200 ease-out overflow-hidden",
+    isCollapsed ? "w-16" : "w-64",
+    mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+  );
+
+  const sidebarStyle = {
+    top: "88px",
+    height: "calc(100vh - 88px)",
+  } as React.CSSProperties;
+
   return (
     <aside
       id="admin-sidebar-nav"
-      className={cn(
-        "fixed left-0 top-[88px] z-[60] flex h-[calc(100vh-88px)] flex-col bg-card text-foreground border-r border-border shadow-xl transition-all duration-200 ease-out overflow-hidden",
-        isCollapsed ? "w-16" : "w-64",
-        mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-      )}
+      className={sidebarClasses}
+      style={sidebarStyle}
     >
       <div className="border-b border-border shrink-0">
         <div className={cn("flex items-center", isCollapsed ? "justify-center p-3" : "justify-between p-6")}>
