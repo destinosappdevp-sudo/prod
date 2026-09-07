@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -31,17 +32,21 @@ interface AdminSidebarProps {
   onCloseMobile?: () => void;
 }
 
-const getMenuItems = () => {
-  return [
+const getMenuItems = (showR4: boolean) => {
+  const items = [
     { href: "/admin", icon: LayoutDashboard, label: "Panel" },
     { href: "/admin/users", icon: Users, label: "Usuarios" },
     { href: "/admin/destinos", icon: MapPin, label: "Destinos" },
     { href: "/admin/payments", icon: CreditCard, label: "Pagos" },
     { href: "/admin/savings", icon: PiggyBank, label: "Alcancía" },
-    { href: "/admin/pagomovil", icon: Smartphone, label: "R4" },
+    // R4 solo visible cuando el modo R4 está activo en configuración
+    ...(showR4
+      ? [{ href: "/admin/pagomovil", icon: Smartphone, label: "R4" }]
+      : []),
     { href: "/admin/reports", icon: BarChart3, label: "Informes" },
     { href: "/admin/configuracion", icon: Settings, label: "Configuración" },
   ];
+  return items;
 };
 
 export function AdminSidebar({
@@ -54,7 +59,30 @@ export function AdminSidebar({
   onCloseMobile,
 }: AdminSidebarProps) {
   const pathname = usePathname();
-  const menuItems = getMenuItems();
+  // Oculto por defecto: solo se muestra si el modo R4 está activo
+  const [showR4, setShowR4] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/settings/pagomovil")
+      .then(async (res) => {
+        if (cancelled) return;
+        try {
+          const data = await res.json();
+          if (res.ok && data?.mode === "R4") setShowR4(true);
+        } catch {
+          // noop: R4 queda oculto
+        }
+      })
+      .catch(() => {
+        // noop: R4 queda oculto
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const menuItems = getMenuItems(showR4);
   const isCollapsed = collapsed;
 
   const sidebarClasses = cn(

@@ -1,7 +1,9 @@
 import { unstable_noStore } from "next/cache";
+import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import prisma from "@/app/lib/db";
 import Link from "next/link";
+import { getPagoMovilMode } from "@/app/lib/pagomovil-config";
 
 async function getLogs() {
   unstable_noStore();
@@ -18,6 +20,10 @@ async function getLogs() {
 }
 
 export default async function JsonLogsPage() {
+  // R4 inactivo (modo MANUAL): los pagos se verifican en /admin/payments
+  const mode = await getPagoMovilMode();
+  if (mode !== "R4") redirect("/admin/payments");
+
   const { data: logs, error } = await getLogs();
 
   return (

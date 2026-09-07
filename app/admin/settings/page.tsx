@@ -9,6 +9,7 @@ import {
   Wrench,
   Landmark,
   Smartphone,
+  Bus,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatBcvRateInput } from "@/app/lib/bcv-rate-format";
@@ -97,6 +98,18 @@ export default function SettingsPage() {
   const [pagomovilLoading, setPagomovilLoading] = useState<boolean>(true);
   const [pagomovilSaving, setPagomovilSaving] = useState<boolean>(false);
   const [pagomovilMsg, setPagomovilMsg] = useState<string>("");
+
+  // Transporte y paquetes privados (solo SUPERADMIN)
+  const [allowPrivatePackages, setAllowPrivatePackages] =
+    useState<boolean>(false);
+  const [transportFlags, setTransportFlags] = useState({
+    ENC32: true,
+    VAN20: false,
+    VAN20_PASILLO: false,
+  });
+  const [featuresLoading, setFeaturesLoading] = useState<boolean>(true);
+  const [featuresSaving, setFeaturesSaving] = useState<boolean>(false);
+  const [featuresMsg, setFeaturesMsg] = useState<string>("");
 
   useEffect(() => {
     fetch("/api/admin/settings/my-role")
@@ -213,6 +226,26 @@ export default function SettingsPage() {
         setPagomovilLoading(false);
       })
       .catch(() => setPagomovilLoading(false));
+
+    // Cargar toggles de transporte y paquetes privados
+    fetch("/api/admin/settings/features")
+      .then(async (res) => {
+        try {
+          const data = await res.json();
+          if (res.ok) {
+            setAllowPrivatePackages(data.allowPrivatePackages === true);
+            setTransportFlags({
+              ENC32: data.transports?.ENC32 !== false,
+              VAN20: data.transports?.VAN20 === true,
+              VAN20_PASILLO: data.transports?.VAN20_PASILLO === true,
+            });
+          }
+        } catch {
+          // noop
+        }
+        setFeaturesLoading(false);
+      })
+      .catch(() => setFeaturesLoading(false));
   }, [currentRole]);
 
   const handleSubmit = async (e: any) => {
@@ -371,6 +404,131 @@ export default function SettingsPage() {
     setPagomovilSaving(false);
     setTimeout(() => setPagomovilMsg(""), 5000);
   };
+
+  const handleFeaturesSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFeaturesSaving(true);
+    setFeaturesMsg("");
+
+    try {
+      const res = await fetch("/api/admin/settings/features", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          allowPrivatePackages,
+          transports: transportFlags,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setAllowPrivatePackages(data.allowPrivatePackages === true);
+        setTransportFlags({
+          ENC32: data.transports?.ENC32 !== false,
+          VAN20: data.transports?.VAN20 === true,
+          VAN20_PASILLO: data.transports?.VAN20_PASILLO === true,
+        });
+        setFeaturesMsg("Configuración guardada correctamente");
+      } else {
+        setFeaturesMsg(data.error || "Error al guardar");
+      }
+    } catch {
+      setFeaturesMsg("Error de red");
+    }
+
+    setFeaturesSaving(false);
+    setTimeout(() => setFeaturesMsg(""), 5000);
+  };
+
+  const featuresSettingsCard = (
+    <Card className="p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-sky-100 rounded-lg">
+          <Bus className="text-sky-600" size={20} />
+        </div>
+        <h3 className="text-lg font-semibold">Transporte y Paquetes Privados</h3>
+      </div>
+
+      <form className="space-y-4" onSubmit={handleFeaturesSubmit}>
+        <label className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg cursor-pointer">
+          <input
+            type="checkbox"
+            checked={allowPrivatePackages}
+            onChange={(e) => setAllowPrivatePackages(e.target.checked)}
+            disabled={featuresLoading || featuresSaving}
+            className="w-4 h-4 rounded"
+          />
+          <span>
+            <span className="font-medium block">
+              Permitir paquetes privados
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Al desactivarlo, la opción desaparece de los formularios y los
+              paquetes privados existentes pasan a públicos
+            </span>
+          </span>
+        </label>
+
+        <div className="border-t pt-4">
+          <h4 className="text-sm font-semibold text-foreground mb-2">
+            Tipos de transporte activos
+          </h4>
+          <p className="text-sm text-muted-foreground mb-3">
+            Los tipos inactivos no se muestran en las opciones al crear o
+            editar paquetes. Encava 32 es el valor por defecto.
+          </p>
+          <div className="space-y-2">
+            {(
+              [
+                { key: "ENC32", label: "Encava 32 (31 pasajeros + copiloto)" },
+                { key: "VAN20", label: "Van 20 (19 pasajeros + copiloto)" },
+                {
+                  key: "VAN20_PASILLO",
+                  label: "Van 20 Pasillo (19 pasajeros + copiloto)",
+                },
+              ] as const
+            ).map((t) => (
+              <label
+                key={t.key}
+                className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={transportFlags[t.key]}
+                  onChange={(e) =>
+                    setTransportFlags((p) => ({
+                      ...p,
+                      [t.key]: e.target.checked,
+                    }))
+                  }
+                  disabled={featuresLoading || featuresSaving}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="font-medium text-sm">{t.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors disabled:opacity-60"
+            disabled={featuresLoading || featuresSaving}
+          >
+            {featuresSaving ? "Guardando..." : "Guardar configuración"}
+          </button>
+          {featuresMsg && (
+            <span
+              className={`text-sm ${featuresMsg.includes("Error") ? "text-red-600" : "text-green-600"}`}
+            >
+              {featuresMsg}
+            </span>
+          )}
+        </div>
+      </form>
+    </Card>
+  );
 
   const pagomovilSettingsCard = (
     <Card className="p-6">
@@ -853,6 +1011,9 @@ export default function SettingsPage() {
 
         {/* Pago Móvil R4 */}
         {pagomovilSettingsCard}
+
+        {/* Transporte y Paquetes Privados */}
+        {featuresSettingsCard}
 
         {/* Notifications */}
         <Card className="p-6">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -104,6 +104,60 @@ export default function PropertyEditForm({
     privateOwnerId: property.privateOwnerId || "",
     transportType: property.transportType || "ENC32",
   });
+
+  // Toggles de plataforma (SUPERADMIN): transportes activos + paquetes privados
+  const [platformFeatures, setPlatformFeatures] = useState<{
+    allowPrivatePackages: boolean;
+    transports: Record<string, boolean>;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/settings/features")
+      .then(async (res) => {
+        if (cancelled) return;
+        try {
+          const data = await res.json();
+          if (res.ok) {
+            setPlatformFeatures({
+              allowPrivatePackages: data.allowPrivatePackages === true,
+              transports: {
+                ENC32: data.transports?.ENC32 !== false,
+                VAN20: data.transports?.VAN20 === true,
+                VAN20_PASILLO: data.transports?.VAN20_PASILLO === true,
+              },
+            });
+          }
+        } catch {
+          // noop: se muestran todas las opciones por defecto
+        }
+      })
+      .catch(() => {
+        // noop
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const allowPrivatePackages = platformFeatures?.allowPrivatePackages === true;
+  const enabledTransports = useMemo(() => {
+    const all = [
+      { value: "ENC32", label: "Encava 32 (31 pasajeros + copiloto)" },
+      { value: "VAN20", label: "Van 20 (19 pasajeros + copiloto)" },
+      { value: "VAN20_PASILLO", label: "Van 20 Pasillo (19 pasajeros + copiloto)" },
+    ];
+    if (!platformFeatures) return all;
+    const filtered = all.filter((t) => platformFeatures.transports[t.value]);
+    // Si el valor actual quedó deshabilitado, mostrarlo igual para no romper el Select
+    const current = formData.transportType || "ENC32";
+    if (!filtered.some((t) => t.value === current)) {
+      const currentOpt = all.find((t) => t.value === current);
+      if (currentOpt) return [currentOpt, ...filtered];
+    }
+    return filtered.length > 0 ? filtered : all;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [platformFeatures, formData.transportType]);
 
   const [ownerSearch, setOwnerSearch] = useState("");
   const [ownerResults, setOwnerResults] = useState<Array<{ id: string; firstName: string; cedula: string; email: string }>>([]);
@@ -417,8 +471,9 @@ export default function PropertyEditForm({
         )
       );
 
-      payload.append("isPrivate", formData.isPrivate ? "true" : "false");
-      if (formData.isPrivate && formData.privateOwnerId) {
+      const effectiveIsPrivate = allowPrivatePackages && formData.isPrivate;
+      payload.append("isPrivate", effectiveIsPrivate ? "true" : "false");
+      if (effectiveIsPrivate && formData.privateOwnerId) {
         payload.append("privateOwnerId", formData.privateOwnerId);
       }
 
@@ -797,9 +852,11 @@ export default function PropertyEditForm({
                       <SelectValue placeholder="Selecciona el transporte" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ENC32">Encava 32 (31 pasajeros + copiloto)</SelectItem>
-                      <SelectItem value="VAN20">Van 20 (19 pasajeros + copiloto)</SelectItem>
-                      <SelectItem value="VAN20_PASILLO">Van 20 Pasillo (19 pasajeros + copiloto)</SelectItem>
+                      {enabledTransports.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1027,6 +1084,7 @@ export default function PropertyEditForm({
             </div>
           </div>
 
+          {allowPrivatePackages && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
             <h3 className="text-lg font-semibold mb-3 text-amber-900">Paquete Privado</h3>
             <div className="flex items-center gap-3 mb-3">
@@ -1118,6 +1176,7 @@ export default function PropertyEditForm({
               </div>
             )}
           </div>
+          )}
 
           <div>
             <h3 className={`text-lg font-semibold mb-4 ${missingAmenities ? "text-red-600" : ""}`}>

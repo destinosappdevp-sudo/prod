@@ -128,9 +128,18 @@ export async function PATCH(
       .getAll("propertyTypeIds")
       .map((value) => (typeof value === "string" ? value.trim() : ""))
       .filter(Boolean);
-    const isPrivate = formData.get("isPrivate") === "true";
+    const { getPlatformFeatures, sanitizeTransportType } = await import(
+      "@/app/lib/platform-features"
+    );
+    const platformFeatures = await getPlatformFeatures();
+    const isPrivate =
+      platformFeatures.allowPrivatePackages &&
+      formData.get("isPrivate") === "true";
     const privateOwnerId = (formData.get("privateOwnerId") as string) || null;
-    const transportType = (formData.get("transportType") as string) || "ENC32";
+    const transportType = sanitizeTransportType(
+      (formData.get("transportType") as string) || "ENC32",
+      platformFeatures,
+    );
 
     const selectedTypeIds = Array.from(
       new Set(

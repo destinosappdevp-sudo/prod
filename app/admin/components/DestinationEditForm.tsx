@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,6 +80,55 @@ export default function DestinationEditForm({
     publishStatus: destination.publishStatus || "APPROVED",
     transportType: destination.transportType || "ENC32",
   });
+
+  // Transportes activos según configuración (SUPERADMIN)
+  const [activeTransports, setActiveTransports] = useState<Record<
+    string,
+    boolean
+  > | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/settings/features")
+      .then(async (res) => {
+        if (cancelled) return;
+        try {
+          const data = await res.json();
+          if (res.ok) {
+            setActiveTransports({
+              ENC32: data.transports?.ENC32 !== false,
+              VAN20: data.transports?.VAN20 === true,
+              VAN20_PASILLO: data.transports?.VAN20_PASILLO === true,
+            });
+          }
+        } catch {
+          // noop
+        }
+      })
+      .catch(() => {
+        // noop
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const enabledTransports = useMemo(() => {
+    const all = [
+      { value: "ENC32", label: "Encava 32" },
+      { value: "VAN20", label: "Van 20" },
+      { value: "VAN20_PASILLO", label: "Van 20 Pasillo" },
+    ];
+    if (!activeTransports) return all;
+    const filtered = all.filter((t) => activeTransports[t.value]);
+    const current = formData.transportType || "ENC32";
+    if (!filtered.some((t) => t.value === current)) {
+      const currentOpt = all.find((t) => t.value === current);
+      if (currentOpt) return [currentOpt, ...filtered];
+    }
+    return filtered.length > 0 ? filtered : all;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTransports, formData.transportType]);
 
   const existingCoords =
     destination.latitude != null && destination.longitude != null
@@ -440,9 +489,11 @@ export default function DestinationEditForm({
                     <SelectValue placeholder="Tipo de transporte" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ENC32">Encava 32</SelectItem>
-                    <SelectItem value="VAN20">Van 20</SelectItem>
-                    <SelectItem value="VAN20_PASILLO">Van 20 Pasillo</SelectItem>
+                    {enabledTransports.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

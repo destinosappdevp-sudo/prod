@@ -81,7 +81,16 @@ export async function POST(
       .getAll("propertyTypeIds")
       .map((v) => (typeof v === "string" ? v.trim() : ""))
       .filter(Boolean);
-    const transportType = (formData.get("transportType") as string) || destination.transportType || "ENC32";
+    const { getPlatformFeatures, sanitizeTransportType } = await import(
+      "@/app/lib/platform-features"
+    );
+    const platformFeatures = await getPlatformFeatures();
+    const transportType = sanitizeTransportType(
+      (formData.get("transportType") as string) ||
+        destination.transportType ||
+        "ENC32",
+      platformFeatures,
+    );
 
     const vipSeats = parseSeatInput(vipSeatsRaw) ?? 0;
     const standardSeats = parseSeatInput(standardSeatsRaw) ?? 0;
