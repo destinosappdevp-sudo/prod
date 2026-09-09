@@ -65,6 +65,8 @@ export async function PUT(request: Request) {
 
     const body = await request.json();
     const allowPrivatePackages = body?.allowPrivatePackages === true;
+    const multiDatesPerDestinationEnabled =
+      body?.multiDatesPerDestinationEnabled === true;
 
     const transports: Record<TransportKey, boolean> = {
       ENC32: body?.transports?.ENC32 !== false,
@@ -83,6 +85,7 @@ export async function PUT(request: Request) {
     const existing = await prismaAny.platformConfig.findFirst();
     const data = {
       allowPrivatePackages,
+      multiDatesPerDestinationEnabled,
       transportEnc32Enabled: transports.ENC32,
       transportVan20Enabled: transports.VAN20,
       transportVan20PasilloEnabled: transports.VAN20_PASILLO,

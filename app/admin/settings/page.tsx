@@ -102,6 +102,8 @@ export default function SettingsPage() {
   // Transporte y paquetes privados (solo SUPERADMIN)
   const [allowPrivatePackages, setAllowPrivatePackages] =
     useState<boolean>(false);
+  const [multiDatesPerDestinationEnabled, setMultiDatesPerDestinationEnabled] =
+    useState<boolean>(false);
   const [transportFlags, setTransportFlags] = useState({
     ENC32: true,
     VAN20: false,
@@ -234,6 +236,9 @@ export default function SettingsPage() {
           const data = await res.json();
           if (res.ok) {
             setAllowPrivatePackages(data.allowPrivatePackages === true);
+            setMultiDatesPerDestinationEnabled(
+              data.multiDatesPerDestinationEnabled === true
+            );
             setTransportFlags({
               ENC32: data.transports?.ENC32 !== false,
               VAN20: data.transports?.VAN20 === true,
@@ -416,6 +421,7 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           allowPrivatePackages,
+          multiDatesPerDestinationEnabled,
           transports: transportFlags,
         }),
       });
@@ -423,6 +429,9 @@ export default function SettingsPage() {
       const data = await res.json();
       if (res.ok) {
         setAllowPrivatePackages(data.allowPrivatePackages === true);
+        setMultiDatesPerDestinationEnabled(
+          data.multiDatesPerDestinationEnabled === true
+        );
         setTransportFlags({
           ENC32: data.transports?.ENC32 !== false,
           VAN20: data.transports?.VAN20 === true,
@@ -465,6 +474,25 @@ export default function SettingsPage() {
             <span className="text-sm text-muted-foreground">
               Al desactivarlo, la opción desaparece de los formularios y los
               paquetes privados existentes pasan a públicos
+            </span>
+          </span>
+        </label>
+
+        <label className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg cursor-pointer">
+          <input
+            type="checkbox"
+            checked={multiDatesPerDestinationEnabled}
+            onChange={(e) => setMultiDatesPerDestinationEnabled(e.target.checked)}
+            disabled={featuresLoading || featuresSaving}
+            className="w-4 h-4 rounded"
+          />
+          <span>
+            <span className="font-medium block">
+              Múltiples fechas por destino
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Al desactivarlo, cada destino queda con 1 única fecha (vista
+              antigua) y no se pueden agregar más salidas
             </span>
           </span>
         </label>

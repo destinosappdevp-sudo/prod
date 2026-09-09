@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import prisma from "@/app/lib/db";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import DestinationEditForm from "@/app/admin/components/DestinationEditForm";
+import DestinationEditFormLegacy from "@/app/admin/components/DestinationEditFormLegacy";
+import DestinationEditFormMulti from "@/app/admin/components/DestinationEditFormMulti";
 import CreatePackageFromDestination from "@/app/admin/components/CreatePackageFromDestination";
+import { getPlatformFeatures } from "@/app/lib/platform-features";
 import { getAllStates } from "@/app/lib/venezuelaStates";
 import { ArrowLeft, Calendar, Heart, Star, Package } from "lucide-react";
 import Link from "next/link";
@@ -84,6 +86,12 @@ export default async function DestinationDetailPage({
 }) {
   const { id } = await params;
   const destination = await getDestination(id);
+  const features = await getPlatformFeatures();
+  const multiDatesEnabled = features.multiDatesPerDestinationEnabled === true;
+  const EditForm = multiDatesEnabled
+    ? DestinationEditFormMulti
+    : DestinationEditFormLegacy;
+  const canAddPackage = multiDatesEnabled || destination.Homes.length === 0;
 
   const states = getAllStates().map((s) => ({ value: s.value, label: s.label }));
 
@@ -197,7 +205,7 @@ export default async function DestinationDetailPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <DestinationEditForm
+          <EditForm
             destination={{
               ...destination,
               propertyTypeIds: selectedPropertyTypeIds,
@@ -237,11 +245,17 @@ export default async function DestinationDetailPage({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-foreground">Paquetes / Fechas</h2>
+          {canAddPackage ? (
           <CreatePackageFromDestination
             destination={destination}
             categories={categoriesForForm}
             states={states}
           />
+          ) : (
+            <span className="text-sm text-muted-foreground">
+              Modo actual: 1 sola fecha por destino
+            </span>
+          )}
         </div>
 
         <Card className="overflow-hidden">

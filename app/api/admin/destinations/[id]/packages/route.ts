@@ -85,12 +85,36 @@ export async function POST(
       "@/app/lib/platform-features"
     );
     const platformFeatures = await getPlatformFeatures();
-    const transportType = sanitizeTransportType(
-      (formData.get("transportType") as string) ||
-        destination.transportType ||
-        "ENC32",
-      platformFeatures,
-    );
+    const multiDatesEnabled =
+      platformFeatures.multiDatesPerDestinationEnabled === true;
+
+    // Legacy: 1 único hijo por destino + ENC32 forzado + fecha obligatoria
+    if (!multiDatesEnabled) {
+      const existingCount = await prismaAny.home.count({
+        where: { destinationId: destination.id },
+      });
+      if (existingCount >= 1) {
+        return NextResponse.json(
+          { error: "El modo actual permite 1 sola fecha por destino" },
+          { status: 409 }
+        );
+      }
+    }
+    const rawCheckInTime = (formData.get("checkInTime") as string) || "";
+    if (!rawCheckInTime.trim() && !destination.checkInTime) {
+      return NextResponse.json(
+        { error: "La fecha y hora de salida es obligatoria" },
+        { status: 400 }
+      );
+    }
+    const transportType = multiDatesEnabled
+      ? sanitizeTransportType(
+          (formData.get("transportType") as string) ||
+            destination.transportType ||
+            "ENC32",
+          platformFeatures
+        )
+      : "ENC32";
 
     const vipSeats = parseSeatInput(vipSeatsRaw) ?? 0;
     const standardSeats = parseSeatInput(standardSeatsRaw) ?? 0;

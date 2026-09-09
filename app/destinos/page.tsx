@@ -1,6 +1,8 @@
 import { createClient } from "@/app/lib/supabase/server";
 import BannerCarousel from "@/app/components/BannerCarousel";
 import DestinationCard from "@/app/components/DestinationCard";
+import DestinationCardLegacy from "@/app/components/DestinationCardLegacy";
+import { getPlatformFeatures } from "@/app/lib/platform-features";
 import prisma from "@/app/lib/db";
 import ReviewsSection from "@/app/components/ReviewsSection";
 import Image from "next/image";
@@ -75,7 +77,9 @@ async function getDestinations({
   }
 
   let homesMonthFilter: any = undefined;
-  if (searchParams?.month) {
+  const destFeatures = await getPlatformFeatures();
+  const destMulti = destFeatures.multiDatesPerDestinationEnabled === true;
+  if (destMulti && searchParams?.month) {
     const [yearStr, monthStr] = searchParams.month.split("-");
     const year = Number(yearStr);
     const month = Number(monthStr);
@@ -135,6 +139,36 @@ async function getDestinations({
   });
 
   return destinations.map((destination: any) => {
+    if (!destMulti) {
+      const futureHomes = destination.Homes.filter((h: any) => {
+        if (!h.checkInTime) return false;
+        const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
+        return d.getTime() > Date.now();
+      });
+      const nextHome = futureHomes[0] || destination.Homes[0];
+      const departure = nextHome?.checkInTime
+        ? new Date(nextHome.checkInTime.includes("T") ? nextHome.checkInTime : `${nextHome.checkInTime}T00:00`)
+        : null;
+      const prices = destination.Homes.map((h: any) => [h.price, h.priceVip]).flat().filter((p: any) => typeof p === "number");
+      const priceFrom = prices.length > 0 ? Math.min(...prices) : null;
+      return {
+        ...destination,
+        nextDate: departure
+          ? departure.toLocaleDateString("es-ES", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : null,
+        nextTime: departure
+          ? departure.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null,
+        priceFrom,
+      };
+    }
     const futureHomes = destination.Homes.filter((h: any) => {
       if (!h.checkInTime) return false;
       const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
@@ -181,6 +215,8 @@ export default async function DestinosHomePage({
     userId: user?.id,
     searchParams: sp,
   });
+  const pageFeatures = await getPlatformFeatures();
+  const pageMulti = pageFeatures.multiDatesPerDestinationEnabled === true;
 
   const selectedTokens = (sp?.filter || "")
     .split(",")
@@ -290,7 +326,8 @@ export default async function DestinosHomePage({
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {destinations.map((destination: any) => (
+          {destinations.map((destination: any) =>
+            pageMulti ? (
             <DestinationCard
               key={destination.id}
               slug={destination.slug}
@@ -299,11 +336,26 @@ export default async function DestinosHomePage({
               imagePath={destination.photo}
               country={destination.country}
               municipality={destination.municipality}
-              allDates={destination.allDates}
+              allDates={destination.allDates ?? []}
               priceFrom={destination.priceFrom}
               reviewCount={destination._count?.Review || 0}
             />
-          ))}
+            ) : (
+            <DestinationCardLegacy
+              key={destination.id}
+              slug={destination.slug}
+              title={destination.title}
+              subtitle={destination.subtitle}
+              imagePath={destination.photo}
+              country={destination.country}
+              municipality={destination.municipality}
+              nextDate={destination.nextDate ?? null}
+              nextTime={destination.nextTime ?? null}
+              priceFrom={destination.priceFrom}
+              reviewCount={destination._count?.Review || 0}
+            />
+            )
+          )}
         </div>
 
         {destinations.length === 0 && (

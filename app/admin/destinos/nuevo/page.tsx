@@ -1,6 +1,8 @@
 import prisma from "@/app/lib/db";
 import { getAllStates } from "@/app/lib/venezuelaStates";
-import DestinationEditForm from "@/app/admin/components/DestinationEditForm";
+import DestinationEditFormLegacy from "@/app/admin/components/DestinationEditFormLegacy";
+import DestinationEditFormMulti from "@/app/admin/components/DestinationEditFormMulti";
+import { getPlatformFeatures } from "@/app/lib/platform-features";
 
 export default async function NewDestinationPage() {
   const states = getAllStates().map((s) => ({ value: s.value, label: s.label }));
@@ -13,6 +15,10 @@ export default async function NewDestinationPage() {
     name: cat.name,
     title: cat.title_es || cat.name,
   }));
+  const features = await getPlatformFeatures();
+  const Form = features.multiDatesPerDestinationEnabled
+    ? DestinationEditFormMulti
+    : DestinationEditFormLegacy;
 
   return (
     <div className="space-y-6">
@@ -23,7 +29,7 @@ export default async function NewDestinationPage() {
         </p>
       </div>
 
-      <DestinationEditForm
+      <Form
         destination={{
           id: "",
           title: null,

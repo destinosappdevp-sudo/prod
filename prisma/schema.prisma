@@ -353,6 +353,7 @@ model PlatformConfig {
 
   // Toggles de plataforma (solo SUPERADMIN)
   allowPrivatePackages       Boolean   @default(false)
+  multiDatesPerDestinationEnabled Boolean @default(false)
   transportEnc32Enabled      Boolean   @default(true)
   transportVan20Enabled      Boolean   @default(false)
   transportVan20PasilloEnabled Boolean @default(false)

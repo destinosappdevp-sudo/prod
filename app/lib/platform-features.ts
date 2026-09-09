@@ -12,11 +12,13 @@ export const TRANSPORT_LABELS: Record<TransportKey, string> = {
 
 export interface PlatformFeatures {
   allowPrivatePackages: boolean;
+  multiDatesPerDestinationEnabled: boolean;
   transports: Record<TransportKey, boolean>;
 }
 
 const DEFAULTS: PlatformFeatures = {
   allowPrivatePackages: false,
+  multiDatesPerDestinationEnabled: false,
   transports: { ENC32: true, VAN20: false, VAN20_PASILLO: false },
 };
 
@@ -27,6 +29,7 @@ export async function getPlatformFeatures(): Promise<PlatformFeatures> {
     if (!config) return DEFAULTS;
     return {
       allowPrivatePackages: config.allowPrivatePackages ?? false,
+      multiDatesPerDestinationEnabled: config.multiDatesPerDestinationEnabled ?? false,
       transports: {
         ENC32: config.transportEnc32Enabled ?? true,
         VAN20: config.transportVan20Enabled ?? false,

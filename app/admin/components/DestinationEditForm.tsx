@@ -43,6 +43,7 @@ interface DestinationEditFormProps {
   categories: Array<{ id: number; name: string; title: string }>;
   states: Array<{ value: string; label: string }>;
   createMode?: boolean;
+  legacyMode?: boolean;
 }
 
 export default function DestinationEditForm({
@@ -50,6 +51,7 @@ export default function DestinationEditForm({
   categories,
   states,
   createMode = false,
+  legacyMode = false,
 }: DestinationEditFormProps) {
   const router = useRouter();
   const { getMunicipalitiesByState, getDefaultMunicipalityByState } = useVenezuelaMunicipalities();
@@ -214,6 +216,10 @@ export default function DestinationEditForm({
         throw new Error("Debes seleccionar al menos una categoría");
       }
 
+      if (!formData.checkInTime.trim()) {
+        throw new Error("La fecha y hora de salida es obligatoria");
+      }
+
       const payload = new FormData();
       payload.append("title", formData.title);
       payload.append("subtitle", formData.subtitle);
@@ -227,7 +233,7 @@ export default function DestinationEditForm({
       payload.append("priceVip", formData.priceVip);
       payload.append("vipSeats", formData.vipSeats);
       payload.append("standardSeats", formData.standardSeats);
-      payload.append("transportType", formData.transportType || "ENC32");
+      payload.append("transportType", legacyMode ? "ENC32" : formData.transportType || "ENC32");
       payload.append("publishStatus", formData.publishStatus);
 
       if (formData.latitude) payload.append("latitude", formData.latitude);
@@ -451,10 +457,11 @@ export default function DestinationEditForm({
                 />
               </div>
               <div>
-                <Label htmlFor="checkInTime">Fecha y hora de salida (referencia)</Label>
+                <Label htmlFor="checkInTime">Fecha y hora de salida *</Label>
                 <Input
                   id="checkInTime"
                   type="datetime-local"
+                  required
                   value={formData.checkInTime}
                   onChange={(e) => handleChange("checkInTime", e.target.value)}
                 />
@@ -479,6 +486,7 @@ export default function DestinationEditForm({
                   placeholder="Precio VIP de referencia"
                 />
               </div>
+              {!legacyMode && (
               <div>
                 <Label htmlFor="transportType">Transporte</Label>
                 <Select
@@ -497,6 +505,7 @@ export default function DestinationEditForm({
                   </SelectContent>
                 </Select>
               </div>
+              )}
               <div>
                 <Label htmlFor="vipSeats">Cupos VIP</Label>
                 <Input

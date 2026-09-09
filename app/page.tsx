@@ -2,8 +2,11 @@ import { createClient } from "@/app/lib/supabase/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { Suspense } from "react";
 import DestinationCard from "./components/DestinationCard";
+import DestinationCardLegacy from "./components/DestinationCardLegacy";
 import MapFilter from "./components/MapFilter";
 import { HomeSearchBar } from "./components/HomeSearchBar";
+import { HomeSearchBarLegacy } from "./components/HomeSearchBarLegacy";
+import { getPlatformFeatures } from "./lib/platform-features";
 import BannerCarousel from "./components/BannerCarousel";
 import BannerMedio from "./components/BannerMedio";
 import BannerPopup from "./components/BannerPopup";
@@ -78,7 +81,9 @@ async function getData({
   }
 
   let homesMonthFilter: any = undefined;
-  if (searchParams?.month) {
+  const features = await getPlatformFeatures();
+  const multiDatesEnabled = features.multiDatesPerDestinationEnabled === true;
+  if (multiDatesEnabled && searchParams?.month) {
     const [yearStr, monthStr] = searchParams.month.split("-");
     const year = Number(yearStr);
     const month = Number(monthStr);
@@ -132,6 +137,36 @@ async function getData({
   });
 
   const data = destinations.map((destination: any) => {
+    if (!multiDatesEnabled) {
+      const futureHomes = destination.Homes.filter((h: any) => {
+        if (!h.checkInTime) return false;
+        const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
+        return d.getTime() > Date.now();
+      });
+      const nextHome = futureHomes[0] || destination.Homes[0];
+      const departure = nextHome?.checkInTime
+        ? new Date(nextHome.checkInTime.includes("T") ? nextHome.checkInTime : `${nextHome.checkInTime}T00:00`)
+        : null;
+      const prices = destination.Homes.map((h: any) => [h.price, h.priceVip]).flat().filter((p: any) => typeof p === "number");
+      const priceFrom = prices.length > 0 ? Math.min(...prices) : null;
+      return {
+        ...destination,
+        nextDate: departure
+          ? departure.toLocaleDateString("es-ES", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : null,
+        nextTime: departure
+          ? departure.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null,
+        priceFrom,
+      };
+    }
     const futureHomes = destination.Homes.filter((h: any) => {
       if (!h.checkInTime) return false;
       const d = new Date(h.checkInTime.includes("T") ? h.checkInTime : `${h.checkInTime}T00:00`);
@@ -160,7 +195,7 @@ async function getData({
   });
   const bcvRate: number | null = appConfig?.bcvRate ? Number(appConfig.bcvRate) : null;
 
-  return { data, bcvRate };
+  return { data, bcvRate, multiDatesEnabled };
 }
 
 export default async function Home({
@@ -177,14 +212,16 @@ export default async function Home({
   }>;
 }) {
   const sp = await searchParams;
+  const homeFeatures = await getPlatformFeatures();
+  const homeMulti = homeFeatures.multiDatesPerDestinationEnabled === true;
   return (
     <div className="container mx-auto px-5 lg:px-10">
       <BannerPopup />
       <BannerCarousel />
       <MapFilter />
-      <HomeSearchBar />
+      {homeMulti ? <HomeSearchBar /> : <HomeSearchBarLegacy />}
 
-      <Suspense key={`${sp?.filter}-${sp?.q}-${sp?.month}`} fallback={<SkeletonLoader />}>
+      <Suspense key={`${sp?.filter}-${sp?.q}-${sp?.month}-${homeMulti}`} fallback={<SkeletonLoader />}>
         <ShowPlace searchParams={sp} />
       </Suspense>
     </div>
@@ -208,6 +245,7 @@ async function ShowPlace({
   let userId: string | undefined;
   let data: Awaited<ReturnType<typeof getData>>["data"] = [];
   let bcvRate: number | null = null;
+  let multiDatesEnabled = false;
 
   try {
     const supabase = await createClient();
@@ -223,6 +261,7 @@ async function ShowPlace({
 
     data = result.data;
     bcvRate = result.bcvRate;
+    multiDatesEnabled = result.multiDatesEnabled;
   } catch (error) {
     console.error("[home] Error rendering listings:", error);
 
@@ -246,7 +285,25 @@ async function ShowPlace({
     );
   }
 
-  const renderCard = (item: typeof data[0]) => (
+  const renderCard = (item: typeof data[0]) => {
+    if (!multiDatesEnabled) {
+      return (
+        <DestinationCardLegacy
+          key={item.id}
+          slug={item.slug}
+          title={item.title}
+          subtitle={item.subtitle}
+          imagePath={item.photo}
+          country={item.country}
+          municipality={item.municipality}
+          nextDate={item.nextDate ?? null}
+          nextTime={item.nextTime ?? null}
+          priceFrom={item.priceFrom}
+          reviewCount={item._count?.Review || 0}
+        />
+      );
+    }
+    return (
     <DestinationCard
       key={item.id}
       slug={item.slug}
@@ -255,11 +312,12 @@ async function ShowPlace({
       imagePath={item.photo}
       country={item.country}
       municipality={item.municipality}
-      allDates={item.allDates}
+      allDates={item.allDates ?? []}
       priceFrom={item.priceFrom}
       reviewCount={item._count?.Review || 0}
     />
-  );
+    );
+  };
 
   if (isSearch) {
     return (
